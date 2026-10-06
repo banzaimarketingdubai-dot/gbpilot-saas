@@ -61,9 +61,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Map className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-lg font-bold tracking-tight text-google-text-primary flex items-center">
+              <span className="text-lg font-extrabold tracking-tight text-google-text-primary flex items-center">
                 GB<span className="text-google-blue">Pilot</span>
-                <span className="ml-2 px-2 py-0.5 text-[10px] font-bold tracking-wider bg-google-blue-light text-google-blue rounded-full border border-google-blue/20">
+                <span className="ml-2 px-2.5 py-0.5 text-[10px] font-bold tracking-wider bg-google-blue-light text-google-blue rounded-md border border-google-blue/20 whitespace-nowrap">
                   MAPS COPILOT
                 </span>
               </span>
