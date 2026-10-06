@@ -1,0 +1,50 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  body {
+    @apply bg-google-bg text-google-text-primary font-sans antialiased min-h-screen selection:bg-google-blue-light selection:text-google-blue;
+  }
+}
+
+/* Material Design Card Utilities */
+.material-card {
+  @apply bg-white rounded-xl border border-google-border-light shadow-material-1 transition-all duration-200;
+}
+
+.material-card-hover {
+  @apply material-card hover:shadow-material-2 hover:-translate-y-0.5 transition-all duration-200;
+}
+
+.material-button-primary {
+  @apply bg-google-blue hover:bg-google-blue-hover text-white font-medium px-4 py-2.5 rounded-lg shadow-sm hover:shadow transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.material-button-secondary {
+  @apply bg-white hover:bg-google-bg text-google-blue border border-google-border font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center justify-center gap-2;
+}
+
+.material-button-ghost {
+  @apply hover:bg-slate-100 text-google-text-secondary hover:text-google-text-primary font-medium px-3 py-2 rounded-lg transition-all duration-150 flex items-center justify-center gap-2;
+}
+
+.material-input {
+  @apply w-full bg-white border border-google-border rounded-lg px-4 py-2.5 text-google-text-primary placeholder:text-google-text-tertiary focus:outline-none focus:border-google-blue focus:ring-2 focus:ring-google-blue-light transition-all duration-150;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F9FA;
+}
+::-webkit-scrollbar-thumb {
+  background: #DADCE0;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BDC1C6;
+}
