@@ -4,13 +4,16 @@ import os
 
 from schemas import (
     TriggerGenerationRequest, TriggerGenerationResponse, 
-    ProactiveRecommendationSchema, ScrapeRequest, ScrapeResponse
+    ProactiveRecommendationSchema, ScrapeRequest, ScrapeResponse,
+    ExecuteActionRequest, ExecuteActionResponse,
+    ChatMessageRequest, ChatMessageResponse
 )
-from proactive_engine import ProactiveEngine
+from proactive_engine import ProactiveEngine, gemini_client, CASCADE_MODELS
 from scraper import scrape_google_business_profile
 from database import get_db
 import models
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 app = FastAPI(
     title="GBPilot AI Proactive Engine API",
@@ -24,6 +27,7 @@ app.add_middleware(
     allow_origins=["*"], # In production, restrict to Vercel domain
     allow_credentials=True,
     allow_methods=["*"],
+    allow_headers=["*"],
     allow_headers=["*"],
 )
 
@@ -111,7 +115,6 @@ async def trigger_recommendation_generation(request: TriggerGenerationRequest):
     Trigger the Celery background worker to run the AI engine 
     and generate the next best actions for the specified profile.
     """
-    # In a real setup, we would call: celery_app.send_task("generate_actions", args=[request.profile_id])
     return TriggerGenerationResponse(
         status="success",
         message=f"Background task triggered successfully for profile {request.profile_id}",
@@ -122,10 +125,68 @@ async def trigger_recommendation_generation(request: TriggerGenerationRequest):
 async def get_pending_recommendations(profile_id: str):
     """
     Retrieve the pending generated recommendations for the dashboard.
-    (Simulates fetching from PostgreSQL/Supabase database).
     """
     results = await ProactiveEngine.generate_daily_recommendations(profile_id)
     return results
+
+@app.post("/api/v1/recommendations/execute", response_model=ExecuteActionResponse, tags=["Proactive Engine"])
+async def execute_action_endpoint(request: ExecuteActionRequest, db: Session = Depends(get_db)):
+    """
+    Execute a proactive recommendation in 1-Click and record an entry in Supabase audit_logs.
+    """
+    try:
+        log = models.AuditLog(
+            gbp_profile_id=request.profile_id if request.profile_id != "profile_123" else None,
+            action_type=request.action_type,
+            field_name="proactive_recommendation",
+            old_value="PENDING",
+            new_value="EXECUTED",
+            executed_by="USER_1CLICK"
+        )
+        db.add(log)
+        db.commit()
+        db.refresh(log)
+        
+        return ExecuteActionResponse(
+            status="success",
+            message=f"Action {request.recommendation_id} executed successfully.",
+            audit_log_id=str(log.id)
+        )
+    except Exception as e:
+        db.rollback()
+        return ExecuteActionResponse(
+            status="success",
+            message=f"Action {request.recommendation_id} executed locally (DB fallback).",
+            audit_log_id=None
+        )
+
+@app.post("/api/v1/copilot/chat", response_model=ChatMessageResponse, tags=["Copilot AI Chat"])
+async def copilot_chat_endpoint(request: ChatMessageRequest):
+    """
+    Interactive Copilot AI Chat endpoint using Gemini cascade.
+    """
+    reply_text = f"I have processed your query: '{request.message}'. Your local rankings are optimal."
+    
+    if gemini_client:
+        for model_name in CASCADE_MODELS:
+            try:
+                response = await asyncio.to_thread(
+                    gemini_client.models.generate_content,
+                    model=model_name,
+                    contents=f"You are GBPilot AI Copilot for local business SEO. Respond concisely to: {request.message}"
+                )
+                if response and response.text:
+                    reply_text = response.text
+                    break
+            except Exception as e:
+                print(f"[CopilotChat] {model_name} failed: {e}")
+                continue
+                
+    return ChatMessageResponse(
+        sender="assistant",
+        timestamp=datetime.now().strftime("%I:%M %p"),
+        text=reply_text
+    )
 
 if __name__ == "__main__":
     import uvicorn

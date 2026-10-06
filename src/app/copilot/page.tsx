@@ -84,7 +84,7 @@ export default function CopilotPage() {
     "✍️ Draft a promotional offer post for this Friday"
   ];
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const query = textToSend || input;
     if (!query.trim()) return;
 
@@ -99,9 +99,35 @@ export default function CopilotPage() {
     if (!textToSend) setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      setIsTyping(false);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${baseUrl}/api/v1/copilot/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile_id: 'profile_123',
+          message: query
+        })
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: data.id || `msg-${Date.now() + 1}`,
+            sender: 'assistant',
+            timestamp: data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            text: data.text,
+            widget: data.widget as any,
+            widgetData: data.widgetData
+          }
+        ]);
+      } else {
+        throw new Error('Chat API returned error status');
+      }
+    } catch {
+      // Fallback behavior if API is unreachable
       if (query.toLowerCase().includes('competitor')) {
         setMessages((prev) => [
           ...prev,
@@ -130,7 +156,9 @@ export default function CopilotPage() {
           }
         ]);
       }
-    }, 1200);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (

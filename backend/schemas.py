@@ -33,6 +33,16 @@ class TriggerGenerationResponse(BaseModel):
     message: str
     task_id: Optional[str] = None
 
+class ExecuteActionRequest(BaseModel):
+    recommendation_id: str
+    action_type: str
+    profile_id: str
+
+class ExecuteActionResponse(BaseModel):
+    status: str
+    message: str
+    audit_log_id: Optional[str] = None
+
 # --------------------------
 # Copilot AI Schemas
 # --------------------------

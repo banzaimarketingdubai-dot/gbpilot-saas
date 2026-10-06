@@ -51,11 +51,27 @@ export default function DashboardPage() {
     fetchRecommendations();
   }, []);
 
-  const handleExecute = (id: string) => {
+  const handleExecute = async (id: string) => {
+    const targetRec = recommendations.find(r => r.id === id);
     setRecommendations((prev) =>
       prev.map((rec) => (rec.id === id ? { ...rec, status: 'EXECUTED' } : rec))
     );
     setHealthScore((prev) => Math.min(100, prev + 3));
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      await fetch(`${baseUrl}/api/v1/recommendations/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recommendation_id: id,
+          action_type: targetRec?.category || '1CLICK_OPTIMIZATION',
+          profile_id: 'profile_123'
+        })
+      });
+    } catch (e) {
+      console.error("Execute API error:", e);
+    }
   };
 
   const handleDismiss = (id: string) => {
