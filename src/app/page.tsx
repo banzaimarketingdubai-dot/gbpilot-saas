@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import OnboardingPage from './onboarding/page';
 
 export default function Home() {
-  redirect('/onboarding');
+  return <OnboardingPage />;
 }
