@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { HealthGauge } from '@/components/HealthGauge';
 import { ProactiveCard, Recommendation } from '@/components/ProactiveCard';
 import { 
@@ -294,6 +295,7 @@ export default function DashboardPage() {
         </div>
 
       </main>
+      <Footer />
     </div>
   );
 }

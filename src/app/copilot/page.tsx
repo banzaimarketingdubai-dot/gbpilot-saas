@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { 
   Bot, 
   Send, 
@@ -427,6 +428,7 @@ export default function CopilotPage() {
         </div>
 
       </main>
+      <Footer />
     </div>
   );
 }

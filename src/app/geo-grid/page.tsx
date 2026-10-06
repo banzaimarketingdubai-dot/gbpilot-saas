@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
 import { 
   MapPin, 
@@ -290,6 +291,7 @@ export default function GeoGridPage() {
         )}
 
       </main>
+      <Footer />
     </div>
   );
 }

@@ -36,6 +36,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 
 export default function B2BLandingPage() {
   const router = useRouter();
@@ -753,35 +754,8 @@ export default function B2BLandingPage() {
         </div>
       </section>
 
-      {/* ======================================================== */}
       {/* FOOTER */}
-      {/* ======================================================== */}
-      <footer className="bg-white border-t border-google-border py-8 text-xs text-google-text-secondary">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded-full bg-google-blue flex items-center justify-center">
-              <MapPin className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-google-text-primary text-sm">GBPilot</span>
-            <span>© 2026 SHER DIGITAL CORE. All rights reserved.</span>
-          </div>
-
-          <div className="flex items-center space-x-6">
-            <Link href="/privacy" className="hover:text-google-blue transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-google-blue transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/onboarding" className="hover:text-google-blue transition-colors">
-              Audit Scanner
-            </Link>
-            <Link href="/dashboard" className="hover:text-google-blue transition-colors">
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

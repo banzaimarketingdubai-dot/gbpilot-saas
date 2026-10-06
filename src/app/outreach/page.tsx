@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { 
   Target, 
   Search, 
@@ -290,6 +291,7 @@ export default function OutreachPage() {
         )}
 
       </main>
+      <Footer />
     </div>
   );
 }
