@@ -68,12 +68,34 @@ export default function OnboardingPage() {
   }
 
   // Handle Path A Scraping
-  const handleScrapeWebsite = (e: React.FormEvent) => {
+  const handleScrapeWebsite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!websiteUrl) return;
     setIsScraping(true);
-    setTimeout(() => {
-      setIsScraping(false);
+    
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+      const response = await fetch(`${backendUrl}/api/v1/onboarding/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ website_url: websiteUrl }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setScrapedData({
+          name: data.business_name,
+          address: data.address,
+          phone: data.phone,
+          category: data.category,
+          services: data.services || [],
+          keywords: data.keywords || []
+        });
+      } else {
+        throw new Error('API request failed');
+      }
+    } catch {
+      // Fallback data if backend is offline/unreachable
       setScrapedData({
         name: 'Artisan Sourdough & Cafe',
         address: '742 Evergreen Terrace, Springfield',
@@ -82,7 +104,9 @@ export default function OnboardingPage() {
         services: ['Organic Sourdough', 'Espresso Bar', 'Breakfast Catering', 'Custom Cakes'],
         keywords: ['artisan bakery springfield', 'best espresso near me', 'sourdough bread']
       });
-    }, 1800);
+    } finally {
+      setIsScraping(false);
+    }
   };
 
   // Handle Path B Scan
