@@ -30,6 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi.responses import RedirectResponse
+from google_service import get_google_auth_url, exchange_code_for_tokens, get_google_user_info
+
 @app.get("/health", tags=["System"])
 async def health_check():
     """System health check endpoint for Railway deployment monitoring."""
@@ -40,6 +43,57 @@ async def health_check():
         "database": "Supabase PostgreSQL",
         "version": "1.0.0"
     }
+
+@app.get("/api/v1/auth/google/login", tags=["Authentication"])
+async def google_login():
+    """
+    Generates the Google OAuth 2.0 authorization URL for connecting a live Google Business Profile.
+    """
+    url = get_google_auth_url()
+    return {"auth_url": url}
+
+@app.get("/api/v1/auth/google/callback", tags=["Authentication"])
+async def google_callback(code: str, state: str = None, db: Session = Depends(get_db)):
+    """
+    OAuth 2.0 callback endpoint handling Google authorization code exchange.
+    """
+    try:
+        tokens = exchange_code_for_tokens(code)
+        access_token = tokens.get("access_token")
+        refresh_token = tokens.get("refresh_token")
+        
+        user_info = get_google_user_info(access_token)
+        email = user_info.get("email", "google_user@gbpilot.com")
+        
+        # Save or update user and organization in Supabase
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if not user:
+            user = models.User(
+                email=email, 
+                hashed_password="oauth_google_user",
+                full_name=user_info.get("name", "Google User")
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            
+        org = db.query(models.Organization).filter(models.Organization.owner_id == user.id).first()
+        if not org:
+            org = models.Organization(owner_id=user.id, name=f"{user.full_name}'s Workspace")
+            db.add(org)
+            db.commit()
+            db.refresh(org)
+            
+        profile = db.query(models.GBPProfile).filter(models.GBPProfile.organization_id == org.id).first()
+        if profile and refresh_token:
+            profile.refresh_token_encrypted = refresh_token
+            db.commit()
+            
+        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+        return RedirectResponse(url=f"{frontend_url}/dashboard?auth=success&email={email}")
+    except Exception as e:
+        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+        return RedirectResponse(url=f"{frontend_url}/dashboard?auth=error&detail={str(e)}")
 
 @app.post("/api/v1/onboarding/scrape", response_model=ScrapeResponse, tags=["Onboarding"])
 async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends(get_db)):

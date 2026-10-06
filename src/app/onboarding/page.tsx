@@ -136,12 +136,24 @@ export default function OnboardingPage() {
   };
 
   // Handle Google OAuth 1-Click Connect
-  const handleConnectGoogle = () => {
+  const handleConnectGoogle = async () => {
     setIsConnectingGoogle(true);
-    setTimeout(() => {
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+      const res = await fetch(`${backendUrl}/api/v1/auth/google/login`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.auth_url) {
+          window.location.href = data.auth_url;
+          return;
+        }
+      }
+      throw new Error("No auth URL returned");
+    } catch {
+      // Fallback preview modal if GOOGLE_CLIENT_ID is not configured yet
       setIsConnectingGoogle(false);
       setShowSmartFixModal(true);
-    }, 1200);
+    }
   };
 
   const handleApplyFixes = () => {
