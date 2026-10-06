@@ -100,7 +100,7 @@ export default function CopilotPage() {
     setIsTyping(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const response = await fetch(`${baseUrl}/api/v1/copilot/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

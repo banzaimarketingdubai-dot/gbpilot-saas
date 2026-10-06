@@ -32,7 +32,7 @@ export default function DashboardPage() {
     // Fetch proactive recommendations from FastAPI backend
     const fetchRecommendations = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
         const response = await fetch(`${baseUrl}/api/v1/recommendations/profile_123`);
         
         if (response.ok) {
@@ -59,7 +59,7 @@ export default function DashboardPage() {
     setHealthScore((prev) => Math.min(100, prev + 3));
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       await fetch(`${baseUrl}/api/v1/recommendations/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
