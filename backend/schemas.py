@@ -48,3 +48,15 @@ class ChatMessageResponse(BaseModel):
     text: str
     widget: Optional[str] = None
     widgetData: Optional[Dict[str, Any]] = None
+
+# --------------------------
+# Onboarding Schemas
+# --------------------------
+class ScrapeRequest(BaseModel):
+    business_name: str
+    location: Optional[str] = None
+
+class ScrapeResponse(BaseModel):
+    status: str
+    message: str
+    profile: Optional[Dict[str, Any]] = None
