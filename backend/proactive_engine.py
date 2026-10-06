@@ -3,16 +3,24 @@ import os
 import json
 import typing
 from typing import List
-import google.generativeai as genai
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
+
 from schemas import ProactiveRecommendationSchema, PreviewContent
 from pydantic import TypeAdapter
 
 # Initialize Gemini Client (Requires GEMINI_API_KEY env var)
 # Get your free key at: aistudio.google.com
-gemini_active = False
-if os.environ.get("GEMINI_API_KEY"):
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-    gemini_active = True
+gemini_client = None
+if GENAI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
+    try:
+        gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    except Exception as e:
+        print(f"[ProactiveEngine] Failed to initialize GenAI client: {e}")
 
 # Define the cascade models to use
 CASCADE_MODELS = [
@@ -35,7 +43,7 @@ class ProactiveEngine:
         """
         print(f"[ProactiveEngine] Analyzing SERP data and Geo-Grid drops for profile {profile_id}...")
         
-        if gemini_active:
+        if gemini_client:
             # ---------------------------------------------------------
             # REAL IMPLEMENTATION LOGIC (USING GEMINI CASCADE)
             # ---------------------------------------------------------
@@ -63,12 +71,12 @@ class ProactiveEngine:
             for model_name in CASCADE_MODELS:
                 try:
                     print(f"[ProactiveEngine] Attempting generation with {model_name}...")
-                    model = genai.GenerativeModel(model_name)
                     
                     response = await asyncio.to_thread(
-                        model.generate_content,
-                        prompt,
-                        generation_config=genai.GenerationConfig(
+                        gemini_client.models.generate_content,
+                        model=model_name,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
                             response_mime_type="application/json",
                             response_schema=list[ProactiveRecommendationSchema]
                         )
