@@ -9,7 +9,7 @@ from schemas import (
     ChatMessageRequest, ChatMessageResponse
 )
 from proactive_engine import ProactiveEngine, gemini_client, CASCADE_MODELS
-from scraper import scrape_google_business_profile
+from scraper import scrape_google_business_profile, scrape_website_url
 from database import get_db
 import models
 from sqlalchemy.orm import Session
@@ -98,14 +98,29 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
 @app.post("/api/v1/onboarding/scrape", response_model=ScrapeResponse, tags=["Onboarding"])
 async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends(get_db)):
     """
-    Scrape Google Maps data for a business name, simulate data structure,
-    and save the new organization and profile into Supabase.
+    Scrape Google Maps profile or real website URL using BeautifulSoup & Gemini AI.
     """
     try:
-        # 1. Scrape data
-        profile_data = await scrape_google_business_profile(request.business_name, request.location)
+        # Check if input is a website URL
+        target_url = request.website_url
+        if not target_url and request.business_name:
+            bn = request.business_name.strip()
+            if bn.startswith("http://") or bn.startswith("https://") or ("." in bn.split("/")[0] and len(bn.split()) == 1):
+                target_url = bn
+
+        if target_url:
+            profile_data = await scrape_website_url(target_url)
+            return ScrapeResponse(
+                status="success",
+                message=f"Successfully scraped website URL {target_url}",
+                profile=profile_data
+            )
+
+        # Standard business name search
+        b_name = request.business_name or "Local Business"
+        profile_data = await scrape_google_business_profile(b_name, request.location)
         
-        # 2. Check if default user exists (for MVP)
+        # Check if default user exists (for MVP)
         default_user = db.query(models.User).first()
         if not default_user:
             default_user = models.User(
@@ -117,19 +132,18 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
             db.commit()
             db.refresh(default_user)
             
-        # 3. Create or Get Organization
+        # Create or Get Organization
         org = db.query(models.Organization).filter(models.Organization.owner_id == default_user.id).first()
         if not org:
             org = models.Organization(
                 owner_id=default_user.id,
-                name=f"{request.business_name} Workspace"
+                name=f"{b_name} Workspace"
             )
             db.add(org)
             db.commit()
             db.refresh(org)
             
-        # 4. Save the new GBP Profile
-        # Point format for PostGIS: 'POINT(lon lat)'
+        # Save the new GBP Profile
         point_str = f"POINT({profile_data['longitude']} {profile_data['latitude']})"
         
         new_profile = models.GBPProfile(
@@ -150,17 +164,18 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
         db.commit()
         db.refresh(new_profile)
         
-        # Add the database ID to the returned profile data
         profile_data['id'] = str(new_profile.id)
         
         return ScrapeResponse(
             status="success",
-            message=f"Successfully scraped and saved profile for {request.business_name}",
+            message=f"Successfully scraped and saved profile for {b_name}",
             profile=profile_data
         )
     except Exception as e:
-        db.rollback()
+        if db:
+            db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/v1/recommendations/generate", response_model=TriggerGenerationResponse, tags=["Proactive Engine"])
 async def trigger_recommendation_generation(request: TriggerGenerationRequest):

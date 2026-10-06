@@ -63,10 +63,12 @@ class ChatMessageResponse(BaseModel):
 # Onboarding Schemas
 # --------------------------
 class ScrapeRequest(BaseModel):
-    business_name: str
+    business_name: Optional[str] = None
     location: Optional[str] = None
+    website_url: Optional[str] = None
 
 class ScrapeResponse(BaseModel):
     status: str
     message: str
     profile: Optional[Dict[str, Any]] = None
+
