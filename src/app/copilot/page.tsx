@@ -29,7 +29,7 @@ interface ChatMessage {
 }
 
 export default function CopilotPage() {
-  const [activeProfile, setActiveProfile] = useState<{name: string, address: string, city?: string} | null>(null);
+  const [activeProfile, setActiveProfile] = useState<{id?: string, name: string, address: string, city?: string} | null>(null);
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
@@ -59,22 +59,6 @@ export default function CopilotPage() {
         sender: 'user',
         timestamp: '10:43 AM',
         text: "How can I improve my ranking for my primary keyword this week?",
-      },
-      {
-        id: 'msg-3',
-        sender: 'assistant',
-        timestamp: '10:43 AM',
-        text: "Based on real-time spatial analysis of your 3x3 Geo-Grid, your average rank is **#3**. Your main competitor currently holds #1 because they posted an update yesterday featuring photos with geotags.\n\nHere is a live Geo-Grid snapshot and a pre-formatted counter post:",
-        widget: 'RANK_SNAPSHOT',
-        widgetData: {
-          keyword: 'primary keyword',
-          avgRank: '#3',
-          grid: [
-            { rank: 1 }, { rank: 3 }, { rank: 2 },
-            { rank: 4 }, { rank: 3 }, { rank: 1 },
-            { rank: 5 }, { rank: 3 }, { rank: 4 }
-          ]
-        }
       }
     ]);
   }, []);
@@ -112,7 +96,7 @@ export default function CopilotPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          profile_id: 'profile_123',
+          profile_id: activeProfile?.id || 'profile_123',
           message: query
         })
       });
@@ -133,36 +117,17 @@ export default function CopilotPage() {
       } else {
         throw new Error('Chat API returned error status');
       }
-    } catch {
-      // Fallback behavior if API is unreachable
-      if (query.toLowerCase().includes('competitor')) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `msg-${Date.now() + 1}`,
-            sender: 'assistant',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            text: "🔍 **Competitor Analysis Report:**\n\n- **Green Bakery** has increased review velocity (+6 reviews this week).\n- **Central Cafe** extended their operating hours to 10 PM.\n\nRecommended Action: Reply to pending customer reviews to boost response rate to 100%. Here is a draft response for your latest 5-star review:",
-            widget: 'REPLY_PREVIEW',
-            widgetData: {
-              customer: 'Emily Watson',
-              rating: 5,
-              reviewText: 'Best sourdough sandwich in the neighborhood! Friendly staff and quick service.',
-              aiResponse: 'Thank you Emily! We love serving the best sourdough sandwiches on Broadway. See you again soon!'
-            }
-          }
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `msg-${Date.now() + 1}`,
-            sender: 'assistant',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            text: `I have processed your request for: "${query}". I am analyzing local competitor signals and updating your optimization queue.`,
-          }
-        ]);
-      }
+    } catch (err) {
+      console.error("Copilot AI error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: "⚠️ I encountered a network error while connecting to the GenAI engine. Please ensure the backend is running and NEXT_PUBLIC_API_URL is correctly set.",
+        }
+      ]);
     } finally {
       setIsTyping(false);
     }

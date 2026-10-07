@@ -30,24 +30,28 @@ export default function DashboardPage() {
   const [healthScore, setHealthScore] = useState(86);
   const [allApproved, setAllApproved] = useState(false);
 
-  const [activeProfile, setActiveProfile] = useState<{name: string, address: string, city?: string, snapshot_url?: string} | null>(null);
+  const [activeProfile, setActiveProfile] = useState<{id?: string, name: string, address: string, city?: string, snapshot_url?: string} | null>(null);
 
   useEffect(() => {
+    let currentProfileId = 'profile_123';
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('gbpilot_active_profile');
       if (stored) {
         try {
-          setActiveProfile(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          setActiveProfile(parsed);
+          if (parsed.id) currentProfileId = parsed.id;
         } catch (e) {
           console.error(e);
         }
       }
     }
+    
     // Fetch proactive recommendations from FastAPI backend
     const fetchRecommendations = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-        const response = await fetch(`${baseUrl}/api/v1/recommendations/profile_123`);
+        const response = await fetch(`${baseUrl}/api/v1/recommendations/${currentProfileId}`);
         
         if (response.ok) {
           const data = await response.json();
@@ -80,7 +84,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           recommendation_id: id,
           action_type: targetRec?.category || '1CLICK_OPTIMIZATION',
-          profile_id: 'profile_123'
+          profile_id: activeProfile?.id || 'profile_123'
         })
       });
     } catch (e) {

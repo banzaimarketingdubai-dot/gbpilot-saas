@@ -43,6 +43,7 @@ export default function OnboardingPage() {
     website_url: string;
     services: string[];
     keywords: string[];
+    id?: string;
   } | null>(null);
   const [interviewStep, setInterviewStep] = useState(0);
   const [interviewAnswers, setInterviewAnswers] = useState({
@@ -109,28 +110,16 @@ export default function OnboardingPage() {
           snapshot_url: profile.snapshot_url || `https://image.thum.io/get/width/800/crop/600/${formattedUrl}`,
           website_url: formattedUrl,
           services: profile.services && profile.services.length > 0 ? profile.services : ['Primary Service', 'Client Support'],
-          keywords: profile.keywords && profile.keywords.length > 0 ? profile.keywords : ['local business', 'top provider']
+          keywords: profile.keywords && profile.keywords.length > 0 ? profile.keywords : ['local business', 'top provider'],
+          id: profile.id
         });
       } else {
         throw new Error('API request failed');
       }
     } catch (err) {
       console.error("Website scrape error:", err);
-      const cleanDomain = formattedUrl.replace(/^https?:\/\//, '').split('/')[0].replace('www.', '');
-      const brandName = cleanDomain.split('.')[0].replace(/[-_]/g, ' ').toUpperCase();
-      setScrapedData({
-        name: brandName,
-        address: 'Extracted from domain lookup',
-        phone: 'Contact via website',
-        email: `info@${cleanDomain}`,
-        category: 'Local Business & Services',
-        niche: 'Digital Service & Commerce',
-        summary: `${brandName} is a verified business offering professional services online at ${cleanDomain}.`,
-        snapshot_url: `https://image.thum.io/get/width/800/crop/600/${formattedUrl}`,
-        website_url: formattedUrl,
-        services: [`${brandName} Core Service`, 'Custom Orders', 'Client Consultation'],
-        keywords: [brandName.toLowerCase(), 'local business', 'top service']
-      });
+      alert("Failed to scrape website. Please ensure the backend is running and the URL is accessible.");
+      setScrapedData(null);
     } finally {
       setIsScraping(false);
     }
@@ -172,23 +161,10 @@ export default function OnboardingPage() {
       } else {
         throw new Error('API failed');
       }
-    } catch {
-      setScanResult({
-        name: searchQuery,
-        address: 'Central District',
-        score: 64,
-        issues: [
-          'Missing Secondary Category Specialty',
-          '3 Negative Reviews without AI owner responses',
-          'Profile Guard disabled (unauthorized edits risk)',
-          'No Google Posts published in past 14 days'
-        ],
-        grid: [
-          { pos: 1, rank: 2 }, { pos: 2, rank: 3 }, { pos: 3, rank: 7 },
-          { pos: 4, rank: 1 }, { pos: 5, rank: 4 }, { pos: 6, rank: 11 },
-          { pos: 7, rank: 8 }, { pos: 8, rank: 14 }, { pos: 9, rank: 18 }
-        ]
-      });
+    } catch (err) {
+      console.error("Scan error:", err);
+      alert("Failed to scan business. Please check backend connection.");
+      setScanResult(null);
     } finally {
       setIsScanning(false);
     }
@@ -557,6 +533,7 @@ export default function OnboardingPage() {
                         onClick={() => {
                           if (typeof window !== 'undefined') {
                             localStorage.setItem('gbpilot_active_profile', JSON.stringify({
+                              id: scrapedData.id,
                               name: scrapedData.name,
                               address: scrapedData.address,
                               city: scrapedData.address.split(',').pop()?.trim() || 'Local City',

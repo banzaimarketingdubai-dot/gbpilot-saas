@@ -29,11 +29,29 @@ export default function ReviewsPostsPage() {
   const [repliedId, setRepliedId] = useState<string | null>(null);
 
   // Tab 2 QR NFC state
-  const [posterTitle, setPosterTitle] = useState('Love our Sourdough & Espresso?');
-  const [posterSubtitle, setPosterSubtitle] = useState('Scan to leave a 5-star Google review & get 10% off your next coffee!');
+  const [activeProfile, setActiveProfile] = useState<{name: string} | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gbpilot_active_profile');
+      if (stored) {
+        try {
+          setActiveProfile(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
+  const businessName = activeProfile?.name || 'Your Local Business';
+
+  // Tab 2 QR NFC state
+  const [posterTitle, setPosterTitle] = useState('Love our Service?');
+  const [posterSubtitle, setPosterSubtitle] = useState('Scan to leave a 5-star Google review & get 10% off your next visit!');
 
   // Tab 3 Posts state
-  const [postDraftText, setPostDraftText] = useState('Enjoy fresh organic sourdough baked every morning at 6 AM on Broadway NYC! Stop by Manhattan Bakery today.');
+  const [postDraftText, setPostDraftText] = useState(`Enjoy fresh products baked every morning at 6 AM on Broadway NYC! Stop by ${businessName} today.`);
   const [isPostPublished, setIsPostPublished] = useState(false);
 
   const reviews = [
@@ -63,9 +81,9 @@ export default function ReviewsPostsPage() {
       rating: 2,
       date: '3 days ago',
       text: 'Waited 15 minutes for my iced latte during peak morning rush.',
-      aiSuggestedReply: 'Hi Alex, we apologize for the wait during morning peak hours. We are adding an extra barista station to ensure faster service on Broadway. Please contact manager@manhattanbakery.com so we can make it right!',
+      aiSuggestedReply: `Hi Alex, we apologize for the wait during morning peak hours. We are adding an extra barista station to ensure faster service on Broadway. Please contact manager@${businessName.replace(/\s+/g, '').toLowerCase()}.com so we can make it right!`,
       status: 'UNREPLIED',
-      lsi: ['morning peak hours', 'manhattan bakery']
+      lsi: ['morning peak hours', 'local business']
     }
   ];
 

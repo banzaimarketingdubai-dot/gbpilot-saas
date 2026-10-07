@@ -19,7 +19,7 @@ import {
 
 const MOCK_COMPETITORS: CompetitorComparison[] = [
   {
-    name: 'Manhattan Bakery & Cafe',
+    name: 'Your Business',
     rating: 4.9,
     reviewsCount: 148,
     reviewVelocityPerWeek: 5,
