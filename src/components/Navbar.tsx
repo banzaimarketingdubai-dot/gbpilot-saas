@@ -65,7 +65,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           setAvailableProfiles(prev => {
             const exists = prev.find(p => p.name === parsed.name);
             if (!exists) {
-              return [{ name: parsed.name, city: parsed.city || parsed.address || 'Scraped Location' }, ...prev];
+              return [{ 
+                name: parsed.name, 
+                address: parsed.address || 'Unknown Address',
+                city: parsed.city || parsed.address || 'Scraped Location',
+                autopilotMode: parsed.autopilotMode || 'MANUAL_APPROVAL'
+              }, ...prev];
             }
             return prev;
           });
