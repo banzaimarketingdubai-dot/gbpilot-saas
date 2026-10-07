@@ -174,6 +174,43 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.delete("/api/v1/profiles/{profile_id}", tags=["Onboarding"])
+async def delete_profile_endpoint(profile_id: str, db: Session = Depends(get_db)):
+    """
+    Delete a business profile from the database.
+    """
+    try:
+        profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == profile_id).first()
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        db.delete(profile)
+        db.commit()
+        return {"status": "success", "message": f"Profile {profile_id} deleted."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ========================================================
+# GOOGLE OAUTH SKELETON
+# ========================================================
+@app.get("/api/v1/auth/google/login", tags=["Auth"])
+async def google_login():
+    """
+    Initiate Google OAuth 2.0 flow for My Business API.
+    """
+    # TODO: Redirect to Google's OAuth 2.0 authorization URL with client_id and scopes.
+    return {"status": "pending", "message": "Google OAuth flow will be implemented here.", "auth_url": "https://accounts.google.com/o/oauth2/v2/auth?..."}
+
+@app.get("/api/v1/auth/google/callback", tags=["Auth"])
+async def google_callback(code: str = None, error: str = None):
+    """
+    Handle OAuth callback, exchange code for tokens, fetch managed locations, and auto-sync profiles.
+    """
+    if error:
+        return {"status": "error", "message": f"OAuth failed: {error}"}
+    # TODO: Exchange code for token, call Google My Business API, and auto-create GBPProfiles in DB.
+    return {"status": "success", "message": "Google accounts synced (skeleton)."}
+
 @app.post("/api/v1/recommendations/generate", response_model=TriggerGenerationResponse, tags=["Proactive Engine"])
 async def trigger_recommendation_generation(request: TriggerGenerationRequest):
     """

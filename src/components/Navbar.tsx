@@ -17,12 +17,15 @@ import {
   Menu,
   X,
   Plus,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react';
 
 interface BusinessProfile {
+  id?: string;
   name: string;
   address: string;
+  city?: string;
   autopilotMode: string;
 }
 
@@ -45,11 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [activeProfile, setActiveProfile] = useState<BusinessProfile>(initialProfile || defaultProfile);
   const [selectedProfile, setSelectedProfile] = useState<string>(activeProfile.name);
 
-  const [availableProfiles, setAvailableProfiles] = useState([
-    { name: 'Manhattan Bakery & Cafe', city: 'New York, NY' },
-    { name: 'Downtown Coffee Hub', city: 'Brooklyn, NY' },
-    { name: 'Austin Sourdough Lab', city: 'Austin, TX' }
-  ]);
+  const [availableProfiles, setAvailableProfiles] = useState<BusinessProfile[]>([]);
 
   useEffect(() => {
     // Load active profile from local storage if available
@@ -75,6 +74,26 @@ export const Navbar: React.FC<NavbarProps> = ({
       }
     }
   }, []);
+
+  const handleDeleteProfile = async (profileId?: string) => {
+    if (!profileId) {
+      alert("No active profile to delete (mock mode).");
+      localStorage.removeItem('gbpilot_active_profile');
+      window.location.href = '/onboarding';
+      return;
+    }
+    
+    if (confirm("Are you sure you want to completely delete this profile from GBPilot?")) {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        await fetch(`${baseUrl}/api/v1/profiles/${profileId}`, { method: 'DELETE' });
+      } catch (e) {
+        console.error("Failed to delete from DB", e);
+      }
+      localStorage.removeItem('gbpilot_active_profile');
+      window.location.href = '/onboarding';
+    }
+  };
 
   const navItems = [
     { id: 'nav-action-hub', label: 'Action Hub', href: '/dashboard', icon: Zap },
@@ -144,19 +163,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Active Business Location
                 </div>
                 {availableProfiles.map((p, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setSelectedProfile(p.name);
-                      setIsLocationOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium mt-1 ${
-                      selectedProfile === p.name ? 'bg-google-blue-light text-google-blue font-bold' : 'text-google-text-primary hover:bg-google-bg'
-                    }`}
-                  >
-                    <span>{p.name}</span>
-                    <span className="text-[10px] text-google-text-tertiary">{p.city}</span>
-                  </button>
+                  <div key={idx} className="flex items-center justify-between mt-1 rounded-lg hover:bg-google-bg transition-colors group pr-1">
+                    <button
+                      onClick={() => {
+                        setSelectedProfile(p.name);
+                        setIsLocationOpen(false);
+                      }}
+                      className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
+                        selectedProfile === p.name ? 'text-google-blue font-bold' : 'text-google-text-primary'
+                      }`}
+                    >
+                      <span className="truncate max-w-[150px]">{p.name}</span>
+                      <span className="text-[10px] text-google-text-tertiary">{p.city}</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteProfile(p.id)}
+                      className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete Workspace"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))}
                 <Link
                   href="/onboarding"
