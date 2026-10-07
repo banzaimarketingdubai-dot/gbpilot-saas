@@ -316,8 +316,89 @@ export default function B2BLandingPage() {
           </div>
 
         </div>
-      </section>
+      {/* ======================================================== */}
+      {/* UNFAIR ADVANTAGE & APP FEATURES (BENTO GRID) */}
+      {/* ======================================================== */}
+      <section className="py-16 bg-white border-b border-google-border">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <span className="text-xs font-bold text-google-green bg-google-green-light px-3 py-1 rounded-full uppercase tracking-wider">
+              The Unfair Advantage
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-google-text-primary">
+              Not Just Analytics. Autonomous Execution.
+            </h2>
+            <p className="text-sm text-google-text-secondary leading-relaxed">
+              Standard SEO tools just show you complicated dashboards and leave the hard work to you. GBPilot takes autonomous action to rank your business in the Maps Pack and AI Search Engines, keeping you in complete control with 1-Click approvals.
+            </p>
+          </div>
 
+          <div className="grid md:grid-cols-2 gap-6">
+            
+            {/* Feature 1: AI Search Visibility */}
+            <div className="material-card bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 sm:p-8 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-6 opacity-20">
+                <Sparkles className="w-32 h-32 text-purple-400" />
+              </div>
+              <div className="relative z-10 space-y-4">
+                <div className="p-2 bg-white/10 rounded-xl inline-block backdrop-blur-md">
+                  <Bot className="w-6 h-6 text-purple-300" />
+                </div>
+                <h3 className="text-xl font-bold">AI Engine Optimization (LLM SOV)</h3>
+                <p className="text-sm text-slate-300">
+                  Customers are moving to ChatGPT and Perplexity for local recommendations. GBPilot optimizes your profile data so AI engines cite you first as the top local authority.
+                </p>
+                <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/10">
+                  <span className="text-xs text-purple-300 font-bold mb-2 block">ChatGPT Query:</span>
+                  <p className="text-sm italic">"What's the best bakery near me?"</p>
+                  <div className="mt-3 bg-white/10 p-3 rounded-lg flex gap-3 items-center">
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="text-xs">Based on local sentiment and Google ratings, you should visit <strong>Your Business</strong>.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 2: Maps UI & Geo-Grid */}
+            <div className="material-card bg-google-bg p-6 sm:p-8 border border-google-border overflow-hidden relative">
+              <div className="relative z-10 space-y-4">
+                <div className="p-2 bg-google-blue-light rounded-xl inline-block">
+                  <MapPin className="w-6 h-6 text-google-blue" />
+                </div>
+                <h3 className="text-xl font-bold text-google-text-primary">3x3 Spatial Geo-Grid</h3>
+                <p className="text-sm text-google-text-secondary">
+                  Track your exact Google Maps ranking across every street in your city. Don't rely on average metrics—see exactly where competitors are beating you and where you dominate.
+                </p>
+                
+                {/* Realistic Google Maps Mockup */}
+                <div className="mt-4 aspect-video rounded-xl overflow-hidden relative shadow-md group">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                    style={{ backgroundImage: 'url(/images/real_google_maps.jpg)' }}
+                  />
+                  {/* Subtle dark overlay to make pins pop */}
+                  <div className="absolute inset-0 bg-black/20" />
+                  
+                  {/* Grid Pins */}
+                  <div className="absolute inset-0 flex items-center justify-center p-4">
+                    <div className="grid grid-cols-3 gap-3 w-full h-full max-w-[240px] max-h-[240px]">
+                      {[3, 2, 3, 2, 1, 4, 3, 2, 3].map((rank, i) => (
+                        <div key={i} className={`flex items-center justify-center rounded-full font-bold text-white text-sm shadow-[0_4px_12px_rgba(0,0,0,0.5)] border-2 border-white backdrop-blur-sm transition-transform hover:scale-110 ${
+                          rank === 1 ? 'bg-google-green z-10 scale-125 ring-4 ring-google-green/30' : 'bg-google-yellow'
+                        }`}>
+                          #{rank}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
       {/* ======================================================== */}
       {/* STORYBRAND HERO'S JOURNEY: PROBLEM -> EMPATHY -> GUIDE */}
       {/* ======================================================== */}
