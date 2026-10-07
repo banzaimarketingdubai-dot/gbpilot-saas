@@ -43,6 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   
   const defaultProfile = { name: 'Manhattan Bakery & Cafe', address: '540 Broadway, New York, NY', autopilotMode: 'MANUAL_APPROVAL' };
   const [activeProfile, setActiveProfile] = useState<BusinessProfile>(initialProfile || defaultProfile);
@@ -75,24 +76,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   }, []);
 
-  const handleDeleteProfile = async (profileId?: string) => {
-    if (!profileId) {
-      alert("No active profile to delete (mock mode).");
-      localStorage.removeItem('gbpilot_active_profile');
-      window.location.href = '/onboarding';
-      return;
+  const confirmDelete = async () => {
+    if (!profileToDelete) return;
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      await fetch(`${baseUrl}/api/v1/profiles/${profileToDelete}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error("Failed to delete from DB", e);
     }
-    
-    if (confirm("Are you sure you want to completely delete this profile from GBPilot?")) {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-        await fetch(`${baseUrl}/api/v1/profiles/${profileId}`, { method: 'DELETE' });
-      } catch (e) {
-        console.error("Failed to delete from DB", e);
-      }
-      localStorage.removeItem('gbpilot_active_profile');
-      window.location.href = '/onboarding';
-    }
+    localStorage.removeItem('gbpilot_active_profile');
+    window.location.href = '/onboarding';
   };
 
   const navItems = [
@@ -177,7 +170,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <span className="text-[10px] text-google-text-tertiary">{p.city}</span>
                     </button>
                     <button 
-                      onClick={() => handleDeleteProfile(p.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!p.id) {
+                          alert("No ID to delete");
+                          return;
+                        }
+                        setProfileToDelete(p.id);
+                        setIsLocationOpen(false);
+                      }}
                       className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Delete Workspace"
                     >
@@ -326,6 +327,37 @@ export const Navbar: React.FC<NavbarProps> = ({
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {profileToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-material-3 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 bg-google-red-light rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-google-red" />
+              </div>
+              <h3 className="text-xl font-bold text-google-text-primary mb-2">Delete Workspace?</h3>
+              <p className="text-sm text-google-text-secondary mb-6">
+                Are you absolutely sure you want to delete this business profile? This action cannot be undone and will permanently erase all AI analysis and geo-grid history.
+              </p>
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={() => setProfileToDelete(null)}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-google-border text-sm font-bold text-google-text-primary hover:bg-google-bg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-google-red hover:bg-google-red-dark text-white text-sm font-bold transition-colors"
+                >
+                  Yes, Delete It
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </header>
