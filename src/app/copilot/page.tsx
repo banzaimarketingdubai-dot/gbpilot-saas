@@ -29,49 +29,55 @@ interface ChatMessage {
 }
 
 export default function CopilotPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'msg-1',
-      sender: 'assistant',
-      timestamp: '10:42 AM',
-      text: "Hello! I am your 24/7 AI Local SEO Manager for **Manhattan Bakery & Cafe**. I have continuously monitored your local competitors and spatial Geo-Grid maps today. How can I boost your search visibility?",
-    },
-    {
-      id: 'msg-2',
-      sender: 'user',
-      timestamp: '10:43 AM',
-      text: "How can I improve my ranking for 'organic sourdough bread' this week?",
-    },
-    {
-      id: 'msg-3',
-      sender: 'assistant',
-      timestamp: '10:43 AM',
-      text: "Based on real-time spatial analysis of your 3x3 Geo-Grid, your average rank for **'organic sourdough bread'** is **#3**. Your main competitor *Green Bakery* currently holds #1 because they posted an update yesterday featuring sourdough photos with geotags.\n\nHere is a live Geo-Grid snapshot and a pre-formatted counter post:",
-      widget: 'RANK_SNAPSHOT',
-      widgetData: {
-        keyword: 'organic sourdough bread',
-        avgRank: '#3',
-        grid: [
-          { rank: 1 }, { rank: 3 }, { rank: 2 },
-          { rank: 4 }, { rank: 3 }, { rank: 1 },
-          { rank: 5 }, { rank: 3 }, { rank: 4 }
-        ]
-      }
-    },
-    {
-      id: 'msg-4',
-      sender: 'assistant',
-      timestamp: '10:44 AM',
-      text: "I have drafted a high-converting Google Post with GEO LSI keywords. You can review and publish it directly below:",
-      widget: 'DRAFT_POST',
-      widgetData: {
-        title: 'Fresh Organic Sourdough Baked Daily at 6 AM! 🥖',
-        body: 'Looking for authentic sourdough in Broadway NYC? Baked fresh daily using 100% organic sourdough starter and local flour. Stop by Manhattan Bakery today!',
-        cta: 'Call Now',
-        lsi: ['organic sourdough', 'broadway bakery', 'artisan bread']
+  const [activeProfile, setActiveProfile] = useState<{name: string, address: string, city?: string} | null>(null);
+  
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  React.useEffect(() => {
+    let profileName = 'Manhattan Bakery & Cafe';
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gbpilot_active_profile');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setActiveProfile(parsed);
+          profileName = parsed.name;
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
-  ]);
+    setMessages([
+      {
+        id: 'msg-1',
+        sender: 'assistant',
+        timestamp: '10:42 AM',
+        text: `Hello! I am your 24/7 AI Local SEO Manager for **${profileName}**. I have continuously monitored your local competitors and spatial Geo-Grid maps today. How can I boost your search visibility?`,
+      },
+      {
+        id: 'msg-2',
+        sender: 'user',
+        timestamp: '10:43 AM',
+        text: "How can I improve my ranking for my primary keyword this week?",
+      },
+      {
+        id: 'msg-3',
+        sender: 'assistant',
+        timestamp: '10:43 AM',
+        text: "Based on real-time spatial analysis of your 3x3 Geo-Grid, your average rank is **#3**. Your main competitor currently holds #1 because they posted an update yesterday featuring photos with geotags.\n\nHere is a live Geo-Grid snapshot and a pre-formatted counter post:",
+        widget: 'RANK_SNAPSHOT',
+        widgetData: {
+          keyword: 'primary keyword',
+          avgRank: '#3',
+          grid: [
+            { rank: 1 }, { rank: 3 }, { rank: 2 },
+            { rank: 4 }, { rank: 3 }, { rank: 1 },
+            { rank: 5 }, { rank: 3 }, { rank: 4 }
+          ]
+        }
+      }
+    ]);
+  }, []);
 
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);

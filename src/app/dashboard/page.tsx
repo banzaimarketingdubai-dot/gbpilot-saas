@@ -19,7 +19,8 @@ import {
   Check, 
   Flame,
   Layers,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -29,7 +30,19 @@ export default function DashboardPage() {
   const [healthScore, setHealthScore] = useState(86);
   const [allApproved, setAllApproved] = useState(false);
 
+  const [activeProfile, setActiveProfile] = useState<{name: string, address: string, city?: string, snapshot_url?: string} | null>(null);
+
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gbpilot_active_profile');
+      if (stored) {
+        try {
+          setActiveProfile(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
     // Fetch proactive recommendations from FastAPI backend
     const fetchRecommendations = async () => {
       try {
@@ -130,25 +143,50 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Top Header: Health Meter + Primary Quick Action */}
+        {/* Top Header: Health Meter + Profile Cover Photo */}
         <div className="material-card p-6 bg-white flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <HealthGauge score={healthScore} size={100} />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-google-text-primary">Business Profile Health</h1>
-                <span className="text-xs font-bold text-google-green bg-google-green-light px-2.5 py-0.5 rounded-full">
-                  TOP 5% IN SECTOR
-                </span>
+          <div className="flex items-center gap-6 w-full">
+            
+            {/* Cover Photo Display */}
+            <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded-2xl overflow-hidden shadow-sm border border-google-border bg-slate-100 flex items-center justify-center relative group">
+              {activeProfile?.snapshot_url ? (
+                <img 
+                  src={activeProfile.snapshot_url} 
+                  alt="Business Cover" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                />
+              ) : (
+                <Building2 className="w-10 h-10 text-slate-300" />
+              )}
+              <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl"></div>
+            </div>
+
+            {/* Health & Profile Details */}
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-2">
+                <HealthGauge score={healthScore} size={64} />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-bold text-google-text-primary tracking-tight">
+                      {activeProfile?.name || 'Business Profile'} Health
+                    </h1>
+                    <span className="text-[10px] font-bold text-google-green bg-google-green-light px-2 py-0.5 rounded-full uppercase">
+                      TOP 5% IN SECTOR
+                    </span>
+                  </div>
+                  <p className="text-xs text-google-text-secondary mt-1">
+                    {pendingCount > 0 
+                      ? `AI identified ${pendingCount} high-impact recommendations to increase local search rank.` 
+                      : 'All proactive actions executed! Your profile is at peak optimization.'}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-google-text-secondary mt-1">
-                {pendingCount > 0 
-                  ? `AI identified ${pendingCount} high-impact recommendations to increase local search rank.` 
-                  : 'All proactive actions executed! Your profile is at peak optimization.'}
-              </p>
-              <div className="flex items-center gap-4 mt-3 text-xs text-google-text-secondary">
-                <span>📍 Geo-Grid Rank: <strong className="text-google-green">#2 Avg</strong></span>
-                <span>⭐ Rating: <strong className="text-google-text-primary">4.9 (148 reviews)</strong></span>
+              
+              <div className="flex items-center gap-4 mt-3 text-xs text-google-text-secondary bg-slate-50 p-2 rounded-lg border border-slate-100 inline-flex">
+                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-google-red" /> Geo-Grid Rank: <strong className="text-google-green">#2 Avg</strong></span>
+                <span className="w-px h-3 bg-slate-300"></span>
+                <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 text-amber-500" /> Rating: <strong className="text-google-text-primary">4.9 (148 reviews)</strong></span>
               </div>
             </div>
           </div>

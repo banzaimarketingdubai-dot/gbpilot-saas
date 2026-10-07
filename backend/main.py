@@ -110,15 +110,11 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
 
         if target_url:
             profile_data = await scrape_website_url(target_url)
-            return ScrapeResponse(
-                status="success",
-                message=f"Successfully scraped website URL {target_url}",
-                profile=profile_data
-            )
-
-        # Standard business name search
-        b_name = request.business_name or "Local Business"
-        profile_data = await scrape_google_business_profile(b_name, request.location)
+            b_name = profile_data.get('business_name', target_url)
+        else:
+            # Standard business name search
+            b_name = request.business_name or "Local Business"
+            profile_data = await scrape_google_business_profile(b_name, request.location)
         
         # Check if default user exists (for MVP)
         default_user = db.query(models.User).first()
@@ -144,8 +140,9 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
             db.refresh(org)
             
         # Save the new GBP Profile
-        point_str = f"POINT({profile_data['longitude']} {profile_data['latitude']})"
-        
+        lon = profile_data.get('longitude', 55.2708)
+        lat = profile_data.get('latitude', 25.2048)
+        point_str = f"POINT({lon} {lat})"
         new_profile = models.GBPProfile(
             organization_id=org.id,
             google_location_id=profile_data['google_location_id'],

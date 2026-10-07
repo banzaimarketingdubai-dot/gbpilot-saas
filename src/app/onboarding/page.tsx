@@ -554,7 +554,18 @@ export default function OnboardingPage() {
                         AI Profile Package Ready to Launch!
                       </div>
                       <button 
-                        onClick={() => router && router.push('/dashboard')}
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('gbpilot_active_profile', JSON.stringify({
+                              name: scrapedData.name,
+                              address: scrapedData.address,
+                              city: scrapedData.address.split(',').pop()?.trim() || 'Local City',
+                              autopilotMode: 'MANUAL_APPROVAL',
+                              snapshot_url: scrapedData.snapshot_url
+                            }));
+                          }
+                          if (router) router.push('/dashboard');
+                        }}
                         className="material-button-primary w-full text-sm"
                       >
                         🚀 Launch New Profile & Go to Action Hub

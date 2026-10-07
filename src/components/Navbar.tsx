@@ -32,21 +32,49 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
-  currentProfile = { name: 'Manhattan Bakery & Cafe', address: '540 Broadway, New York, NY', autopilotMode: 'MANUAL_APPROVAL' }, 
+  currentProfile: initialProfile, 
   onAutopilotToggle 
 }) => {
   const pathname = usePathname();
-  const [autopilotMode, setAutopilotMode] = useState<string>(currentProfile.autopilotMode);
+  const [autopilotMode, setAutopilotMode] = useState<string>('MANUAL_APPROVAL');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<string>(currentProfile.name);
+  
+  const defaultProfile = { name: 'Manhattan Bakery & Cafe', address: '540 Broadway, New York, NY', autopilotMode: 'MANUAL_APPROVAL' };
+  const [activeProfile, setActiveProfile] = useState<BusinessProfile>(initialProfile || defaultProfile);
+  const [selectedProfile, setSelectedProfile] = useState<string>(activeProfile.name);
 
-  const availableProfiles = [
+  const [availableProfiles, setAvailableProfiles] = useState([
     { name: 'Manhattan Bakery & Cafe', city: 'New York, NY' },
     { name: 'Downtown Coffee Hub', city: 'Brooklyn, NY' },
     { name: 'Austin Sourdough Lab', city: 'Austin, TX' }
-  ];
+  ]);
+
+  useEffect(() => {
+    // Load active profile from local storage if available
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gbpilot_active_profile');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setActiveProfile(parsed);
+          setSelectedProfile(parsed.name);
+          setAutopilotMode(parsed.autopilotMode || 'MANUAL_APPROVAL');
+          
+          setAvailableProfiles(prev => {
+            const exists = prev.find(p => p.name === parsed.name);
+            if (!exists) {
+              return [{ name: parsed.name, city: parsed.city || parsed.address || 'Scraped Location' }, ...prev];
+            }
+            return prev;
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
 
   const navItems = [
     { id: 'nav-action-hub', label: 'Action Hub', href: '/dashboard', icon: Zap },
