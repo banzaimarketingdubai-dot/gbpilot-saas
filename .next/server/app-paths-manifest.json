@@ -3,16 +3,16 @@
   "/api/v1/onboarding/sync/route": "app/api/v1/onboarding/sync/route.js",
   "/api/v1/recommendations/execute/route": "app/api/v1/recommendations/execute/route.js",
   "/api/v1/onboarding/scrape/route": "app/api/v1/onboarding/scrape/route.js",
-  "/copilot/page": "app/copilot/page.js",
-  "/audit/[audit_id]/page": "app/audit/[audit_id]/page.js",
   "/api/v1/recommendations/route": "app/api/v1/recommendations/route.js",
-  "/onboarding/page": "app/onboarding/page.js",
-  "/geo-grid/page": "app/geo-grid/page.js",
+  "/audit/[audit_id]/page": "app/audit/[audit_id]/page.js",
   "/b2b/page": "app/b2b/page.js",
+  "/onboarding/page": "app/onboarding/page.js",
+  "/outreach/page": "app/outreach/page.js",
   "/page": "app/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/copilot/page": "app/copilot/page.js",
   "/reviews-posts/page": "app/reviews-posts/page.js",
   "/terms/page": "app/terms/page.js",
-  "/privacy/page": "app/privacy/page.js",
-  "/outreach/page": "app/outreach/page.js"
+  "/geo-grid/page": "app/geo-grid/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
 }

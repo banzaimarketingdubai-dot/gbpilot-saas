@@ -95,7 +95,7 @@ export default function B2BLandingPage() {
   };
 
   // FAQ State
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState(0 as number | null);
 
   const faqs = [
     {
@@ -119,11 +119,9 @@ export default function B2BLandingPage() {
       a: "Most businesses see an immediate rank improvement in their 3x3 Geo-Grid heatmap within 5 to 10 days after executing their first set of 1-Click Next Best Actions."
     }
   ];
-
   return (
-    <div className="min-h-screen bg-google-bg text-google-text-primary flex flex-col font-sans">
+    <main className="min-h-screen bg-google-bg text-google-text-primary flex flex-col font-sans">
       <Navbar />
-
       {/* ======================================================== */}
       {/* HERO SECTION */}
       {/* ======================================================== */}
@@ -316,6 +314,8 @@ export default function B2BLandingPage() {
           </div>
 
         </div>
+      </section>
+
       {/* ======================================================== */}
       {/* UNFAIR ADVANTAGE & APP FEATURES (BENTO GRID) */}
       {/* ======================================================== */}
@@ -835,8 +835,7 @@ export default function B2BLandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <Footer />
-    </div>
+    </main>
   );
 }
