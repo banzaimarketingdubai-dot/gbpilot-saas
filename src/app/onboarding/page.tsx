@@ -65,34 +65,33 @@ export default function OnboardingPage() {
     grid: { pos: number; rank: number }[];
   } | null>(null);
 
+  // Store approximate location to avoid requesting permission
+  const [approxLocation, setApproxLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  useEffect(() => {
+    // Fetch IP-based location silently on mount
+    fetch('https://get.geojs.io/v1/ip/geo.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.latitude && data.longitude) {
+          setApproxLocation({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) });
+        }
+      })
+      .catch(() => {}); // silently ignore if blocked by adblocker
+  }, []);
+
   // Fetch Autocomplete Suggestions
   useEffect(() => {
     if (searchQuery.trim().length < 3) {
       setSuggestions([]);
       return;
     }
-    const delayDebounceFn = setTimeout(async () => {
-      try {
-        let lat = null;
-        let lng = null;
-        // Attempt to grab current geolocation for biasing
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((pos) => {
-             lat = pos.coords.latitude;
-             lng = pos.coords.longitude;
-             fetchSuggestions(searchQuery, lat, lng);
-          }, () => {
-             fetchSuggestions(searchQuery, null, null);
-          });
-        } else {
-          fetchSuggestions(searchQuery, null, null);
-        }
-      } catch (e) {
-        // ignore error
-      }
+    const delayDebounceFn = setTimeout(() => {
+      fetchSuggestions(searchQuery, approxLocation?.lat || null, approxLocation?.lng || null);
     }, 500);
+    
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  }, [searchQuery, approxLocation]);
 
   const fetchSuggestions = async (q: string, lat: any, lng: any) => {
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://gbpilot-saas-production.up.railway.app';
