@@ -102,7 +102,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
         url = 'https://places.googleapis.com/v1/places:searchText'
         headers = {
             'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount',
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount',
             'Content-Type': 'application/json'
         }
         data = {'textQuery': query}
@@ -112,6 +112,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
             if results:
                 place = results[0]
                 return {
+                    "place_id": place.get("id"),
                     "business_name": place.get("displayName", {}).get("text"),
                     "address": place.get("formattedAddress"),
                     "rating": place.get("rating"),

@@ -75,28 +75,28 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
     rating = 4.5
     reviews_count = 120
 
-    # 1. Try Google Places API if key exists
-    places_key = os.environ.get("GOOGLE_PLACES_API_KEY") or os.environ.get("GOOGLE_MAPS_API_KEY")
-    if places_key:
-        try:
-            url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={requests.utils.quote(business_name)}&key={places_key}"
-            res = await asyncio.to_thread(requests.get, url, timeout=5)
-            if res.ok:
-                data = res.json()
-                if data.get("results"):
-                    place = data["results"][0]
-                    address = place.get("formatted_address", address)
-                    lat = place.get("geometry", {}).get("location", {}).get("lat", lat)
-                    lng = place.get("geometry", {}).get("location", {}).get("lng", lng)
-                    rating = place.get("rating", rating)
-                    reviews_count = place.get("user_ratings_total", reviews_count)
-                    if place.get("types"):
-                        category = place["types"][0].replace("_", " ").title()
-        except Exception as e:
-            print(f"[Scraper] Google Places API lookup failed: {e}")
+    # 1. Try Google Places API (New) using our service
+    from google_service import get_public_place_details
+    real_place_id = f"ChIJ{uuid.uuid4().hex[:16]}"
+    
+    place_details = get_public_place_details(business_name + " " + (location or ""))
+    if place_details:
+        address = place_details.get("address", address)
+        lat = place_details.get("lat", lat)
+        lng = place_details.get("lng", lng)
+        rating = place_details.get("rating", rating)
+        reviews_count = place_details.get("reviews_count", reviews_count)
+        
+        # We don't have place_id in the New API get_public_place_details right now,
+        # but we can assume we extracted it if we update get_public_place_details.
+        # For now, we'll keep the uuid fallback if missing.
+        real_place_id = place_details.get("place_id", real_place_id)
+        
+        # Override name with official Google name
+        business_name = place_details.get("business_name", business_name)
 
     # 2. Fallback: OpenStreetMap Nominatim for real GEO location lookup if Places API key not present
-    if not places_key:
+    elif not os.environ.get("GOOGLE_PLACES_API_KEY"):
         try:
             search_query = f"{business_name} {location if location else ''}".strip()
             osm_url = f"https://nominatim.openstreetmap.org/search?q={requests.utils.quote(search_query)}&format=json&limit=1"
@@ -143,7 +143,7 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
     health_score = max(40, min(95, 100 - len(issues) * 9 - random.randint(1, 10)))
 
     return {
-        "google_location_id": f"ChIJ{uuid.uuid4().hex[:16]}",
+        "google_location_id": real_place_id,
         "business_name": business_name,
         "primary_category": category,
         "address_line": address,
