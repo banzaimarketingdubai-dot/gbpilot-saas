@@ -96,6 +96,15 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
         return RedirectResponse(url=f"{frontend_url}/dashboard?auth=error&detail={str(e)}")
 
+@app.get("/api/v1/onboarding/autocomplete", tags=["Onboarding"])
+async def autocomplete_endpoint(query: str, lat: float = None, lng: float = None):
+    """
+    Get location-biased business name suggestions from Google Places API (New).
+    """
+    from google_service import autocomplete_places
+    suggestions = autocomplete_places(query, lat, lng)
+    return {"status": "success", "suggestions": suggestions}
+
 @app.post("/api/v1/onboarding/scrape", response_model=ScrapeResponse, tags=["Onboarding"])
 async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends(get_db)):
     """

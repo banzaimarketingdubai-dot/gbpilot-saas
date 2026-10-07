@@ -165,6 +165,50 @@ def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_mete
         print(f"[GoogleService] GeoGrid API lookup failed: {e}")
     return []
 
+def autocomplete_places(query: str, lat: Optional[float] = None, lng: Optional[float] = None) -> List[Dict[str, str]]:
+    """
+    Fetches autocomplete suggestions for a business name using Google Places API (New).
+    Optionally biased to a lat/lng.
+    """
+    if not GOOGLE_PLACES_API_KEY or not query:
+        return []
+        
+    try:
+        url = 'https://places.googleapis.com/v1/places:autocomplete'
+        headers = {
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        data = {'input': query}
+        if lat is not None and lng is not None:
+            data['locationBias'] = {
+                'circle': {
+                    'center': {'latitude': lat, 'longitude': lng},
+                    'radius': 50000.0 # 50km radius bias
+                }
+            }
+            
+        res = requests.post(url, headers=headers, json=data, timeout=3)
+        if res.ok:
+            suggestions = res.json().get("suggestions", [])
+            results = []
+            for s in suggestions:
+                pred = s.get("placePrediction", {})
+                if pred:
+                    main_text = pred.get("structuredFormat", {}).get("mainText", {}).get("text", "")
+                    sec_text = pred.get("structuredFormat", {}).get("secondaryText", {}).get("text", "")
+                    full_text = f"{main_text}, {sec_text}" if sec_text else main_text
+                    
+                    results.append({
+                        "place_id": pred.get("placeId"),
+                        "description": full_text,
+                        "main_text": main_text
+                    })
+            return results
+    except Exception as e:
+        print(f"[GoogleService] Autocomplete API failed: {e}")
+    return []
+
 def fetch_google_reviews(access_token: str, location_name: str) -> List[Dict[str, Any]]:
     """
     Fetches real Google reviews for a specific location using GMB API.

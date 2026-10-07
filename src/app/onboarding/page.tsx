@@ -54,6 +54,8 @@ export default function OnboardingPage() {
 
   // Path B state
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{
     name: string;
@@ -62,6 +64,52 @@ export default function OnboardingPage() {
     issues: string[];
     grid: { pos: number; rank: number }[];
   } | null>(null);
+
+  // Fetch Autocomplete Suggestions
+  useEffect(() => {
+    if (searchQuery.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        let lat = null;
+        let lng = null;
+        // Attempt to grab current geolocation for biasing
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+             lat = pos.coords.latitude;
+             lng = pos.coords.longitude;
+             fetchSuggestions(searchQuery, lat, lng);
+          }, () => {
+             fetchSuggestions(searchQuery, null, null);
+          });
+        } else {
+          fetchSuggestions(searchQuery, null, null);
+        }
+      } catch (e) {
+        // ignore error
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const fetchSuggestions = async (q: string, lat: any, lng: any) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://gbpilot-saas-production.up.railway.app';
+    let url = `${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(q)}`;
+    if (lat && lng) url += `&lat=${lat}&lng=${lng}`;
+    
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+        setShowSuggestions(true);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  };
   const [showSmartFixModal, setShowSmartFixModal] = useState(false);
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const [isFixApplied, setIsFixApplied] = useState(false);
@@ -590,14 +638,37 @@ export default function OnboardingPage() {
                       required
                       placeholder="Enter business name (e.g. Manhattan Bakery & Cafe)"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                       className="material-input text-sm pl-11 py-3"
                     />
+                    
+                    {/* Autocomplete Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                        {suggestions.map((s, idx) => (
+                          <div 
+                            key={idx}
+                            onClick={() => {
+                              setSearchQuery(s.description);
+                              setShowSuggestions(false);
+                            }}
+                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                          >
+                            <div className="font-semibold text-sm text-google-text-primary">{s.main_text}</div>
+                            <div className="text-xs text-google-text-secondary truncate">{s.description}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <button 
                     type="submit"
                     disabled={isScanning}
-                    className="material-button-primary w-full text-sm py-3"
+                    className="material-button-primary w-full text-sm py-3 relative z-40"
                   >
                     {isScanning ? (
                       <>
