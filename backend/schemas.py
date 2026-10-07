@@ -72,3 +72,19 @@ class ScrapeResponse(BaseModel):
     message: str
     profile: Optional[Dict[str, Any]] = None
 
+class GeoGridScanRequest(BaseModel):
+    profile_id: str
+    keyword: str
+    grid_size: int = 3
+    distance_meters: float = 500.0
+
+class GeoGridNode(BaseModel):
+    pos: int
+    rank: int
+    lat: float
+    lng: float
+
+class GeoGridScanResponse(BaseModel):
+    status: str
+    grid: List[GeoGridNode]
+    message: str = ""

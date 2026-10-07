@@ -56,20 +56,56 @@ export default function GeoGridPage() {
   const [gridSize, setGridSize] = useState<'3x3' | '5x5' | '7x7'>('3x3');
   const [timelineIndex, setTimelineIndex] = useState(3); // Today
 
-  const dates = ['Sep 15', 'Sep 22', 'Sep 29', 'Today (Oct 6)'];
+  // State for grid ranks
+  const [isScanning, setIsScanning] = useState(false);
+  const [gridRanks, setGridRanks] = useState([
+    { pos: 1, rank: 0, competitor: 'No Data' },
+    { pos: 2, rank: 0, competitor: 'No Data' },
+    { pos: 3, rank: 0, competitor: 'No Data' },
+    { pos: 4, rank: 0, competitor: 'No Data' },
+    { pos: 5, rank: 0, competitor: 'No Data' },
+    { pos: 6, rank: 0, competitor: 'No Data' },
+    { pos: 7, rank: 0, competitor: 'No Data' },
+    { pos: 8, rank: 0, competitor: 'No Data' },
+    { pos: 9, rank: 0, competitor: 'No Data' },
+  ]);
 
-  // Simulated grid rank matrices
-  const gridRanks = [
-    { pos: 1, rank: 1, competitor: 'You' },
-    { pos: 2, rank: 2, competitor: 'You' },
-    { pos: 3, rank: 3, competitor: 'You' },
-    { pos: 4, rank: 2, competitor: 'You' },
-    { pos: 5, rank: 1, competitor: 'You' },
-    { pos: 6, rank: 4, competitor: 'Green Bakery' },
-    { pos: 7, rank: 3, competitor: 'You' },
-    { pos: 8, rank: 5, competitor: 'Green Bakery' },
-    { pos: 9, rank: 7, competitor: 'Central Cafe' },
-  ];
+  const handleScan = async () => {
+    setIsScanning(true);
+    try {
+      const stored = localStorage.getItem('gbpilot_active_profile');
+      let profileId = "123";
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.id) profileId = parsed.id;
+      }
+      
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const res = await fetch(`${baseUrl}/api/v1/geo-grid/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile_id: profileId, keyword: selectedKeyword, grid_size: 3, distance_meters: 500.0 })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        // data.grid: [{pos: 1, rank: 1, lat: X, lng: Y}, ...]
+        const newRanks = data.grid.map((g: any) => ({
+          pos: g.pos,
+          rank: g.rank,
+          competitor: g.rank === 1 ? 'You' : (g.rank > 20 ? 'Not Found' : 'Competitor')
+        }));
+        setGridRanks(newRanks);
+      } else {
+        alert("Scan failed. Ensure API keys are active.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error contacting scan endpoint.");
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-google-bg flex flex-col">
@@ -128,8 +164,9 @@ export default function GeoGridPage() {
                 <select
                   value={selectedKeyword}
                   onChange={(e) => setSelectedKeyword(e.target.value)}
-                  className="material-input text-xs py-1.5 px-3 w-56 font-medium"
+                  className="material-input text-xs py-1.5 px-3 w-56 font-medium bg-white"
                 >
+                  <option value="bakery in new york">bakery in new york</option>
                   <option value="organic sourdough bread">organic sourdough bread</option>
                   <option value="artisan espresso bar">artisan espresso bar</option>
                   <option value="best breakfast cafe near me">best breakfast cafe near me</option>
@@ -155,21 +192,25 @@ export default function GeoGridPage() {
                 </div>
               </div>
 
-              {/* Historical Timeline Scrub Slider */}
+              {/* Scan Trigger */}
               <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-google-text-tertiary" />
-                <span className="font-semibold text-google-text-secondary">Timeline:</span>
-                <input 
-                  type="range" 
-                  min={0} 
-                  max={dates.length - 1} 
-                  value={timelineIndex} 
-                  onChange={(e) => setTimelineIndex(Number(e.target.value))}
-                  className="w-28 accent-google-blue"
-                />
-                <span className="font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded text-[11px]">
-                  {dates[timelineIndex]}
-                </span>
+                <button
+                  onClick={handleScan}
+                  disabled={isScanning}
+                  className="material-button-primary text-xs py-2 px-4 font-bold flex items-center gap-2"
+                >
+                  {isScanning ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Scanning API...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="w-3.5 h-3.5" />
+                      Run Live Grid Scan
+                    </>
+                  )}
+                </button>
               </div>
 
             </div>

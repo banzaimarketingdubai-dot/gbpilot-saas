@@ -93,29 +93,73 @@ def fetch_user_managed_locations(access_token: str) -> List[Dict[str, Any]]:
 
 def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
     """
-    Fetches official Google Places API data for ANY public business (even competitors).
+    Fetches official Google Places API (New) data for ANY public business.
     """
     if not GOOGLE_PLACES_API_KEY:
         return None
         
     try:
-        url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={requests.utils.quote(query)}&key={GOOGLE_PLACES_API_KEY}"
-        res = requests.get(url, timeout=5)
+        url = 'https://places.googleapis.com/v1/places:searchText'
+        headers = {
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+            'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount',
+            'Content-Type': 'application/json'
+        }
+        data = {'textQuery': query}
+        res = requests.post(url, headers=headers, json=data, timeout=5)
         if res.ok:
-            data = res.json()
-            results = data.get("results", [])
+            results = res.json().get("places", [])
             if results:
                 place = results[0]
                 return {
-                    "place_id": place.get("place_id"),
-                    "business_name": place.get("name"),
-                    "address": place.get("formatted_address"),
+                    "business_name": place.get("displayName", {}).get("text"),
+                    "address": place.get("formattedAddress"),
                     "rating": place.get("rating"),
-                    "reviews_count": place.get("user_ratings_total"),
-                    "types": place.get("types", []),
-                    "lat": place.get("geometry", {}).get("location", {}).get("lat"),
-                    "lng": place.get("geometry", {}).get("location", {}).get("lng")
+                    "reviews_count": place.get("userRatingCount"),
+                    "lat": place.get("location", {}).get("latitude"),
+                    "lng": place.get("location", {}).get("longitude")
                 }
     except Exception as e:
         print(f"[GoogleService] Public Place API lookup failed: {e}")
     return None
+
+def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_meters: float = 500.0) -> List[Dict[str, Any]]:
+    """
+    Searches for businesses matching the keyword around a specific lat/lng point 
+    using Google Places API (New) LocationBias.
+    """
+    if not GOOGLE_PLACES_API_KEY:
+        return []
+        
+    try:
+        url = 'https://places.googleapis.com/v1/places:searchText'
+        headers = {
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+            'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.rating',
+            'Content-Type': 'application/json'
+        }
+        data = {
+            'textQuery': keyword,
+            'locationBias': {
+                'circle': {
+                    'center': {'latitude': lat, 'longitude': lng},
+                    'radius': radius_meters
+                }
+            }
+        }
+        res = requests.post(url, headers=headers, json=data, timeout=8)
+        if res.ok:
+            places = res.json().get("places", [])
+            results = []
+            for p in places:
+                results.append({
+                    "name": p.get("displayName", {}).get("text"),
+                    "address": p.get("formattedAddress"),
+                    "lat": p.get("location", {}).get("latitude"),
+                    "lng": p.get("location", {}).get("longitude"),
+                    "rating": p.get("rating", 0)
+                })
+            return results
+    except Exception as e:
+        print(f"[GoogleService] GeoGrid API lookup failed: {e}")
+    return []

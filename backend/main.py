@@ -6,7 +6,8 @@ from schemas import (
     TriggerGenerationRequest, TriggerGenerationResponse, 
     ProactiveRecommendationSchema, ScrapeRequest, ScrapeResponse,
     ExecuteActionRequest, ExecuteActionResponse,
-    ChatMessageRequest, ChatMessageResponse
+    ChatMessageRequest, ChatMessageResponse,
+    GeoGridScanRequest, GeoGridScanResponse, GeoGridNode
 )
 from proactive_engine import ProactiveEngine, gemini_client, CASCADE_MODELS
 from scraper import scrape_google_business_profile, scrape_website_url
@@ -191,25 +192,71 @@ async def delete_profile_endpoint(profile_id: str, db: Session = Depends(get_db)
         raise HTTPException(status_code=500, detail=str(e))
 
 # ========================================================
-# GOOGLE OAUTH SKELETON
+# GOOGLE OAUTH IMPLEMENTATION
 # ========================================================
 @app.get("/api/v1/auth/google/login", tags=["Auth"])
 async def google_login():
     """
     Initiate Google OAuth 2.0 flow for My Business API.
     """
-    # TODO: Redirect to Google's OAuth 2.0 authorization URL with client_id and scopes.
-    return {"status": "pending", "message": "Google OAuth flow will be implemented here.", "auth_url": "https://accounts.google.com/o/oauth2/v2/auth?..."}
+    auth_url = get_google_auth_url()
+    return {"status": "success", "auth_url": auth_url}
 
 @app.get("/api/v1/auth/google/callback", tags=["Auth"])
-async def google_callback(code: str = None, error: str = None):
+async def google_callback(code: str = None, error: str = None, db: Session = Depends(get_db)):
     """
     Handle OAuth callback, exchange code for tokens, fetch managed locations, and auto-sync profiles.
     """
     if error:
-        return {"status": "error", "message": f"OAuth failed: {error}"}
-    # TODO: Exchange code for token, call Google My Business API, and auto-create GBPProfiles in DB.
-    return {"status": "success", "message": "Google accounts synced (skeleton)."}
+        raise HTTPException(status_code=400, detail=f"OAuth failed: {error}")
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code provided.")
+        
+    try:
+        # 1. Exchange code for tokens
+        token_data = exchange_code_for_tokens(code)
+        access_token = token_data.get("access_token")
+        if not access_token:
+            raise Exception("No access token returned from Google.")
+            
+        # 2. Get User Info
+        user_info = get_google_user_info(access_token)
+        email = user_info.get("email", "unknown@gbpilot.com")
+        
+        # 3. Fetch GBP Locations from Google API
+        locations = fetch_user_managed_locations(access_token)
+        
+        # 4. Auto-Sync: Create or Update in Database
+        synced_profiles = []
+        org = db.query(models.Organization).first() # Fallback for MVP
+        
+        for loc in locations:
+            location_id = loc.get("name")
+            title = loc.get("title", "Unnamed Business")
+            
+            profile = db.query(models.GBPProfile).filter(models.GBPProfile.google_location_id == location_id).first()
+            if not profile:
+                profile = models.GBPProfile(
+                    organization_id=org.id if org else None,
+                    google_location_id=location_id,
+                    business_name=title,
+                    primary_category="Imported via Google",
+                    address_line="Auto-synced from Google Profile",
+                    city="Unknown"
+                )
+                db.add(profile)
+                db.commit()
+                db.refresh(profile)
+            synced_profiles.append({"id": str(profile.id), "name": title})
+            
+        return {
+            "status": "success",
+            "message": f"Successfully authenticated as {email} and synced {len(synced_profiles)} locations.",
+            "synced_profiles": synced_profiles
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"OAuth Processing Error: {str(e)}")
 
 @app.post("/api/v1/recommendations/generate", response_model=TriggerGenerationResponse, tags=["Proactive Engine"])
 async def trigger_recommendation_generation(request: TriggerGenerationRequest):
@@ -288,6 +335,83 @@ async def copilot_chat_endpoint(request: ChatMessageRequest):
         sender="assistant",
         timestamp=datetime.now().strftime("%I:%M %p"),
         text=reply_text
+    )
+
+import asyncio
+import math
+from google_service import search_places_for_geo_grid
+
+@app.post("/api/v1/geo-grid/scan", response_model=GeoGridScanResponse, tags=["Geo-Grid"])
+async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depends(get_db)):
+    """
+    Generate a 3x3 Geo-Grid and scan Google Places API at each point for the given keyword.
+    """
+    profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == request.profile_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Parse WKT POINT
+    point_str = profile.location # e.g. "POINT(-73.98689399999999 40.759524899999995)"
+    try:
+        coords = point_str.replace("POINT(", "").replace(")", "").split()
+        center_lng, center_lat = float(coords[0]), float(coords[1])
+    except:
+        center_lat, center_lng = 40.7595, -73.9868 # fallback
+
+    # Approximate 1 meter in degrees (roughly)
+    lat_offset_per_m = 1 / 111111
+    lng_offset_per_m = 1 / (111111 * math.cos(math.radians(center_lat)))
+    
+    distance = request.distance_meters
+    grid_nodes = []
+    
+    # Generate 3x3 grid (9 points)
+    # 1 2 3
+    # 4 5 6
+    # 7 8 9
+    pos = 1
+    for dy in [distance, 0, -distance]:
+        for dx in [-distance, 0, distance]:
+            grid_lat = center_lat + (dy * lat_offset_per_m)
+            grid_lng = center_lng + (dx * lng_offset_per_m)
+            grid_nodes.append({"pos": pos, "lat": grid_lat, "lng": grid_lng})
+            pos += 1
+            
+    # Perform concurrent searches for all 9 points
+    async def scan_point(node):
+        # We wrap the synchronous requests call in a thread
+        places = await asyncio.to_thread(
+            search_places_for_geo_grid, 
+            request.keyword, 
+            node["lat"], 
+            node["lng"], 
+            distance
+        )
+        
+        # Find our business rank
+        # We match by name broadly
+        rank = 21 # Default if not found (20+ means not ranking well)
+        target_name = profile.business_name.lower().strip()
+        for idx, place in enumerate(places):
+            place_name = place.get("name", "").lower()
+            if target_name in place_name or place_name in target_name:
+                rank = idx + 1
+                break
+                
+        return GeoGridNode(
+            pos=node["pos"],
+            lat=node["lat"],
+            lng=node["lng"],
+            rank=rank
+        )
+
+    tasks = [scan_point(node) for node in grid_nodes]
+    results = await asyncio.gather(*tasks)
+    
+    return GeoGridScanResponse(
+        status="success",
+        grid=results,
+        message=f"Scanned {len(results)} nodes for '{request.keyword}'."
     )
 
 if __name__ == "__main__":
