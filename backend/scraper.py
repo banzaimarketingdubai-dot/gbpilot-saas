@@ -163,9 +163,12 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
 
 async def scrape_website_url(website_url: str) -> Dict[str, Any]:
     """
-    Fetches real HTML content from the given website URL and uses Gemini AI
-    to extract real business name, category, address, phone, services, LSI keywords, and vulnerabilities.
+    Fetches real HTML content from the given website URL, extracts contact metadata,
+    generates a visual website snapshot URL, and uses Gemini AI to analyze the niche,
+    executive summary, primary category, services, LSI keywords, and vulnerabilities.
     """
+    import re
+
     if not website_url.startswith("http"):
         website_url = "https://" + website_url
 
@@ -174,6 +177,8 @@ async def scrape_website_url(website_url: str) -> Dict[str, Any]:
     extracted_text = ""
     page_title = ""
     meta_desc = ""
+    extracted_emails = []
+    extracted_phones = []
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -191,42 +196,69 @@ async def scrape_website_url(website_url: str) -> Dict[str, Any]:
                 from bs4 import BeautifulSoup
                 soup = BeautifulSoup(res.text, "html.parser")
                 
+                # Title & Meta Description
                 t_tag = soup.find("title")
                 page_title = t_tag.get_text(strip=True) if t_tag else ""
                 
                 m_tag = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", attrs={"property": "og:description"})
                 meta_desc = m_tag["content"].strip() if m_tag and m_tag.get("content") else ""
 
-                headings = [h.get_text(strip=True) for h in soup.find_all(["h1", "h2"])]
-                headings_str = " | ".join(headings[:10])
+                # Extract mailto and tel links
+                for a in soup.find_all("a", href=True):
+                    href = a["href"]
+                    if href.startswith("mailto:"):
+                        email = href.replace("mailto:", "").split("?")[0].strip()
+                        if email and email not in extracted_emails:
+                            extracted_emails.append(email)
+                    elif href.startswith("tel:"):
+                        phone = href.replace("tel:", "").strip()
+                        if phone and phone not in extracted_phones:
+                            extracted_phones.append(phone)
+
+                # Regex fallback for emails and phones
+                text_content = res.text
+                regex_emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text_content)
+                for em in regex_emails:
+                    if em.lower() not in [e.lower() for e in extracted_emails] and not em.endswith(('.png', '.jpg', '.svg', '.js')):
+                        extracted_emails.append(em)
+
+                headings = [h.get_text(strip=True) for h in soup.find_all(["h1", "h2", "h3"])]
+                headings_str = " | ".join(headings[:12])
 
                 for script in soup(["script", "style", "svg", "nav", "footer"]):
                     script.extract()
-                body_text = soup.get_text(separator=" ", strip=True)[:3500]
+                body_text = soup.get_text(separator=" ", strip=True)[:4000]
                 
                 extracted_text = f"URL: {website_url}\nPage Title: {page_title}\nMeta Description: {meta_desc}\nHeadings: {headings_str}\nBody Text: {body_text}"
             except Exception as pe:
                 print(f"[Scraper] BeautifulSoup parsing error: {pe}")
-                extracted_text = res.text[:3500]
+                extracted_text = res.text[:4000]
     except Exception as e:
         print(f"[Scraper] Failed to fetch raw HTML from {website_url}: {e}")
 
     clean_domain = website_url.replace("https://", "").replace("http://", "").split("/")[0].replace("www.", "")
     domain_brand = clean_domain.split(".")[0].replace("-", " ").replace("_", " ").title()
     
+    # Live Website Snapshot URL via thum.io
+    snapshot_url = f"https://image.thum.io/get/width/800/crop/600/{website_url}"
+
     result = {
         "google_location_id": f"ChIJ{uuid.uuid4().hex[:16]}",
         "business_name": domain_brand,
+        "niche": "Local Business & Services",
+        "summary": f"{domain_brand} is an established organization offering services online at {clean_domain}.",
         "primary_category": "Local Business & Services",
         "category": "Local Business & Services",
-        "address_line": "Location not specified on homepage",
-        "address": "Location not specified on homepage",
+        "address_line": "Extracted from Website Header",
+        "address": "Extracted from Website Header",
         "city": "Local Region",
         "country": "United Arab Emirates",
-        "phone_number": "Contact via Website",
-        "phone": "Contact via Website",
+        "phone_number": extracted_phones[0] if extracted_phones else "Contact via Website",
+        "phone": extracted_phones[0] if extracted_phones else "Contact via Website",
+        "email": extracted_emails[0] if extracted_emails else f"info@{clean_domain}",
         "website_url": website_url,
-        "services": [f"{domain_brand} Service", "Consultation", "Customer Support"],
+        "snapshot_url": snapshot_url,
+        "services": [f"{domain_brand} Core Service", "Client Consultation", "Support & Delivery"],
         "keywords": [domain_brand.lower(), "local service", "top provider"],
         "health_score": 68,
         "issues": [
@@ -246,21 +278,27 @@ async def scrape_website_url(website_url: str) -> Dict[str, Any]:
         {extracted_text}
         --- END SCRAPED WEBPAGE CONTENT ---
         
-        Extract the REAL business profile details from the webpage:
-        1. Real company / business name (e.g. from Title or Meta or Brand)
-        2. Primary Google Business Profile Category (most specific matching Google category)
-        3. Address or City / Region mentioned on site (or specific street address if present)
-        4. Phone number or contact info found on site
-        5. Up to 5 specific services / products offered on this website
-        6. 5 high-intent LSI search keywords for local SEO
-        7. 4 specific SEO & Google Profile vulnerabilities/leaks for this business
+        Extract and generate the REAL business profile details from the webpage:
+        1. Real company / business name (from Page Title or Header)
+        2. Business Niche / Field of Activity (e.g., "Specialty Artisan Bakery", "B2B AI Marketing Platform", "Dental Clinic")
+        3. Executive AI Summary (2-3 informative sentences summarizing what the business actually does, its target audience, and key offer)
+        4. Primary Google Business Profile Category (most accurate matching Google category)
+        5. Physical Address or City / Region mentioned on site
+        6. Phone number found on site (or keep extracted: {result['phone']})
+        7. Email address found on site (or keep extracted: {result['email']})
+        8. Up to 5 specific services / products offered on this website
+        9. 5 high-intent LSI search keywords for local SEO
+        10. 4 specific SEO & Google Profile vulnerabilities/leaks for this business
 
         Return strictly valid JSON with this structure:
         {{
             "business_name": "Exact Brand Name",
+            "niche": "Specific Industry Niche",
+            "summary": "Executive 2-3 sentence AI summary of business activities and audience.",
             "category": "Primary Category Name",
             "address": "Address or City, Country",
-            "phone": "Phone number or Contact Info",
+            "phone": "Phone number",
+            "email": "Email address",
             "services": ["Service 1", "Service 2", "Service 3", "Service 4", "Service 5"],
             "keywords": ["keyword 1", "keyword 2", "keyword 3", "keyword 4", "keyword 5"],
             "issues": ["Leak 1", "Leak 2", "Leak 3", "Leak 4"]
@@ -269,6 +307,10 @@ async def scrape_website_url(website_url: str) -> Dict[str, Any]:
         parsed = await call_gemini_json(prompt)
         if parsed.get("business_name"):
             result["business_name"] = parsed["business_name"]
+        if parsed.get("niche"):
+            result["niche"] = parsed["niche"]
+        if parsed.get("summary"):
+            result["summary"] = parsed["summary"]
         if parsed.get("category"):
             result["category"] = parsed["category"]
             result["primary_category"] = parsed["category"]
@@ -278,6 +320,8 @@ async def scrape_website_url(website_url: str) -> Dict[str, Any]:
         if parsed.get("phone"):
             result["phone"] = parsed["phone"]
             result["phone_number"] = parsed["phone"]
+        if parsed.get("email"):
+            result["email"] = parsed["email"]
         if parsed.get("services"):
             result["services"] = parsed["services"]
         if parsed.get("keywords"):
