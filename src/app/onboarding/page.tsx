@@ -71,7 +71,13 @@ export default function OnboardingPage() {
   // Handle Path A Scraping
   const handleScrapeWebsite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!websiteUrl) return;
+    if (!websiteUrl || !websiteUrl.trim()) return;
+    
+    let formattedUrl = websiteUrl.trim();
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
     setIsScraping(true);
     
     try {
@@ -79,7 +85,7 @@ export default function OnboardingPage() {
       const response = await fetch(`${backendUrl}/api/v1/onboarding/scrape`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ website_url: websiteUrl }),
+        body: JSON.stringify({ website_url: formattedUrl }),
       });
       
       if (response.ok) {
@@ -98,12 +104,12 @@ export default function OnboardingPage() {
       }
     } catch (err) {
       console.error("Website scrape error:", err);
-      const cleanDomain = websiteUrl.replace(/^https?:\/\//, '').split('/')[0].replace('www.', '');
+      const cleanDomain = formattedUrl.replace(/^https?:\/\//, '').split('/')[0].replace('www.', '');
       const brandName = cleanDomain.split('.')[0].replace(/[-_]/g, ' ').toUpperCase();
       setScrapedData({
         name: brandName,
         address: 'Extracted from domain lookup',
-        phone: 'Contact via ' + websiteUrl,
+        phone: 'Contact via ' + formattedUrl,
         category: 'Local Business & Services',
         services: [`${brandName} Core Service`, 'Custom Orders', 'Client Consultation'],
         keywords: [brandName.toLowerCase(), 'local business', 'top service']
@@ -305,9 +311,10 @@ export default function OnboardingPage() {
                   <div>
                     <label className="block text-xs font-semibold text-google-text-secondary mb-1">Website URL</label>
                     <input 
-                      type="url"
+                      type="text"
+                      inputMode="url"
                       required
-                      placeholder="https://mybakery.com"
+                      placeholder="e.g. virale.uno, google.com, www.mybakery.com"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
                       className="material-input text-sm"

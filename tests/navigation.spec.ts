@@ -137,8 +137,8 @@ test.describe('GBPilot Comprehensive Navigation & Functionality Tests', () => {
       await page.click('h2:has-text("I do NOT have a Google Profile")');
       await expect(page.locator('h2:has-text("Step 1: Enter Business Website")')).toBeVisible();
 
-      // Enter website URL
-      await page.fill('input[type="url"]', 'https://railway.app');
+      // Enter website domain without http/https (e.g. virale.uno)
+      await page.fill('input[inputmode="url"]', 'virale.uno');
       await page.click('button[type="submit"]');
 
       // Expect extracted entity baseline
