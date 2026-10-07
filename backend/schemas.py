@@ -88,3 +88,14 @@ class GeoGridScanResponse(BaseModel):
     status: str
     grid: List[GeoGridNode]
     message: str = ""
+
+class B2BLead(BaseModel):
+    name: str
+    address: str
+    rating: float
+    website: str = ""
+    email: str = ""
+
+class B2BOutreachResponse(BaseModel):
+    status: str
+    leads: List[B2BLead]

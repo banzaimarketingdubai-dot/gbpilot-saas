@@ -163,3 +163,53 @@ def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_mete
     except Exception as e:
         print(f"[GoogleService] GeoGrid API lookup failed: {e}")
     return []
+
+def fetch_google_reviews(access_token: str, location_name: str) -> List[Dict[str, Any]]:
+    """
+    Fetches real Google reviews for a specific location using GMB API.
+    location_name should be formatted like 'accounts/123/locations/456' or 'locations/456'
+    """
+    if not access_token:
+        raise ValueError("No OAuth access token provided")
+        
+    try:
+        url = f"https://mybusiness.googleapis.com/v4/{location_name}/reviews"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        res = requests.get(url, headers=headers, timeout=5)
+        
+        if res.ok:
+            data = res.json()
+            return data.get("reviews", [])
+        else:
+            print(f"[GoogleService] Failed to fetch reviews: {res.text}")
+            return []
+    except Exception as e:
+        print(f"[GoogleService] Exception fetching reviews: {e}")
+        return []
+
+def publish_google_post(access_token: str, location_name: str, post_text: str) -> bool:
+    """
+    Publishes a new 'Local Post' (Offer, Update, or Event) to the Google Business Profile.
+    """
+    if not access_token:
+        raise ValueError("No OAuth access token provided")
+        
+    try:
+        url = f"https://mybusiness.googleapis.com/v4/{location_name}/localPosts"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "languageCode": "en-US",
+            "summary": post_text,
+            "callToAction": {
+                "actionType": "LEARN_MORE",
+                "url": "https://gbpilot.com"
+            }
+        }
+        res = requests.post(url, headers=headers, json=payload, timeout=5)
+        return res.ok
+    except Exception as e:
+        print(f"[GoogleService] Exception publishing post: {e}")
+        return False
