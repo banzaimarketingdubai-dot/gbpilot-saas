@@ -59,19 +59,19 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
         {/* Top Section: Circular Chart + Potential Gains */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Health Score Circular Chart */}
-          <div className="material-card p-8 bg-white flex flex-col items-center justify-center text-center">
+          <div className="material-card p-8 bg-google-red-light/30 border-2 border-google-red/20 flex flex-col items-center justify-center text-center shadow-sm">
             <h3 className="font-bold text-google-text-primary mb-6 text-sm">Overall GBP Health Score</h3>
             <div className="relative w-40 h-40">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
-                  className="text-google-border"
+                  className="text-white drop-shadow-sm"
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="3"
                 />
                 <path
-                  className="text-amber-500 animate-[dash_1.5s_ease-out_forwards]"
+                  className="text-google-red animate-[dash_1.5s_ease-out_forwards]"
                   strokeDasharray={`${healthScore}, 100`}
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
@@ -80,31 +80,31 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-black text-google-text-primary">{healthScore}%</span>
-                <span className="text-[10px] text-google-text-secondary uppercase font-bold tracking-widest mt-1">Critical</span>
+                <span className="text-4xl font-black text-google-red">{healthScore}%</span>
+                <span className="text-[10px] text-google-red uppercase font-bold tracking-widest mt-1">Critical</span>
               </div>
             </div>
-            <p className="text-xs text-google-text-secondary mt-6">Your profile is currently losing up to 35% of high-intent search queries to competitors.</p>
+            <p className="text-xs text-google-text-primary font-medium mt-6">Your profile is currently losing up to 35% of high-intent search queries to competitors.</p>
           </div>
 
           {/* Potential Gains */}
-          <div className="material-card p-8 bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col justify-center">
+          <div className="material-card p-8 bg-google-green-light/30 border-2 border-google-green/30 flex flex-col justify-center shadow-sm">
             <div className="flex items-center gap-2 mb-6">
               <TrendingUp className="w-5 h-5 text-google-green" />
-              <h3 className="font-bold text-lg">Potential Weekly Growth</h3>
+              <h3 className="font-bold text-lg text-google-text-primary">Potential Weekly Growth</h3>
             </div>
             
-            <p className="text-sm text-slate-300 mb-6">
+            <p className="text-sm text-google-text-secondary font-medium mb-6">
               By applying our AI-recommended fixes to your Google Business Profile, our algorithm projects the following growth over the next 7 days:
             </p>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm">
-                <span className="block text-xs text-slate-400 font-semibold mb-1">New Local Clients</span>
+              <div className="bg-white p-4 rounded-xl border border-google-green/20 shadow-sm">
+                <span className="block text-xs text-google-text-secondary font-bold mb-1">New Local Clients</span>
                 <span className="text-3xl font-black text-google-green">{estimatedClientGain}</span>
               </div>
-              <div className="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm">
-                <span className="block text-xs text-slate-400 font-semibold mb-1">Est. Revenue Boost</span>
+              <div className="bg-white p-4 rounded-xl border border-google-green/20 shadow-sm">
+                <span className="block text-xs text-google-text-secondary font-bold mb-1">Est. Revenue Boost</span>
                 <span className="text-3xl font-black text-google-blue">{estimatedRevenueGain}</span>
               </div>
             </div>
