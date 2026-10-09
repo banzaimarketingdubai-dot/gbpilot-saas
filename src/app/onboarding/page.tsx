@@ -26,7 +26,7 @@ import { useRouter } from 'next/navigation';
 
 export default function OnboardingPage() {
   const router = routerNav();
-  const [onboardingMode, setOnboardingMode] = useState<'MODE_A' | 'MODE_B' | null>(null);
+  const [onboardingMode, setOnboardingMode] = useState<'MODE_A' | 'MODE_B' | 'MODE_C' | null>(null);
 
   // Path A state
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -64,6 +64,9 @@ export default function OnboardingPage() {
     issues: string[];
     grid: { pos: number; rank: number }[];
   } | null>(null);
+
+  // Path C state
+  const [mapsLink, setMapsLink] = useState('');
 
   // Store approximate location to avoid requesting permission
   const [approxLocation, setApproxLocation] = useState<{lat: number, lng: number} | null>(null);
@@ -217,6 +220,20 @@ export default function OnboardingPage() {
     }
   };
 
+  // Handle Path C Scan (Agency Maps Link)
+  const handleMapsScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mapsLink) return;
+    setIsScanning(true);
+    
+    // In a real scenario, this would send the URL to backend.
+    // For this fast agency JTBD, we simulate a 1.5s scan and redirect directly to a generated Audit page.
+    setTimeout(() => {
+      setIsScanning(false);
+      if (router) router.push('/audit/agency-instant-' + Math.random().toString(36).substring(7));
+    }, 1500);
+  };
+
   // Handle Google OAuth 1-Click Connect
   const handleConnectGoogle = async () => {
     setIsConnectingGoogle(true);
@@ -267,26 +284,26 @@ export default function OnboardingPage() {
 
         {/* Global Mode Selector */}
         {!onboardingMode && (
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
             
             {/* Mode A Selector */}
             <div 
               onClick={() => setOnboardingMode('MODE_A')}
-              className="material-card p-6 cursor-pointer hover:border-google-blue hover:shadow-material-2 transition-all group border-2 border-transparent"
+              className="material-card p-5 cursor-pointer hover:border-google-blue hover:shadow-material-2 transition-all group border-2 border-transparent"
             >
-              <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Building2 className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Building2 className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Mode A
               </span>
-              <h2 className="text-xl font-bold text-google-text-primary mt-2">
-                I do NOT have a Google Profile
+              <h2 className="text-lg font-bold text-google-text-primary mt-2 leading-tight">
+                No Google Profile
               </h2>
               <p className="text-google-text-secondary text-xs mt-2 leading-relaxed">
-                Build a high-ranking Google Business Profile from scratch. Our AI will analyze your website and conduct a 60-second interview to prepare your launch package.
+                Build a high-ranking Google Business Profile from scratch using AI and your website data.
               </p>
-              <div className="mt-6 flex items-center text-google-blue text-xs font-bold group-hover:translate-x-1 transition-transform">
+              <div className="mt-4 flex items-center text-google-blue text-xs font-bold group-hover:translate-x-1 transition-transform">
                 <span>Start Website Extraction</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </div>
@@ -295,25 +312,48 @@ export default function OnboardingPage() {
             {/* Mode B Selector */}
             <div 
               onClick={() => setOnboardingMode('MODE_B')}
-              className="material-card p-6 cursor-pointer hover:border-google-blue hover:shadow-material-2 transition-all group border-2 border-google-blue/40 relative overflow-hidden"
+              className="material-card p-5 cursor-pointer hover:border-google-blue hover:shadow-material-2 transition-all group border-2 border-google-blue/40 relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 bg-google-blue text-white text-[10px] font-extrabold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
-                RECOMMENDED (ZERO-FRICTION)
+              <div className="absolute top-0 right-0 bg-google-blue text-white text-[9px] font-extrabold px-2 py-1 rounded-bl-lg uppercase tracking-wider">
+                RECOMMENDED
               </div>
-              <div className="w-12 h-12 rounded-xl bg-google-blue-light text-google-blue flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <MapPin className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl bg-google-blue-light text-google-blue flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <MapPin className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Mode B
               </span>
-              <h2 className="text-xl font-bold text-google-text-primary mt-2">
-                I ALREADY HAVE a Google Profile
+              <h2 className="text-lg font-bold text-google-text-primary mt-2 leading-tight">
+                Have a Google Profile
               </h2>
               <p className="text-google-text-secondary text-xs mt-2 leading-relaxed">
-                Instant audit without logging in! Search your business name to generate a 3x3 Geo-Grid rank heatmap & 1-Click fix vulnerabilities.
+                Search your business name to generate a 3x3 Geo-Grid rank heatmap & 1-Click fix vulnerabilities.
               </p>
-              <div className="mt-6 flex items-center text-google-blue text-xs font-bold group-hover:translate-x-1 transition-transform">
+              <div className="mt-4 flex items-center text-google-blue text-xs font-bold group-hover:translate-x-1 transition-transform">
                 <span>Launch Instant Magic Scan</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </div>
+            </div>
+
+            {/* Mode C Selector (Agency / In-Person Mode) */}
+            <div 
+              onClick={() => setOnboardingMode('MODE_C')}
+              className="material-card p-5 cursor-pointer hover:border-google-red hover:shadow-material-2 transition-all group border-2 border-google-red/40 relative overflow-hidden"
+            >
+              <div className="w-10 h-10 rounded-xl bg-google-red-light text-google-red flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Zap className="w-5 h-5 fill-google-red" />
+              </div>
+              <span className="text-[10px] font-bold text-google-red bg-google-red-light px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Agency Mode (Fast)
+              </span>
+              <h2 className="text-lg font-bold text-google-text-primary mt-2 leading-tight">
+                Instant Link Audit
+              </h2>
+              <p className="text-google-text-secondary text-xs mt-2 leading-relaxed">
+                Paste a Google Maps link to instantly generate a PDF/Web report for a client you just met.
+              </p>
+              <div className="mt-4 flex items-center text-google-red text-xs font-bold group-hover:translate-x-1 transition-transform">
+                <span>Paste Maps Link</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </div>
             </div>
@@ -912,6 +952,70 @@ export default function OnboardingPage() {
                 </button>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* PATH C: AGENCY INSTANT AUDIT (BY LINK) */}
+        {/* ======================================================== */}
+        {onboardingMode === 'MODE_C' && (
+          <div className="max-w-3xl mx-auto space-y-6">
+            
+            <button 
+              onClick={() => { setOnboardingMode(null); }}
+              className="text-xs text-google-text-secondary hover:text-google-blue font-medium flex items-center gap-1 mb-2"
+            >
+              ← Back to Mode Selector
+            </button>
+
+            <div className="material-card p-6 border-t-4 border-google-red">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 bg-google-red-light text-google-red rounded-xl">
+                  <Zap className="w-6 h-6 fill-google-red" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-google-text-primary">Instant Agency Audit</h2>
+                  <p className="text-xs text-google-text-secondary">Paste a Google Maps URL to instantly generate and open a full PDF/Web Audit report. Optimized for face-to-face pitches.</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleMapsScan} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-google-text-secondary mb-1">Google Maps Profile URL</label>
+                  <input 
+                    type="url"
+                    required
+                    placeholder="https://maps.app.goo.gl/..."
+                    value={mapsLink}
+                    onChange={(e) => setMapsLink(e.target.value)}
+                    className="material-input text-sm py-3"
+                  />
+                </div>
+                
+                <button 
+                  type="submit"
+                  disabled={isScanning}
+                  className="material-button-primary w-full text-sm py-3 !bg-google-red hover:!bg-red-700 shadow-lg shadow-red-500/30"
+                >
+                  {isScanning ? (
+                    <>
+                      <Sparkles className="w-4 h-4 animate-spin" />
+                      <span>Generating Full Audit Presentation...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>⚡ Generate & Open Report Instantly</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+            
+            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-500 flex gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+              <p><strong>Pro-Tip:</strong> Use this feature when you're physically at a client's location or on a sales call. It bypasses the Google Login step and jumps straight to the Disaster vs Future pitch deck.</p>
             </div>
           </div>
         )}
