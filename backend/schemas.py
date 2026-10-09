@@ -125,3 +125,25 @@ class RevoWebhookPayload(BaseModel):
     event: str
     timestamp: str
     leads: List[WebhookLead]
+
+# --------------------------
+# Audit Report Schemas (For Frontend)
+# --------------------------
+class AuditRedBlock(BaseModel):
+    title: str
+    description: str
+
+class AuditGreenBlock(BaseModel):
+    title: str
+    description: str
+
+class AuditReportSchema(BaseModel):
+    audit_id: str
+    company_name: str
+    address: str
+    health_score: int
+    estimated_revenue_gain: str
+    estimated_client_gain: str
+    red_blocks: List[AuditRedBlock]
+    green_blocks: List[AuditGreenBlock]
+    created_at: str

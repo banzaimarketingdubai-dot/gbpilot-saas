@@ -542,12 +542,17 @@ async def receive_revo_leads_webhook(payload: RevoWebhookPayload, db: Session = 
     # For now, we will log them and start an asyncio task to process the audits
     
     async def process_audits(leads):
+        from proactive_engine import ProactiveEngine
         for lead in leads:
             print(f"[GBP Analyzer] Starting audit for: {lead.company_name} (Revo Score: {lead.revo_score})")
-            # Here we would typically call the LLM to generate the 'Disaster vs Future' report
-            # and then push the report to System 3 (Outreach Engine)
-            await asyncio.sleep(1) # Simulated processing time
-            print(f"[GBP Analyzer] Audit complete for: {lead.company_name}. Pushing to System 3.")
+            
+            # Call the LLM to generate the personalized audit
+            audit_json = await ProactiveEngine.generate_audit_report(lead.model_dump())
+            
+            # Here we would save audit_json to the Supabase database
+            # db.add(models.AuditReport(...))
+            
+            print(f"[GBP Analyzer] Audit {audit_json['audit_id']} complete for: {lead.company_name}. Ready for System 3.")
             
     # Trigger background processing
     asyncio.create_task(process_audits(payload.leads))
