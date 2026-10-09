@@ -99,3 +99,29 @@ class B2BLead(BaseModel):
 class B2BOutreachResponse(BaseModel):
     status: str
     leads: List[B2BLead]
+
+# --------------------------
+# Webhook Schemas (REVO Master Data Integration)
+# --------------------------
+class WebhookContact(BaseModel):
+    type: str
+    value: str
+    is_verified: Optional[bool] = False
+
+class WebhookLead(BaseModel):
+    lead_id: str
+    company_name: str
+    business_type: Optional[str] = None
+    city: Optional[str] = None
+    address: Optional[str] = None
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    reviews_count: Optional[int] = None
+    revo_score: Optional[int] = None
+    audit_notes: Optional[str] = None
+    contacts: List[WebhookContact] = []
+
+class RevoWebhookPayload(BaseModel):
+    event: str
+    timestamp: str
+    leads: List[WebhookLead]

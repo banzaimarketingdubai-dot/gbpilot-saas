@@ -527,6 +527,37 @@ async def b2b_outreach_search(query: str, lat: float = 40.7128, lng: float = -74
         
     return B2BOutreachResponse(status="success", leads=leads)
 
+from schemas import RevoWebhookPayload
+import asyncio
+
+@app.post("/api/v1/webhooks/revo-leads", tags=["Integrations"])
+async def receive_revo_leads_webhook(payload: RevoWebhookPayload, db: Session = Depends(get_db)):
+    """
+    Webhook endpoint to receive enriched leads from REVO Master Data (System 1).
+    This triggers the GBP Analyzer (System 2) audit process.
+    """
+    received_count = len(payload.leads)
+    
+    # In a production environment, we would queue these for asynchronous processing
+    # For now, we will log them and start an asyncio task to process the audits
+    
+    async def process_audits(leads):
+        for lead in leads:
+            print(f"[GBP Analyzer] Starting audit for: {lead.company_name} (Revo Score: {lead.revo_score})")
+            # Here we would typically call the LLM to generate the 'Disaster vs Future' report
+            # and then push the report to System 3 (Outreach Engine)
+            await asyncio.sleep(1) # Simulated processing time
+            print(f"[GBP Analyzer] Audit complete for: {lead.company_name}. Pushing to System 3.")
+            
+    # Trigger background processing
+    asyncio.create_task(process_audits(payload.leads))
+
+    return {
+        "status": "success", 
+        "message": f"Successfully received {received_count} leads for GBP Analysis.",
+        "event": payload.event
+    }
+
 if __name__ == "__main__":
     import uvicorn
     # When deployed on Railway, the PORT env var is automatically provided
