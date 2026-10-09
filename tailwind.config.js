@@ -37,6 +37,14 @@ module.exports = {
         'material-3': '0 4px 8px 3px rgba(60,64,67,0.15), 0 8px 12px 6px rgba(60,64,67,0.15)',
         'material-hover': '0 2px 6px 2px rgba(60,64,67,0.15), 0 1px 2px 0 rgba(60,64,67,0.3)',
       },
+      keyframes: {
+        dash: {
+          '0%': { strokeDasharray: '0, 100' },
+        }
+      },
+      animation: {
+        dash: 'dash 1.5s ease-out forwards',
+      }
     },
   },
   plugins: [],

@@ -9,16 +9,23 @@ import {
   ShieldAlert, 
   ArrowRight, 
   Zap, 
-  Map 
+  Map,
+  TrendingUp,
+  XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuditLandingPage({ params }: { params: { audit_id: string } }) {
+  // In a real app, we would fetch data using params.audit_id from Supabase
+  const healthScore = 54;
+  const estimatedRevenueGain = "$1,250";
+  const estimatedClientGain = "+45";
+
   return (
-    <div className="min-h-screen bg-google-bg flex flex-col">
+    <div className="min-h-screen bg-google-bg flex flex-col font-sans">
       
       {/* Public Header */}
-      <header className="bg-white border-b border-google-border py-4 px-6 shadow-sm">
+      <header className="bg-white border-b border-google-border py-4 px-6 shadow-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-google-blue flex items-center justify-center shadow">
@@ -29,55 +36,94 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
             </span>
           </div>
 
-          <Link href="/onboarding" className="material-button-primary text-xs py-2 px-4">
-            <span>Claim Free 14-Day Trial</span>
+          <Link href="/onboarding" className="material-button-primary text-xs py-2 px-4 shadow hover:shadow-md transition">
+            <span>Fix My Profile</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 space-y-8">
         
-        {/* Teaser Header Card */}
-        <div className="material-card p-6 bg-white border-2 border-google-red/40">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-google-border-light pb-4">
-            <div>
-              <span className="text-[10px] font-extrabold text-google-red bg-google-red-light px-2.5 py-1 rounded-full uppercase tracking-wider">
-                CONFIDENTIAL LOCAL SEO AUDIT
-              </span>
-              <h1 className="text-2xl font-black text-google-text-primary mt-2">
-                Central District Bakery & Coffee
-              </h1>
-              <p className="text-xs text-google-text-secondary">102 Central Ave, New York • Audit ID: {params.audit_id}</p>
-            </div>
+        {/* Title Block */}
+        <div className="text-center space-y-2">
+          <span className="text-[10px] font-extrabold text-google-red bg-google-red-light px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+            CONFIDENTIAL LOCAL SEO AUDIT
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-black text-google-text-primary tracking-tight">
+            Central District Bakery & Coffee
+          </h1>
+          <p className="text-sm text-google-text-secondary">102 Central Ave, New York • Audit Ref: {params.audit_id}</p>
+        </div>
 
-            <div className="text-right">
-              <span className="text-xs font-semibold text-google-text-secondary block">Health Score</span>
-              <span className="text-3xl font-black text-amber-600">54 / 100</span>
+        {/* Top Section: Circular Chart + Potential Gains */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Health Score Circular Chart */}
+          <div className="material-card p-8 bg-white flex flex-col items-center justify-center text-center">
+            <h3 className="font-bold text-google-text-primary mb-6 text-sm">Overall GBP Health Score</h3>
+            <div className="relative w-40 h-40">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-google-border"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+                <path
+                  className="text-amber-500 animate-[dash_1.5s_ease-out_forwards]"
+                  strokeDasharray={`${healthScore}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-4xl font-black text-google-text-primary">{healthScore}%</span>
+                <span className="text-[10px] text-google-text-secondary uppercase font-bold tracking-widest mt-1">Critical</span>
+              </div>
             </div>
+            <p className="text-xs text-google-text-secondary mt-6">Your profile is currently losing up to 35% of high-intent search queries to competitors.</p>
           </div>
 
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <span>
-              <strong>Warning:</strong> Your profile is currently losing up to 35% of high-intent morning search queries to neighboring competitors in Sector 4.
-            </span>
+          {/* Potential Gains */}
+          <div className="material-card p-8 bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-6">
+              <TrendingUp className="w-5 h-5 text-google-green" />
+              <h3 className="font-bold text-lg">Potential Weekly Growth</h3>
+            </div>
+            
+            <p className="text-sm text-slate-300 mb-6">
+              By applying our AI-recommended fixes to your Google Business Profile, our algorithm projects the following growth over the next 7 days:
+            </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm">
+                <span className="block text-xs text-slate-400 font-semibold mb-1">New Local Clients</span>
+                <span className="text-3xl font-black text-google-green">{estimatedClientGain}</span>
+              </div>
+              <div className="bg-white/10 p-4 rounded-xl border border-white/20 backdrop-blur-sm">
+                <span className="block text-xs text-slate-400 font-semibold mb-1">Est. Revenue Boost</span>
+                <span className="text-3xl font-black text-google-blue">{estimatedRevenueGain}</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* 3x3 Geo-Grid Spatial Snapshot */}
-        <div className="material-card p-6 bg-white">
+        <div className="material-card p-6 bg-white border border-google-border">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-bold text-google-text-primary text-sm flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-google-blue" />
-                3x3 Geo-Grid Heatmap (Keyword: "bakery near me")
+                Live 3x3 Geo-Grid Heatmap (Keyword: "bakery near me")
               </h3>
-              <p className="text-xs text-google-text-secondary">Red circles indicate positions where local customers do not see your business.</p>
+              <p className="text-xs text-google-text-secondary mt-1">Red circles indicate streets where local customers do not see your business.</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
+          <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
             {[
               { rank: 2 }, { rank: 4 }, { rank: 7 },
               { rank: 3 }, { rank: 9 }, { rank: 12 },
@@ -85,62 +131,89 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
             ].map((item, idx) => (
               <div 
                 key={idx}
-                className={`h-20 rounded-xl flex flex-col items-center justify-center font-bold text-white shadow-sm ${
+                className={`h-20 rounded-xl flex flex-col items-center justify-center font-bold text-white shadow-sm border border-white/20 ${
                   item.rank <= 3 ? 'bg-google-green' : item.rank <= 8 ? 'bg-google-yellow' : 'bg-google-red'
                 }`}
               >
-                <span className="text-[10px] opacity-80">Rank</span>
+                <span className="text-[10px] opacity-90 uppercase tracking-wider font-semibold">Rank</span>
                 <span className="text-2xl font-black">#{item.rank}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 3 Critical Issues Identified */}
-        <div className="material-card p-6 bg-white space-y-4">
-          <h3 className="font-bold text-google-text-primary text-sm">3 Critical Vulnerabilities Identified</h3>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-3 bg-google-bg rounded-xl border border-google-border flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-google-red flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-google-text-primary block">Missing Secondary Category: "Artisan Espresso Bar"</strong>
-                <span className="text-google-text-secondary">Competitors offering espresso drive 40% higher map impressions.</span>
+        {/* Red & Green Blocks: Disaster vs Action */}
+        <div className="grid md:grid-cols-2 gap-6">
+          
+          {/* RED BLOCK: What is decreasing ranking */}
+          <div className="material-card p-6 bg-google-red-light/20 border-2 border-google-red/30">
+            <h3 className="font-bold text-google-red text-sm flex items-center gap-2 mb-4">
+              <XCircle className="w-5 h-5" />
+              Critical Ranking Leaks (Current State)
+            </h3>
+            <div className="space-y-4">
+              <div className="bg-white p-3 rounded-lg border border-google-red/20 shadow-sm text-xs">
+                <strong className="text-google-text-primary block mb-1">Missing "Artisan Espresso Bar" Category</strong>
+                <span className="text-google-text-secondary">Competitors offering espresso in Sector 4 are stealing 40% of morning map impressions.</span>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-google-red/20 shadow-sm text-xs">
+                <strong className="text-google-text-primary block mb-1">Stagnant Profile (0 Posts in 21 Days)</strong>
+                <span className="text-google-text-secondary">Google's algorithm penalizes your ranking for lack of fresh content updates.</span>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-google-red/20 shadow-sm text-xs">
+                <strong className="text-google-text-primary block mb-1">15 Unanswered Reviews</strong>
+                <span className="text-google-text-secondary">Customer trust is dropping, signaling poor engagement to AI search engines.</span>
               </div>
             </div>
+          </div>
 
-            <div className="p-3 bg-google-bg rounded-xl border border-google-border flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-google-red flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-google-text-primary block">No Google Posts in Past 21 Days</strong>
-                <span className="text-google-text-secondary">Google freshness algorithm penalizes inactive local listings.</span>
+          {/* GREEN BLOCK: How to fix it fast */}
+          <div className="material-card p-6 bg-google-green-light/20 border-2 border-google-green/40 shadow-material-1">
+            <h3 className="font-bold text-google-green text-sm flex items-center gap-2 mb-4">
+              <CheckCircle2 className="w-5 h-5" />
+              Quick Action Plan (Next Steps)
+            </h3>
+            <div className="space-y-4">
+              <div className="bg-white p-3 rounded-lg border border-google-green/20 shadow-sm text-xs flex gap-3">
+                <div className="bg-google-green text-white w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</div>
+                <div>
+                  <strong className="text-google-text-primary block mb-1">Inject Secondary Categories</strong>
+                  <span className="text-google-text-secondary">AI suggests 3 optimal categories to instantly capture hidden traffic.</span>
+                </div>
               </div>
-            </div>
-
-            <div className="p-3 bg-google-bg rounded-xl border border-google-border flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-google-red flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-google-text-primary block">Profile Guard Sentinel Disabled</strong>
-                <span className="text-google-text-secondary">Risk of third parties suggesting unauthorized edits to your phone number or business hours.</span>
+              <div className="bg-white p-3 rounded-lg border border-google-green/20 shadow-sm text-xs flex gap-3">
+                <div className="bg-google-green text-white w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</div>
+                <div>
+                  <strong className="text-google-text-primary block mb-1">Activate Auto-Responder</strong>
+                  <span className="text-google-text-secondary">Clear the backlog of 15 reviews in seconds using SEO-optimized AI replies.</span>
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-google-green/20 shadow-sm text-xs flex gap-3">
+                <div className="bg-google-green text-white w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</div>
+                <div>
+                  <strong className="text-google-text-primary block mb-1">Enable Profile Guard</strong>
+                  <span className="text-google-text-secondary">Lock business hours and phone numbers from unauthorized competitor edits.</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Primary Call-to-Action Card */}
-        <div className="material-card p-8 bg-gradient-to-r from-google-blue to-blue-700 text-white text-center space-y-4 shadow-material-3">
-          <h2 className="text-2xl font-black">Fix These Vulnerabilities in 1-Click</h2>
-          <p className="text-xs text-blue-100 max-w-md mx-auto">
-            Claim your 14-day free trial of GBPilot AI Growth Copilot to automatically fix these ranking leaks and protect your profile 24/7.
+        <div className="material-card p-8 bg-gradient-to-r from-google-blue to-blue-700 text-white text-center space-y-5 shadow-material-3">
+          <h2 className="text-2xl font-black">Execute This Plan on Autopilot</h2>
+          <p className="text-sm text-blue-100 max-w-lg mx-auto leading-relaxed">
+            Don't waste hours logging into Google Business Manager. Connect your profile securely to GBPilot AI and execute these fixes in 1-Click.
           </p>
 
           <Link 
             href="/onboarding"
-            className="inline-flex items-center justify-center gap-2 bg-white text-google-blue font-bold px-8 py-3.5 rounded-xl shadow hover:bg-google-bg transition-all text-sm"
+            className="inline-flex items-center justify-center gap-2 bg-white text-google-blue font-bold px-8 py-4 rounded-xl shadow-lg hover:scale-105 hover:bg-google-bg transition-all text-sm"
           >
-            <Zap className="w-4 h-4 fill-google-blue" />
-            <span>Claim 14-Day Free Pro Trial</span>
+            <Zap className="w-5 h-5 fill-google-blue" />
+            <span>Connect Google & Fix Now</span>
           </Link>
+          <p className="text-[10px] text-blue-200 uppercase font-bold tracking-widest mt-2">14-Day Free Trial included</p>
         </div>
 
       </main>
