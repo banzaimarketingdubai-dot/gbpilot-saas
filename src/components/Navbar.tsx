@@ -93,14 +93,13 @@ export const Navbar: React.FC<NavbarProps> = ({
     window.location.href = '/onboarding';
   };
 
-  const navItems = [
-    { id: 'nav-action-hub', label: 'Action Hub', href: '/dashboard', icon: Zap },
-    { id: 'nav-ai-copilot', label: 'AI Copilot', href: '/copilot', icon: Bot, badge: 'GPT-4o' },
-    { id: 'nav-geo-grid', label: 'Geo-Grid Radar', href: '/geo-grid', icon: MapPin },
-    { id: 'nav-reviews-posts', label: 'Reviews & Posts', href: '/reviews-posts', icon: MessageSquare },
-    { id: 'nav-lead-outreach', label: 'Lead Outreach', href: '/outreach', icon: Target },
-    { id: 'nav-onboarding', label: 'Onboarding', href: '/onboarding', icon: Compass },
-    { id: 'nav-b2b', label: 'B2B Services', href: '/b2b', icon: Sparkles },
+  const navItems: { id: string; label: string; href: string; icon: any; badge?: string }[] = [
+    { id: 'nav-dashboard', label: '⚡ Кокпит', href: '/dashboard', icon: Zap },
+    { id: 'nav-geo-grid', label: '🧭 Разведка', href: '/geo-grid', icon: MapPin },
+    { id: 'nav-reviews-posts', label: '🤖 Ассистент', href: '/reviews-posts', icon: MessageSquare },
+    { id: 'nav-ai-copilot', label: '💬 AI Копилот', href: '/copilot', icon: Bot },
+    { id: 'nav-lead-outreach', label: '🎯 B2B Лидген', href: '/outreach', icon: Target },
+    { id: 'nav-b2b', label: '🇦🇪 Дубай Тарифы', href: '/b2b', icon: Sparkles },
   ];
 
   const handleModeChange = (mode: 'OFF' | 'MANUAL_APPROVAL' | 'FULL_AUTOPILOT') => {
@@ -134,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-lg font-extrabold tracking-tight text-google-text-primary flex items-center">
                 GB<span className="text-google-blue">Pilot</span>
                 <span className="ml-2 px-2 py-0.5 text-[9px] font-bold tracking-wider bg-google-blue-light text-google-blue rounded-md border border-google-blue/20 whitespace-nowrap hidden sm:inline-block">
-                  MAPS COPILOT
+                  🇦🇪 DUBAI AI COPILOT
                 </span>
               </span>
             </div>

@@ -147,3 +147,29 @@ class AuditReportSchema(BaseModel):
     red_blocks: List[AuditRedBlock]
     green_blocks: List[AuditGreenBlock]
     created_at: str
+
+# --------------------------
+# Review Takedown Schemas (Guard Module)
+# --------------------------
+class ReviewTakedownRequest(BaseModel):
+    business_name: str
+    review_text: str
+    author_name: Optional[str] = "Anonymous"
+    rating: int = 1
+    business_context: Optional[str] = "Dubai, UAE"
+    location_details: Optional[str] = None
+
+class ReviewTakedownViolation(BaseModel):
+    clause: str
+    policy_name: str
+    explanation: str
+
+class ReviewTakedownResponse(BaseModel):
+    status: str
+    business_name: str
+    confidence_score: int
+    estimated_removal_time: str
+    violations: List[ReviewTakedownViolation]
+    dossier_text: str
+    google_escalation_url: str
+    message: str

@@ -13,7 +13,8 @@ from schemas import (
     ProactiveRecommendationSchema, ScrapeRequest, ScrapeResponse,
     ExecuteActionRequest, ExecuteActionResponse,
     ChatMessageRequest, ChatMessageResponse,
-    GeoGridScanRequest, GeoGridScanResponse, GeoGridNode
+    GeoGridScanRequest, GeoGridScanResponse, GeoGridNode,
+    ReviewTakedownRequest, ReviewTakedownResponse
 )
 from proactive_engine import ProactiveEngine, gemini_client, CASCADE_MODELS
 from scraper import scrape_google_business_profile, scrape_website_url
@@ -548,6 +549,26 @@ async def publish_post_endpoint(request: PublishPostRequest, db: Session = Depen
     else:
         # For MVP we fake success if token is missing but profile exists
         return {"status": "success", "message": "Post queued (simulated Google API success)"}
+
+@app.post("/api/v1/guard/review-takedown", response_model=ReviewTakedownResponse, tags=["Guard Sentinel"])
+async def review_takedown_endpoint(request: ReviewTakedownRequest):
+    """
+    Synthesizes an Official Legal & Policy Review Dispute Notice
+    citing Google Maps User Contributed Content Guidelines and
+    UAE Federal Decree-Law No. 34 of 2021 on Combatting Rumors & Cybercrimes.
+    """
+    try:
+        result = await ProactiveEngine.generate_review_takedown_dossier(
+            business_name=request.business_name,
+            review_text=request.review_text,
+            author_name=request.author_name or "Anonymous",
+            rating=request.rating,
+            business_context=request.business_context or "Dubai, UAE"
+        )
+        return ReviewTakedownResponse(**result)
+    except Exception as e:
+        logger.error(f"Review takedown error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 from schemas import B2BOutreachResponse, B2BLead
 @app.get("/api/v1/outreach/search", response_model=B2BOutreachResponse, tags=["B2B Outreach"])

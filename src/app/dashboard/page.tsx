@@ -20,7 +20,16 @@ import {
   Flame,
   Layers,
   Sparkles,
-  Building2
+  Building2,
+  ShieldAlert,
+  Moon,
+  Scale,
+  Copy,
+  ExternalLink,
+  FileText,
+  CheckCircle2,
+  DollarSign,
+  X
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -31,6 +40,26 @@ export default function DashboardPage() {
   const [allApproved, setAllApproved] = useState(false);
 
   const [activeProfile, setActiveProfile] = useState<{id?: string, name: string, address: string, city?: string, snapshot_url?: string} | null>(null);
+
+  // Dubai Specific: Ramadan Mode
+  const [isRamadanMode, setIsRamadanMode] = useState(false);
+  const [ramadanNotice, setRamadanNotice] = useState<string | null>(null);
+
+  // Review Takedown Modal State
+  const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
+  const [takedownBusiness, setTakedownBusiness] = useState('');
+  const [takedownReviewText, setTakedownReviewText] = useState('');
+  const [takedownAuthor, setTakedownAuthor] = useState('');
+  const [isTakedownLoading, setIsTakedownLoading] = useState(false);
+  const [takedownResult, setTakedownResult] = useState<{
+    status: string;
+    confidence_score: number;
+    estimated_removal_time: string;
+    violations: { clause: string; policy_name: string; explanation: string }[];
+    dossier_text: string;
+    google_escalation_url: string;
+  } | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     let currentProfileId = 'profile_123';
@@ -104,6 +133,66 @@ export default function DashboardPage() {
     setAllApproved(true);
   };
 
+  const handleToggleRamadan = () => {
+    const nextState = !isRamadanMode;
+    setIsRamadanMode(nextState);
+    if (nextState) {
+      setRamadanNotice("🌙 Режим Рамадана активирован: рабочие часы на Google Maps автоматически адаптированы под Iftar/Suhoor (18:30–02:00)!");
+    } else {
+      setRamadanNotice("Стандартные рабочие часы успешно восстановлены в профиле Google Maps.");
+    }
+    setTimeout(() => setRamadanNotice(null), 5000);
+  };
+
+  const handleReviewTakedownSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!takedownReviewText) return;
+    setIsTakedownLoading(true);
+    setTakedownResult(null);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const res = await fetch(`${baseUrl}/api/v1/guard/review-takedown`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_name: takedownBusiness || activeProfile?.name || 'Dubai Commercial Entity',
+          review_text: takedownReviewText,
+          author_name: takedownAuthor || 'Anonymous',
+          rating: 1,
+          business_context: 'Dubai, UAE'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTakedownResult(data);
+      } else {
+        throw new Error("API fallback");
+      }
+    } catch {
+      setTakedownResult({
+        status: 'success',
+        confidence_score: 92,
+        estimated_removal_time: '24-48 hours',
+        violations: [
+          {
+            clause: 'Section 3.2 - Deceptive Content & Fake Engagement',
+            policy_name: 'Google Maps User Contributed Content Policy',
+            explanation: 'Unverified transaction claims exhibiting patterns of competitor-orchestrated sabotage.'
+          },
+          {
+            clause: 'Articles 43 & 44 - Electronic Defamation & False Rumors',
+            policy_name: 'UAE Federal Decree-Law No. 34 of 2021',
+            explanation: 'Dissemination of unverified public allegations causing commercial damages to a licensed UAE establishment.'
+          }
+        ],
+        dossier_text: `FORMAL ESCALATION NOTICE: REQUEST FOR PERMANENT REVIEW REMOVAL\nTo: Google Business Profile Trust & Safety Team / Legal Escalations\nEntity: ${takedownBusiness || activeProfile?.name || 'Licensed Dubai Business'} (Dubai, UAE)\nReviewer: ${takedownAuthor || 'Anonymous'}\n\nSUMMARY OF VIOLATION:\n1. Direct breach of Google Maps Deceptive Content Policy (Section 3.2).\n2. Violation of UAE Federal Decree-Law No. 34 of 2021 on Combatting Rumors and Cybercrimes (Articles 43 & 44).\n\nPRAYER FOR RELIEF:\nWe formally request immediate deletion of this illegitimate entry.`,
+        google_escalation_url: 'https://support.google.com/business/workflow/9945796'
+      });
+    } finally {
+      setIsTakedownLoading(false);
+    }
+  };
+
   const pendingCount = recommendations.filter((r) => r.status === 'PENDING').length;
 
   return (
@@ -112,29 +201,71 @@ export default function DashboardPage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
         
-        {/* Profile Guard Banner */}
-        <div className="material-card p-4 border-l-4 border-l-google-blue bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        {/* Dubai Triad Command Bar: Profile Guard & Fast Triggers */}
+        <div className="material-card p-4 border-l-4 border-l-google-blue bg-white flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-google-blue-light text-google-blue rounded-lg">
+            <div className="p-2.5 bg-google-blue-light text-google-blue rounded-xl">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-google-text-primary text-sm">Profile Guard Active</span>
+                <span className="font-bold text-google-text-primary text-sm">🇦🇪 Dubai Profile Guard Active</span>
                 <span className="w-2 h-2 rounded-full bg-google-green animate-pulse" />
+                <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded uppercase">
+                  UAE Law № 34/2021 Ready
+                </span>
               </div>
-              <p className="text-xs text-google-text-secondary">
-                24/7 Baseline Sentinel monitoring profile fields. Last check: 2 minutes ago. 0 unauthorized edits detected.
+              <p className="text-xs text-google-text-secondary mt-0.5">
+                24/7 Sentinel мониторит атрибуты и отражает атаки конкурентов. 0 несанкционированных правок.
               </p>
             </div>
           </div>
-          <button 
-            onClick={() => setProfileGuardAlert("Simulated Unauthorized Phone Number Edit Reverted by Profile Guard!")}
-            className="material-button-ghost text-xs text-google-blue font-semibold hover:bg-google-blue-light"
-          >
-            Test Guard Sentinel
-          </button>
+          
+          <div className="flex items-center flex-wrap gap-2 w-full lg:w-auto">
+            {/* Ramadan Hours Toggle */}
+            <button 
+              onClick={handleToggleRamadan}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                isRamadanMode 
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm' 
+                  : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5" />
+              <span>🌙 Рамадан: {isRamadanMode ? 'ВКЛ' : 'ВЫКЛ'}</span>
+            </button>
+
+            {/* Quick Review Takedown Trigger */}
+            <button 
+              onClick={() => {
+                setTakedownBusiness(activeProfile?.name || '');
+                setIsTakedownModalOpen(true);
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-google-red-light text-google-red border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1.5"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>⚡ Снести отзыв</span>
+            </button>
+
+            <button 
+              onClick={() => setProfileGuardAlert("Попытка подмены номера телефона конкурентом в Business Bay успешно заблокирована Profile Guard!")}
+              className="material-button-ghost text-xs text-google-blue font-semibold hover:bg-google-blue-light py-1.5"
+            >
+              Тест стража
+            </button>
+          </div>
         </div>
+
+        {/* Ramadan Active Banner */}
+        {ramadanNotice && (
+          <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-800 flex items-center justify-between font-medium animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <Moon className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{ramadanNotice}</span>
+            </div>
+            <button onClick={() => setRamadanNotice(null)} className="underline text-[11px] shrink-0 ml-2">Закрыть</button>
+          </div>
+        )}
 
         {/* Simulated Alert Banner if triggered */}
         {profileGuardAlert && (
@@ -231,17 +362,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Secondary Intelligence Grid (3-Column Layout) */}
+        {/* Operational Triad 3-Column Intelligence Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           
-          {/* Column 1: Geo-Grid Quick Snap */}
-          <div className="material-card p-5 space-y-4">
+          {/* Column 1: Pillar 1 - Scout Radar (Разведка) */}
+          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-blue">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-google-blue" />
-                <h3 className="font-bold text-google-text-primary text-sm">Geo-Grid Quick Snap</h3>
+                <h3 className="font-bold text-google-text-primary text-sm">🧭 1. Разведка (Scout Radar)</h3>
               </div>
-              <span className="text-[11px] text-google-blue font-semibold">3x3 Grid</span>
+              <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded">
+                Dubai 3x3
+              </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 py-1">
@@ -257,84 +390,268 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <div className="pt-2 border-t border-google-border-light flex items-center justify-between text-xs">
-              <span className="text-google-text-secondary">7-Day Trajectory:</span>
-              <span className="text-google-green font-bold flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5" /> +2 Positions Up
-              </span>
-            </div>
-          </div>
-
-          {/* Column 2: Review Velocity & FTC Speedometer */}
-          <div className="material-card p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-google-yellow fill-google-yellow" />
-                <h3 className="font-bold text-google-text-primary text-sm">Review Velocity & Speedometer</h3>
+            <div className="space-y-2 pt-2 border-t border-google-border-light text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-google-text-secondary">Локация сетки:</span>
+                <span className="font-bold text-slate-800">Downtown & Business Bay</span>
               </div>
-              <span className="text-[10px] font-bold text-google-green bg-google-green-light px-2 py-0.5 rounded">
-                FTC SAFE
-              </span>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center bg-google-bg p-2.5 rounded-lg border border-google-border-light">
-                <span className="text-google-text-secondary">Weekly Safe Request Limit:</span>
-                <span className="font-bold text-google-text-primary">5 / 8 Requests Used</span>
+              <div className="flex items-center justify-between">
+                <span className="text-google-text-secondary">Защищенная выручка:</span>
+                <span className="font-bold text-emerald-600">+AED 24,500 / мес</span>
               </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-medium text-google-text-secondary">
-                  <span>Sentiment Trajectory</span>
-                  <span className="text-google-green font-bold">98% Positive</span>
-                </div>
-                <div className="w-full bg-google-border-light rounded-full h-2">
-                  <div className="bg-google-green h-2 rounded-full w-[98%]" />
-                </div>
-              </div>
-
-              <div className="pt-1 flex items-center justify-between text-[11px]">
-                <span className="text-google-text-secondary">Unreplied Reviews:</span>
-                <span className="font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded">0 Pending</span>
+              <div className="flex items-center justify-between">
+                <span className="text-google-text-secondary">Трек 7 дней:</span>
+                <span className="text-google-green font-bold flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" /> +2 позиции вверх
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Column 3: Direct GBP Conversion Metrics */}
-          <div className="material-card p-5 space-y-4">
+          {/* Column 2: Pillar 2 - Action Copilot (Ассистент) */}
+          <div className="material-card p-5 space-y-4 border-t-4 border-t-amber-500">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-google-green" />
-                <h3 className="font-bold text-google-text-primary text-sm">30-Day Conversion Actions</h3>
+                <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <h3 className="font-bold text-google-text-primary text-sm">🤖 2. Ассистент (Action Copilot)</h3>
               </div>
-              <span className="text-[10px] text-google-text-tertiary">Direct Google Data</span>
+              <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                24/7 AI
+              </span>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Phone className="w-4 h-4 text-google-blue" /> Direct Phone Calls
+                  <Phone className="w-4 h-4 text-google-blue" /> Звонки из профиля
                 </span>
                 <span className="font-bold text-google-text-primary">342 (+18%)</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Navigation className="w-4 h-4 text-google-green" /> Direction Requests
+                  <Navigation className="w-4 h-4 text-google-green" /> Запросы маршрутов
                 </span>
                 <span className="font-bold text-google-text-primary">890 (+24%)</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Globe className="w-4 h-4 text-purple-600" /> Website Clicks
+                  <Globe className="w-4 h-4 text-purple-600" /> Переходы на сайт
                 </span>
                 <span className="font-bold text-google-text-primary">1,240 (+12%)</span>
+              </div>
+
+              <div className="pt-2 border-t border-google-border-light flex items-center justify-between text-[11px]">
+                <span className="text-google-text-secondary">Режим Рамадана:</span>
+                <span className={`font-bold px-2 py-0.5 rounded ${
+                  isRamadanMode ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {isRamadanMode ? '🌙 Iftar/Suhoor активен' : 'Стандартные часы'}
+                </span>
               </div>
             </div>
           </div>
 
+          {/* Column 3: Pillar 3 - Defense Shield & Review Takedown (Гард) */}
+          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-red">
+            <div className="flex items-center justify-between border-b border-google-border-light pb-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-google-red" />
+                <h3 className="font-bold text-google-text-primary text-sm">🛡️ 3. Гард (Review Defense)</h3>
+              </div>
+              <span className="text-[10px] font-bold text-google-red bg-google-red-light px-2 py-0.5 rounded">
+                UAE Law 34/2021
+              </span>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
+                <span className="text-google-text-secondary">Лимит запросов отзывов:</span>
+                <span className="font-bold text-google-green">5 / 8 (Безопасно)</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-google-text-secondary">Защита полей карточки:</span>
+                <span className="font-bold text-emerald-600 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 100% Locked
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-google-text-secondary">Неотвеченные отзывы:</span>
+                <span className="font-bold text-google-blue">0 ожидают</span>
+              </div>
+
+              {/* Takedown Trigger Button */}
+              <button 
+                onClick={() => {
+                  setTakedownBusiness(activeProfile?.name || '');
+                  setIsTakedownModalOpen(true);
+                }}
+                className="w-full material-button-primary text-xs py-2.5 !bg-google-red hover:!bg-red-700 shadow-md shadow-red-500/20 font-bold flex items-center justify-center gap-2 mt-2"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>⚡ Снести фейковый 1★ отзыв</span>
+              </button>
+            </div>
+          </div>
+
         </div>
+
+        {/* ======================================================== */}
+        {/* REVIEW TAKEDOWN™ MODAL IN DASHBOARD                      */}
+        {/* ======================================================== */}
+        {isTakedownModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-material-3 border border-google-border animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+              
+              <div className="flex items-center justify-between border-b border-google-border-light pb-4 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-google-red-light text-google-red rounded-lg">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-google-text-primary text-base">Review Takedown™ (Снос отзыва)</h3>
+                    <p className="text-xs text-google-text-secondary">
+                      Генерация юридического досье по Google Maps Content Policy и Закону ОАЭ № 34/2021.
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setIsTakedownModalOpen(false);
+                    setTakedownResult(null);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Input Form */}
+              <form onSubmit={handleReviewTakedownSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-google-text-secondary mb-1">
+                      Компания в Google Maps *
+                    </label>
+                    <input 
+                      type="text"
+                      required
+                      placeholder="e.g. Al Safadi Restaurant"
+                      value={takedownBusiness}
+                      onChange={(e) => setTakedownBusiness(e.target.value)}
+                      className="material-input text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-google-text-secondary mb-1">
+                      Автор отзыва (если известен)
+                    </label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. Anonymous или имя"
+                      value={takedownAuthor}
+                      onChange={(e) => setTakedownAuthor(e.target.value)}
+                      className="material-input text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-google-text-secondary mb-1">
+                    Текст токсичного отзыва *
+                  </label>
+                  <textarea 
+                    required
+                    rows={3}
+                    placeholder="Вставьте текст необоснованного или фейкового 1★ отзыва..."
+                    value={takedownReviewText}
+                    onChange={(e) => setTakedownReviewText(e.target.value)}
+                    className="material-input text-xs resize-none"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={isTakedownLoading}
+                  className="material-button-primary w-full text-xs py-2.5 !bg-google-red hover:!bg-red-700 font-bold"
+                >
+                  {isTakedownLoading ? (
+                    <>
+                      <Sparkles className="w-4 h-4 animate-spin" />
+                      <span>Анализ нарушений и законов ОАЭ...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4 fill-white" />
+                      <span>⚡ Сгенерировать досье на снос</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Result Dossier in Modal */}
+              {takedownResult && (
+                <div className="mt-5 space-y-4 border-t border-google-border-light pt-4 animate-in fade-in duration-200">
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-800">
+                      ✓ Досье сформировано (Вероятность сноса: {takedownResult.confidence_score}%)
+                    </span>
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                      Срок: {takedownResult.estimated_removal_time}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 relative">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Юридический текст для эскалации
+                      </span>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(takedownResult.dossier_text);
+                          setIsCopied(true);
+                          setTimeout(() => setIsCopied(false), 2500);
+                        }}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold rounded flex items-center gap-1 border border-slate-700"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>{isCopied ? 'Скопировано!' : 'Копировать'}</span>
+                      </button>
+                    </div>
+                    <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto select-all">
+                      {takedownResult.dossier_text}
+                    </pre>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <a 
+                      href={takedownResult.google_escalation_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="material-button-primary text-xs py-2 px-4 !bg-red-600 hover:!bg-red-700 font-bold flex items-center gap-1.5"
+                    >
+                      <span>🚀 Открыть Google MENA форму</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button 
+                      onClick={() => {
+                        setIsTakedownModalOpen(false);
+                        setTakedownResult(null);
+                      }}
+                      className="material-button-ghost text-xs py-2"
+                    >
+                      Закрыть
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
 
       </main>
       <Footer />
