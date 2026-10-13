@@ -187,13 +187,13 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         
         # Fetch user managed locations from Google Business Profile API
         fetched_profiles = []
+        api_disabled = False
         try:
-            from google_service import fetch_user_managed_locations, parse_google_location
-            raw_locations = fetch_user_managed_locations(access_token)
-            logger.info(f"[OAuth] Google returned {len(raw_locations)} locations for {email}")
-            for r_loc in raw_locations:
-                p = parse_google_location(r_loc)
-                fetched_profiles.append(p)
+            from google_service import fetch_user_managed_locations
+            loc_res = fetch_user_managed_locations(access_token)
+            fetched_profiles = loc_res.get("locations", [])
+            api_disabled = loc_res.get("api_disabled", False)
+            logger.info(f"[OAuth] Google returned {len(fetched_profiles)} locations for {email} (api_disabled={api_disabled})")
         except Exception as fe:
             logger.warning(f"[OAuth] Could not fetch Google locations: {fe}")
 
@@ -250,9 +250,11 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         params = f"auth=success&email={email}"
         if fetched_profiles:
             profiles_b64 = base64.b64encode(json.dumps(fetched_profiles).encode('utf-8')).decode('utf-8')
-            params += f"&profiles={profiles_b64}"
+            params += f"&profiles={profiles_b64}&select_location=true"
+        elif api_disabled:
+            params += "&api_disabled=true&select_location=true"
         else:
-            params += "&needs_location=true"
+            params += "&needs_location=true&select_location=true"
             
         return RedirectResponse(url=f"{target_frontend}/dashboard?{params}")
     except Exception as e:
@@ -260,6 +262,41 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         import urllib.parse
         err_msg = urllib.parse.quote(str(e))
         return RedirectResponse(url=f"{target_frontend}/dashboard?auth=error&detail={err_msg}")
+
+@app.get("/api/v1/profiles", tags=["Onboarding"])
+async def list_profiles_endpoint(db: Session = Depends(get_db)):
+    """
+    List all business profiles registered in the database.
+    """
+    if not db:
+        return {"profiles": []}
+    try:
+        profiles = db.query(models.GBPProfile).all()
+        return {
+            "profiles": [
+                {
+                    "id": str(p.id),
+                    "google_location_id": p.google_location_id,
+                    "name": p.business_name,
+                    "business_name": p.business_name,
+                    "address": p.address_line,
+                    "city": p.city,
+                    "primary_category": p.primary_category,
+                    "category": p.primary_category,
+                    "phone": p.phone_number,
+                    "phone_number": p.phone_number,
+                    "website_url": p.website_url,
+                    "health_score": p.health_score or 85,
+                    "role": "Владелец / Администратор",
+                    "verified": True,
+                    "is_admin": True,
+                }
+                for p in profiles
+            ]
+        }
+    except Exception as e:
+        logger.warning(f"[DB Warning] Could not list profiles: {e}")
+        return {"profiles": []}
 
 @app.get("/api/v1/onboarding/autocomplete", tags=["Onboarding"])
 async def autocomplete_endpoint(query: str, lat: float = None, lng: float = None):

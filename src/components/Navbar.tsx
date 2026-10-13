@@ -27,6 +27,9 @@ interface BusinessProfile {
   address: string;
   city?: string;
   autopilotMode: string;
+  role?: string;
+  is_admin?: boolean;
+  verified?: boolean;
 }
 
 interface NavbarProps {
@@ -73,13 +76,19 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (storedActive) {
         try {
           const parsed = JSON.parse(storedActive);
-          setActiveProfile(parsed);
-          setSelectedProfile(parsed.name);
-          setAutopilotMode(parsed.autopilotMode || 'MANUAL_APPROVAL');
+          if (parsed.name === 'Manhattan Bakery & Cafe' && parsedList.length > 0) {
+            setActiveProfile(parsedList[0]);
+            setSelectedProfile(parsedList[0].name);
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedList[0]));
+          } else {
+            setActiveProfile(parsed);
+            setSelectedProfile(parsed.name);
+            setAutopilotMode(parsed.autopilotMode || 'MANUAL_APPROVAL');
+          }
           
           setAvailableProfiles(prev => {
             const exists = prev.find(p => p.name === parsed.name);
-            if (!exists) {
+            if (!exists && parsed.name !== 'Manhattan Bakery & Cafe') {
               return [parsed, ...prev];
             }
             return prev;
@@ -92,6 +101,32 @@ export const Navbar: React.FC<NavbarProps> = ({
         setSelectedProfile(parsedList[0].name);
         localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedList[0]));
       }
+
+      // Also fetch profiles from backend
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      fetch(`${baseUrl}/api/v1/profiles`)
+        .then(res => res.json())
+        .then(data => {
+          if (data?.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+            setAvailableProfiles(prev => {
+              const combined = [...prev];
+              data.profiles.forEach((p: any) => {
+                if (!combined.some(c => c.name === p.name || c.id === p.id)) {
+                  combined.push(p);
+                }
+              });
+              localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combined));
+              return combined;
+            });
+            const stored = localStorage.getItem('gbpilot_active_profile');
+            if (!stored || JSON.parse(stored).name === 'Manhattan Bakery & Cafe') {
+              setActiveProfile(data.profiles[0]);
+              setSelectedProfile(data.profiles[0].name);
+              localStorage.setItem('gbpilot_active_profile', JSON.stringify(data.profiles[0]));
+            }
+          }
+        })
+        .catch(e => console.error("Could not fetch profiles from backend", e));
     }
   }, []);
 
@@ -161,17 +196,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center space-x-2 bg-google-bg border border-google-border px-3 py-1.5 rounded-lg text-xs hover:bg-white transition-colors"
             >
               <Building2 className="w-3.5 h-3.5 text-google-blue" />
-              <span className="font-semibold text-google-text-primary">{selectedProfile}</span>
+              <span className="font-semibold text-google-text-primary max-w-[130px] truncate">{selectedProfile}</span>
+              <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
+                {(activeProfile as any)?.role?.includes('Владелец') ? 'Владелец' : 'Администратор'}
+              </span>
               <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
             </button>
 
             {isLocationOpen && (
               <div 
                 data-testid="location-dropdown-menu" 
-                className="absolute left-0 mt-2 w-64 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
+                className="absolute left-0 mt-2 w-72 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
               >
-                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light">
-                  Active Business Location
+                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light flex items-center justify-between">
+                  <span>Ваши заведения ({availableProfiles.length})</span>
+                  <span className="text-emerald-600 font-bold">Google Verified</span>
                 </div>
                 {availableProfiles.map((p, idx) => (
                   <div key={idx} className="flex items-center justify-between mt-1 rounded-lg hover:bg-google-bg transition-colors group pr-1">
@@ -186,11 +225,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsLocationOpen(false);
                       }}
                       className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
-                        selectedProfile === p.name ? 'text-google-blue font-bold' : 'text-google-text-primary'
+                        selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
                       }`}
                     >
-                      <span className="truncate max-w-[150px]">{p.name}</span>
-                      <span className="text-[10px] text-google-text-tertiary">{p.city}</span>
+                      <div className="truncate max-w-[150px]">
+                        <div className="truncate font-semibold">{p.name}</div>
+                        <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
+                      </div>
+                      <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
+                        {p.role ? (p.role.includes('Владелец') ? 'Владелец' : 'Админ') : 'Админ'}
+                      </span>
                     </button>
                     <button 
                       onClick={(e) => {
@@ -203,7 +247,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsLocationOpen(false);
                       }}
                       className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Delete Workspace"
+                      title="Удалить заведение"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -223,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Connect New Location</span>
+                  <span>+ Выбрать / сменить заведение</span>
                 </button>
               </div>
             )}

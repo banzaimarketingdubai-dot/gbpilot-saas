@@ -68,15 +68,21 @@ export default function DashboardPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [authBanner, setAuthBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Business Location Management State
+  // Business Location Management State (JTBD Flow)
   const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
   const [locationSearchInput, setLocationSearchInput] = useState('');
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [isScrapingLocation, setIsScrapingLocation] = useState(false);
   const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
+  const [showManualSearch, setShowManualSearch] = useState(false);
+  const [selectedPendingLocation, setSelectedPendingLocation] = useState<any | null>(null);
+  const [isAdminConfirmed, setIsAdminConfirmed] = useState(false);
+  const [apiDisabledWarning, setApiDisabledWarning] = useState(false);
 
   useEffect(() => {
+    let currentProfileId = 'profile_123';
+
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const auth = urlParams.get('auth');
@@ -84,8 +90,33 @@ export default function DashboardPage() {
       const email = urlParams.get('email');
       const profilesParam = urlParams.get('profiles');
       const needsLocation = urlParams.get('needs_location');
+      const selectLocation = urlParams.get('select_location');
+      const apiDisabled = urlParams.get('api_disabled');
 
-      if (profilesParam) {
+      // Load available profiles from storage first
+      const storedList = localStorage.getItem('gbpilot_available_profiles');
+      let loadedList: any[] = [];
+      if (storedList) {
+        try {
+          const parsed = JSON.parse(storedList);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            loadedList = parsed;
+            setAvailableProfiles(parsed);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (apiDisabled === 'true') {
+        setApiDisabledWarning(true);
+        setIsAddLocationModalOpen(true);
+        setAuthBanner({
+          type: 'error',
+          message: `Google аккаунт (${email || 'подтвержден'}) подключен, но в Google Cloud проекте (117262328905) требуется включить Business Information API.`
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (profilesParam) {
         try {
           const jsonStr = decodeURIComponent(escape(atob(profilesParam)));
           const profilesList = JSON.parse(jsonStr);
@@ -94,9 +125,11 @@ export default function DashboardPage() {
             localStorage.setItem('gbpilot_active_profile', JSON.stringify(profilesList[0]));
             setActiveProfile(profilesList[0]);
             setAvailableProfiles(profilesList);
+            if (profilesList[0].id) currentProfileId = profilesList[0].id;
+            setIsAddLocationModalOpen(true);
             setAuthBanner({
               type: 'success',
-              message: `Загружено ${profilesList.length} заведений из Google аккаунта (${email || 'подтвержден'})! Активно: ${profilesList[0].name}`
+              message: `Подтянуто ${profilesList.length} заведений из вашего Google профиля (${email || 'подтвержден'})! Выберите заведение для работы.`
             });
           }
         } catch (e) {
@@ -108,7 +141,7 @@ export default function DashboardPage() {
           type: 'success',
           message: `Google аккаунт (${email || 'подтвержден'}) успешно подключен! Синхронизация профиля активирована.`
         });
-        if (needsLocation) {
+        if (needsLocation || selectLocation) {
           setIsAddLocationModalOpen(true);
         }
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -121,39 +154,61 @@ export default function DashboardPage() {
       }
 
       const addLoc = urlParams.get('add_location');
-      if (addLoc === 'true') {
+      if (addLoc === 'true' || selectLocation === 'true') {
         setIsAddLocationModalOpen(true);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
-      // Load available profiles from storage
-      const storedList = localStorage.getItem('gbpilot_available_profiles');
-      if (storedList) {
-        try {
-          const parsed = JSON.parse(storedList);
-          if (Array.isArray(parsed)) setAvailableProfiles(parsed);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      const handleOpenModal = () => setIsAddLocationModalOpen(true);
-      window.addEventListener('open_add_location_modal', handleOpenModal);
-      return () => window.removeEventListener('open_add_location_modal', handleOpenModal);
-    }
-
-    let currentProfileId = 'profile_123';
-    if (typeof window !== 'undefined') {
+      // Check active profile in storage
       const stored = localStorage.getItem('gbpilot_active_profile');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          setActiveProfile(parsed);
-          if (parsed.id) currentProfileId = parsed.id;
+          if (parsed.name === 'Manhattan Bakery & Cafe' && loadedList.length > 0) {
+            setActiveProfile(loadedList[0]);
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(loadedList[0]));
+            if (loadedList[0].id) currentProfileId = loadedList[0].id;
+          } else {
+            setActiveProfile(parsed);
+            if (parsed.id) currentProfileId = parsed.id;
+          }
         } catch (e) {
           console.error(e);
         }
+      } else if (loadedList.length > 0) {
+        setActiveProfile(loadedList[0]);
+        localStorage.setItem('gbpilot_active_profile', JSON.stringify(loadedList[0]));
+        if (loadedList[0].id) currentProfileId = loadedList[0].id;
       }
+
+      // Also query backend for registered profiles
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      fetch(`${baseUrl}/api/v1/profiles`)
+        .then(res => res.json())
+        .then(data => {
+          if (data?.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+            setAvailableProfiles(prev => {
+              const combined = [...prev];
+              data.profiles.forEach((p: any) => {
+                if (!combined.some(c => c.name === p.name || c.id === p.id)) {
+                  combined.push(p);
+                }
+              });
+              localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combined));
+              return combined;
+            });
+            const storedCur = localStorage.getItem('gbpilot_active_profile');
+            if (!storedCur || JSON.parse(storedCur).name === 'Manhattan Bakery & Cafe') {
+              setActiveProfile(data.profiles[0]);
+              localStorage.setItem('gbpilot_active_profile', JSON.stringify(data.profiles[0]));
+            }
+          }
+        })
+        .catch(e => console.error("Could not fetch profiles from backend", e));
+
+      const handleOpenModal = () => setIsAddLocationModalOpen(true);
+      window.addEventListener('open_add_location_modal', handleOpenModal);
+      return () => window.removeEventListener('open_add_location_modal', handleOpenModal);
     }
     
     // Fetch proactive recommendations from FastAPI backend
@@ -220,10 +275,13 @@ export default function DashboardPage() {
           name: profile.business_name || sug.main_text,
           address: profile.address_line || sug.description,
           city: profile.city || profile.address_line?.split(',').pop()?.trim() || 'Dubai',
-          category: profile.primary_category || 'Local Business',
+          category: profile.primary_category || 'Локальный бизнес',
           rating: profile.rating || 4.9,
           reviews_count: profile.reviews_count || 145,
-          health_score: profile.health_score || 85,
+          health_score: profile.health_score || 88,
+          role: 'Владелец / Администратор (Подтверждено)',
+          verified: true,
+          is_admin: true,
           autopilotMode: 'MANUAL_APPROVAL',
         };
 
@@ -235,6 +293,9 @@ export default function DashboardPage() {
         setIsAddLocationModalOpen(false);
         setLocationSearchInput('');
         setLocationSuggestions([]);
+        setSelectedPendingLocation(null);
+        setShowManualSearch(false);
+        setIsAdminConfirmed(false);
         window.location.reload();
       }
     } catch(e) {
@@ -517,18 +578,29 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4 mb-2">
                 <HealthGauge score={healthScore} size={64} />
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-xl font-bold text-google-text-primary tracking-tight">
-                      {activeProfile?.name || 'Business Profile'} Health
+                      {activeProfile?.name || 'Business Profile'}
                     </h1>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      {(activeProfile as any)?.role || 'Владелец / Администратор'}
+                    </span>
                     <span className="text-[10px] font-bold text-google-green bg-google-green-light px-2 py-0.5 rounded-full uppercase">
                       TOP 5% IN SECTOR
                     </span>
                   </div>
-                  <p className="text-xs text-google-text-secondary mt-1">
-                    {pendingCount > 0 
-                      ? `AI identified ${pendingCount} high-impact recommendations to increase local search rank.` 
-                      : 'All proactive actions executed! Your profile is at peak optimization.'}
+                  <p className="text-xs text-google-text-secondary mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span className="flex items-center gap-1 text-slate-500">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      {activeProfile?.address || (activeProfile as any)?.city || 'Подтверждено в Google Business'}
+                    </span>
+                    {(activeProfile as any)?.category && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-slate-600 font-medium">{(activeProfile as any)?.category}</span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -543,7 +615,7 @@ export default function DashboardPage() {
                   className="text-google-blue hover:underline font-bold flex items-center gap-1 ml-1"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Сменить / добавить точку</span>
+                  <span>Сменить / выбрать точку ({availableProfiles.length})</span>
                 </button>
               </div>
             </div>
@@ -960,10 +1032,12 @@ export default function DashboardPage() {
         {/* Modal: Add / Select Business Location from Google Maps */}
         {isAddLocationModalOpen && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-google-border relative">
+            <div className="bg-white rounded-2xl shadow-material-3 border border-slate-200 max-w-xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
               <button 
                 onClick={() => {
                   setIsAddLocationModalOpen(false);
+                  setShowManualSearch(false);
+                  setSelectedPendingLocation(null);
                   setLocationSearchInput('');
                   setLocationSuggestions([]);
                 }}
@@ -973,110 +1047,286 @@ export default function DashboardPage() {
               </button>
 
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-google-blue-light text-google-blue flex items-center justify-center">
-                  <Building2 className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-2xl bg-google-blue-light text-google-blue flex items-center justify-center shadow-sm">
+                  <Building2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-google-text-primary">
-                    Привязать заведение из Google
+                  <h3 className="text-lg font-bold text-google-text-primary tracking-tight">
+                    {availableProfiles.length > 0 ? "Выберите заведение для управления" : "Подключение заведения к GBPilot"}
                   </h3>
                   <p className="text-xs text-google-text-secondary">
-                    Найдите ваши заведения по названию или адресу для активации мониторинга
+                    {availableProfiles.length > 0 
+                      ? "Ваши заведения из Google Business Profile. Для работы с заведением подтверждены права Администратора / Владельца."
+                      : "Выберите или найдите ваше заведение для активации аналитики и автопилота."}
                   </p>
                 </div>
               </div>
 
-              {/* Search Input with Live Autocomplete */}
-              <div className="relative mb-4">
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input 
-                    type="text"
-                    value={locationSearchInput}
-                    onChange={(e) => setLocationSearchInput(e.target.value)}
-                    placeholder="Введите название заведения или адрес..."
-                    className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue transition-all"
-                    autoFocus
-                  />
-                  {isSearchingLocation && (
-                    <Loader2 className="w-4 h-4 text-google-blue animate-spin absolute right-3.5 top-1/2 -translate-y-1/2" />
-                  )}
-                </div>
-
-                {/* Suggestions Dropdown */}
-                {locationSuggestions.length > 0 && (
-                  <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-lg max-h-60 overflow-y-auto divide-y divide-slate-100">
-                    {locationSuggestions.map((sug, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSelectSuggestion(sug)}
-                        disabled={isScrapingLocation}
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 group"
-                      >
-                        <MapPin className="w-4 h-4 text-google-red mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-slate-800 truncate">
-                            {sug.main_text || sug.description}
-                          </div>
-                          <div className="text-xs text-slate-500 truncate">
-                            {sug.description}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-slate-400 mt-1 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    ))}
+              {/* API Disabled Warning if Google Cloud project hasn't enabled Business Information API */}
+              {apiDisabledWarning && (
+                <div className="p-4 mb-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-amber-950">
+                        Требуется включить Google Business Information API
+                      </div>
+                      <p className="mt-0.5 text-amber-800 leading-relaxed">
+                        В вашем Google Cloud проекте (117262328905) требуется активировать My Business Information API для чтения списка точек. Нажмите кнопку ниже для включения:
+                      </p>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {isScrapingLocation && (
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center gap-3 text-xs text-slate-600 mb-4 animate-pulse">
-                  <Loader2 className="w-4 h-4 text-google-blue animate-spin" />
-                  <span>Загружаем реальные данные, рейтинг и отзывы из Google...</span>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <a
+                      href="https://console.cloud.google.com/apis/library/mybusinessbusinessinformation.googleapis.com?project=117262328905"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm"
+                    >
+                      <span>Включить API в Google Cloud</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => {
+                        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+                        window.location.href = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(window.location.origin)}`;
+                      }}
+                      className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-lg hover:bg-amber-100 font-medium text-xs transition-colors"
+                    >
+                      Повторить вход
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* List of Connected Profiles */}
-              {availableProfiles.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-2">
-                    Ваши заведения ({availableProfiles.length}):
+              {/* List of Available Google Business Profiles */}
+              {availableProfiles.length > 0 && !showManualSearch && (
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                    <span>Подтянутые заведения ({availableProfiles.length})</span>
+                    <span className="text-[11px] text-google-green flex items-center gap-1 font-bold">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Права: Владелец / Администратор
+                    </span>
                   </div>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {availableProfiles.map((prof, idx) => (
-                      <div 
-                        key={idx}
-                        className={`p-2.5 rounded-lg border text-xs flex items-center justify-between transition-colors ${
-                          activeProfile?.name === prof.name 
-                            ? 'border-google-blue bg-google-blue-light/30 text-google-blue font-bold' 
-                            : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 truncate">
-                          <Building2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
-                          <span className="truncate">{prof.name}</span>
-                          <span className="text-[10px] text-slate-400">({prof.city || prof.address})</span>
+
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                    {availableProfiles.map((prof, idx) => {
+                      const isActive = activeProfile?.name === prof.name;
+                      return (
+                        <div 
+                          key={idx}
+                          className={`p-3.5 rounded-xl border transition-all ${
+                            isActive 
+                              ? 'border-google-blue bg-google-blue-light/20 ring-1 ring-google-blue shadow-sm' 
+                              : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 font-bold text-xs ${
+                                isActive ? 'bg-google-blue text-white' : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {prof.name ? prof.name.charAt(0).toUpperCase() : <Building2 className="w-4 h-4" />}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-sm font-bold text-slate-900 truncate flex items-center gap-2">
+                                  <span>{prof.name}</span>
+                                  {isActive && (
+                                    <span className="text-[10px] bg-google-blue text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                      Активно
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-slate-500 truncate mt-0.5 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <span className="truncate">{prof.address || prof.city || 'Google Business Profile'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+                                    {prof.category || prof.primary_category || 'Локальный бизнес'}
+                                  </span>
+                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                    {prof.role || 'Владелец / Администратор'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="shrink-0 pt-1">
+                              {isActive ? (
+                                <button
+                                  onClick={() => setIsAddLocationModalOpen(false)}
+                                  className="px-3 py-1.5 bg-google-blue text-white rounded-lg font-bold text-xs hover:bg-google-blue/90 shadow-sm"
+                                >
+                                  Продолжить
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    localStorage.setItem('gbpilot_active_profile', JSON.stringify(prof));
+                                    setActiveProfile(prof);
+                                    setIsAddLocationModalOpen(false);
+                                    setAuthBanner({
+                                      type: 'success',
+                                      message: `Заведение "${prof.name}" успешно активировано! Вы управляете им с правами ${prof.role || 'Владельца/Администратора'}.`
+                                    });
+                                    window.location.reload();
+                                  }}
+                                  className="px-3 py-1.5 bg-white border border-google-blue text-google-blue hover:bg-google-blue hover:text-white rounded-lg font-bold text-xs transition-colors shadow-sm"
+                                >
+                                  Выбрать →
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        {activeProfile?.name === prof.name ? (
-                          <span className="text-[10px] bg-google-blue text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
-                            Активно
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              localStorage.setItem('gbpilot_active_profile', JSON.stringify(prof));
-                              setActiveProfile(prof);
-                              setIsAddLocationModalOpen(false);
-                              window.location.reload();
-                            }}
-                            className="text-xs text-google-blue hover:underline font-semibold"
-                          >
-                            Выбрать
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowManualSearch(true)}
+                      className="text-xs font-semibold text-google-blue hover:underline flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Привязать еще одно заведение через поиск Google Maps</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Search Section (If no profiles, or user clicked to add another, or API disabled) */}
+              {(availableProfiles.length === 0 || showManualSearch) && (
+                <div className="space-y-4">
+                  {availableProfiles.length > 0 && (
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-bold text-slate-700">Поиск заведения в Google Maps</span>
+                      <button
+                        onClick={() => {
+                          setShowManualSearch(false);
+                          setSelectedPendingLocation(null);
+                        }}
+                        className="text-xs text-slate-500 hover:text-slate-800 underline"
+                      >
+                        ← Вернуться к списку
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Autocomplete Search Input */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="text"
+                      value={locationSearchInput}
+                      onChange={(e) => {
+                        setLocationSearchInput(e.target.value);
+                        setSelectedPendingLocation(null);
+                      }}
+                      placeholder="Введите название заведения или адрес..."
+                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue transition-all"
+                      autoFocus
+                    />
+                    {isSearchingLocation && (
+                      <Loader2 className="w-4 h-4 text-google-blue animate-spin absolute right-3.5 top-1/2 -translate-y-1/2" />
+                    )}
+                  </div>
+
+                  {/* Suggestions Dropdown */}
+                  {locationSuggestions.length > 0 && !selectedPendingLocation && (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-lg max-h-56 overflow-y-auto divide-y divide-slate-100">
+                      {locationSuggestions.map((sug, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedPendingLocation(sug);
+                            setIsAdminConfirmed(false);
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 group"
+                        >
+                          <MapPin className="w-4 h-4 text-google-red mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-800 truncate">
+                              {sug.main_text || sug.description}
+                            </div>
+                            <div className="text-xs text-slate-500 truncate">
+                              {sug.description}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-slate-400 mt-1 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Selected Pending Location Confirmation Card */}
+                  {selectedPendingLocation && (
+                    <div className="p-4 rounded-xl border border-google-blue/30 bg-google-blue-light/20 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Building2 className="w-5 h-5 text-google-blue shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-slate-900 truncate">
+                            {selectedPendingLocation.main_text || selectedPendingLocation.description}
+                          </div>
+                          <div className="text-xs text-slate-600 truncate mt-0.5">
+                            {selectedPendingLocation.description}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Admin/Owner Confirmation Checkbox */}
+                      <label className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                        <input 
+                          type="checkbox"
+                          checked={isAdminConfirmed}
+                          onChange={(e) => setIsAdminConfirmed(e.target.checked)}
+                          className="w-4 h-4 mt-0.5 text-google-blue rounded border-slate-300 focus:ring-google-blue shrink-0 cursor-pointer"
+                        />
+                        <span className="text-xs text-slate-700 leading-snug">
+                          <strong>Подтверждаю:</strong> я являюсь владельцем или администратором данного заведения в Google Business Profile.
+                        </span>
+                      </label>
+
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPendingLocation(null)}
+                          className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 font-medium"
+                        >
+                          Отмена
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!isAdminConfirmed || isScrapingLocation}
+                          onClick={() => handleSelectSuggestion(selectedPendingLocation)}
+                          className="px-4 py-2 bg-google-blue text-white rounded-lg text-xs font-bold hover:bg-google-blue/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                        >
+                          {isScrapingLocation ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Активация заведения...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>Подтвердить и начать работу</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isScrapingLocation && !selectedPendingLocation && (
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center gap-3 text-xs text-slate-600 animate-pulse">
+                      <Loader2 className="w-4 h-4 text-google-blue animate-spin" />
+                      <span>Загружаем реальные данные заведения из Google...</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

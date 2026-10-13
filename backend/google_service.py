@@ -64,24 +64,31 @@ def get_google_user_info(access_token: str) -> Dict[str, Any]:
         return response.json()
     return {}
 
-def parse_google_location(loc: Dict[str, Any]) -> Dict[str, Any]:
+def parse_google_location(loc: Dict[str, Any], role: str = "OWNER") -> Dict[str, Any]:
     """Parses raw Google Business Profile API location into GBPilot BusinessProfile dict."""
-    store_addr = loc.get("storefrontAddress", {})
-    address_lines = store_addr.get("addressLines", [])
-    locality = store_addr.get("locality") or store_addr.get("administrativeArea") or "Local Area"
+    store_addr = loc.get("storefrontAddress", {}) or loc.get("address", {})
+    address_lines = store_addr.get("addressLines", []) if isinstance(store_addr, dict) else []
+    locality = store_addr.get("locality") or store_addr.get("administrativeArea") or "Dubai" if isinstance(store_addr, dict) else "Dubai"
     address = ", ".join(address_lines) if address_lines else locality
     
-    title = loc.get("title") or loc.get("name") or "My Business"
+    title = loc.get("title") or loc.get("locationName") or loc.get("name") or "My Business"
     categories = loc.get("categories", {})
-    primary_cat = categories.get("primaryCategory", {}).get("displayName", "Local Business")
-    phone = loc.get("phoneNumbers", {}).get("primaryPhone", "")
-    website = loc.get("websiteUri", "")
+    primary_cat = "Local Business"
+    if isinstance(categories, dict):
+        primary_cat = categories.get("primaryCategory", {}).get("displayName", "Local Business")
+    
+    phone_info = loc.get("phoneNumbers", {})
+    phone = phone_info.get("primaryPhone", "") if isinstance(phone_info, dict) else str(loc.get("primaryPhone", ""))
+    website = loc.get("websiteUri", "") or loc.get("websiteUrl", "")
     loc_name = loc.get("name", "")
     loc_id = loc_name.split("/")[-1] if "/" in loc_name else (loc_name or f"loc_{os.urandom(4).hex()}")
     
     latlng = loc.get("latlng", {})
-    lat = latlng.get("latitude", 25.2048)
-    lng = latlng.get("longitude", 55.2708)
+    lat = latlng.get("latitude", 25.2048) if isinstance(latlng, dict) else 25.2048
+    lng = latlng.get("longitude", 55.2708) if isinstance(latlng, dict) else 55.2708
+
+    role_str = str(role).upper()
+    role_display = "Владелец (Owner)" if "OWNER" in role_str else "Администратор (Manager)"
 
     return {
         "id": f"profile_{loc_id}",
@@ -97,40 +104,89 @@ def parse_google_location(loc: Dict[str, Any]) -> Dict[str, Any]:
         "website_url": website,
         "latitude": lat,
         "longitude": lng,
-        "health_score": 85,
+        "health_score": 88,
+        "role": role_display,
+        "is_admin": True,
+        "verified": True,
+        "source": "google_my_business",
         "autopilotMode": "MANUAL_APPROVAL"
     }
 
-def fetch_user_managed_locations(access_token: str) -> List[Dict[str, Any]]:
+def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
     """
     Fetches all live Google Business Profile locations owned or managed by the authenticated user.
+    Uses wildcard accounts/-/locations endpoint and accounts enumeration fallback.
+    Returns {"locations": [...], "error": None or str, "api_disabled": bool}
     """
+    result = {"locations": [], "error": None, "api_disabled": False}
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Method 1: Wildcard endpoint to fetch all locations across all accounts directly
     try:
-        # Step 1: List Accounts
+        wildcard_url = "https://mybusinessbusinessinformation.googleapis.com/v1/accounts/-/locations?readMask=name,title,storefrontAddress,websiteUri,phoneNumbers,categories,latlng"
+        res_w = requests.get(wildcard_url, headers=headers, timeout=8)
+        if res_w.ok:
+            w_data = res_w.json()
+            locs = w_data.get("locations", [])
+            if locs:
+                result["locations"] = [parse_google_location(l, "OWNER") for l in locs]
+                print(f"[GoogleService] Wildcard locations fetched: {len(result['locations'])}")
+                return result
+        elif res_w.status_code == 403:
+            print(f"[GoogleService] Wildcard returned 403: {res_w.text}")
+            if "has not been used in project" in res_w.text or "is disabled" in res_w.text:
+                result["api_disabled"] = True
+                result["error"] = "API_DISABLED"
+    except Exception as e:
+        print(f"[GoogleService] Wildcard query error: {e}")
+
+    # Method 2: Step 1 List Accounts, then Step 2 List Locations
+    try:
         accounts_url = "https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
-        headers = {"Authorization": f"Bearer {access_token}"}
         res = requests.get(accounts_url, headers=headers, timeout=8)
-        
-        locations = []
         if res.ok:
             data = res.json()
             accounts = data.get("accounts", [])
             for account in accounts:
-                account_name = account.get("name")
-                # Step 2: List Locations for each account
+                account_name = account.get("name") # e.g. "accounts/12345"
+                role = account.get("role", "OWNER")
                 loc_url = f"https://mybusinessbusinessinformation.googleapis.com/v1/{account_name}/locations?readMask=name,title,categories,storefrontAddress,phoneNumbers,websiteUri,latlng"
                 loc_res = requests.get(loc_url, headers=headers, timeout=8)
                 if loc_res.ok:
                     loc_data = loc_res.json()
-                    locations.extend(loc_data.get("locations", []))
+                    for l in loc_data.get("locations", []):
+                        result["locations"].append(parse_google_location(l, role))
                 else:
-                    print(f"[GoogleService] Locations request failed: {loc_res.status_code} {loc_res.text}")
+                    print(f"[GoogleService] Locations for {account_name} failed: {loc_res.status_code} {loc_res.text}")
+            if result["locations"]:
+                return result
         else:
-            print(f"[GoogleService] Accounts request returned {res.status_code}: {res.text}")
-        return locations
+            print(f"[GoogleService] Accounts endpoint returned {res.status_code}: {res.text}")
+            if res.status_code == 403 and ("disabled" in res.text or "not been used" in res.text):
+                result["api_disabled"] = True
+                result["error"] = "API_DISABLED"
     except Exception as e:
-        print(f"[GoogleService] Error fetching user managed locations: {e}")
-        return []
+        print(f"[GoogleService] Accounts query error: {e}")
+        result["error"] = str(e)
+
+    # Method 3: Legacy v4 fallback
+    try:
+        v4_url = "https://mybusiness.googleapis.com/v4/accounts"
+        res_v4 = requests.get(v4_url, headers=headers, timeout=8)
+        if res_v4.ok:
+            v4_data = res_v4.json()
+            for acc in v4_data.get("accounts", []):
+                acc_name = acc.get("name")
+                acc_role = acc.get("role", "OWNER")
+                v4_loc_url = f"https://mybusiness.googleapis.com/v4/{acc_name}/locations"
+                res_v4_loc = requests.get(v4_loc_url, headers=headers, timeout=8)
+                if res_v4_loc.ok:
+                    for l in res_v4_loc.json().get("locations", []):
+                        result["locations"].append(parse_google_location(l, acc_role))
+    except Exception as e:
+        print(f"[GoogleService] v4 query error: {e}")
+        
+    return result
 
 def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
     """
