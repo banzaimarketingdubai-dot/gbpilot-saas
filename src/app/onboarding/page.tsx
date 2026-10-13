@@ -350,8 +350,8 @@ export default function OnboardingPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const loginUrl = origin 
-        ? `${backendUrl}/api/v1/auth/google/login?redirect_url=${encodeURIComponent(origin)}`
-        : `${backendUrl}/api/v1/auth/google/login`;
+        ? `${backendUrl}/api/v1/auth/google/login?redirect_url=${encodeURIComponent(origin)}&origin=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}&raw_json=true`
+        : `${backendUrl}/api/v1/auth/google/login?raw_json=true`;
       const res = await fetch(loginUrl);
       if (res.ok) {
         const data = await res.json();

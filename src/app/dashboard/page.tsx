@@ -495,10 +495,23 @@ export default function DashboardPage() {
     window.location.reload();
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
-    window.location.href = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}`;
+    const loginUrl = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
+    try {
+      const res = await fetch(`${loginUrl}&raw_json=true`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.auth_url) {
+          window.location.href = data.auth_url;
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Direct auth fetch failed", e);
+    }
+    window.location.href = loginUrl;
   };
 
   const handleCopyAddress = () => {

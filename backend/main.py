@@ -161,14 +161,17 @@ def get_safe_frontend_url(state: str = None) -> str:
     return os.environ.get("FRONTEND_URL", "https://www.gbpilot.top").rstrip("/")
 
 @app.get("/api/v1/auth/google/login", tags=["Authentication"])
-async def google_login(redirect_url: str = None, state: str = None):
+async def google_login(redirect_url: str = None, state: str = None, origin: str = None, raw_json: bool = False):
     """
     Generates the Google OAuth 2.0 authorization URL for connecting a live Google Business Profile.
-    Optionally accepts redirect_url / state so Google redirects back to the caller's origin.
+    Optionally accepts redirect_url / state / origin so Google redirects back to the caller's origin.
+    Redirects (307) directly to Google OAuth consent page (or returns JSON if raw_json=True).
     """
-    target = redirect_url or state
+    target = redirect_url or state or origin or "https://www.gbpilot.top"
     url = get_google_auth_url(state=target)
-    return {"auth_url": url}
+    if raw_json:
+        return {"auth_url": url}
+    return RedirectResponse(url=url, status_code=307)
 
 @app.get("/api/v1/auth/google/callback", tags=["Authentication"])
 async def google_callback(code: str, state: str = None, db: Session = Depends(get_db)):
