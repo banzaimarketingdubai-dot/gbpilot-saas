@@ -40,6 +40,15 @@ app.add_middleware(
 from fastapi.responses import RedirectResponse
 from google_service import get_google_auth_url, exchange_code_for_tokens, get_google_user_info
 
+@app.get("/", tags=["System"])
+async def root():
+    return {
+        "status": "ok",
+        "service": "GBPilot AI Proactive Engine API",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 @app.get("/health", tags=["System"])
 async def health_check():
     """System health check endpoint for Railway deployment monitoring."""
