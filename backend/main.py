@@ -563,7 +563,8 @@ async def review_takedown_endpoint(request: ReviewTakedownRequest):
             review_text=request.review_text,
             author_name=request.author_name or "Anonymous",
             rating=request.rating,
-            business_context=request.business_context or "Dubai, UAE"
+            business_context=request.business_context or "Dubai, UAE",
+            jurisdiction=request.jurisdiction or "UAE"
         )
         return ReviewTakedownResponse(**result)
     except Exception as e:

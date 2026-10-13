@@ -158,6 +158,7 @@ class ReviewTakedownRequest(BaseModel):
     rating: int = 1
     business_context: Optional[str] = "Dubai, UAE"
     location_details: Optional[str] = None
+    jurisdiction: Optional[str] = "UAE"  # 'UAE' | 'USA' | 'EU' | 'GLOBAL'
 
 class ReviewTakedownViolation(BaseModel):
     clause: str
@@ -173,3 +174,4 @@ class ReviewTakedownResponse(BaseModel):
     dossier_text: str
     google_escalation_url: str
     message: str
+    jurisdiction: Optional[str] = "UAE"

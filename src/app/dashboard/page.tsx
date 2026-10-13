@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [ramadanNotice, setRamadanNotice] = useState<string | null>(null);
 
   // Review Takedown Modal State
+  const [takedownJurisdiction, setTakedownJurisdiction] = useState<'UAE' | 'USA' | 'EU' | 'GLOBAL'>('UAE');
   const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
   const [takedownBusiness, setTakedownBusiness] = useState('');
   const [takedownReviewText, setTakedownReviewText] = useState('');
@@ -58,6 +59,7 @@ export default function DashboardPage() {
     violations: { clause: string; policy_name: string; explanation: string }[];
     dossier_text: string;
     google_escalation_url: string;
+    jurisdiction?: string;
   } | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -151,15 +153,24 @@ export default function DashboardPage() {
     setTakedownResult(null);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const defaultCtx = takedownJurisdiction === 'UAE' 
+        ? 'Dubai, UAE' 
+        : takedownJurisdiction === 'USA' 
+        ? 'United States' 
+        : takedownJurisdiction === 'EU' 
+        ? 'European Union' 
+        : 'International';
+
       const res = await fetch(`${baseUrl}/api/v1/guard/review-takedown`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          business_name: takedownBusiness || activeProfile?.name || 'Dubai Commercial Entity',
+          business_name: takedownBusiness || activeProfile?.name || 'Local Business Entity',
           review_text: takedownReviewText,
           author_name: takedownAuthor || 'Anonymous',
           rating: 1,
-          business_context: 'Dubai, UAE'
+          jurisdiction: takedownJurisdiction,
+          business_context: defaultCtx
         })
       });
       if (res.ok) {
@@ -169,23 +180,55 @@ export default function DashboardPage() {
         throw new Error("API fallback");
       }
     } catch {
+      const jurFallbacks: Record<string, any> = {
+        UAE: {
+          statute: 'UAE Federal Decree-Law No. 34 of 2021 (Articles 43 & 44)',
+          clause1: 'Section 3.2 - Deceptive Content & Fake Engagement',
+          policy1: 'Google Maps User Contributed Content Policy',
+          clause2: 'Articles 43 & 44 - Defamation & False Rumors',
+          policy2: 'UAE Federal Decree-Law No. 34 of 2021'
+        },
+        USA: {
+          statute: 'FTC Consumer Review Fairness Act & Lanham Act § 43(a)',
+          clause1: 'Section 3.2 - Deceptive Content & Inauthentic Engagement',
+          policy1: 'Google Maps User Contributed Content Policy',
+          clause2: '15 U.S.C. § 45b & Lanham Act - Commercial Disparagement',
+          policy2: 'FTC & US Commercial Code'
+        },
+        EU: {
+          statute: 'EU Digital Services Act (Regulation 2022/2065, Art. 16) & GDPR',
+          clause1: 'Article 16 DSA - Notice and Action Mechanism',
+          policy1: 'EU Digital Services Act',
+          clause2: 'Section 3.2 - Deceptive & Fake Engagement',
+          policy2: 'Google Maps User Contributed Content Policy'
+        },
+        GLOBAL: {
+          statute: 'Google Maps User Contributed Content Guidelines',
+          clause1: 'Section 3.2 - Inauthentic Engagement & Unverified Experience',
+          policy1: 'Google Maps Content Policy',
+          clause2: 'Section 1.2 - Conflict of Interest & Commercial Sabotage',
+          policy2: 'Google Business Profile Guidelines'
+        }
+      };
+      const curJur = jurFallbacks[takedownJurisdiction] || jurFallbacks.UAE;
       setTakedownResult({
         status: 'success',
         confidence_score: 92,
         estimated_removal_time: '24-48 hours',
+        jurisdiction: takedownJurisdiction,
         violations: [
           {
-            clause: 'Section 3.2 - Deceptive Content & Fake Engagement',
-            policy_name: 'Google Maps User Contributed Content Policy',
+            clause: curJur.clause1,
+            policy_name: curJur.policy1,
             explanation: 'Unverified transaction claims exhibiting patterns of competitor-orchestrated sabotage.'
           },
           {
-            clause: 'Articles 43 & 44 - Electronic Defamation & False Rumors',
-            policy_name: 'UAE Federal Decree-Law No. 34 of 2021',
-            explanation: 'Dissemination of unverified public allegations causing commercial damages to a licensed UAE establishment.'
+            clause: curJur.clause2,
+            policy_name: curJur.policy2,
+            explanation: `Formal violation of applicable statutory standards (${curJur.statute}).`
           }
         ],
-        dossier_text: `FORMAL ESCALATION NOTICE: REQUEST FOR PERMANENT REVIEW REMOVAL\nTo: Google Business Profile Trust & Safety Team / Legal Escalations\nEntity: ${takedownBusiness || activeProfile?.name || 'Licensed Dubai Business'} (Dubai, UAE)\nReviewer: ${takedownAuthor || 'Anonymous'}\n\nSUMMARY OF VIOLATION:\n1. Direct breach of Google Maps Deceptive Content Policy (Section 3.2).\n2. Violation of UAE Federal Decree-Law No. 34 of 2021 on Combatting Rumors and Cybercrimes (Articles 43 & 44).\n\nPRAYER FOR RELIEF:\nWe formally request immediate deletion of this illegitimate entry.`,
+        dossier_text: `FORMAL ESCALATION NOTICE: REQUEST FOR PERMANENT REVIEW REMOVAL\nTo: Google Business Profile Trust & Safety Team / Legal Escalations\nEntity: ${takedownBusiness || activeProfile?.name || 'Licensed Business'}\nJurisdiction: ${takedownJurisdiction}\nReviewer: ${takedownAuthor || 'Anonymous'}\n\nSUMMARY OF VIOLATION:\n1. Direct breach of Google Maps Deceptive Content Policy (Section 3.2).\n2. Violation of statutory standards under ${curJur.statute}.\n\nPRAYER FOR RELIEF:\nWe formally request immediate deletion of this illegitimate entry.`,
         google_escalation_url: 'https://support.google.com/business/workflow/9945796'
       });
     } finally {
@@ -514,7 +557,7 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-bold text-google-text-primary text-base">Review Takedown™ (Снос отзыва)</h3>
                     <p className="text-xs text-google-text-secondary">
-                      Генерация юридического досье по Google Maps Content Policy и Закону ОАЭ № 34/2021.
+                      Генерация юридического досье по Google Maps Content Policy и юрисдикциям (ОАЭ, США, ЕС, Global).
                     </p>
                   </div>
                 </div>
@@ -531,6 +574,72 @@ export default function DashboardPage() {
 
               {/* Input Form */}
               <form onSubmit={handleReviewTakedownSubmit} className="space-y-4">
+                {/* Jurisdiction Switcher */}
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Юрисдикция / Применимое право:</span>
+                    <span className="text-[11px] text-google-blue font-bold">
+                      {takedownJurisdiction === 'UAE' && '🇦🇪 ОАЭ: Закон № 34/2021'}
+                      {takedownJurisdiction === 'USA' && '🇺🇸 США: FTC Act & Lanham Act'}
+                      {takedownJurisdiction === 'EU' && '🇪🇺 ЕС / UK: Digital Services Act'}
+                      {takedownJurisdiction === 'GLOBAL' && '🌍 Международный: Google Policy'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTakedownJurisdiction('UAE')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                        takedownJurisdiction === 'UAE'
+                          ? 'bg-white text-google-red border-red-300 shadow-sm ring-1 ring-red-300'
+                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
+                      }`}
+                    >
+                      <span>🇦🇪</span>
+                      <span>ОАЭ / Дубай</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTakedownJurisdiction('USA')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                        takedownJurisdiction === 'USA'
+                          ? 'bg-white text-google-blue border-blue-300 shadow-sm ring-1 ring-blue-300'
+                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
+                      }`}
+                    >
+                      <span>🇺🇸</span>
+                      <span>США (US)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTakedownJurisdiction('EU')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                        takedownJurisdiction === 'EU'
+                          ? 'bg-white text-purple-700 border-purple-300 shadow-sm ring-1 ring-purple-300'
+                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
+                      }`}
+                    >
+                      <span>🇪🇺</span>
+                      <span>Европа / UK</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTakedownJurisdiction('GLOBAL')}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                        takedownJurisdiction === 'GLOBAL'
+                          ? 'bg-white text-emerald-700 border-emerald-300 shadow-sm ring-1 ring-emerald-300'
+                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
+                      }`}
+                    >
+                      <span>🌍</span>
+                      <span>Global</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-google-text-secondary mb-1">
@@ -581,7 +690,12 @@ export default function DashboardPage() {
                   {isTakedownLoading ? (
                     <>
                       <Sparkles className="w-4 h-4 animate-spin" />
-                      <span>Анализ нарушений и законов ОАЭ...</span>
+                      <span>
+                        {takedownJurisdiction === 'UAE' && 'Анализ нарушений и законов ОАЭ...'}
+                        {takedownJurisdiction === 'USA' && 'Анализ законов США (FTC/Lanham)...'}
+                        {takedownJurisdiction === 'EU' && 'Анализ регламентов ЕС (DSA/GDPR)...'}
+                        {takedownJurisdiction === 'GLOBAL' && 'Анализ Google Maps Content Policy...'}
+                      </span>
                     </>
                   ) : (
                     <>
@@ -595,10 +709,20 @@ export default function DashboardPage() {
               {/* Result Dossier in Modal */}
               {takedownResult && (
                 <div className="mt-5 space-y-4 border-t border-google-border-light pt-4 animate-in fade-in duration-200">
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-800">
-                      ✓ Досье сформировано (Вероятность сноса: {takedownResult.confidence_score}%)
-                    </span>
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="font-bold text-emerald-800">
+                        ✓ Досье сформировано (Вероятность сноса: {takedownResult.confidence_score}%)
+                      </span>
+                      <div className="text-[11px] text-emerald-700 mt-0.5">
+                        Юрисдикция: <span className="font-bold">{takedownJurisdiction}</span> • {
+                          takedownJurisdiction === 'UAE' ? 'ОАЭ Декрет-Закон № 34/2021' :
+                          takedownJurisdiction === 'USA' ? 'FTC Act & Lanham Act § 43(a)' :
+                          takedownJurisdiction === 'EU' ? 'EU Digital Services Act Art. 16' :
+                          'Google Universal Content Policy'
+                        }
+                      </div>
+                    </div>
                     <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
                       Срок: {takedownResult.estimated_removal_time}
                     </span>
@@ -633,7 +757,7 @@ export default function DashboardPage() {
                       rel="noopener noreferrer"
                       className="material-button-primary text-xs py-2 px-4 !bg-red-600 hover:!bg-red-700 font-bold flex items-center gap-1.5"
                     >
-                      <span>🚀 Открыть Google MENA форму</span>
+                      <span>🚀 {takedownJurisdiction === 'UAE' ? 'Открыть Google MENA форму' : 'Открыть форму эскалации Google'}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                     <button 
