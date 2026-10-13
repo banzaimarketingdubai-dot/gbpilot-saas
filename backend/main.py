@@ -158,7 +158,7 @@ def get_safe_frontend_url(state: str = None) -> str:
         clean_state = state.strip().rstrip("/")
         if clean_state.startswith("http://") or clean_state.startswith("https://"):
             return clean_state
-    return os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+    return os.environ.get("FRONTEND_URL", "https://www.gbpilot.top").rstrip("/")
 
 @app.get("/api/v1/auth/google/login", tags=["Authentication"])
 async def google_login(redirect_url: str = None, state: str = None):
