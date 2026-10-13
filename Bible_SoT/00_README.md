@@ -16,6 +16,7 @@
 | [**06. Политика Монетизации и Тарифы**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/06_MONETIZATION_AND_PRICING_POLICY.md) | Тарифная сетка по глубине автоматизации Триады (Starter $29, Pro $69, Agency $199), транзакционные Add-ons (NFC/QR стойки, цитирования), Unit-экономика (>93% маржа). |
 | [**07. Анализ Конкурентов и Киллер-Фичи**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/07_COMPETITIVE_INTELLIGENCE_AND_KILLER_FEATURES.md) | Разбор уязвимостей BrightLocal, LocalFalcon, Localo, Birdeye, Podium. 6 нечестных преимуществ GBPilot (1-Click Engine, Profile Guard, FTC Speedometer, GEO/LLM SOV). |
 | [**08. Фреймворк JTBD и Сценарии**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/08_JTBD_AND_CUSTOMER_SCENARIOS.md) | Jobs To Be Done (Bob Moesta 4 Forces of Progress), целевые персоны, Job Stories по Триаде, микромоменты (холодная конверсия, отражение диверсий, LSI-ответы). |
+| [**09. Рынок Дубая и Локализация (ОАЭ)**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/09_DUBAI_UAE_MARKET_LOCALIZATION_AND_GTM.md) | 6 адаптаций под Дубай (Башни/Кластеры, Makani, WhatsApp-first, снос отзывов по Закону о киберпреступности ОАЭ № 34/2021, пресет «Рамадан», Apple Maps/2GIS, тарифы в AED). |
 
 ---
 
