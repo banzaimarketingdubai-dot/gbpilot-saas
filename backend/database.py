@@ -22,7 +22,8 @@ else:
 
 def get_db():
     if not SessionLocal:
-        raise Exception("Database is not configured")
+        yield None
+        return
     db = SessionLocal()
     try:
         yield db

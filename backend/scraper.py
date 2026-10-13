@@ -26,7 +26,7 @@ async def call_gemini_json(prompt: str) -> Dict[str, Any]:
             client = genai.Client(api_key=gemini_key)
             response = await asyncio.to_thread(
                 client.models.generate_content,
-                model="gemini-2.5-flash",
+                model="gemini-3.8-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(response_mime_type="application/json")
             )
@@ -38,7 +38,7 @@ async def call_gemini_json(prompt: str) -> Dict[str, Any]:
 
     # Method B: Direct Gemini REST API call via HTTP
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={gemini_key}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json"}

@@ -97,7 +97,7 @@ export default function OnboardingPage() {
   }, [searchQuery, approxLocation]);
 
   const fetchSuggestions = async (q: string, lat: any, lng: any) => {
-    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
     let url = `${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(q)}`;
     if (lat && lng) url += `&lat=${lat}&lng=${lng}`;
     
@@ -139,7 +139,7 @@ export default function OnboardingPage() {
     setIsScraping(true);
     
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const response = await fetch(`${backendUrl}/api/v1/onboarding/scrape`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,7 +182,7 @@ export default function OnboardingPage() {
     setIsScanning(true);
     
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const response = await fetch(`${backendUrl}/api/v1/onboarding/scrape`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
   const handleConnectGoogle = async () => {
     setIsConnectingGoogle(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const res = await fetch(`${backendUrl}/api/v1/auth/google/login`);
       if (res.ok) {
         const data = await res.json();

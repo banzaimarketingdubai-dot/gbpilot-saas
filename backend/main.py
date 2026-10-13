@@ -1,3 +1,9 @@
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except Exception:
+    pass
+
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -126,52 +132,54 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
             b_name = request.business_name or "Local Business"
             profile_data = await scrape_google_business_profile(b_name, request.location)
         
-        # Check if default user exists (for MVP)
-        default_user = db.query(models.User).first()
-        if not default_user:
-            default_user = models.User(
-                email="admin@gbpilot.com", 
-                hashed_password="hashed_placeholder", 
-                full_name="Default Admin"
+        if db:
+            # Check if default user exists (for MVP)
+            default_user = db.query(models.User).first()
+            if not default_user:
+                default_user = models.User(
+                    email="admin@gbpilot.com", 
+                    hashed_password="hashed_placeholder", 
+                    full_name="Default Admin"
+                )
+                db.add(default_user)
+                db.commit()
+                db.refresh(default_user)
+                
+            # Create or Get Organization
+            org = db.query(models.Organization).filter(models.Organization.owner_id == default_user.id).first()
+            if not org:
+                org = models.Organization(
+                    owner_id=default_user.id,
+                    name=f"{b_name} Workspace"
+                )
+                db.add(org)
+                db.commit()
+                db.refresh(org)
+                
+            # Save the new GBP Profile
+            lon = profile_data.get('longitude', 55.2708)
+            lat = profile_data.get('latitude', 25.2048)
+            point_str = f"POINT({lon} {lat})"
+            new_profile = models.GBPProfile(
+                organization_id=org.id,
+                google_location_id=profile_data['google_location_id'],
+                business_name=profile_data['business_name'],
+                primary_category=profile_data['primary_category'],
+                address_line=profile_data['address_line'],
+                city=profile_data['city'],
+                postal_code=profile_data['postal_code'],
+                country=profile_data['country'],
+                location=point_str,
+                phone_number=profile_data['phone_number'],
+                website_url=profile_data['website_url'],
+                health_score=profile_data['health_score']
             )
-            db.add(default_user)
+            db.add(new_profile)
             db.commit()
-            db.refresh(default_user)
-            
-        # Create or Get Organization
-        org = db.query(models.Organization).filter(models.Organization.owner_id == default_user.id).first()
-        if not org:
-            org = models.Organization(
-                owner_id=default_user.id,
-                name=f"{b_name} Workspace"
-            )
-            db.add(org)
-            db.commit()
-            db.refresh(org)
-            
-        # Save the new GBP Profile
-        lon = profile_data.get('longitude', 55.2708)
-        lat = profile_data.get('latitude', 25.2048)
-        point_str = f"POINT({lon} {lat})"
-        new_profile = models.GBPProfile(
-            organization_id=org.id,
-            google_location_id=profile_data['google_location_id'],
-            business_name=profile_data['business_name'],
-            primary_category=profile_data['primary_category'],
-            address_line=profile_data['address_line'],
-            city=profile_data['city'],
-            postal_code=profile_data['postal_code'],
-            country=profile_data['country'],
-            location=point_str,
-            phone_number=profile_data['phone_number'],
-            website_url=profile_data['website_url'],
-            health_score=profile_data['health_score']
-        )
-        db.add(new_profile)
-        db.commit()
-        db.refresh(new_profile)
-        
-        profile_data['id'] = str(new_profile.id)
+            db.refresh(new_profile)
+            profile_data['id'] = str(new_profile.id)
+        else:
+            profile_data['id'] = f"profile_{profile_data['google_location_id'][:8]}"
         
         return ScrapeResponse(
             status="success",
@@ -376,17 +384,19 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
     """
     Generate a 3x3 Geo-Grid and scan Google Places API at each point for the given keyword.
     """
-    profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == request.profile_id).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-
+    profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == request.profile_id).first() if db else None
+    
     # Parse WKT POINT
-    point_str = profile.location # e.g. "POINT(-73.98689399999999 40.759524899999995)"
-    try:
-        coords = point_str.replace("POINT(", "").replace(")", "").split()
-        center_lng, center_lat = float(coords[0]), float(coords[1])
-    except:
-        center_lat, center_lng = 40.7595, -73.9868 # fallback
+    center_lat, center_lng = 40.7595, -73.9868
+    target_name = "my business"
+    if profile:
+        target_name = profile.business_name.lower().strip()
+        point_str = profile.location or ""
+        try:
+            coords = point_str.replace("POINT(", "").replace(")", "").split()
+            center_lng, center_lat = float(coords[0]), float(coords[1])
+        except:
+            pass
 
     # Approximate 1 meter in degrees (roughly)
     lat_offset_per_m = 1 / 111111
@@ -421,10 +431,10 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
         # Find our business rank
         # We match by name broadly
         rank = 21 # Default if not found (20+ means not ranking well)
-        target_name = profile.business_name.lower().strip()
+        safe_target = profile.business_name.lower().strip() if profile else target_name
         for idx, place in enumerate(places):
             place_name = place.get("name", "").lower()
-            if target_name in place_name or place_name in target_name:
+            if safe_target in place_name or place_name in safe_target:
                 rank = idx + 1
                 break
                 
