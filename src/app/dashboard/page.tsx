@@ -120,6 +120,12 @@ export default function DashboardPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
+      const addLoc = urlParams.get('add_location');
+      if (addLoc === 'true') {
+        setIsAddLocationModalOpen(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
       // Load available profiles from storage
       const storedList = localStorage.getItem('gbpilot_available_profiles');
       if (storedList) {
@@ -130,6 +136,10 @@ export default function DashboardPage() {
           console.error(e);
         }
       }
+
+      const handleOpenModal = () => setIsAddLocationModalOpen(true);
+      window.addEventListener('open_add_location_modal', handleOpenModal);
+      return () => window.removeEventListener('open_add_location_modal', handleOpenModal);
     }
 
     let currentProfileId = 'profile_123';

@@ -209,14 +209,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   </div>
                 ))}
-                <Link
-                  href="/onboarding"
-                  onClick={() => setIsLocationOpen(false)}
-                  className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLocationOpen(false);
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('open_add_location_modal'));
+                      if (window.location.pathname !== '/dashboard') {
+                        window.location.href = '/dashboard?add_location=true';
+                      }
+                    }
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Connect New Location</span>
-                </Link>
+                  <span>+ Connect New Location</span>
+                </button>
               </div>
             )}
           </div>
