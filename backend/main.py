@@ -255,7 +255,8 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
             profiles_b64 = base64.b64encode(json.dumps(fetched_profiles).encode('utf-8')).decode('utf-8')
             params += f"&profiles={profiles_b64}&select_location=true"
         elif api_disabled:
-            params += "&api_disabled=true&select_location=true"
+            missing_api = loc_res.get("missing_api", "mybusinessaccountmanagement.googleapis.com")
+            params += f"&api_disabled=true&missing_api={missing_api}&select_location=true"
         else:
             params += "&needs_location=true&select_location=true"
             

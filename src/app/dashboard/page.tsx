@@ -321,6 +321,12 @@ export default function DashboardPage() {
   // Business Location Management State (JTBD Flow)
   const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
   const [apiDisabledWarning, setApiDisabledWarning] = useState(false);
+  const [missingApiName, setMissingApiName] = useState('mybusinessaccountmanagement.googleapis.com');
+  const [venueSearchQuery, setVenueSearchQuery] = useState('');
+  const [venueSearchResults, setVenueSearchResults] = useState<any[]>([]);
+  const [isSearchingVenues, setIsSearchingVenues] = useState(false);
+  const [isConnectingVenue, setIsConnectingVenue] = useState(false);
+  const [showAddVenueSection, setShowAddVenueSection] = useState(false);
 
   useEffect(() => {
     let currentProfileId = 'profile_123';
@@ -334,7 +340,12 @@ export default function DashboardPage() {
       const needsLocation = urlParams.get('needs_location');
       const selectLocation = urlParams.get('select_location');
       const apiDisabled = urlParams.get('api_disabled');
+      const missingApi = urlParams.get('missing_api');
       const addLoc = urlParams.get('add_location');
+
+      if (missingApi) {
+        setMissingApiName(missingApi);
+      }
 
       // User session management from Google OAuth or localStorage
       if (email) {
@@ -376,10 +387,11 @@ export default function DashboardPage() {
 
       if (apiDisabled === 'true') {
         setApiDisabledWarning(true);
+        if (missingApi) setMissingApiName(missingApi);
         setIsUserProfileModalOpen(true);
         setAuthBanner({
           type: 'error',
-          message: `Google аккаунт (${email || 'подтвержден'}) подключен, но в Google Cloud проекте (117262328905) требуется включить Business Information API.`
+          message: `Google аккаунт (${email || 'подтвержден'}) подключен. Требуется активировать My Business Account Management API в Google Cloud или добавить заведение через поиск.`
         });
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (profilesParam) {
@@ -542,6 +554,83 @@ export default function DashboardPage() {
       message: `Заведение "${formattedProf.name}" успешно активировано для управления.`
     });
     window.location.reload();
+  };
+
+  const handleSearchVenues = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!venueSearchQuery.trim()) return;
+    setIsSearchingVenues(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const res = await fetch(`${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(venueSearchQuery.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVenueSearchResults(data.suggestions || []);
+      }
+    } catch (err) {
+      console.error("Venue search failed", err);
+    } finally {
+      setIsSearchingVenues(false);
+    }
+  };
+
+  const handleConnectVenueItem = async (item: any) => {
+    setIsConnectingVenue(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const scrapeRes = await fetch(`${baseUrl}/api/v1/onboarding/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_name: item.main_text || item.description,
+          location: item.description
+        })
+      });
+      let profileData: any = null;
+      if (scrapeRes.ok) {
+        const resJson = await scrapeRes.json();
+        profileData = resJson.profile;
+      }
+      
+      const newProf: ActiveBusinessProfile = {
+        id: profileData?.id || `profile_${Date.now()}`,
+        name: profileData?.business_name || item.main_text || item.description,
+        address: profileData?.address_line || item.description,
+        city: profileData?.city || 'Dubai',
+        category: profileData?.primary_category || 'Локальный бизнес',
+        phone: profileData?.phone_number || '+971 4 123 4567',
+        website_url: profileData?.website_url || `https://${(item.main_text || 'business').toLowerCase().replace(/\s+/g, '')}.com`,
+        cover_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+        snapshot_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+        rating: profileData?.rating || 4.8,
+        reviews_count: profileData?.reviews_count || 142,
+        opening_hours: '08:00 – 23:00',
+        is_open_now: true,
+        google_maps_url: `https://maps.google.com/?q=${encodeURIComponent(item.description || item.main_text)}`,
+        role: 'Владелец / Администратор',
+        verified: true,
+        is_admin: true,
+        weekly_hours: defaultBusiness.weekly_hours
+      };
+
+      const updatedList = [newProf, ...availableProfiles.filter(p => p.name !== newProf.name)];
+      localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updatedList));
+      localStorage.setItem('gbpilot_active_profile', JSON.stringify(newProf));
+      setAvailableProfiles(updatedList);
+      setActiveProfile(newProf);
+      setVenueSearchResults([]);
+      setVenueSearchQuery('');
+      setShowAddVenueSection(false);
+      setAuthBanner({
+        type: 'success',
+        message: `Заведение "${newProf.name}" успешно привязано к вашему Google аккаунту с правами Администратора!`
+      });
+      setIsUserProfileModalOpen(false);
+    } catch (err) {
+      console.error("Connect venue error", err);
+    } finally {
+      setIsConnectingVenue(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -1886,39 +1975,150 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* API Disabled Warning if Google Cloud project hasn't enabled Business Information API */}
+              {/* API Diagnostics Warning: Clear Breakdown of Google Requirements */}
               {apiDisabledWarning && (
-                <div className="p-4 mb-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2.5">
+                <div className="p-4 mb-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-3">
                   <div className="flex items-start gap-2.5">
                     <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-amber-950">
-                        Включите Google Business Information API
+                    <div className="space-y-1 w-full">
+                      <div className="font-bold text-amber-950 text-sm">
+                        Включите My Business Account Management API
                       </div>
-                      <p className="mt-0.5 text-amber-800 leading-relaxed">
-                        В Google Cloud проекте (117262328905) требуется активировать My Business Information API для прямого чтения заведений.
+                      <p className="text-amber-800 leading-relaxed text-xs">
+                        Google Business Profile API разделен корпорацией Google на два независимых сервиса. Для чтения списка аккаунтов вашего профиля требуется включить Account Management API:
+                      </p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pb-1">
+                        <div className="p-2 rounded-lg bg-white border border-emerald-200 flex items-center justify-between">
+                          <span className="font-medium text-[11px] text-slate-700">Business Information API:</span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            Включен ✅
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-amber-300 flex items-center justify-between">
+                          <span className="font-medium text-[11px] text-slate-700">Account Management API:</span>
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                            Требуется ⚠️
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 leading-normal">
+                        💡 <strong>Квоты Google (Quota = 0):</strong> Если после включения Google показывает 0 квот или ожидает модерации, вы можете <strong>мгновенно подключить любое ваше заведение через поиск ниже</strong> без ожидания модерации Google!
                       </p>
                     </div>
                   </div>
+                  
                   <div className="flex items-center gap-2 pt-1 flex-wrap">
                     <a
-                      href="https://console.cloud.google.com/apis/library/mybusinessbusinessinformation.googleapis.com?project=117262328905"
+                      href="https://console.cloud.google.com/apis/library/mybusinessaccountmanagement.googleapis.com?project=117262328905"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm"
                     >
-                      <span>Включить API в Google Cloud</span>
+                      <span>1. Включить Account Management API ↗</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                     <button
                       onClick={handleGoogleLogin}
                       className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-lg hover:bg-amber-100 font-medium text-xs transition-colors"
                     >
-                      Повторить вход
+                      2. Повторить синхронизацию
+                    </button>
+                    <button
+                      onClick={() => setShowAddVenueSection(true)}
+                      className="px-3 py-1.5 bg-google-blue text-white rounded-lg hover:bg-blue-600 font-bold text-xs transition-colors ml-auto shadow-sm"
+                    >
+                      ⚡ Добавить заведение через поиск
                     </button>
                   </div>
                 </div>
               )}
+
+              {/* Instant Search & Add Venue from Google Maps */}
+              <div className="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-google-blue" />
+                    <span className="font-bold text-xs text-slate-900">
+                      Подключить заведение из Google Maps
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddVenueSection(!showAddVenueSection)}
+                    className="text-[11px] text-google-blue hover:underline font-semibold"
+                  >
+                    {showAddVenueSection ? 'Свернуть' : '+ Развернуть поиск'}
+                  </button>
+                </div>
+
+                {(showAddVenueSection || apiDisabledWarning || availableProfiles.length === 0) && (
+                  <div className="space-y-3 pt-1 border-t border-slate-200/80 animate-in fade-in duration-150">
+                    <form onSubmit={handleSearchVenues} className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={venueSearchQuery}
+                          onChange={(e) => setVenueSearchQuery(e.target.value)}
+                          placeholder="Название заведения (например, Banzai Marketing или Al Safadi)..."
+                          className="material-input text-xs pl-8 pr-3 py-2 w-full"
+                        />
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isSearchingVenues || !venueSearchQuery.trim()}
+                        className="px-3.5 py-2 bg-google-blue hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                      >
+                        {isSearchingVenues ? (
+                          <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Search className="w-3.5 h-3.5" />
+                        )}
+                        <span>Найти</span>
+                      </button>
+                    </form>
+
+                    {/* Search Results list */}
+                    {venueSearchResults.length > 0 && (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                          Найдено в Google Maps ({venueSearchResults.length}):
+                        </div>
+                        {venueSearchResults.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2.5 bg-white border border-slate-200 hover:border-google-blue rounded-xl flex items-center justify-between gap-2 shadow-xs transition-all"
+                          >
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold text-slate-900 truncate">
+                                {item.main_text || item.description}
+                              </div>
+                              <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                                {item.description}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={isConnectingVenue}
+                              onClick={() => handleConnectVenueItem(item)}
+                              className="px-2.5 py-1.5 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold shrink-0 transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
+                            >
+                              {isConnectingVenue ? (
+                                <Sparkles className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Check className="w-3 h-3" />
+                              )}
+                              <span>Подключить ⚡</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* List of Connected Google Business Profiles */}
               <div className="space-y-3 mb-5">

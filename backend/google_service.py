@@ -137,6 +137,7 @@ def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
             if "has not been used in project" in res_w.text or "is disabled" in res_w.text:
                 result["api_disabled"] = True
                 result["error"] = "API_DISABLED"
+                result["missing_api"] = "mybusinessbusinessinformation.googleapis.com"
     except Exception as e:
         print(f"[GoogleService] Wildcard query error: {e}")
 
@@ -158,6 +159,10 @@ def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
                         result["locations"].append(parse_google_location(l, role))
                 else:
                     print(f"[GoogleService] Locations for {account_name} failed: {loc_res.status_code} {loc_res.text}")
+                    if loc_res.status_code == 403 and ("disabled" in loc_res.text or "not been used" in loc_res.text):
+                        result["api_disabled"] = True
+                        result["error"] = "API_DISABLED"
+                        result["missing_api"] = "mybusinessbusinessinformation.googleapis.com"
             if result["locations"]:
                 return result
         else:
@@ -165,6 +170,7 @@ def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
             if res.status_code == 403 and ("disabled" in res.text or "not been used" in res.text):
                 result["api_disabled"] = True
                 result["error"] = "API_DISABLED"
+                result["missing_api"] = "mybusinessaccountmanagement.googleapis.com"
     except Exception as e:
         print(f"[GoogleService] Accounts query error: {e}")
         result["error"] = str(e)
