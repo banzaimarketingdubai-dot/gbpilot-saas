@@ -29,7 +29,11 @@ import {
   FileText,
   CheckCircle2,
   DollarSign,
-  X
+  X,
+  Search,
+  Loader2,
+  ChevronRight,
+  Plus
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -64,18 +68,49 @@ export default function DashboardPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [authBanner, setAuthBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Business Location Management State
+  const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
+  const [locationSearchInput, setLocationSearchInput] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [isScrapingLocation, setIsScrapingLocation] = useState(false);
+  const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const auth = urlParams.get('auth');
       const detail = urlParams.get('detail');
       const email = urlParams.get('email');
+      const profilesParam = urlParams.get('profiles');
+      const needsLocation = urlParams.get('needs_location');
 
-      if (auth === 'success') {
+      if (profilesParam) {
+        try {
+          const jsonStr = decodeURIComponent(escape(atob(profilesParam)));
+          const profilesList = JSON.parse(jsonStr);
+          if (Array.isArray(profilesList) && profilesList.length > 0) {
+            localStorage.setItem('gbpilot_available_profiles', JSON.stringify(profilesList));
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(profilesList[0]));
+            setActiveProfile(profilesList[0]);
+            setAvailableProfiles(profilesList);
+            setAuthBanner({
+              type: 'success',
+              message: `Загружено ${profilesList.length} заведений из Google аккаунта (${email || 'подтвержден'})! Активно: ${profilesList[0].name}`
+            });
+          }
+        } catch (e) {
+          console.error("Failed to parse profiles param", e);
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (auth === 'success') {
         setAuthBanner({
           type: 'success',
           message: `Google аккаунт (${email || 'подтвержден'}) успешно подключен! Синхронизация профиля активирована.`
         });
+        if (needsLocation) {
+          setIsAddLocationModalOpen(true);
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (auth === 'error') {
         setAuthBanner({
@@ -83,6 +118,17 @@ export default function DashboardPage() {
           message: `Ошибка подключения Google OAuth: ${detail ? decodeURIComponent(detail) : 'Не удалось завершить авторизацию'}`
         });
         window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      // Load available profiles from storage
+      const storedList = localStorage.getItem('gbpilot_available_profiles');
+      if (storedList) {
+        try {
+          const parsed = JSON.parse(storedList);
+          if (Array.isArray(parsed)) setAvailableProfiles(parsed);
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
 
@@ -121,6 +167,72 @@ export default function DashboardPage() {
     
     fetchRecommendations();
   }, []);
+
+  // Live autocomplete search for adding locations
+  useEffect(() => {
+    if (!locationSearchInput.trim() || locationSearchInput.length < 2) {
+      setLocationSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingLocation(true);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const res = await fetch(`${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(locationSearchInput)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLocationSuggestions(data.suggestions || []);
+        }
+      } catch(e) {
+        console.error(e);
+      } finally {
+        setIsSearchingLocation(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [locationSearchInput]);
+
+  const handleSelectSuggestion = async (sug: any) => {
+    setIsScrapingLocation(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const res = await fetch(`${baseUrl}/api/v1/onboarding/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ business_name: sug.main_text || sug.description }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const profile = data.profile || data;
+        const newProf = {
+          id: profile.id || `profile_${Date.now()}`,
+          google_location_id: profile.google_location_id || sug.place_id,
+          name: profile.business_name || sug.main_text,
+          address: profile.address_line || sug.description,
+          city: profile.city || profile.address_line?.split(',').pop()?.trim() || 'Dubai',
+          category: profile.primary_category || 'Local Business',
+          rating: profile.rating || 4.9,
+          reviews_count: profile.reviews_count || 145,
+          health_score: profile.health_score || 85,
+          autopilotMode: 'MANUAL_APPROVAL',
+        };
+
+        const updatedList = [...availableProfiles.filter(p => p.name !== newProf.name), newProf];
+        localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updatedList));
+        localStorage.setItem('gbpilot_active_profile', JSON.stringify(newProf));
+        setActiveProfile(newProf);
+        setAvailableProfiles(updatedList);
+        setIsAddLocationModalOpen(false);
+        setLocationSearchInput('');
+        setLocationSuggestions([]);
+        window.location.reload();
+      }
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setIsScrapingLocation(false);
+    }
+  };
 
   const handleExecute = async (id: string) => {
     const targetRec = recommendations.find(r => r.id === id);
@@ -323,7 +435,7 @@ export default function DashboardPage() {
 
         {/* Google OAuth Status Banner */}
         {authBanner && (
-          <div className={`p-4 rounded-xl text-xs flex items-center justify-between font-medium animate-in fade-in ${
+          <div className={`p-4 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-medium animate-in fade-in ${
             authBanner.type === 'success' 
               ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' 
               : 'bg-red-50 border border-red-300 text-red-800'
@@ -336,7 +448,16 @@ export default function DashboardPage() {
               )}
               <span>{authBanner.message}</span>
             </div>
-            <button onClick={() => setAuthBanner(null)} className="underline text-[11px] shrink-0 ml-2">Закрыть</button>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <button 
+                onClick={() => setIsAddLocationModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Привязать / Выбрать заведения</span>
+              </button>
+              <button onClick={() => setAuthBanner(null)} className="underline text-[11px] shrink-0 ml-1 text-emerald-700">Закрыть</button>
+            </div>
           </div>
         )}
 
@@ -402,10 +523,18 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-4 mt-3 text-xs text-google-text-secondary bg-slate-50 p-2 rounded-lg border border-slate-100 inline-flex">
+              <div className="flex items-center flex-wrap gap-3 mt-3 text-xs text-google-text-secondary bg-slate-50 p-2 rounded-lg border border-slate-100 inline-flex">
                 <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-google-red" /> Geo-Grid Rank: <strong className="text-google-green">#2 Avg</strong></span>
                 <span className="w-px h-3 bg-slate-300"></span>
-                <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 text-amber-500" /> Rating: <strong className="text-google-text-primary">4.9 (148 reviews)</strong></span>
+                <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 text-amber-500" /> Rating: <strong className="text-google-text-primary">{(activeProfile as any)?.rating || 4.9} ({(activeProfile as any)?.reviews_count || 148} отзывов)</strong></span>
+                <span className="w-px h-3 bg-slate-300"></span>
+                <button 
+                  onClick={() => setIsAddLocationModalOpen(true)}
+                  className="text-google-blue hover:underline font-bold flex items-center gap-1 ml-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Сменить / добавить точку</span>
+                </button>
               </div>
             </div>
           </div>
@@ -814,6 +943,132 @@ export default function DashboardPage() {
                 </div>
               )}
 
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add / Select Business Location from Google Maps */}
+        {isAddLocationModalOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-google-border relative">
+              <button 
+                onClick={() => {
+                  setIsAddLocationModalOpen(false);
+                  setLocationSearchInput('');
+                  setLocationSuggestions([]);
+                }}
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-google-blue-light text-google-blue flex items-center justify-center">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-google-text-primary">
+                    Привязать заведение из Google
+                  </h3>
+                  <p className="text-xs text-google-text-secondary">
+                    Найдите ваши заведения по названию или адресу для активации мониторинга
+                  </p>
+                </div>
+              </div>
+
+              {/* Search Input with Live Autocomplete */}
+              <div className="relative mb-4">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input 
+                    type="text"
+                    value={locationSearchInput}
+                    onChange={(e) => setLocationSearchInput(e.target.value)}
+                    placeholder="Введите название заведения или адрес..."
+                    className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue transition-all"
+                    autoFocus
+                  />
+                  {isSearchingLocation && (
+                    <Loader2 className="w-4 h-4 text-google-blue animate-spin absolute right-3.5 top-1/2 -translate-y-1/2" />
+                  )}
+                </div>
+
+                {/* Suggestions Dropdown */}
+                {locationSuggestions.length > 0 && (
+                  <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-lg max-h-60 overflow-y-auto divide-y divide-slate-100">
+                    {locationSuggestions.map((sug, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSelectSuggestion(sug)}
+                        disabled={isScrapingLocation}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 group"
+                      >
+                        <MapPin className="w-4 h-4 text-google-red mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-slate-800 truncate">
+                            {sug.main_text || sug.description}
+                          </div>
+                          <div className="text-xs text-slate-500 truncate">
+                            {sug.description}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-400 mt-1 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {isScrapingLocation && (
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center gap-3 text-xs text-slate-600 mb-4 animate-pulse">
+                  <Loader2 className="w-4 h-4 text-google-blue animate-spin" />
+                  <span>Загружаем реальные данные, рейтинг и отзывы из Google...</span>
+                </div>
+              )}
+
+              {/* List of Connected Profiles */}
+              {availableProfiles.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <div className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-2">
+                    Ваши заведения ({availableProfiles.length}):
+                  </div>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {availableProfiles.map((prof, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-2.5 rounded-lg border text-xs flex items-center justify-between transition-colors ${
+                          activeProfile?.name === prof.name 
+                            ? 'border-google-blue bg-google-blue-light/30 text-google-blue font-bold' 
+                            : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Building2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                          <span className="truncate">{prof.name}</span>
+                          <span className="text-[10px] text-slate-400">({prof.city || prof.address})</span>
+                        </div>
+                        {activeProfile?.name === prof.name ? (
+                          <span className="text-[10px] bg-google-blue text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                            Активно
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              localStorage.setItem('gbpilot_active_profile', JSON.stringify(prof));
+                              setActiveProfile(prof);
+                              setIsAddLocationModalOpen(false);
+                              window.location.reload();
+                            }}
+                            className="text-xs text-google-blue hover:underline font-semibold"
+                          >
+                            Выбрать
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

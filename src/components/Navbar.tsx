@@ -52,12 +52,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [availableProfiles, setAvailableProfiles] = useState<BusinessProfile[]>([]);
 
   useEffect(() => {
-    // Load active profile from local storage if available
+    // Load active and available profiles from local storage
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('gbpilot_active_profile');
-      if (stored) {
+      const storedActive = localStorage.getItem('gbpilot_active_profile');
+      const storedList = localStorage.getItem('gbpilot_available_profiles');
+
+      let parsedList: BusinessProfile[] = [];
+      if (storedList) {
         try {
-          const parsed = JSON.parse(stored);
+          const list = JSON.parse(storedList);
+          if (Array.isArray(list) && list.length > 0) {
+            parsedList = list;
+            setAvailableProfiles(list);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (storedActive) {
+        try {
+          const parsed = JSON.parse(storedActive);
           setActiveProfile(parsed);
           setSelectedProfile(parsed.name);
           setAutopilotMode(parsed.autopilotMode || 'MANUAL_APPROVAL');
@@ -65,18 +80,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           setAvailableProfiles(prev => {
             const exists = prev.find(p => p.name === parsed.name);
             if (!exists) {
-              return [{ 
-                name: parsed.name, 
-                address: parsed.address || 'Unknown Address',
-                city: parsed.city || parsed.address || 'Scraped Location',
-                autopilotMode: parsed.autopilotMode || 'MANUAL_APPROVAL'
-              }, ...prev];
+              return [parsed, ...prev];
             }
             return prev;
           });
         } catch (e) {
           console.error(e);
         }
+      } else if (parsedList.length > 0) {
+        setActiveProfile(parsedList[0]);
+        setSelectedProfile(parsedList[0].name);
+        localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedList[0]));
       }
     }
   }, []);
@@ -164,6 +178,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       onClick={() => {
                         setSelectedProfile(p.name);
+                        setActiveProfile(p);
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
+                          window.location.reload();
+                        }
                         setIsLocationOpen(false);
                       }}
                       className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${

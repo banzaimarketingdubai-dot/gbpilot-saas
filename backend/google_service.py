@@ -64,6 +64,43 @@ def get_google_user_info(access_token: str) -> Dict[str, Any]:
         return response.json()
     return {}
 
+def parse_google_location(loc: Dict[str, Any]) -> Dict[str, Any]:
+    """Parses raw Google Business Profile API location into GBPilot BusinessProfile dict."""
+    store_addr = loc.get("storefrontAddress", {})
+    address_lines = store_addr.get("addressLines", [])
+    locality = store_addr.get("locality") or store_addr.get("administrativeArea") or "Local Area"
+    address = ", ".join(address_lines) if address_lines else locality
+    
+    title = loc.get("title") or loc.get("name") or "My Business"
+    categories = loc.get("categories", {})
+    primary_cat = categories.get("primaryCategory", {}).get("displayName", "Local Business")
+    phone = loc.get("phoneNumbers", {}).get("primaryPhone", "")
+    website = loc.get("websiteUri", "")
+    loc_name = loc.get("name", "")
+    loc_id = loc_name.split("/")[-1] if "/" in loc_name else (loc_name or f"loc_{os.urandom(4).hex()}")
+    
+    latlng = loc.get("latlng", {})
+    lat = latlng.get("latitude", 25.2048)
+    lng = latlng.get("longitude", 55.2708)
+
+    return {
+        "id": f"profile_{loc_id}",
+        "google_location_id": loc_name or loc_id,
+        "name": title,
+        "business_name": title,
+        "address": address,
+        "city": locality,
+        "primary_category": primary_cat,
+        "category": primary_cat,
+        "phone": phone,
+        "phone_number": phone,
+        "website_url": website,
+        "latitude": lat,
+        "longitude": lng,
+        "health_score": 85,
+        "autopilotMode": "MANUAL_APPROVAL"
+    }
+
 def fetch_user_managed_locations(access_token: str) -> List[Dict[str, Any]]:
     """
     Fetches all live Google Business Profile locations owned or managed by the authenticated user.
@@ -72,7 +109,7 @@ def fetch_user_managed_locations(access_token: str) -> List[Dict[str, Any]]:
         # Step 1: List Accounts
         accounts_url = "https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
         headers = {"Authorization": f"Bearer {access_token}"}
-        res = requests.get(accounts_url, headers=headers, timeout=5)
+        res = requests.get(accounts_url, headers=headers, timeout=8)
         
         locations = []
         if res.ok:
@@ -82,10 +119,14 @@ def fetch_user_managed_locations(access_token: str) -> List[Dict[str, Any]]:
                 account_name = account.get("name")
                 # Step 2: List Locations for each account
                 loc_url = f"https://mybusinessbusinessinformation.googleapis.com/v1/{account_name}/locations?readMask=name,title,categories,storefrontAddress,phoneNumbers,websiteUri,latlng"
-                loc_res = requests.get(loc_url, headers=headers, timeout=5)
+                loc_res = requests.get(loc_url, headers=headers, timeout=8)
                 if loc_res.ok:
                     loc_data = loc_res.json()
                     locations.extend(loc_data.get("locations", []))
+                else:
+                    print(f"[GoogleService] Locations request failed: {loc_res.status_code} {loc_res.text}")
+        else:
+            print(f"[GoogleService] Accounts request returned {res.status_code}: {res.text}")
         return locations
     except Exception as e:
         print(f"[GoogleService] Error fetching user managed locations: {e}")

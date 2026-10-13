@@ -185,6 +185,18 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         user_info = get_google_user_info(access_token)
         email = user_info.get("email", "google_user@gbpilot.com")
         
+        # Fetch user managed locations from Google Business Profile API
+        fetched_profiles = []
+        try:
+            from google_service import fetch_user_managed_locations, parse_google_location
+            raw_locations = fetch_user_managed_locations(access_token)
+            logger.info(f"[OAuth] Google returned {len(raw_locations)} locations for {email}")
+            for r_loc in raw_locations:
+                p = parse_google_location(r_loc)
+                fetched_profiles.append(p)
+        except Exception as fe:
+            logger.warning(f"[OAuth] Could not fetch Google locations: {fe}")
+
         # Save or update user and organization in Supabase (with safe DB fallback)
         if db:
             try:
@@ -206,16 +218,43 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
                     db.commit()
                     db.refresh(org)
                     
-                profile = db.query(models.GBPProfile).filter(models.GBPProfile.organization_id == org.id).first()
-                if profile and refresh_token:
-                    profile.refresh_token_encrypted = refresh_token
-                    db.commit()
+                # Save each fetched profile
+                for p in fetched_profiles:
+                    existing = db.query(models.GBPProfile).filter(
+                        models.GBPProfile.google_location_id == p["google_location_id"]
+                    ).first()
+                    if not existing:
+                        new_p = models.GBPProfile(
+                            organization_id=org.id,
+                            google_location_id=p["google_location_id"],
+                            business_name=p["business_name"],
+                            primary_category=p["primary_category"],
+                            address_line=p["address"],
+                            city=p["city"],
+                            phone_number=p.get("phone_number"),
+                            website_url=p.get("website_url"),
+                            health_score=p.get("health_score", 85),
+                            refresh_token_encrypted=refresh_token
+                        )
+                        db.add(new_p)
+                    elif refresh_token:
+                        existing.refresh_token_encrypted = refresh_token
+                db.commit()
             except Exception as dbe:
                 logger.warning(f"[DB Warning] Could not persist OAuth profile: {dbe}")
                 if db:
                     db.rollback()
             
-        return RedirectResponse(url=f"{target_frontend}/dashboard?auth=success&email={email}")
+        import base64
+        import json
+        params = f"auth=success&email={email}"
+        if fetched_profiles:
+            profiles_b64 = base64.b64encode(json.dumps(fetched_profiles).encode('utf-8')).decode('utf-8')
+            params += f"&profiles={profiles_b64}"
+        else:
+            params += "&needs_location=true"
+            
+        return RedirectResponse(url=f"{target_frontend}/dashboard?{params}")
     except Exception as e:
         logger.error(f"[OAuth Error] {e}")
         import urllib.parse
