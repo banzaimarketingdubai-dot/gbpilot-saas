@@ -32,6 +32,14 @@ interface BusinessProfile {
   verified?: boolean;
 }
 
+interface GoogleUser {
+  email: string;
+  name?: string;
+  picture?: string;
+  role?: string;
+  loggedIn: boolean;
+}
+
 interface NavbarProps {
   currentProfile?: BusinessProfile;
   onAutopilotToggle?: (mode: 'OFF' | 'MANUAL_APPROVAL' | 'FULL_AUTOPILOT') => void;
@@ -47,6 +55,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<GoogleUser | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
   const defaultProfile = { name: 'Manhattan Bakery & Cafe', address: '540 Broadway, New York, NY', autopilotMode: 'MANUAL_APPROVAL' };
   const [activeProfile, setActiveProfile] = useState<BusinessProfile>(initialProfile || defaultProfile);
@@ -102,6 +112,27 @@ export const Navbar: React.FC<NavbarProps> = ({
         localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedList[0]));
       }
 
+      // Load current user from storage
+      const storedUser = localStorage.getItem('gbpilot_user');
+      if (storedUser) {
+        try {
+          const u = JSON.parse(storedUser);
+          if (u.loggedIn) setCurrentUser(u);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      const handleUserUpdate = () => {
+        const s = localStorage.getItem('gbpilot_user');
+        if (s) {
+          try { setCurrentUser(JSON.parse(s)); } catch (e) {}
+        } else {
+          setCurrentUser(null);
+        }
+      };
+      window.addEventListener('user_session_updated', handleUserUpdate);
+
       // Also fetch profiles from backend
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       fetch(`${baseUrl}/api/v1/profiles`)
@@ -127,8 +158,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           }
         })
         .catch(e => console.error("Could not fetch profiles from backend", e));
+
+      return () => window.removeEventListener('user_session_updated', handleUserUpdate);
     }
   }, []);
+
+  const handleGoogleLogin = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
+    window.location.href = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}`;
+  };
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gbpilot_user');
+      setCurrentUser(null);
+      setIsUserMenuOpen(false);
+      window.dispatchEvent(new CustomEvent('user_session_updated'));
+      window.location.reload();
+    }
+  };
 
   const confirmDelete = async () => {
     if (!profileToDelete) return;
@@ -191,15 +240,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Business Location Selector Dropdown */}
           <div className="relative hidden md:block">
             <button
-              onClick={() => setIsLocationOpen(!isLocationOpen)}
+              onClick={() => {
+                if (!currentUser) {
+                  window.dispatchEvent(new CustomEvent('require_google_login'));
+                  return;
+                }
+                setIsLocationOpen(!isLocationOpen);
+              }}
               data-testid="location-selector"
               className="flex items-center space-x-2 bg-google-bg border border-google-border px-3 py-1.5 rounded-lg text-xs hover:bg-white transition-colors"
             >
               <Building2 className="w-3.5 h-3.5 text-google-blue" />
               <span className="font-semibold text-google-text-primary max-w-[130px] truncate">{selectedProfile}</span>
-              <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
-                {(activeProfile as any)?.role?.includes('Владелец') ? 'Владелец' : 'Администратор'}
-              </span>
+              {currentUser ? (
+                <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
+                  {(activeProfile as any)?.role?.includes('Владелец') ? 'Владелец' : 'Администратор'}
+                </span>
+              ) : (
+                <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 hidden sm:inline-block">
+                  Демо
+                </span>
+              )}
               <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
             </button>
 
@@ -257,17 +318,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   onClick={() => {
                     setIsLocationOpen(false);
-                    if (typeof window !== 'undefined') {
-                      window.dispatchEvent(new CustomEvent('open_add_location_modal'));
-                      if (window.location.pathname !== '/dashboard') {
-                        window.location.href = '/dashboard?add_location=true';
-                      }
+                    if (!currentUser) {
+                      window.dispatchEvent(new CustomEvent('require_google_login'));
+                      return;
                     }
+                    window.dispatchEvent(new CustomEvent('open_user_profile_modal'));
                   }}
                   className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Выбрать / сменить заведение</span>
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>🏢 Управление заведениями в профиле</span>
                 </button>
               </div>
             )}
@@ -303,8 +363,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </nav>
 
-        {/* Right Autopilot Controls */}
-        <div className="flex items-center space-x-3">
+        {/* Right Controls: Autopilot + Google Auth Profile */}
+        <div className="flex items-center space-x-2.5">
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -365,6 +425,74 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Google User Profile or Login Button */}
+          {currentUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2 bg-slate-50 hover:bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs transition-colors shadow-sm"
+              >
+                <div className="w-5 h-5 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-[10px]">
+                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'G'}
+                </div>
+                <span className="font-semibold text-slate-800 max-w-[110px] truncate hidden sm:inline">
+                  {currentUser.email.split('@')[0]}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 p-1.5 shadow-material-2 z-50 text-xs">
+                  <div className="px-3 py-2 border-b border-slate-100">
+                    <div className="font-bold text-slate-900 truncate">{currentUser.email}</div>
+                    <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Google Business: Владелец
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      window.dispatchEvent(new CustomEvent('open_user_profile_modal'));
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg font-medium text-slate-700 flex items-center gap-2 mt-1"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-google-blue" />
+                    <span>Мои заведения GBP ({availableProfiles.length})</span>
+                  </button>
+                  <button
+                    onClick={handleGoogleLogin}
+                    className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg text-slate-600 flex items-center gap-2"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Сменить Google аккаунт</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 rounded-lg font-medium flex items-center gap-2 border-t border-slate-100 mt-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Выйти</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleGoogleLogin}
+              className="flex items-center space-x-2 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 shadow-sm transition-all hover:shadow"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Войти через Google</span>
+            </button>
+          )}
         </div>
 
       </div>
