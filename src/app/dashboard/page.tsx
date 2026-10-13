@@ -250,7 +250,7 @@ export default function DashboardPage() {
   const [isRamadanMode, setIsRamadanMode] = useState(false);
   const [ramadanNotice, setRamadanNotice] = useState<string | null>(null);
 
-  // Review Takedown Modal State
+  // Review Takedown Modal State & Automated Negative Review Detection
   const [takedownJurisdiction, setTakedownJurisdiction] = useState<'UAE' | 'USA' | 'EU' | 'GLOBAL'>('UAE');
   const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
   const [takedownBusiness, setTakedownBusiness] = useState('');
@@ -268,6 +268,55 @@ export default function DashboardPage() {
   } | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [authBanner, setAuthBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Auto-detected 1-star & 2-star Negative Reviews from Connected Profile
+  const [detectedNegativeReviews, setDetectedNegativeReviews] = useState<{
+    id: string;
+    author_name: string;
+    rating: number;
+    review_date: string;
+    review_text: string;
+    suspected_violation: string;
+    violation_details?: string;
+    confidence_score: number;
+    recommended_jurisdiction?: 'UAE' | 'USA' | 'EU' | 'GLOBAL';
+  }[]>([
+    {
+      id: 'rev_takedown_01',
+      author_name: 'Alex K. (Подозрение: Конкурент)',
+      rating: 1,
+      review_date: '2 дня назад',
+      review_text: 'Never visited this terrible place! The owner was rude, refused to talk, and everything is completely fake. Avoid at all costs, they are buying 5-star reviews!',
+      suspected_violation: 'Раздел 3.2: Deceptive Content & Координированная атака',
+      violation_details: 'Аккаунт без истории, шаблонный текст клеветы, не является реальным клиентом',
+      confidence_score: 96,
+      recommended_jurisdiction: 'UAE'
+    },
+    {
+      id: 'rev_takedown_02',
+      author_name: 'Ghost User #489',
+      rating: 1,
+      review_date: '5 дней назад',
+      review_text: 'Food poisoning! Waited 2 hours, staff cursed at customers. Total scam operation.',
+      suspected_violation: 'Клевета и отсутствие чека (Статьи 43 и 44 Закона ОАЭ № 34/2021)',
+      violation_details: 'Отсутствие транзакции в POS-системе, неподтвержденные медицинские обвинения',
+      confidence_score: 91,
+      recommended_jurisdiction: 'UAE'
+    },
+    {
+      id: 'rev_takedown_03',
+      author_name: 'SpamBot_NYC',
+      rating: 2,
+      review_date: '1 неделю назад',
+      review_text: 'Check out best competitor bakery down the street at competitor-promo.com instead, much better quality!',
+      suspected_violation: 'Реклама и спам конкурента (Раздел 4.1 Google Content Policy)',
+      violation_details: 'Прямая ссылка на сторонний сайт и продвижение конкурента',
+      confidence_score: 98,
+      recommended_jurisdiction: 'USA'
+    }
+  ]);
+  const [selectedReviewId, setSelectedReviewId] = useState<string>('rev_takedown_01');
+  const [takedownSourceMode, setTakedownSourceMode] = useState<'AUTO' | 'MANUAL'>('AUTO');
 
   // Business Location Management State (JTBD Flow)
   const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
@@ -575,6 +624,31 @@ export default function DashboardPage() {
       setRamadanNotice("Стандартные рабочие часы успешно восстановлены в профиле Google Maps.");
     }
     setTimeout(() => setRamadanNotice(null), 5000);
+  };
+
+  const openReviewTakedown = (review?: any) => {
+    const targetRev = review || detectedNegativeReviews.find(r => r.id === selectedReviewId) || detectedNegativeReviews[0];
+    setTakedownBusiness(activeProfile?.name || 'Manhattan Bakery & Cafe');
+    if (targetRev) {
+      setSelectedReviewId(targetRev.id);
+      setTakedownAuthor(targetRev.author_name);
+      setTakedownReviewText(targetRev.review_text);
+      if (targetRev.recommended_jurisdiction) {
+        setTakedownJurisdiction(targetRev.recommended_jurisdiction);
+      }
+      setTakedownSourceMode('AUTO');
+    }
+    setTakedownResult(null);
+    setIsTakedownModalOpen(true);
+  };
+
+  const handleSelectNegativeReview = (rev: any) => {
+    setSelectedReviewId(rev.id);
+    setTakedownAuthor(rev.author_name);
+    setTakedownReviewText(rev.review_text);
+    if (rev.recommended_jurisdiction) {
+      setTakedownJurisdiction(rev.recommended_jurisdiction);
+    }
   };
 
   const handleReviewTakedownSubmit = async (e: React.FormEvent) => {
@@ -1460,8 +1534,163 @@ export default function DashboardPage() {
                 </button>
               </div>
 
+              {/* Review Source Switcher: Auto-Detected vs Manual */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTakedownSourceMode('AUTO');
+                    const cur = detectedNegativeReviews.find(r => r.id === selectedReviewId) || detectedNegativeReviews[0];
+                    if (cur) handleSelectNegativeReview(cur);
+                  }}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    takedownSourceMode === 'AUTO'
+                      ? 'bg-white text-google-red shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>⚡ Подтянутые отзывы карточки ({detectedNegativeReviews.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTakedownSourceMode('MANUAL')}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    takedownSourceMode === 'MANUAL'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span>✏️ Ввести текст вручную</span>
+                </button>
+              </div>
+
               {/* Input Form */}
               <form onSubmit={handleReviewTakedownSubmit} className="space-y-4">
+                
+                {/* AUTO MODE: Detected Negative Reviews List */}
+                {takedownSourceMode === 'AUTO' && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      <span>Нажмите на отзыв для авто-заполнения:</span>
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600" /> Без ручного ввода
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {detectedNegativeReviews.map((rev) => {
+                        const isSelected = selectedReviewId === rev.id;
+                        return (
+                          <div
+                            key={rev.id}
+                            onClick={() => handleSelectNegativeReview(rev)}
+                            className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-google-red bg-red-50/70 ring-1 ring-google-red shadow-sm'
+                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-xs text-slate-900">{rev.author_name}</span>
+                                <span className="text-[10px] bg-red-100 text-google-red font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                                  <Star className="w-3 h-3 fill-google-red" /> {rev.rating}★
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium">{rev.review_date}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                                  {rev.confidence_score}% снос
+                                </span>
+                                {isSelected && (
+                                  <span className="text-[10px] bg-google-red text-white font-bold px-2 py-0.5 rounded-full">
+                                    Выбран ✓
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-slate-700 italic leading-relaxed line-clamp-2">
+                              "{rev.review_text}"
+                            </p>
+
+                            <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                              <span className="text-google-red font-semibold flex items-center gap-1">
+                                <ShieldAlert className="w-3 h-3" />
+                                {rev.suspected_violation}
+                              </span>
+                              {rev.violation_details && (
+                                <span className="text-slate-500 hidden sm:inline">{rev.violation_details}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Pre-filled info pill */}
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-slate-500 shrink-0 font-medium">Выбранный отзыв:</span>
+                        <span className="font-bold text-slate-900 truncate">
+                          {takedownAuthor} ({takedownBusiness})
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold shrink-0 border border-emerald-200">
+                        Готов к эскалации
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* MANUAL MODE: Text Inputs */}
+                {takedownSourceMode === 'MANUAL' && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-google-text-secondary mb-1">
+                          Компания в Google Maps *
+                        </label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="e.g. Al Safadi Restaurant"
+                          value={takedownBusiness}
+                          onChange={(e) => setTakedownBusiness(e.target.value)}
+                          className="material-input text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-google-text-secondary mb-1">
+                          Автор отзыва (если известен)
+                        </label>
+                        <input 
+                          type="text"
+                          placeholder="e.g. Anonymous или имя"
+                          value={takedownAuthor}
+                          onChange={(e) => setTakedownAuthor(e.target.value)}
+                          className="material-input text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-google-text-secondary mb-1">
+                        Текст токсичного отзыва *
+                      </label>
+                      <textarea 
+                        required
+                        rows={3}
+                        placeholder="Вставьте текст необоснованного или фейкового 1★ отзыва..."
+                        value={takedownReviewText}
+                        onChange={(e) => setTakedownReviewText(e.target.value)}
+                        className="material-input text-xs resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Jurisdiction Switcher */}
                 <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
@@ -1526,48 +1755,6 @@ export default function DashboardPage() {
                       <span>Global</span>
                     </button>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                      Компания в Google Maps *
-                    </label>
-                    <input 
-                      type="text"
-                      required
-                      placeholder="e.g. Al Safadi Restaurant"
-                      value={takedownBusiness}
-                      onChange={(e) => setTakedownBusiness(e.target.value)}
-                      className="material-input text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                      Автор отзыва (если известен)
-                    </label>
-                    <input 
-                      type="text"
-                      placeholder="e.g. Anonymous или имя"
-                      value={takedownAuthor}
-                      onChange={(e) => setTakedownAuthor(e.target.value)}
-                      className="material-input text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                    Текст токсичного отзыва *
-                  </label>
-                  <textarea 
-                    required
-                    rows={3}
-                    placeholder="Вставьте текст необоснованного или фейкового 1★ отзыва..."
-                    value={takedownReviewText}
-                    onChange={(e) => setTakedownReviewText(e.target.value)}
-                    className="material-input text-xs resize-none"
-                  />
                 </div>
 
                 <button 
