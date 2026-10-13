@@ -97,14 +97,14 @@ This document presents a competitive teardown of the existing market leaders, di
 * **Dynamic Audit Links:** Generates white-label teaser audit pages (`/audit/[id]`) showing quantified lost revenue (e.g., *"$1,450 estimated monthly revenue lost to 3 competitors"*).
 * **Conversion Impact:** Increases cold agency outreach reply rates from 3% to **18–24%**.
 
-### Killer Feature 7: AI Review Neutralizer & Legal Dispute Dossier™ (The "Anti-Hate Shield")
+### Killer Feature 7: Review Takedown™ / Снос Отзыва (The "Anti-Hate Shield")
 * **The Problem:** Fake, malicious 1-star reviews left by disgruntled former employees, competitors, or internet trolls are the single most agonizing pain point for local business owners. Standard "Flag review" buttons are processed by automated Google bots that reject ~95% of removal requests. Unjustified 1-star reviews cause direct revenue loss (a drop from 4.5★ to 4.2★ reduces incoming customer calls by 37%).
 * **The GBPilot Solution:**
-  * Bypasses the superficial automated flagging workflow by formulating an **Official Legal & Policy Dispute Dossier** for Google Support Escalation / Legal Review.
+  * Bypasses superficial automated flagging by generating an **Official Google Policy Takedown Notice** for Google Support Escalation / Legal Review.
   * Gemini 3.8 Flash evaluates the toxic review against the 8 official clauses of the **Google Maps User Contributed Content Policy** (Conflict of Interest, Deceptive Content/Fake Engagement, Off-topic, Harassment & Defamation).
   * Automatically synthesizes a formal legal submission citing specific section numbers, policy links, and documented evidentiary arguments.
-  * Generates a direct deep-link into Google's 2nd-tier escalation support workflow with a 1-Click "Copy & Escalate" interface.
+  * Generates a direct deep-link into Google's 2nd-tier escalation support workflow with a 1-Click `[ ⚡ Снести отзыв через Google ]` interface.
 * **Conversion Power & Market Arbitrage:**
   * Traditional Online Reputation Management (ORM) agencies charge **$300 to $1,000 per removed review**.
-  * Offering **1 Free AI Dispute Dossier** acts as the highest-converting top-of-funnel Trojan hook in the SaaS, converting desperate business owners into loyal Pro subscribers.
+  * Offering **1 Free Review Takedown (Снос 1 отзыва бесплатно)** acts as the highest-converting top-of-funnel Trojan hook in the SaaS, converting desperate business owners into loyal Pro subscribers.
 
