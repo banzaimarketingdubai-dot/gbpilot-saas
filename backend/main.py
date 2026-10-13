@@ -130,12 +130,12 @@ async def system_diagnostics(db: Session = Depends(get_db)):
             res = await asyncio.wait_for(
                 asyncio.to_thread(
                     gemini_client.models.generate_content,
-                    model="gemini-3.8-flash",
+                    model="gemini-2.5-flash",
                     contents="ping"
                 ),
                 timeout=4.0
             )
-            diagnostics["gemini_ai"] = {"status": "healthy", "detail": "Gemini 3.8 Flash operational"}
+            diagnostics["gemini_ai"] = {"status": "healthy", "detail": "Gemini 2.5 Flash operational"}
         else:
             diagnostics["gemini_ai"] = {"status": "error", "detail": "Gemini client not initialized"}
     except Exception as e:
