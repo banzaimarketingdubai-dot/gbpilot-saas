@@ -24,6 +24,21 @@ The local SEO software market is undergoing a fundamental shift driven by the 12
 
 ---
 
+## 2.1 The Operational Triad: The 3 Core Modules
+To eliminate dashboard fatigue and provide crystal-clear value perception, GBPilot is organized around **3 Global Modules (The Operational Triad)** representing three essential marketing roles:
+
+1. 🧭 **«Разведка» (Scout Radar — Глаза & Стратег):**
+   - **Role:** Continuous diagnostic intelligence and territory visibility.
+   - **Capabilities:** High-density Geo-Grid rank heatmaps (3x3 to 7x7), Competitor Espionage Radar (tracking rival photo/review/category moves), and Generative Engine Optimization (GEO) tracking brand citations inside Google AI Overviews, Gemini, and ChatGPT Search.
+2. 🤖 **«Ассистент» (Action Copilot — Руки & Маркетолог):**
+   - **Role:** Autonomous execution of high-impact optimizations.
+   - **Capabilities:** Proactive 1-Click Action cards, automated weekly localized Google Posts, 15-minute LSI-rich review responses (with neighborhood and entity injection), and peak-traffic ("Open Now") schedule matching.
+3. 🛡️ **«Гард» (Defense Shield — Щит & Контрразведка):**
+   - **Role:** 24/7 profile integrity defense and anti-sabotage.
+   - **Capabilities:** Cryptographic snapshot of canonical business baseline data, real-time monitoring against crowdsourced Google Maps edits, 5-minute automated rollback (Diff Auto-Revert), and FTC-compliant review velocity pacing (Review Speedometer).
+
+---
+
 ## 3. Killer Features & Unfair Advantages
 
 1. **Profile Guard System (Data Integrity Reverter)**
@@ -141,31 +156,46 @@ The platform is designed around a Product-Led Growth (PLG) model with **Zero-Fri
 
 ---
 
-## 5. PLG Monetization Strategy (Monetization Framework)
+## 5. PLG Monetization Strategy & Triad Tier Architecture
 
-The business model is a hybrid PLG (Product-Led Growth) structure: **Freemium + SaaS Subscription (Per-Location/Month) + Transactional Add-ons**.
+The business model is governed by the **Depth of Automation across the 3 Modules** (see complete specifications in [`06_MONETIZATION_AND_PRICING_POLICY.md`](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/06_MONETIZATION_AND_PRICING_POLICY.md)).
 
 ### 1. Subscription Tiers
 
-* **Free Tier (The Hook): $0**
-  * **Included:** Connection of 1 profile, 10 Geo-Grid scans/month, basic Profile Guard alerts (Telegram/Email), basic QR code generator.
-  * **Goal:** Maximize top-of-funnel acquisition; deliver instant value.
+* **Free Scout (The Acquisition Hook): $0**
+  * **Included:** 1 location, 1 initial 3x3 Geo-Grid scan, Health Score 0–100 with lost revenue quantification.
+  * **Triad Allocation:** 🧭 Разведка (1 скан) | 🤖 Ассистент (Превью, действия заблокированы) | 🛡️ Гард (Демо-статус уязвимостей).
+  * **Goal:** Create initial cognitive shock with red grid pins and convert to Starter/Pro.
 
-* **Starter / Solo Business: $29 – $39 / month / location**
-  * **Included:** Fully autonomous AI Agent (post generation, 24/7 smart review replies with injected LSI entities), Profile Guard with Auto-Revert (protection against malicious edits), weekly Smart Tasks.
-  * **Positioning:** Replaces the need for a junior social media/SEO assistant.
+* **Starter Hero (Ручной режим с подсказками): $29 / month ($24/mo annual)**
+  * **Included:** 1 location. Weekly 3x3 & 5x5 Geo-Grid scans (3 keywords).
+  * **Triad Allocation:**
+    * 🧭 **Разведка:** Еженедельные сетки 3x3/5x5, мониторинг топ-1 конкурента.
+    * 🤖 **Ассистент:** Полуавтомат — до 30 действий/мес в 1 клик (ручной аппрув постов и ответов на отзывы).
+    * 🛡️ **Гард:** Пассивный — ежечасный мониторинг и Email/Telegram-алерты о сторонних правках.
+  * **Positioning:** Budget-friendly copilot for solo owners who want control and guidance.
 
-* **Pro / GEO Dominance: $69 – $89 / month / location**
-  * **Included:** Starter features + AI Search Visibility tracking (ChatGPT, Gemini), Dynamic Hours Peak-Traffic controller, and automated Citation Submissions.
-  * **Positioning:** The ultimate "set-and-forget" local dominance engine replacing expensive local SEO agencies.
+* **Pro GEO Dominance (100% Автопилот & Активная оборона): $69 / month ($55/mo annual) 🔥 [Флагман]**
+  * **Included:** Up to 3 locations (+$19/add-on). Precision 7x7 Geo-Grid scans (2x/week + on-demand, 10 keywords).
+  * **Triad Allocation:**
+    * 🧭 **Разведка:** 7x7 радар, ежедневный шпионаж за топ-3 конкурентами, отслеживание GEO/LLM (Google AI Overviews, Gemini, ChatGPT).
+    * 🤖 **Ассистент:** 100% Автопилот — автономная публикация постов, автоответ на отзывы за 15 минут с LSI-ключами района, оптимизация "Open Now" часов.
+    * 🛡️ **Гард:** **Активный Киберщит с 5-минутным Auto-Revert** (автоматический откат вредоносных правок Google Maps без участия человека) + Review Velocity Speedometer.
+  * **Positioning:** The ultimate hands-off local domination engine replacing an expensive marketing agency.
 
-* **Agency White-Label: $199 – $499 / month (Buckets of 10-50 locations)**
-  * **Included:** Custom domain branding, client sub-portals for post approval, Rank Replay GIF export tools, and automated PDF reporting.
+* **Agency Scale (Штаб масштабирования сети): $199 / month ($159/mo annual)**
+  * **Included:** 10 locations included (+$15/add-on location).
+  * **Triad Allocation:**
+    * 🧭 **Разведка:** Trojan-Horse Lead Generator (публичные аудиты `portal.agency.com/audit/[id]`, анимированные Rank Replay GIF для холодного аутрича).
+    * 🤖 **Ассистент:** Массовые мутации (Bulk 1-Click) по всей сети, клиентские порталы для согласования.
+    * 🛡️ **Гард:** Централизованный мониторинг атак и авто-защита всей клиентской базы.
+    * **White-Label:** 100% брендирование (кастомный домен, логотип, SMTP).
 
-### 2. Transactional Add-ons (Upsells)
-1. **Hardware Upsell:** Branded NFC stands, table tents, and smart cards for in-store review collection ($15–$30/item). Tied directly to the AI review responder.
-2. **Citation Submission Packages:** 1-time fee for guaranteed listing on 50+ local directories ($49–$99).
-3. **Extra Geo-Grid Credits:** Micro-transactions for heavy scanning usage (20-30 km radius).
+### 2. High-Margin Transactional Add-ons
+1. **Physical Smart NFC/QR Stands & Tap Cards:** $29–$49/unit (COGS ~$5, margin ~82%). Instant 5-star Google review prompt on contactless tap.
+2. **Citation Booster Pack (NAP Syndication):** $69 one-time for 25 high-authority local niche directories.
+3. **Extra Geo-Grid Scan Packs:** $19 / 5,000 scan credits.
+4. **GBP Reinstatement Service:** $199 one-time emergency assistance for suspended profiles.
 
 ---
 

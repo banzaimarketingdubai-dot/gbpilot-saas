@@ -28,14 +28,16 @@ GBPilot employs a **clean, native Google Material Design 3 visual hierarchy**. T
 GBPilot Root Layout
 ├── Sidebar / Top Navigation Bar
 │   ├── Business Profile Selector dropdown (Multi-location)
-│   ├── Autopilot Mode Toggle [ Off | Manual Approval | 100% Autopilot ]
-│   ├── Navigation Links:
-│   │   ├── ⚡ Dashboard (Action Hub) `/dashboard`
-│   │   ├── 🤖 AI Growth Copilot `/copilot`
-│   │   ├── 🗺️ Geo-Grid Radar `/geo-grid`
-│   │   ├── 💬 Reviews & Content `/reviews-posts`
-│   │   └── 🎯 Lead Outreach `/outreach`
-│   └── User / Agency Settings & White-Label Profile
+│   ├── Operational Status Indicator [ 🛡️ ARMED & PROTECTED | 🤖 AUTOPILOT ACTIVE ]
+│   ├── Primary Module Navigation (The Triad):
+│   │   ├── ⚡ Кокпит (Command Center) `/dashboard` (All 3 modules overview)
+│   │   ├── 🧭 Разведка (Scout Radar) `/recon` (Geo-Grid, Competitor Radar, GEO/LLM)
+│   │   ├── 🤖 Ассистент (Action Copilot) `/assistant` (1-Click Actions, Posts, Reviews)
+│   │   └── 🛡️ Гард (Defense Shield) `/guard` (Anti-Tamper, Auto-Revert log, Baselines)
+│   ├── Secondary & Pro Tools:
+│   │   ├── 💬 AI Copilot Chat `/copilot`
+│   │   └── 🎯 Лидген-Аутрич (Agency Lead Machine) `/outreach`
+│   └── Настройки / White-Label Тариф
 └── Main Active Screen Workspace
 ```
 
@@ -72,28 +74,51 @@ GBPilot Root Layout
 
 ---
 
-### Screen 1: Main Proactive Analytics & Action Hub (`/dashboard`)
-*The central command deck where daily proactive decisions are presented and executed.*
+### Screen 1: Кокпит Управления Триадой (`/dashboard`)
+*Главный командный пункт, объединяющий все 3 боевых модуля платформы на одном экране.*
 
 #### Layout Structure:
-1. **Header Toolbar:**
-   - Business Health Score Radial Meter (e.g. `84/100`, animated circle badge with score category breakdown).
-   - "Autopilot Active" status indicator with pulsating emerald pulse dot.
-   - Quick Action: `[⚡ Approve All 5 Recommendations]` primary button.
-2. **Profile Guard System Widget (Top Banner):**
-   - Active status: `🛡️ Profile Guard Active: Last baseline check 2 mins ago.`
-   - Alert state (if triggered): Red banner showing `"Unauthorized change to Phone Number detected & reverted. [View Diff]"`
-3. **Hero Section: "Today's Proactive Next Best Actions" (Central Focal Point)**
-   - Stacked horizontal carousel or 5-card grid featuring animated recommendation cards (including **Dynamic Hours** extension cards for peak traffic).
-   - **Card Anatomy:**
-     - **Top Row:** `[Impact Badge: ⚡ High Impact / 🚨 Rank Alert]` + `[Category Tag]` + `[Projected Boost]`.
-     - **Title & Description:** Bold action headline with problem context.
-     - **Pre-computed Content Preview:** Expandable preview box.
-     - **Action CTA Group:** `[1-Click Execute]`, `[Customize]`, `[Dismiss]`.
-4. **Secondary Intelligence Grid (3-Column Layout):**
-   - **Column 1: Geo-Grid Quick Snap** - Compact 3x3 heatmap widget showing today vs 7-day rank trajectory.
-   - **Column 2: Review Velocity & Sentiment** - Breakdown of positive/negative sentiment trends and unreplied count.
-   - **Column 3: Direct GBP Conversion Metrics** - Sparkline charts for Calls, Direction Requests, and Website Clicks.
+1. **Header Toolbar (Командная строка):**
+   - Селектор активной локации (с переключателем для мульти-точек).
+   - Radial Meter здоровья профиля (Health Score `84/100` с разбивкой по категориям).
+   - Бейдж статуса защиты: `🛡️ СИСТЕМА ОБОРОНЫ: АКТИВНА` (пульсирующий зеленый индикатор).
+   - Переключатель автопилота: `[ Ручной аппрув | 🟢 100% Автопилот ]`.
+
+2. **The Triad Command Cockpit (3 Главных Столпа — Центральный Экран):**
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        GBPILOT TRIAD COCKPIT (/dashboard)                              │
+├──────────────────────────┬───────────────────────────┬─────────────────────────────────┤
+│ 🧭 РАЗВЕДКА (Scout Radar)│ 🤖 АССИСТЕНТ (Copilot)    │ 🛡️ ГАРД (Defense Shield)        │
+├──────────────────────────┼───────────────────────────┼─────────────────────────────────┤
+│ • Мини-тепловая карта    │ • Лента 5 действий на     │ • Статус: 🟢 ПОД ЗАЩИТОЙ        │
+│   Geo-Grid (текущий ранг)│   сегодня (High Impact)   │ • Эталон профиля: Зафиксирован  │
+│ • Радар конкурентов:     │ • 2 неотвеченных отзыва с │ • Последняя атака: 2 дня назад  │
+│   Соперник #1: +2 поз.   │   готовым LSI-ответом     │   (Попытка смены графика)       │
+│ • ИИ-поиск (GEO SOV):    │ • Готовый сезонный пост   │ • Авто-откат: Выполнен за 3 мин │
+│   2 цитаты в ChatGPT/AI  │ • CTA: [⚡ Применить всё] │ • Пейсинг отзывов: В норме      │
+│ [Открыть радар 7x7 →]    │ [Журнал действий →]       │ [Журнал инцидентов →]           │
+└──────────────────────────┴───────────────────────────┴─────────────────────────────────┘
+```
+
+   - **Столп 1: 🧭 «РАЗВЕДКА» (Scout Radar):**
+     - Компактный 3x3/7x7 интерактивный грид с позициями по главному ключевику.
+     - Дельта за 7 дней (зеленые/красные стрелки).
+     - Радар соперников: отслеживание шагов ближайшего конкурента.
+     - GEO Share-of-Voice: зафиксированные цитаты в LLM-выдаче.
+   - **Столп 2: 🤖 «АССИСТЕНТ» (Action Copilot):**
+     - Лента из 3–5 ежедневных карточек рекомендаций с pre-computed контентом.
+     - Карточка содержит: бейдж `⚡ High Impact / 🚨 Rank Alert`, проблему, текст и кнопку `[1-Click Execute]`.
+     - На тарифе Pro: индикатор `🟢 Автопилот: 3 действия выполнены автоматически сегодня в 08:00`.
+   - **Столп 3: 🛡️ «ГАРД» (Defense Shield):**
+     - Мониторинг целостности данных Google Maps в реальном времени.
+     - Индикатор готовности: время последней проверки базовой линии (`Проверено 2 мин назад`).
+     - Счетчик отраженных атак: журнал краудсорсинговых правок с отметкой `Автоматически возвращено к эталону за 5 мин`.
+     - FTC Speedometer: скорость прироста отзывов для защиты от спам-фильтров Google.
+
+3. **Нижний аналитический слой (Бизнес-метрики):**
+   - Графики прямого коммерческого эффекта Google Maps: Звонки, Маршруты, Переходы на сайт, Оценка сохраненной выручки.
 
 ---
 
