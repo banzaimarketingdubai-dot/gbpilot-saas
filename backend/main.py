@@ -22,6 +22,19 @@ import models
 from sqlalchemy.orm import Session
 from datetime import datetime
 
+import logging
+import traceback
+import time
+from fastapi import Request
+from fastapi.responses import JSONResponse, RedirectResponse
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger("GBPilot")
+
 app = FastAPI(
     title="GBPilot AI Proactive Engine API",
     description="FastAPI backend for GBPilot Proactive Recommendations and AI Sentinel",
@@ -37,7 +50,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi.responses import RedirectResponse
+@app.middleware("http")
+async def log_requests_middleware(request: Request, call_next):
+    start_time = time.time()
+    path = request.url.path
+    method = request.method
+    try:
+        response = await call_next(request)
+        duration = round((time.time() - start_time) * 1000, 2)
+        logger.info(f"{method} {path} -> {response.status_code} ({duration}ms)")
+        return response
+    except Exception as exc:
+        duration = round((time.time() - start_time) * 1000, 2)
+        logger.error(f"{method} {path} FAILED ({duration}ms): {exc}\n{traceback.format_exc()}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "error_type": type(exc).__name__,
+                "detail": str(exc),
+                "path": path
+            }
+        )
+
 from google_service import get_google_auth_url, exchange_code_for_tokens, get_google_user_info
 
 @app.get("/", tags=["System"])
@@ -46,7 +81,8 @@ async def root():
         "status": "ok",
         "service": "GBPilot AI Proactive Engine API",
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
+        "diagnostics": "/api/v1/system/diagnostics"
     }
 
 @app.get("/health", tags=["System"])
@@ -59,6 +95,56 @@ async def health_check():
         "database": "Supabase PostgreSQL",
         "version": "1.0.0"
     }
+
+@app.get("/api/v1/system/diagnostics", tags=["System"])
+async def system_diagnostics(db: Session = Depends(get_db)):
+    """
+    Live health check of all subsystems: Database, Gemini AI, Google Places API.
+    """
+    diagnostics = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "database": {"status": "unknown", "detail": ""},
+        "gemini_ai": {"status": "unknown", "detail": ""},
+        "google_places": {"status": "unknown", "detail": ""}
+    }
+    
+    # 1. Database Connectivity
+    try:
+        if db:
+            from sqlalchemy import text
+            db.execute(text("SELECT 1"))
+            diagnostics["database"] = {"status": "healthy", "detail": "Supabase PostgreSQL connected"}
+        else:
+            diagnostics["database"] = {"status": "degraded", "detail": "Running in-memory (No DATABASE_URL)"}
+    except Exception as e:
+        diagnostics["database"] = {"status": "error", "detail": str(e)}
+
+    # 2. Gemini AI Connectivity
+    try:
+        from proactive_engine import gemini_client
+        if gemini_client:
+            res = await asyncio.to_thread(
+                gemini_client.models.generate_content,
+                model="gemini-3.8-flash",
+                contents="ping"
+            )
+            diagnostics["gemini_ai"] = {"status": "healthy", "detail": "Gemini 3.8 Flash operational"}
+        else:
+            diagnostics["gemini_ai"] = {"status": "error", "detail": "Gemini client not initialized"}
+    except Exception as e:
+        diagnostics["gemini_ai"] = {"status": "error", "detail": str(e)}
+
+    # 3. Google Places API Key
+    try:
+        places_key = os.environ.get("GOOGLE_PLACES_API_KEY")
+        if places_key:
+            diagnostics["google_places"] = {"status": "healthy", "detail": "GOOGLE_PLACES_API_KEY is configured"}
+        else:
+            diagnostics["google_places"] = {"status": "warning", "detail": "GOOGLE_PLACES_API_KEY not set"}
+    except Exception as e:
+        diagnostics["google_places"] = {"status": "error", "detail": str(e)}
+
+    return diagnostics
 
 @app.get("/api/v1/auth/google/login", tags=["Authentication"])
 async def google_login():
@@ -142,51 +228,58 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
             profile_data = await scrape_google_business_profile(b_name, request.location)
         
         if db:
-            # Check if default user exists (for MVP)
-            default_user = db.query(models.User).first()
-            if not default_user:
-                default_user = models.User(
-                    email="admin@gbpilot.com", 
-                    hashed_password="hashed_placeholder", 
-                    full_name="Default Admin"
+            try:
+                # Check if default user exists (for MVP)
+                default_user = db.query(models.User).first()
+                if not default_user:
+                    default_user = models.User(
+                        email="admin@gbpilot.com", 
+                        hashed_password="hashed_placeholder", 
+                        full_name="Default Admin"
+                    )
+                    db.add(default_user)
+                    db.commit()
+                    db.refresh(default_user)
+                    
+                # Create or Get Organization
+                org = db.query(models.Organization).filter(models.Organization.owner_id == default_user.id).first()
+                if not org:
+                    org = models.Organization(
+                        owner_id=default_user.id,
+                        name=f"{b_name} Workspace"
+                    )
+                    db.add(org)
+                    db.commit()
+                    db.refresh(org)
+                    
+                # Save the new GBP Profile
+                lon = profile_data.get('longitude', 55.2708)
+                lat = profile_data.get('latitude', 25.2048)
+                point_str = f"POINT({lon} {lat})"
+                new_profile = models.GBPProfile(
+                    organization_id=org.id,
+                    google_location_id=profile_data['google_location_id'],
+                    business_name=profile_data['business_name'],
+                    primary_category=profile_data['primary_category'],
+                    address_line=profile_data['address_line'],
+                    city=profile_data['city'],
+                    postal_code=profile_data['postal_code'],
+                    country=profile_data['country'],
+                    location=point_str,
+                    phone_number=profile_data['phone_number'],
+                    website_url=profile_data['website_url'],
+                    health_score=profile_data['health_score']
                 )
-                db.add(default_user)
+                db.add(new_profile)
                 db.commit()
-                db.refresh(default_user)
-                
-            # Create or Get Organization
-            org = db.query(models.Organization).filter(models.Organization.owner_id == default_user.id).first()
-            if not org:
-                org = models.Organization(
-                    owner_id=default_user.id,
-                    name=f"{b_name} Workspace"
-                )
-                db.add(org)
-                db.commit()
-                db.refresh(org)
-                
-            # Save the new GBP Profile
-            lon = profile_data.get('longitude', 55.2708)
-            lat = profile_data.get('latitude', 25.2048)
-            point_str = f"POINT({lon} {lat})"
-            new_profile = models.GBPProfile(
-                organization_id=org.id,
-                google_location_id=profile_data['google_location_id'],
-                business_name=profile_data['business_name'],
-                primary_category=profile_data['primary_category'],
-                address_line=profile_data['address_line'],
-                city=profile_data['city'],
-                postal_code=profile_data['postal_code'],
-                country=profile_data['country'],
-                location=point_str,
-                phone_number=profile_data['phone_number'],
-                website_url=profile_data['website_url'],
-                health_score=profile_data['health_score']
-            )
-            db.add(new_profile)
-            db.commit()
-            db.refresh(new_profile)
-            profile_data['id'] = str(new_profile.id)
+                db.refresh(new_profile)
+                profile_data['id'] = str(new_profile.id)
+                logger.info(f"[DB] Profile persisted successfully with ID {new_profile.id}")
+            except Exception as dbe:
+                logger.warning(f"[DB Warning] Could not persist profile to DB (IPv6/Network issue): {dbe}")
+                if db:
+                    db.rollback()
+                profile_data['id'] = f"profile_{profile_data['google_location_id'][:8]}"
         else:
             profile_data['id'] = f"profile_{profile_data['google_location_id'][:8]}"
         

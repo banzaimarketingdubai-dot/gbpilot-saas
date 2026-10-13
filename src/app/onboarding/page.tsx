@@ -164,11 +164,12 @@ export default function OnboardingPage() {
           id: profile.id
         });
       } else {
-        throw new Error('API request failed');
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.detail || errorJson.message || `Ошибка сервера (${response.status})`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Website scrape error:", err);
-      alert("Failed to scrape website. Please ensure the backend is running and the URL is accessible.");
+      alert(`Ошибка анализа сайта: ${err.message || 'Проверьте доступность URL и бэкенда'}`);
       setScrapedData(null);
     } finally {
       setIsScraping(false);
@@ -209,11 +210,12 @@ export default function OnboardingPage() {
           ]
         });
       } else {
-        throw new Error('API failed');
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.detail || errorJson.message || `Ошибка сервера (${response.status})`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Scan error:", err);
-      alert("Failed to scan business. Please check backend connection.");
+      alert(`Ошибка при сканировании: ${err.message || 'Проверьте соединение с бэкендом'}`);
       setScanResult(null);
     } finally {
       setIsScanning(false);
