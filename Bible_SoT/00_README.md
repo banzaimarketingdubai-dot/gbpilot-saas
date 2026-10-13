@@ -17,6 +17,7 @@
 | [**07. Анализ Конкурентов и Киллер-Фичи**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/07_COMPETITIVE_INTELLIGENCE_AND_KILLER_FEATURES.md) | Разбор уязвимостей BrightLocal, LocalFalcon, Localo, Birdeye, Podium. 6 нечестных преимуществ GBPilot (1-Click Engine, Profile Guard, FTC Speedometer, GEO/LLM SOV). |
 | [**08. Фреймворк JTBD и Сценарии**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/08_JTBD_AND_CUSTOMER_SCENARIOS.md) | Jobs To Be Done (Bob Moesta 4 Forces of Progress), целевые персоны, Job Stories по Триаде, микромоменты (холодная конверсия, отражение диверсий, LSI-ответы). |
 | [**09. Рынок Дубая и Локализация (ОАЭ)**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/09_DUBAI_UAE_MARKET_LOCALIZATION_AND_GTM.md) | 6 адаптаций под Дубай (Башни/Кластеры, Makani, WhatsApp-first, снос отзывов по Закону о киберпреступности ОАЭ № 34/2021, пресет «Рамадан», Apple Maps/2GIS, тарифы в AED). |
+| [**10. Убойный Лендинг для Дубая**](file:///c:/Sher_AI_Studio/projects/GBPilot/Bible_SoT/10_DUBAI_LANDING_PAGE_BLUEPRINT_AND_COPYWRITING.md) | Проектирование и копирайтинг лендинга под Дубай: закрытие в 1 касание (Zero-Friction), живой калькулятор потерь в AED, Review Takedown, Apple Pay. |
 
 ---
 
