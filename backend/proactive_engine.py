@@ -253,16 +253,19 @@ class ProactiveEngine:
                - 'google_escalation_url': "https://support.google.com/business/workflow/9945796"
                - 'message': "Official Legal Dispute Dossier generated successfully."
             """
-            for model_name in CASCADE_MODELS:
+            for model_name in CASCADE_MODELS[:2]:
                 try:
-                    response = await asyncio.to_thread(
-                        gemini_client.models.generate_content,
-                        model=model_name,
-                        contents=prompt,
-                        config=types.GenerateContentConfig(
-                            response_mime_type="application/json",
-                            response_schema=ReviewTakedownResponse
-                        )
+                    response = await asyncio.wait_for(
+                        asyncio.to_thread(
+                            gemini_client.models.generate_content,
+                            model=model_name,
+                            contents=prompt,
+                            config=types.GenerateContentConfig(
+                                response_mime_type="application/json",
+                                response_schema=ReviewTakedownResponse
+                            )
+                        ),
+                        timeout=5.0
                     )
                     parsed = json.loads(response.text)
                     parsed["status"] = "success"
@@ -272,7 +275,7 @@ class ProactiveEngine:
                     parsed["message"] = "Official Legal Dispute Dossier generated successfully."
                     return parsed
                 except Exception as e:
-                    print(f"[ProactiveEngine] Review takedown failed on {model_name}: {e}")
+                    print(f"[ProactiveEngine] Review takedown failed or timed out on {model_name}: {e}")
                     continue
 
         # HIGH-QUALITY FALLBACK DOSSIER
