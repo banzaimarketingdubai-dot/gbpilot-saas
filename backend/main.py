@@ -217,72 +217,7 @@ async def delete_profile_endpoint(profile_id: str, db: Session = Depends(get_db)
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# ========================================================
-# GOOGLE OAUTH IMPLEMENTATION
-# ========================================================
-@app.get("/api/v1/auth/google/login", tags=["Auth"])
-async def google_login():
-    """
-    Initiate Google OAuth 2.0 flow for My Business API.
-    """
-    auth_url = get_google_auth_url()
-    return {"status": "success", "auth_url": auth_url}
 
-@app.get("/api/v1/auth/google/callback", tags=["Auth"])
-async def google_callback(code: str = None, error: str = None, db: Session = Depends(get_db)):
-    """
-    Handle OAuth callback, exchange code for tokens, fetch managed locations, and auto-sync profiles.
-    """
-    if error:
-        raise HTTPException(status_code=400, detail=f"OAuth failed: {error}")
-    if not code:
-        raise HTTPException(status_code=400, detail="No authorization code provided.")
-        
-    try:
-        # 1. Exchange code for tokens
-        token_data = exchange_code_for_tokens(code)
-        access_token = token_data.get("access_token")
-        if not access_token:
-            raise Exception("No access token returned from Google.")
-            
-        # 2. Get User Info
-        user_info = get_google_user_info(access_token)
-        email = user_info.get("email", "unknown@gbpilot.com")
-        
-        # 3. Fetch GBP Locations from Google API
-        locations = fetch_user_managed_locations(access_token)
-        
-        # 4. Auto-Sync: Create or Update in Database
-        synced_profiles = []
-        org = db.query(models.Organization).first() # Fallback for MVP
-        
-        for loc in locations:
-            location_id = loc.get("name")
-            title = loc.get("title", "Unnamed Business")
-            
-            profile = db.query(models.GBPProfile).filter(models.GBPProfile.google_location_id == location_id).first()
-            if not profile:
-                profile = models.GBPProfile(
-                    organization_id=org.id if org else None,
-                    google_location_id=location_id,
-                    business_name=title,
-                    primary_category="Imported via Google",
-                    address_line="Auto-synced from Google Profile",
-                    city="Unknown"
-                )
-                db.add(profile)
-                db.commit()
-                db.refresh(profile)
-            synced_profiles.append({"id": str(profile.id), "name": title})
-            
-        return {
-            "status": "success",
-            "message": f"Successfully authenticated as {email} and synced {len(synced_profiles)} locations.",
-            "synced_profiles": synced_profiles
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"OAuth Processing Error: {str(e)}")
 
 @app.post("/api/v1/recommendations/generate", response_model=TriggerGenerationResponse, tags=["Proactive Engine"])
 async def trigger_recommendation_generation(request: TriggerGenerationRequest):
