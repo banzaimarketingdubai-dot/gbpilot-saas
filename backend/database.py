@@ -12,7 +12,7 @@ if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://")
 
 # Create SQLAlchemy engine
 if SQLALCHEMY_DATABASE_URL:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, connect_args={"connect_timeout": 5})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 else:
     # Fallback or warning if no DB is provided

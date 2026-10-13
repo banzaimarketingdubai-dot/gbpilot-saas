@@ -112,7 +112,10 @@ async def system_diagnostics(db: Session = Depends(get_db)):
     try:
         if db:
             from sqlalchemy import text
-            db.execute(text("SELECT 1"))
+            await asyncio.wait_for(
+                asyncio.to_thread(db.execute, text("SELECT 1")),
+                timeout=3.0
+            )
             diagnostics["database"] = {"status": "healthy", "detail": "Supabase PostgreSQL connected"}
         else:
             diagnostics["database"] = {"status": "degraded", "detail": "Running in-memory (No DATABASE_URL)"}
@@ -123,10 +126,13 @@ async def system_diagnostics(db: Session = Depends(get_db)):
     try:
         from proactive_engine import gemini_client
         if gemini_client:
-            res = await asyncio.to_thread(
-                gemini_client.models.generate_content,
-                model="gemini-3.8-flash",
-                contents="ping"
+            res = await asyncio.wait_for(
+                asyncio.to_thread(
+                    gemini_client.models.generate_content,
+                    model="gemini-3.8-flash",
+                    contents="ping"
+                ),
+                timeout=4.0
             )
             diagnostics["gemini_ai"] = {"status": "healthy", "detail": "Gemini 3.8 Flash operational"}
         else:
