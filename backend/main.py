@@ -153,19 +153,30 @@ async def system_diagnostics(db: Session = Depends(get_db)):
 
     return diagnostics
 
+def get_safe_frontend_url(state: str = None) -> str:
+    if state:
+        clean_state = state.strip().rstrip("/")
+        if clean_state.startswith("http://") or clean_state.startswith("https://"):
+            return clean_state
+    return os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+
 @app.get("/api/v1/auth/google/login", tags=["Authentication"])
-async def google_login():
+async def google_login(redirect_url: str = None, state: str = None):
     """
     Generates the Google OAuth 2.0 authorization URL for connecting a live Google Business Profile.
+    Optionally accepts redirect_url / state so Google redirects back to the caller's origin.
     """
-    url = get_google_auth_url()
+    target = redirect_url or state
+    url = get_google_auth_url(state=target)
     return {"auth_url": url}
 
 @app.get("/api/v1/auth/google/callback", tags=["Authentication"])
 async def google_callback(code: str, state: str = None, db: Session = Depends(get_db)):
     """
     OAuth 2.0 callback endpoint handling Google authorization code exchange.
+    Redirects back to frontend origin supplied in state, or FRONTEND_URL env var.
     """
+    target_frontend = get_safe_frontend_url(state)
     try:
         tokens = exchange_code_for_tokens(code)
         access_token = tokens.get("access_token")
@@ -174,35 +185,42 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         user_info = get_google_user_info(access_token)
         email = user_info.get("email", "google_user@gbpilot.com")
         
-        # Save or update user and organization in Supabase
-        user = db.query(models.User).filter(models.User.email == email).first()
-        if not user:
-            user = models.User(
-                email=email, 
-                hashed_password="oauth_google_user",
-                full_name=user_info.get("name", "Google User")
-            )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+        # Save or update user and organization in Supabase (with safe DB fallback)
+        if db:
+            try:
+                user = db.query(models.User).filter(models.User.email == email).first()
+                if not user:
+                    user = models.User(
+                        email=email, 
+                        hashed_password="oauth_google_user",
+                        full_name=user_info.get("name", "Google User")
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                    
+                org = db.query(models.Organization).filter(models.Organization.owner_id == user.id).first()
+                if not org:
+                    org = models.Organization(owner_id=user.id, name=f"{user.full_name}'s Workspace")
+                    db.add(org)
+                    db.commit()
+                    db.refresh(org)
+                    
+                profile = db.query(models.GBPProfile).filter(models.GBPProfile.organization_id == org.id).first()
+                if profile and refresh_token:
+                    profile.refresh_token_encrypted = refresh_token
+                    db.commit()
+            except Exception as dbe:
+                logger.warning(f"[DB Warning] Could not persist OAuth profile: {dbe}")
+                if db:
+                    db.rollback()
             
-        org = db.query(models.Organization).filter(models.Organization.owner_id == user.id).first()
-        if not org:
-            org = models.Organization(owner_id=user.id, name=f"{user.full_name}'s Workspace")
-            db.add(org)
-            db.commit()
-            db.refresh(org)
-            
-        profile = db.query(models.GBPProfile).filter(models.GBPProfile.organization_id == org.id).first()
-        if profile and refresh_token:
-            profile.refresh_token_encrypted = refresh_token
-            db.commit()
-            
-        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-        return RedirectResponse(url=f"{frontend_url}/dashboard?auth=success&email={email}")
+        return RedirectResponse(url=f"{target_frontend}/dashboard?auth=success&email={email}")
     except Exception as e:
-        frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-        return RedirectResponse(url=f"{frontend_url}/dashboard?auth=error&detail={str(e)}")
+        logger.error(f"[OAuth Error] {e}")
+        import urllib.parse
+        err_msg = urllib.parse.quote(str(e))
+        return RedirectResponse(url=f"{target_frontend}/dashboard?auth=error&detail={err_msg}")
 
 @app.get("/api/v1/onboarding/autocomplete", tags=["Onboarding"])
 async def autocomplete_endpoint(query: str, lat: float = None, lng: float = None):

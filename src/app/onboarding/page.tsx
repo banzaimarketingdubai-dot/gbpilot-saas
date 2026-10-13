@@ -348,7 +348,11 @@ export default function OnboardingPage() {
     setIsConnectingGoogle(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      const res = await fetch(`${backendUrl}/api/v1/auth/google/login`);
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const loginUrl = origin 
+        ? `${backendUrl}/api/v1/auth/google/login?redirect_url=${encodeURIComponent(origin)}`
+        : `${backendUrl}/api/v1/auth/google/login`;
+      const res = await fetch(loginUrl);
       if (res.ok) {
         const data = await res.json();
         if (data.auth_url) {

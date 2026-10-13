@@ -62,8 +62,30 @@ export default function DashboardPage() {
     jurisdiction?: string;
   } | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [authBanner, setAuthBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const auth = urlParams.get('auth');
+      const detail = urlParams.get('detail');
+      const email = urlParams.get('email');
+
+      if (auth === 'success') {
+        setAuthBanner({
+          type: 'success',
+          message: `Google аккаунт (${email || 'подтвержден'}) успешно подключен! Синхронизация профиля активирована.`
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (auth === 'error') {
+        setAuthBanner({
+          type: 'error',
+          message: `Ошибка подключения Google OAuth: ${detail ? decodeURIComponent(detail) : 'Не удалось завершить авторизацию'}`
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     let currentProfileId = 'profile_123';
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('gbpilot_active_profile');
@@ -298,6 +320,25 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* Google OAuth Status Banner */}
+        {authBanner && (
+          <div className={`p-4 rounded-xl text-xs flex items-center justify-between font-medium animate-in fade-in ${
+            authBanner.type === 'success' 
+              ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' 
+              : 'bg-red-50 border border-red-300 text-red-800'
+          }`}>
+            <div className="flex items-center gap-2">
+              {authBanner.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertOctagon className="w-4 h-4 text-red-600 shrink-0" />
+              )}
+              <span>{authBanner.message}</span>
+            </div>
+            <button onClick={() => setAuthBanner(null)} className="underline text-[11px] shrink-0 ml-2">Закрыть</button>
+          </div>
+        )}
 
         {/* Ramadan Active Banner */}
         {ramadanNotice && (
