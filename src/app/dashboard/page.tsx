@@ -326,7 +326,38 @@ export default function DashboardPage() {
   const [venueSearchResults, setVenueSearchResults] = useState<any[]>([]);
   const [isSearchingVenues, setIsSearchingVenues] = useState(false);
   const [isConnectingVenue, setIsConnectingVenue] = useState(false);
-  const [showAddVenueSection, setShowAddVenueSection] = useState(false);
+  const [showAddVenueSection, setShowAddVenueSection] = useState(true);
+  const [showVenueDropdown, setShowVenueDropdown] = useState(false);
+
+  // Live Google Places Autocomplete as user types in venue search
+  useEffect(() => {
+    const q = venueSearchQuery.trim();
+    if (q.length < 2) {
+      setVenueSearchResults([]);
+      setShowVenueDropdown(false);
+      setIsSearchingVenues(false);
+      return;
+    }
+
+    setIsSearchingVenues(true);
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const res = await fetch(`${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setVenueSearchResults(data.suggestions || []);
+          setShowVenueDropdown(true);
+        }
+      } catch (err) {
+        console.error("Venue live autocomplete failed", err);
+      } finally {
+        setIsSearchingVenues(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [venueSearchQuery]);
 
   useEffect(() => {
     let currentProfileId = 'profile_123';
@@ -2094,13 +2125,13 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddVenueSection(!showAddVenueSection)}
-                    className="text-[11px] text-google-blue hover:underline font-semibold"
+                    className="text-[11px] text-google-blue hover:underline font-semibold cursor-pointer"
                   >
-                    {showAddVenueSection ? 'Collapse' : '+ Expand Search'}
+                    {showAddVenueSection ? '− Collapse' : '+ Expand Search'}
                   </button>
                 </div>
 
-                {(showAddVenueSection || apiDisabledWarning || availableProfiles.length === 0) && (
+                {showAddVenueSection && (
                   <div className="space-y-3 pt-1 border-t border-slate-200/80 animate-in fade-in duration-150">
                     <form onSubmit={handleSearchVenues} className="flex gap-2">
                       <div className="relative flex-1">
@@ -2108,11 +2139,70 @@ export default function DashboardPage() {
                         <input
                           type="text"
                           value={venueSearchQuery}
-                          onChange={(e) => setVenueSearchQuery(e.target.value)}
-                          placeholder="Business name (e.g. Banzai Marketing or Al Safadi)..."
-                          className="material-input text-xs !pl-9 pr-3 py-2 w-full"
+                          onChange={(e) => {
+                            setVenueSearchQuery(e.target.value);
+                            setShowVenueDropdown(true);
+                          }}
+                          onFocus={() => {
+                            if (venueSearchResults.length > 0) setShowVenueDropdown(true);
+                          }}
+                          placeholder="Business name in Google Maps (e.g. Al Safadi, Svoi Cafe)..."
+                          className="material-input text-xs !pl-9 pr-8 py-2 w-full"
                         />
+                        {isSearchingVenues && (
+                          <Sparkles className="w-3.5 h-3.5 text-google-blue animate-spin absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        )}
+
+                        {/* Live Google Places Autocomplete Dropdown */}
+                        {showVenueDropdown && venueSearchResults.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-100 max-h-56 overflow-y-auto animate-in fade-in duration-100">
+                            <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                              <span>Google Places Suggestions</span>
+                              <span className="text-google-blue font-semibold">{venueSearchResults.length} found</span>
+                            </div>
+                            {venueSearchResults.map((item, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  handleConnectVenueItem(item);
+                                  setShowVenueDropdown(false);
+                                }}
+                                className="p-2.5 hover:bg-google-blue-light/30 cursor-pointer flex items-center justify-between gap-2 transition-colors group"
+                              >
+                                <div className="min-w-0 flex items-start gap-2">
+                                  <MapPin className="w-3.5 h-3.5 text-google-red shrink-0 mt-0.5" />
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-slate-900 group-hover:text-google-blue truncate">
+                                      {item.main_text || item.description}
+                                    </div>
+                                    <div className="text-[11px] text-slate-500 truncate">
+                                      {item.description}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={isConnectingVenue}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleConnectVenueItem(item);
+                                    setShowVenueDropdown(false);
+                                  }}
+                                  className="px-2.5 py-1 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold shrink-0 transition-colors flex items-center gap-1 shadow-xs"
+                                >
+                                  {isConnectingVenue ? (
+                                    <Sparkles className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Check className="w-3 h-3" />
+                                  )}
+                                  <span>Connect ⚡</span>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
+
                       <button
                         type="submit"
                         disabled={isSearchingVenues || !venueSearchQuery.trim()}
@@ -2127,8 +2217,8 @@ export default function DashboardPage() {
                       </button>
                     </form>
 
-                    {/* Search Results list */}
-                    {venueSearchResults.length > 0 && (
+                    {/* Persistent Search Results list below when dropdown closed */}
+                    {!showVenueDropdown && venueSearchResults.length > 0 && (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           Found on Google Maps ({venueSearchResults.length}):
@@ -2138,12 +2228,15 @@ export default function DashboardPage() {
                             key={idx}
                             className="p-2.5 bg-white border border-slate-200 hover:border-google-blue rounded-xl flex items-center justify-between gap-2 shadow-xs transition-all"
                           >
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold text-slate-900 truncate">
-                                {item.main_text || item.description}
-                              </div>
-                              <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                                {item.description}
+                            <div className="min-w-0 flex items-start gap-2">
+                              <MapPin className="w-3.5 h-3.5 text-google-red shrink-0 mt-0.5" />
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 truncate">
+                                  {item.main_text || item.description}
+                                </div>
+                                <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                                  {item.description}
+                                </div>
                               </div>
                             </div>
                             <button
