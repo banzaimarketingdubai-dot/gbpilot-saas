@@ -2104,14 +2104,14 @@ export default function DashboardPage() {
                   <div className="space-y-3 pt-1 border-t border-slate-200/80 animate-in fade-in duration-150">
                     <form onSubmit={handleSearchVenues} className="flex gap-2">
                       <div className="relative flex-1">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="text"
                           value={venueSearchQuery}
                           onChange={(e) => setVenueSearchQuery(e.target.value)}
                           placeholder="Business name (e.g. Banzai Marketing or Al Safadi)..."
-                          className="material-input text-xs pl-8 pr-3 py-2 w-full"
+                          className="material-input text-xs !pl-9 pr-3 py-2 w-full"
                         />
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                       </div>
                       <button
                         type="submit"

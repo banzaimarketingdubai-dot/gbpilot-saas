@@ -156,14 +156,14 @@ export default function B2BLandingPage() {
               <div className="material-card p-3 bg-white border-2 border-google-blue/30 shadow-material-2 max-w-xl mx-auto lg:mx-0">
                 <form onSubmit={handleAuditSubmit} className="flex flex-col sm:flex-row items-center gap-2">
                   <div className="relative flex-1 w-full">
-                    <MapPin className="w-5 h-5 text-google-blue absolute left-3.5 top-3.5" />
+                    <MapPin className="w-5 h-5 text-google-blue absolute left-3.5 top-3.5 pointer-events-none" />
                     <input 
                       type="text"
                       required
                       placeholder="Enter business name or Google Maps URL..."
                       value={auditQuery}
                       onChange={(e) => setAuditQuery(e.target.value)}
-                      className="material-input text-xs sm:text-sm pl-11 py-3 w-full border-none focus:ring-0"
+                      className="material-input text-xs sm:text-sm !pl-11 py-3 w-full border-none focus:ring-0"
                     />
                   </div>
                   <button 

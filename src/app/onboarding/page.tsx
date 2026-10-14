@@ -542,7 +542,7 @@ export default function OnboardingPage() {
 
                   <form onSubmit={handleSearchScan} className="space-y-4">
                     <div className="relative">
-                      <Search className="w-5 h-5 text-google-text-tertiary absolute left-3.5 top-3.5" />
+                      <Search className="w-5 h-5 text-google-text-tertiary absolute left-3.5 top-3.5 pointer-events-none" />
                       <input 
                         type="text"
                         required
@@ -553,7 +553,7 @@ export default function OnboardingPage() {
                           setShowSuggestions(true);
                         }}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                        className="material-input text-sm pl-11 py-3.5"
+                        className="material-input text-sm !pl-11 py-3.5"
                       />
                       
                       {/* Autocomplete Dropdown */}
