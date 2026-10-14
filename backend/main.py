@@ -317,19 +317,21 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
     Scrape Google Maps profile or real website URL using BeautifulSoup & Gemini AI.
     """
     try:
-        # Check if input is a website URL
-        target_url = request.website_url
-        if not target_url and request.business_name:
-            bn = request.business_name.strip()
-            if bn.startswith("http://") or bn.startswith("https://") or ("." in bn.split("/")[0] and len(bn.split()) == 1):
-                target_url = bn
+        # Check if input is a Google Maps URL or standard website
+        bn = (request.business_name or "").strip()
+        wu = (request.website_url or "").strip()
+        is_maps_link = any("maps.app.goo.gl" in c or "google.com/maps" in c or "goo.gl/maps" in c for c in [bn, wu] if c)
 
-        if target_url:
+        if is_maps_link:
+            target_query = bn if ("maps.app.goo.gl" in bn or "google.com/maps" in bn or "goo.gl/maps" in bn) else wu
+            profile_data = await scrape_google_business_profile(target_query, request.location)
+            b_name = profile_data.get('business_name', target_query)
+        elif wu or (bn.startswith("http://") or bn.startswith("https://")):
+            target_url = wu or bn
             profile_data = await scrape_website_url(target_url)
             b_name = profile_data.get('business_name', target_url)
         else:
-            # Standard business name search
-            b_name = request.business_name or "Local Business"
+            b_name = bn or "Local Business"
             profile_data = await scrape_google_business_profile(b_name, request.location)
         
         if db:

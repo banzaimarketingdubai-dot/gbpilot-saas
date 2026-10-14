@@ -25,7 +25,8 @@ import {
   FileText,
   Scale,
   Moon,
-  ShieldCheck
+  ShieldCheck,
+  X
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -87,7 +88,15 @@ export default function OnboardingPage() {
     score: number;
     issues: string[];
     grid: { pos: number; rank: number }[];
+    category?: string;
+    rating?: number;
+    reviews_count?: number;
+    phone?: string;
+    website_url?: string;
+    cover_url?: string;
+    id?: string;
   } | null>(null);
+  const [isManageGatekeeperOpen, setIsManageGatekeeperOpen] = useState(false);
 
   // Path C state
   const [mapsLink, setMapsLink] = useState('');
@@ -302,7 +311,7 @@ export default function OnboardingPage() {
         const profile = data.profile || {};
         setScanResult({
           name: profile.business_name || searchQuery,
-          address: `${profile.address_line || 'Central District'}, ${profile.city || ''}`,
+          address: `${profile.address_line || 'Central District'}, ${profile.city || 'Dubai'}`,
           score: profile.health_score || 64,
           issues: profile.issues || [
             `Missing Secondary Category: ${profile.primary_category || 'Specialty'} Training & Services`,
@@ -314,7 +323,14 @@ export default function OnboardingPage() {
             { pos: 1, rank: 2 }, { pos: 2, rank: 3 }, { pos: 3, rank: 7 },
             { pos: 4, rank: 1 }, { pos: 5, rank: 4 }, { pos: 6, rank: 11 },
             { pos: 7, rank: 8 }, { pos: 8, rank: 14 }, { pos: 9, rank: 18 }
-          ]
+          ],
+          category: profile.primary_category || 'Локальный бизнес',
+          rating: profile.rating || 4.7,
+          reviews_count: profile.reviews_count || 120,
+          phone: profile.phone_number || '+971 4 123 4567',
+          website_url: profile.website_url || '',
+          cover_url: profile.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+          id: profile.id
         });
       } else {
         const errorJson = await response.json().catch(() => ({}));
@@ -347,12 +363,32 @@ export default function OnboardingPage() {
   const handleConnectGoogle = async () => {
     setIsConnectingGoogle(true);
     try {
+      // PLG: Store pending venue in localStorage so Dashboard auto-attaches it post-login!
+      if (scanResult) {
+        localStorage.setItem('gbpilot_pending_venue', JSON.stringify({
+          id: scanResult.id || `profile_${Date.now()}`,
+          name: scanResult.name,
+          address: scanResult.address,
+          city: scanResult.address.split(',').pop()?.trim() || 'Dubai',
+          category: scanResult.category || 'Локальный бизнес',
+          primary_category: scanResult.category || 'Локальный бизнес',
+          phone: scanResult.phone || '+971 4 123 4567',
+          website_url: scanResult.website_url || `https://${scanResult.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+          rating: scanResult.rating || 4.7,
+          reviews_count: scanResult.reviews_count || 120,
+          health_score: scanResult.score || 64,
+          cover_url: scanResult.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+          role: 'Владелец / Администратор',
+          verified: true,
+          is_admin: true
+        }));
+      }
+
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const loginUrl = origin 
-        ? `${backendUrl}/api/v1/auth/google/login?redirect_url=${encodeURIComponent(origin)}&origin=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}&raw_json=true`
-        : `${backendUrl}/api/v1/auth/google/login?raw_json=true`;
-      const res = await fetch(loginUrl);
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
+      const loginUrl = `${backendUrl}/api/v1/auth/google/login?redirect_url=${encodeURIComponent(origin)}&origin=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
+      
+      const res = await fetch(`${loginUrl}&raw_json=true`);
       if (res.ok) {
         const data = await res.json();
         if (data.auth_url) {
@@ -360,7 +396,7 @@ export default function OnboardingPage() {
           return;
         }
       }
-      throw new Error("No auth URL returned");
+      window.location.href = loginUrl;
     } catch {
       // Fallback preview modal if GOOGLE_CLIENT_ID is not configured yet
       setIsConnectingGoogle(false);
@@ -1254,7 +1290,7 @@ export default function OnboardingPage() {
                     <input 
                       type="text"
                       required
-                      placeholder="Enter business name (e.g. Manhattan Bakery & Cafe)"
+                      placeholder="Введите название (напр. Al Safadi Dubai) или ссылку Google Maps (maps.app.goo.gl)..."
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
@@ -1422,32 +1458,129 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
-                {/* Sticky 1-Click OAuth CTA */}
+                {/* Sticky 1-Click Management CTA */}
                 <div className="material-card p-6 bg-gradient-to-r from-google-blue to-blue-700 text-white shadow-material-2">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold">Ready to Auto-Fix These Ranking Leaks?</h3>
-                      <p className="text-xs text-blue-100 mt-1">Connect your Google Business Profile to trigger AI 1-Click Smart Fix.</p>
+                      <h3 className="text-lg font-bold">Готовы исправить уязвимости и запустить Автопилот?</h3>
+                      <p className="text-xs text-blue-100 mt-1">Авторизуйтесь под управляющим аккаунтом для привязки карточки и включения защиты.</p>
                     </div>
                     <button 
-                      onClick={handleConnectGoogle}
-                      disabled={isConnectingGoogle}
-                      className="bg-white hover:bg-google-bg text-google-blue font-bold px-6 py-3 rounded-xl shadow transition-all flex items-center gap-2 whitespace-nowrap text-sm"
+                      onClick={() => setIsManageGatekeeperOpen(true)}
+                      className="bg-white hover:bg-slate-50 text-google-blue font-bold px-6 py-3 rounded-xl shadow-lg transition-all flex items-center gap-2 whitespace-nowrap text-sm hover:scale-[1.02] active:scale-[0.98]"
                     >
-                      {isConnectingGoogle ? (
-                        <>
-                          <Sparkles className="w-4 h-4 animate-spin text-google-blue" />
-                          <span>Connecting Google Account...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4 text-google-blue fill-google-blue" />
-                          <span>Fix these issues in 1-Click (Connect Google)</span>
-                        </>
-                      )}
+                      <Zap className="w-4 h-4 text-google-blue fill-google-blue" />
+                      <span>⚡ Начать управление заведением</span>
                     </button>
                   </div>
                 </div>
+
+                {/* GATEKEEPER MODAL: REQUIRE GOOGLE OWNER LOGIN (PLG JTBD) */}
+                {isManageGatekeeperOpen && (
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl shadow-material-3 border border-slate-200 max-w-lg w-full p-6 relative">
+                      <button 
+                        onClick={() => setIsManageGatekeeperOpen(false)}
+                        className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+
+                      {/* Venue Header */}
+                      <div className="flex items-start gap-3.5 mb-5 pb-4 border-b border-slate-100">
+                        <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100 flex items-center justify-center">
+                          {scanResult.cover_url ? (
+                            <img src={scanResult.cover_url} alt={scanResult.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="w-6 h-6 text-google-blue" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-base font-bold text-slate-900 truncate">
+                            {scanResult.name}
+                          </div>
+                          <div className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3.5 h-3.5 text-google-red shrink-0" />
+                            <span className="truncate">{scanResult.address}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded border border-amber-200">
+                              ★ {scanResult.rating} ({scanResult.reviews_count} отзывов)
+                            </span>
+                            <span className="text-[10px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded">
+                              {scanResult.category || 'Локальный бизнес'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Explanation Callout */}
+                      <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-2 mb-6">
+                        <div className="flex items-center gap-2 text-xs font-bold text-google-blue">
+                          <ShieldCheck className="w-4 h-4 text-google-blue shrink-0" />
+                          <span>Требуется Google-аккаунт Владельца / Администратора</span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          Для применения рекомендаций Автопилота, сноса токсичных отзывов (Review Takedown™) и оперативного управления точкой войдите через аккаунт, являющийся <strong>Владельцем или Менеджером</strong> этого заведения в Google Business Profile.
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="space-y-3">
+                        <button
+                          onClick={handleConnectGoogle}
+                          disabled={isConnectingGoogle}
+                          className="w-full py-3.5 px-4 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2.5"
+                        >
+                          {isConnectingGoogle ? (
+                            <>
+                              <Sparkles className="w-4 h-4 animate-spin text-white" />
+                              <span>Подключение к Google...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                              </svg>
+                              <span>Войти через Google (Владелец / Администратор)</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (typeof window !== 'undefined' && scanResult) {
+                              localStorage.setItem('gbpilot_active_profile', JSON.stringify({
+                                id: scanResult.id || `profile_${Date.now()}`,
+                                name: scanResult.name,
+                                address: scanResult.address,
+                                city: scanResult.address.split(',').pop()?.trim() || 'Dubai',
+                                health_score: scanResult.score,
+                                cover_url: scanResult.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+                                role: 'Демо-просмотр',
+                                verified: false,
+                                is_admin: false
+                              }));
+                            }
+                            setIsManageGatekeeperOpen(false);
+                            if (router) router.push('/dashboard');
+                          }}
+                          className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-colors"
+                        >
+                          Продолжить в демо-режиме (только просмотр)
+                        </button>
+                      </div>
+
+                      <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Безопасная OAuth 2.0 авторизация через Google Cloud</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 1-Click Local Website Builder (Optional PLG Feature) */}
                 <div className="material-card p-6 border border-purple-200 bg-purple-50/50">

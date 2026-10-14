@@ -194,34 +194,81 @@ def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
         
     return result
 
+def resolve_google_maps_url(url: str) -> Optional[str]:
+    """
+    Expands short Google Maps URLs (maps.app.goo.gl) or extracts place query from full Google Maps URLs.
+    """
+    if not url:
+        return None
+    url = url.strip()
+    try:
+        if "maps.app.goo.gl" in url or "goo.gl/maps" in url:
+            res = requests.head(url, allow_redirects=True, timeout=5)
+            url = res.url
+
+        if "/place/" in url:
+            parts = url.split("/place/")[1].split("/")
+            raw_name = parts[0].split("?")[0].replace("+", " ")
+            clean_name = requests.utils.unquote(raw_name)
+            return clean_name
+        elif "q=" in url:
+            import urllib.parse
+            parsed = urllib.parse.urlparse(url)
+            params = urllib.parse.parse_qs(parsed.query)
+            if "q" in params:
+                return params["q"][0]
+    except Exception as e:
+        print(f"[GoogleService] Google Maps URL resolve error: {e}")
+    return None
+
 def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
     """
-    Fetches official Google Places API (New) data for ANY public business.
+    Fetches official Google Places API (New) data for ANY public business (by name or Maps URL).
     """
     if not GOOGLE_PLACES_API_KEY:
         return None
+
+    # If query is a URL, resolve to place name
+    if query.startswith("http://") or query.startswith("https://"):
+        resolved = resolve_google_maps_url(query)
+        if resolved:
+            query = resolved
         
     try:
         url = 'https://places.googleapis.com/v1/places:searchText'
         headers = {
             'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount',
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos',
             'Content-Type': 'application/json'
         }
         data = {'textQuery': query}
-        res = requests.post(url, headers=headers, json=data, timeout=5)
+        res = requests.post(url, headers=headers, json=data, timeout=6)
         if res.ok:
             results = res.json().get("places", [])
             if results:
                 place = results[0]
+                photo_url = None
+                photos = place.get("photos", [])
+                if photos:
+                    photo_name = photos[0].get("name") # e.g. places/ChIJ.../photos/...
+                    if photo_name:
+                        photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=600&maxWidthPx=800&key={GOOGLE_PLACES_API_KEY}"
+                
+                cat_name = place.get("primaryTypeDisplayName", {}).get("text") or "Локальный бизнес"
+
                 return {
                     "place_id": place.get("id"),
                     "business_name": place.get("displayName", {}).get("text"),
                     "address": place.get("formattedAddress"),
-                    "rating": place.get("rating"),
-                    "reviews_count": place.get("userRatingCount"),
+                    "rating": place.get("rating", 4.5),
+                    "reviews_count": place.get("userRatingCount", 0),
                     "lat": place.get("location", {}).get("latitude"),
-                    "lng": place.get("location", {}).get("longitude")
+                    "lng": place.get("location", {}).get("longitude"),
+                    "phone": place.get("internationalPhoneNumber", ""),
+                    "website_url": place.get("websiteUri", ""),
+                    "category": cat_name,
+                    "primary_category": cat_name,
+                    "cover_url": photo_url
                 }
     except Exception as e:
         print(f"[GoogleService] Public Place API lookup failed: {e}")

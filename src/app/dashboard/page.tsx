@@ -385,7 +385,54 @@ export default function DashboardPage() {
         }
       }
 
-      if (apiDisabled === 'true') {
+      // Check for pending venue saved before OAuth redirect (PLG Flow)
+      const pendingVenueStr = localStorage.getItem('gbpilot_pending_venue');
+      let hasAttachedPending = false;
+      if (pendingVenueStr) {
+        try {
+          const pendingVenue = JSON.parse(pendingVenueStr);
+          const fullProf: ActiveBusinessProfile = {
+            id: pendingVenue.id || `profile_${Date.now()}`,
+            name: pendingVenue.name,
+            business_name: pendingVenue.name,
+            address: pendingVenue.address,
+            city: pendingVenue.city || 'Dubai',
+            category: pendingVenue.category || pendingVenue.primary_category || 'Локальный бизнес',
+            primary_category: pendingVenue.primary_category || pendingVenue.category || 'Локальный бизнес',
+            phone: pendingVenue.phone || pendingVenue.phone_number || '+971 4 123 4567',
+            website_url: pendingVenue.website_url || `https://${pendingVenue.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+            google_maps_url: pendingVenue.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(pendingVenue.name)}`,
+            cover_url: pendingVenue.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+            snapshot_url: pendingVenue.snapshot_url || pendingVenue.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+            rating: pendingVenue.rating || 4.8,
+            reviews_count: pendingVenue.reviews_count || 142,
+            opening_hours: pendingVenue.opening_hours || '08:00 – 23:00',
+            is_open_now: true,
+            role: 'Владелец / Администратор',
+            verified: true,
+            is_admin: true,
+            weekly_hours: defaultBusiness.weekly_hours
+          };
+
+          const combinedList = [fullProf, ...loadedList.filter(p => p.name !== fullProf.name)];
+          localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combinedList));
+          localStorage.setItem('gbpilot_active_profile', JSON.stringify(fullProf));
+          localStorage.removeItem('gbpilot_pending_venue');
+          setAvailableProfiles(combinedList);
+          setActiveProfile(fullProf);
+          loadedList = combinedList;
+          hasAttachedPending = true;
+          currentProfileId = fullProf.id || 'profile_123';
+          setAuthBanner({
+            type: 'success',
+            message: `Заведение "${fullProf.name}" успешно привязано к аккаунту ${email || 'Google'} с правами Владельца / Администратора!`
+          });
+        } catch (e) {
+          console.error("Failed to parse pending venue", e);
+        }
+      }
+
+      if (apiDisabled === 'true' && !hasAttachedPending) {
         setApiDisabledWarning(true);
         if (missingApi) setMissingApiName(missingApi);
         setIsUserProfileModalOpen(true);

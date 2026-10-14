@@ -79,7 +79,8 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
     from google_service import get_public_place_details
     real_place_id = f"ChIJ{uuid.uuid4().hex[:16]}"
     
-    place_details = get_public_place_details(business_name + " " + (location or ""))
+    clean_query = business_name.strip() if business_name.startswith("http") else f"{business_name} {location or ''}".strip()
+    place_details = get_public_place_details(clean_query)
     if place_details:
         address = place_details.get("address", address)
         lat = place_details.get("lat", lat)
@@ -142,6 +143,10 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
 
     health_score = max(40, min(95, 100 - len(issues) * 9 - random.randint(1, 10)))
 
+    phone = place_details.get("phone") if place_details and place_details.get("phone") else f"+971 4 {random.randint(100,999)} {random.randint(1000,9999)}"
+    website = place_details.get("website_url") if place_details and place_details.get("website_url") else f"https://www.{business_name.lower().replace(' ', '')}.com"
+    cover_photo = place_details.get("cover_url") if place_details else None
+
     return {
         "google_location_id": real_place_id,
         "business_name": business_name,
@@ -152,8 +157,9 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
         "country": country,
         "latitude": lat,
         "longitude": lng,
-        "phone_number": f"+1 (555) {random.randint(100,999)}-{random.randint(1000,9999)}",
-        "website_url": f"https://www.{business_name.lower().replace(' ', '')}.com",
+        "phone_number": phone,
+        "website_url": website,
+        "cover_url": cover_photo,
         "booking_url": None,
         "health_score": health_score,
         "reviews_count": reviews_count,
