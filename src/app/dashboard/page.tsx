@@ -87,25 +87,25 @@ const defaultBusiness: ActiveBusinessProfile = {
   snapshot_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
   opening_hours: '08:00 – 23:00',
   is_open_now: true,
-  role: 'Владелец / Администратор',
+  role: 'Owner / Administrator',
   verified: true,
   is_admin: true,
   attributes_count: 12,
   total_attributes: 20,
   weekly_hours: [
-    { day: 'Понедельник', hours: '08:00 – 23:00', isToday: false },
-    { day: 'Вторник', hours: '08:00 – 23:00', isToday: false },
-    { day: 'Среда', hours: '08:00 – 23:00', isToday: true },
-    { day: 'Четверг', hours: '08:00 – 23:00', isToday: false },
-    { day: 'Пятница', hours: '08:00 – 00:00', isToday: false },
-    { day: 'Суббота', hours: '08:00 – 00:00', isToday: false },
-    { day: 'Воскресенье', hours: '08:00 – 22:00', isToday: false },
+    { day: 'Monday', hours: '08:00 – 23:00', isToday: false },
+    { day: 'Tuesday', hours: '08:00 – 23:00', isToday: false },
+    { day: 'Wednesday', hours: '08:00 – 23:00', isToday: true },
+    { day: 'Thursday', hours: '08:00 – 23:00', isToday: false },
+    { day: 'Friday', hours: '08:00 – 00:00', isToday: false },
+    { day: 'Saturday', hours: '08:00 – 00:00', isToday: false },
+    { day: 'Sunday', hours: '08:00 – 22:00', isToday: false },
   ]
 };
 
 const analyticsData = {
   '7d': {
-    label: '7 дней',
+    label: '7 days',
     totalImpressions: '5,420',
     impressionsTrend: '+12.4%',
     mapsImpressions: '3,840',
@@ -125,28 +125,28 @@ const analyticsData = {
     messages: '24',
     messagesTrend: '+28%',
     cvr: '11.3%',
-    cvrBenchmark: '+3.1% выше среднего',
+    cvrBenchmark: '+3.1% above benchmark',
     deviceMobile: 88,
     deviceDesktop: 12,
     hourly: [
-      { hour: '09:00', val: 32, label: 'Утро' },
+      { hour: '09:00', val: 32, label: 'Morning' },
       { hour: '11:00', val: 56, label: '' },
-      { hour: '13:00', val: 94, label: 'Обед (Пик)', peak: true },
+      { hour: '13:00', val: 94, label: 'Lunch (Peak)', peak: true },
       { hour: '15:00', val: 48, label: '' },
       { hour: '17:00', val: 64, label: '' },
       { hour: '19:00', val: 86, label: '' },
-      { hour: '21:00', val: 100, label: 'Вечер (Пик)', peak: true },
+      { hour: '21:00', val: 100, label: 'Evening (Peak)', peak: true },
       { hour: '23:00', val: 30, label: '' },
     ],
     districts: [
-      { name: 'Downtown Dubai', percent: 43, count: '92 маршрута' },
-      { name: 'Business Bay', percent: 28, count: '60 маршрутов' },
-      { name: 'DIFC', percent: 17, count: '37 маршрутов' },
-      { name: 'Dubai Marina & др.', percent: 12, count: '26 маршрутов' },
+      { name: 'Downtown Dubai', percent: 43, count: '92 routes' },
+      { name: 'Business Bay', percent: 28, count: '60 routes' },
+      { name: 'DIFC', percent: 17, count: '37 routes' },
+      { name: 'Dubai Marina & others', percent: 12, count: '26 routes' },
     ]
   },
   '30d': {
-    label: '30 дней',
+    label: '30 days',
     totalImpressions: '21,800',
     impressionsTrend: '+14.2%',
     mapsImpressions: '14,820',
@@ -166,28 +166,28 @@ const analyticsData = {
     messages: '95',
     messagesTrend: '+35%',
     cvr: '11.8%',
-    cvrBenchmark: '+3.4% выше среднего',
+    cvrBenchmark: '+3.4% above benchmark',
     deviceMobile: 86,
     deviceDesktop: 14,
     hourly: [
-      { hour: '09:00', val: 40, label: 'Утро' },
+      { hour: '09:00', val: 40, label: 'Morning' },
       { hour: '11:00', val: 65, label: '' },
-      { hour: '13:00', val: 98, label: 'Обед (Пик)', peak: true },
+      { hour: '13:00', val: 98, label: 'Lunch (Peak)', peak: true },
       { hour: '15:00', val: 50, label: '' },
       { hour: '17:00', val: 72, label: '' },
       { hour: '19:00', val: 92, label: '' },
-      { hour: '21:00', val: 100, label: 'Вечер (Пик)', peak: true },
+      { hour: '21:00', val: 100, label: 'Evening (Peak)', peak: true },
       { hour: '23:00', val: 38, label: '' },
     ],
     districts: [
-      { name: 'Downtown Dubai', percent: 42, count: '374 маршрута' },
-      { name: 'Business Bay', percent: 28, count: '249 маршрутов' },
-      { name: 'DIFC', percent: 18, count: '160 маршрутов' },
-      { name: 'Dubai Marina & др.', percent: 12, count: '107 маршрутов' },
+      { name: 'Downtown Dubai', percent: 42, count: '374 routes' },
+      { name: 'Business Bay', percent: 28, count: '249 routes' },
+      { name: 'DIFC', percent: 18, count: '160 routes' },
+      { name: 'Dubai Marina & others', percent: 12, count: '107 routes' },
     ]
   },
   '90d': {
-    label: '90 дней',
+    label: '90 days',
     totalImpressions: '68,450',
     impressionsTrend: '+16.8%',
     mapsImpressions: '47,200',
@@ -207,24 +207,24 @@ const analyticsData = {
     messages: '310',
     messagesTrend: '+42%',
     cvr: '11.9%',
-    cvrBenchmark: '+3.8% выше среднего',
+    cvrBenchmark: '+3.8% above benchmark',
     deviceMobile: 85,
     deviceDesktop: 15,
     hourly: [
-      { hour: '09:00', val: 42, label: 'Утро' },
+      { hour: '09:00', val: 42, label: 'Morning' },
       { hour: '11:00', val: 68, label: '' },
-      { hour: '13:00', val: 100, label: 'Обед (Пик)', peak: true },
+      { hour: '13:00', val: 100, label: 'Lunch (Peak)', peak: true },
       { hour: '15:00', val: 54, label: '' },
       { hour: '17:00', val: 75, label: '' },
       { hour: '19:00', val: 94, label: '' },
-      { hour: '21:00', val: 98, label: 'Вечер (Пик)', peak: true },
+      { hour: '21:00', val: 98, label: 'Evening (Peak)', peak: true },
       { hour: '23:00', val: 35, label: '' },
     ],
     districts: [
-      { name: 'Downtown Dubai', percent: 41, count: '1,164 маршрута' },
-      { name: 'Business Bay', percent: 29, count: '824 маршрута' },
-      { name: 'DIFC', percent: 19, count: '540 маршрутов' },
-      { name: 'Dubai Marina & др.', percent: 11, count: '312 маршрутов' },
+      { name: 'Downtown Dubai', percent: 41, count: '1,164 routes' },
+      { name: 'Business Bay', percent: 29, count: '824 routes' },
+      { name: 'DIFC', percent: 19, count: '540 routes' },
+      { name: 'Dubai Marina & others', percent: 11, count: '312 routes' },
     ]
   }
 };
@@ -283,12 +283,12 @@ export default function DashboardPage() {
   }[]>([
     {
       id: 'rev_takedown_01',
-      author_name: 'Alex K. (Подозрение: Конкурент)',
+      author_name: 'Alex K. (Suspected: Competitor)',
       rating: 1,
-      review_date: '2 дня назад',
+      review_date: '2 days ago',
       review_text: 'Never visited this terrible place! The owner was rude, refused to talk, and everything is completely fake. Avoid at all costs, they are buying 5-star reviews!',
-      suspected_violation: 'Раздел 3.2: Deceptive Content & Координированная атака',
-      violation_details: 'Аккаунт без истории, шаблонный текст клеветы, не является реальным клиентом',
+      suspected_violation: 'Section 3.2: Deceptive Content & Coordinated Sabotage',
+      violation_details: 'Account with no prior history, boilerplate defamatory text, not a genuine customer',
       confidence_score: 96,
       recommended_jurisdiction: 'UAE'
     },
@@ -296,10 +296,10 @@ export default function DashboardPage() {
       id: 'rev_takedown_02',
       author_name: 'Ghost User #489',
       rating: 1,
-      review_date: '5 дней назад',
+      review_date: '5 days ago',
       review_text: 'Food poisoning! Waited 2 hours, staff cursed at customers. Total scam operation.',
-      suspected_violation: 'Клевета и отсутствие чека (Статьи 43 и 44 Закона ОАЭ № 34/2021)',
-      violation_details: 'Отсутствие транзакции в POS-системе, неподтвержденные медицинские обвинения',
+      suspected_violation: 'Defamation & Unverified Claims (UAE Law No. 34/2021, Articles 43 & 44)',
+      violation_details: 'No record of transaction in POS system, unsubstantiated medical claims',
       confidence_score: 91,
       recommended_jurisdiction: 'UAE'
     },
@@ -307,10 +307,10 @@ export default function DashboardPage() {
       id: 'rev_takedown_03',
       author_name: 'SpamBot_NYC',
       rating: 2,
-      review_date: '1 неделю назад',
+      review_date: '1 week ago',
       review_text: 'Check out best competitor bakery down the street at competitor-promo.com instead, much better quality!',
-      suspected_violation: 'Реклама и спам конкурента (Раздел 4.1 Google Content Policy)',
-      violation_details: 'Прямая ссылка на сторонний сайт и продвижение конкурента',
+      suspected_violation: 'Competitor Advertising & Spam (Google Content Policy Section 4.1)',
+      violation_details: 'Direct link to external third-party site promoting competitor',
       confidence_score: 98,
       recommended_jurisdiction: 'USA'
     }
@@ -352,7 +352,7 @@ export default function DashboardPage() {
         const userObj = {
           email,
           name: email.split('@')[0],
-          role: 'Владелец / Администратор',
+          role: 'Owner / Administrator',
           loggedIn: true
         };
         localStorage.setItem('gbpilot_user', JSON.stringify(userObj));
@@ -397,8 +397,8 @@ export default function DashboardPage() {
             business_name: pendingVenue.name,
             address: pendingVenue.address,
             city: pendingVenue.city || 'Dubai',
-            category: pendingVenue.category || pendingVenue.primary_category || 'Локальный бизнес',
-            primary_category: pendingVenue.primary_category || pendingVenue.category || 'Локальный бизнес',
+            category: pendingVenue.category || pendingVenue.primary_category || 'Local Business',
+            primary_category: pendingVenue.primary_category || pendingVenue.category || 'Local Business',
             phone: pendingVenue.phone || pendingVenue.phone_number || '+971 4 123 4567',
             website_url: pendingVenue.website_url || `https://${pendingVenue.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
             google_maps_url: pendingVenue.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(pendingVenue.name)}`,
@@ -408,7 +408,7 @@ export default function DashboardPage() {
             reviews_count: pendingVenue.reviews_count || 142,
             opening_hours: pendingVenue.opening_hours || '08:00 – 23:00',
             is_open_now: true,
-            role: 'Владелец / Администратор',
+            role: 'Owner / Administrator',
             verified: true,
             is_admin: true,
             weekly_hours: defaultBusiness.weekly_hours
@@ -425,7 +425,7 @@ export default function DashboardPage() {
           currentProfileId = fullProf.id || 'profile_123';
           setAuthBanner({
             type: 'success',
-            message: `Заведение "${fullProf.name}" успешно привязано к аккаунту ${email || 'Google'} с правами Владельца / Администратора!`
+            message: `Business "${fullProf.name}" successfully attached to ${email || 'Google'} with Owner / Administrator privileges!`
           });
         } catch (e) {
           console.error("Failed to parse pending venue", e);
@@ -438,7 +438,7 @@ export default function DashboardPage() {
         setIsUserProfileModalOpen(true);
         setAuthBanner({
           type: 'error',
-          message: `Google аккаунт (${email || 'подтвержден'}) подключен. Требуется активировать My Business Account Management API в Google Cloud или добавить заведение через поиск.`
+          message: `Google account (${email || 'verified'}) connected. My Business Account Management API needs to be enabled in Google Cloud or add venue via search.`
         });
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (profilesParam) {
@@ -454,7 +454,7 @@ export default function DashboardPage() {
             setIsUserProfileModalOpen(true);
             setAuthBanner({
               type: 'success',
-              message: `Подтянуто ${profilesList.length} заведений из вашего Google профиля (${email || 'подтвержден'})! Выберите заведение для работы.`
+              message: `Synced ${profilesList.length} business locations from your Google profile (${email || 'verified'})! Select a location to manage.`
             });
           }
         } catch (e) {
@@ -464,7 +464,7 @@ export default function DashboardPage() {
       } else if (auth === 'success') {
         setAuthBanner({
           type: 'success',
-          message: `Google аккаунт (${email || 'подтвержден'}) успешно подключен! Синхронизация профиля активирована.`
+          message: `Google account (${email || 'verified'}) successfully connected! Profile synchronization active.`
         });
         if (needsLocation || selectLocation) {
           setIsUserProfileModalOpen(true);
@@ -473,7 +473,7 @@ export default function DashboardPage() {
       } else if (auth === 'error') {
         setAuthBanner({
           type: 'error',
-          message: `Ошибка подключения Google OAuth: ${detail ? decodeURIComponent(detail) : 'Не удалось завершить авторизацию'}`
+          message: `Google OAuth connection error: ${detail ? decodeURIComponent(detail) : 'Failed to complete authorization'}`
         });
         window.history.replaceState({}, document.title, window.location.pathname);
       }
@@ -588,7 +588,7 @@ export default function DashboardPage() {
       phone: prof.phone || prof.phone_number || '+1 (212) 555-0192',
       website_url: prof.website_url || 'https://manhattanbakery.com',
       google_maps_url: prof.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(prof.name || 'Business')}`,
-      role: prof.role || 'Владелец / Администратор',
+      role: prof.role || 'Owner / Administrator',
       verified: true,
       is_admin: true,
       weekly_hours: prof.weekly_hours || defaultBusiness.weekly_hours
@@ -598,7 +598,7 @@ export default function DashboardPage() {
     setIsUserProfileModalOpen(false);
     setAuthBanner({
       type: 'success',
-      message: `Заведение "${formattedProf.name}" успешно активировано для управления.`
+      message: `Business "${formattedProf.name}" successfully activated for management.`
     });
     window.location.reload();
   };
@@ -644,7 +644,7 @@ export default function DashboardPage() {
         name: profileData?.business_name || item.main_text || item.description,
         address: profileData?.address_line || item.description,
         city: profileData?.city || 'Dubai',
-        category: profileData?.primary_category || 'Локальный бизнес',
+        category: profileData?.primary_category || 'Local Business',
         phone: profileData?.phone_number || '+971 4 123 4567',
         website_url: profileData?.website_url || `https://${(item.main_text || 'business').toLowerCase().replace(/\s+/g, '')}.com`,
         cover_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
@@ -654,7 +654,7 @@ export default function DashboardPage() {
         opening_hours: '08:00 – 23:00',
         is_open_now: true,
         google_maps_url: `https://maps.google.com/?q=${encodeURIComponent(item.description || item.main_text)}`,
-        role: 'Владелец / Администратор',
+        role: 'Owner / Administrator',
         verified: true,
         is_admin: true,
         weekly_hours: defaultBusiness.weekly_hours
@@ -670,7 +670,7 @@ export default function DashboardPage() {
       setShowAddVenueSection(false);
       setAuthBanner({
         type: 'success',
-        message: `Заведение "${newProf.name}" успешно привязано к вашему Google аккаунту с правами Администратора!`
+        message: `Business "${newProf.name}" successfully attached to your Google account with Administrator privileges!`
       });
       setIsUserProfileModalOpen(false);
     } catch (err) {
@@ -755,9 +755,9 @@ export default function DashboardPage() {
     const nextState = !isRamadanMode;
     setIsRamadanMode(nextState);
     if (nextState) {
-      setRamadanNotice("🌙 Режим Рамадана активирован: рабочие часы на Google Maps автоматически адаптированы под Iftar/Suhoor (18:30–02:00)!");
+      setRamadanNotice("🌙 Ramadan Mode activated: Google Maps operating hours automatically adapted for Iftar/Suhoor (18:30–02:00)!");
     } else {
-      setRamadanNotice("Стандартные рабочие часы успешно восстановлены в профиле Google Maps.");
+      setRamadanNotice("Standard operating hours successfully restored on your Google Business Profile.");
     }
     setTimeout(() => setRamadanNotice(null), 5000);
   };
@@ -900,7 +900,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-google-text-secondary mt-0.5">
-                24/7 Sentinel мониторит атрибуты и отражает атаки конкурентов. 0 несанкционированных правок.
+                24/7 Sentinel monitors attributes and blocks competitor edits. 0 unauthorized changes.
               </p>
             </div>
           </div>
@@ -916,7 +916,7 @@ export default function DashboardPage() {
               }`}
             >
               <Moon className="w-3.5 h-3.5" />
-              <span>🌙 Рамадан: {isRamadanMode ? 'ВКЛ' : 'ВЫКЛ'}</span>
+              <span>🌙 Ramadan: {isRamadanMode ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Quick Review Takedown Trigger */}
@@ -928,14 +928,14 @@ export default function DashboardPage() {
               className="px-3 py-1.5 rounded-lg text-xs font-bold bg-google-red-light text-google-red border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1.5"
             >
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span>⚡ Снести отзыв</span>
+              <span>⚡ Remove Review</span>
             </button>
 
             <button 
-              onClick={() => setProfileGuardAlert("Попытка подмены номера телефона конкурентом в Business Bay успешно заблокирована Profile Guard!")}
+              onClick={() => setProfileGuardAlert("Competitor phone number replacement attempt in Business Bay successfully blocked by Profile Guard!")}
               className="material-button-ghost text-xs text-google-blue font-semibold hover:bg-google-blue-light py-1.5"
             >
-              Тест стража
+              Test Guard
             </button>
           </div>
         </div>
@@ -961,9 +961,9 @@ export default function DashboardPage() {
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Building2 className="w-3.5 h-3.5" />
-                <span>Мои заведения GBP</span>
+                <span>My GBP Businesses</span>
               </button>
-              <button onClick={() => setAuthBanner(null)} className="underline text-[11px] shrink-0 ml-1 text-emerald-700">Закрыть</button>
+              <button onClick={() => setAuthBanner(null)} className="underline text-[11px] shrink-0 ml-1 text-emerald-700">Close</button>
             </div>
           </div>
         )}
@@ -975,7 +975,7 @@ export default function DashboardPage() {
               <Moon className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{ramadanNotice}</span>
             </div>
-            <button onClick={() => setRamadanNotice(null)} className="underline text-[11px] shrink-0 ml-2">Закрыть</button>
+            <button onClick={() => setRamadanNotice(null)} className="underline text-[11px] shrink-0 ml-2">Close</button>
           </div>
         )}
 
@@ -1012,7 +1012,7 @@ export default function DashboardPage() {
                 {/* Live Status Badge */}
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-bold shadow-md">
                   <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  <span>Открыто сейчас</span>
+                  <span>Open Now</span>
                 </div>
 
                 {/* Google Maps link overlay */}
@@ -1021,7 +1021,7 @@ export default function DashboardPage() {
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="absolute bottom-3 right-3 p-2 bg-white/90 hover:bg-white text-slate-800 rounded-xl shadow-md text-xs font-bold transition-all flex items-center gap-1 hover:text-google-blue"
-                  title="Открыть в Google Maps"
+                  title="Open in Google Maps"
                 >
                   <MapPin className="w-3.5 h-3.5 text-google-red" />
                   <span className="text-[10px]">Maps ↗</span>
@@ -1049,11 +1049,11 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                    {activeProfile?.role || 'Владелец / Администратор'}
+                    {activeProfile?.role || 'Owner / Administrator'}
                   </span>
                   {!currentUser && (
                     <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
-                      Режим: Демо
+                      Demo Mode
                     </span>
                   )}
                 </div>
@@ -1073,17 +1073,17 @@ export default function DashboardPage() {
                 <button
                   onClick={handleCopyAddress}
                   className="px-2.5 py-1 text-[11px] font-bold text-google-blue hover:bg-google-blue-light/50 bg-white border border-slate-200 rounded-lg shrink-0 transition-colors flex items-center gap-1 shadow-2xs"
-                  title="Скопировать адрес"
+                  title="Copy address"
                 >
                   {copiedAddress ? (
                     <>
                       <Check className="w-3 h-3 text-emerald-600" />
-                      <span className="text-emerald-700">Скопировано!</span>
+                      <span className="text-emerald-700">Copied!</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3 h-3" />
-                      <span>Копировать</span>
+                      <span>Copy</span>
                     </>
                   )}
                 </button>
@@ -1094,15 +1094,15 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-slate-700">
                     <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-semibold">Сегодня:</span>
+                    <span className="font-semibold">Today:</span>
                     <span className="font-bold text-slate-900">{activeProfile?.opening_hours || '08:00 – 23:00'}</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Открыто</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Open</span>
                   </div>
                   <button
                     onClick={() => setIsWeeklyHoursOpen(!isWeeklyHoursOpen)}
                     className="text-google-blue hover:underline font-bold text-[11px] flex items-center gap-0.5"
                   >
-                    <span>{isWeeklyHoursOpen ? 'Скрыть график' : 'График на неделю'}</span>
+                    <span>{isWeeklyHoursOpen ? 'Hide Schedule' : 'Weekly Schedule'}</span>
                     {isWeeklyHoursOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1142,7 +1142,7 @@ export default function DashboardPage() {
                     className="px-3 py-1.5 bg-white border border-slate-200 hover:border-google-blue text-slate-700 hover:text-google-blue font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
                   >
                     <Globe className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Сайт ↗</span>
+                    <span>Website ↗</span>
                   </a>
                 )}
 
@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
                   className="px-3 py-1.5 bg-google-blue-light/30 border border-google-blue/30 text-google-blue font-bold rounded-lg hover:bg-google-blue-light transition-colors flex items-center gap-1.5 ml-auto"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Открыть в Google Maps ↗</span>
+                  <span>Open in Google Maps ↗</span>
                 </a>
               </div>
             </div>
@@ -1165,7 +1165,7 @@ export default function DashboardPage() {
                   <HealthGauge score={healthScore} size={54} />
                   <div>
                     <div className="text-xs font-bold text-slate-800">GBP Health Score</div>
-                    <div className="text-[10px] text-google-green font-bold uppercase tracking-wider">Top 5% в секторе</div>
+                    <div className="text-[10px] text-google-green font-bold uppercase tracking-wider">Top 5% in Sector</div>
                   </div>
                 </div>
               </div>
@@ -1174,33 +1174,33 @@ export default function DashboardPage() {
               <div className="space-y-1.5 text-xs">
                 <div className="flex items-center justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Контакты и телефон
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Phone & Contact Details
                   </span>
                   <span className="font-bold text-emerald-600">100%</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Расписание и часы
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Operating Hours
                   </span>
                   <span className="font-bold text-emerald-600">100%</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-google-blue" /> Атрибуты профиля
+                    <Sparkles className="w-3.5 h-3.5 text-google-blue" /> Profile Attributes
                   </span>
                   <span className="font-bold text-google-blue">12 / 20</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" /> Меню / Прайс-лист
+                    <Check className="w-3.5 h-3.5 text-emerald-600" /> Menu / Service Catalog
                   </span>
-                  <span className="font-bold text-emerald-600">Заполнено</span>
+                  <span className="font-bold text-emerald-600">Complete</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5 text-google-red" /> 1★ Фейк отзывы
+                    <ShieldAlert className="w-3.5 h-3.5 text-google-red" /> 1★ Fake Reviews
                   </span>
-                  <span className="font-bold text-google-red">1 готов к сносу</span>
+                  <span className="font-bold text-google-red">1 Ready to Remove</span>
                 </div>
               </div>
 
@@ -1211,7 +1211,7 @@ export default function DashboardPage() {
                   className="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
                 >
                   <Building2 className="w-3.5 h-3.5 text-google-blue" />
-                  <span>Сменить заведение ({availableProfiles.length})</span>
+                  <span>Switch Business ({availableProfiles.length})</span>
                 </button>
 
                 <button
@@ -1220,7 +1220,7 @@ export default function DashboardPage() {
                   className="w-full material-button-primary text-xs py-2.5 font-bold flex items-center justify-center gap-1.5"
                 >
                   <Zap className="w-3.5 h-3.5 fill-white" />
-                  <span>{allApproved ? 'Все действия выполнены' : `⚡ Одобрить все (${pendingCount})`}</span>
+                  <span>{allApproved ? 'All Actions Completed' : `⚡ Approve All (${pendingCount})`}</span>
                 </button>
               </div>
             </div>
@@ -1242,14 +1242,14 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-bold text-google-text-primary tracking-tight">
-                    Поведенческий анализ посетителей
+                    Visitor Behavioral Analytics
                   </h2>
                   <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded-full uppercase">
                     Google Business Insights API
                   </span>
                 </div>
                 <p className="text-xs text-google-text-secondary">
-                  Статистика кликов, показов карточки, звонков и построенных маршрутов в реальном времени.
+                  Real-time statistics for impressions, clicks, calls, and direction requests.
                 </p>
               </div>
             </div>
@@ -1266,7 +1266,7 @@ export default function DashboardPage() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {period === '7d' ? '7 дней' : period === '30d' ? '30 дней' : '90 дней'}
+                  {period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}
                 </button>
               ))}
             </div>
@@ -1278,7 +1278,7 @@ export default function DashboardPage() {
             {/* Card 1: Impressions */}
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><Eye className="w-4 h-4 text-google-blue" /> Всего показов</span>
+                <span className="flex items-center gap-1.5"><Eye className="w-4 h-4 text-google-blue" /> Total Impressions</span>
                 <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
                   {analyticsData[analyticsPeriod].impressionsTrend}
                 </span>
@@ -1292,11 +1292,11 @@ export default function DashboardPage() {
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].mapsImpressions} ({analyticsData[analyticsPeriod].mapsPercent}%)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Google Поиск:</span>
+                  <span>Google Search:</span>
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].searchImpressions} ({analyticsData[analyticsPeriod].searchPercent}%)</span>
                 </div>
                 <div className="flex justify-between text-[10px] text-slate-500 pt-0.5">
-                  <span>Дискавери (поиск еды):</span>
+                  <span>Discovery (Category Search):</span>
                   <span className="font-semibold text-google-blue">{analyticsData[analyticsPeriod].discoveryPercent}%</span>
                 </div>
               </div>
@@ -1305,7 +1305,7 @@ export default function DashboardPage() {
             {/* Card 2: Customer Actions */}
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><MousePointerClick className="w-4 h-4 text-emerald-600" /> Действия клиентов</span>
+                <span className="flex items-center gap-1.5"><MousePointerClick className="w-4 h-4 text-emerald-600" /> Customer Actions</span>
                 <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
                   {analyticsData[analyticsPeriod].actionsTrend}
                 </span>
@@ -1315,15 +1315,15 @@ export default function DashboardPage() {
               </div>
               <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
                 <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-1"><Navigation className="w-3 h-3 text-google-green" /> Маршруты:</span>
+                  <span className="flex items-center gap-1"><Navigation className="w-3 h-3 text-google-green" /> Directions:</span>
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].directions} <span className="text-[10px] text-emerald-600 font-normal">({analyticsData[analyticsPeriod].directionsTrend})</span></span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-google-blue" /> Звонки:</span>
+                  <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-google-blue" /> Calls:</span>
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].calls} <span className="text-[10px] text-emerald-600 font-normal">({analyticsData[analyticsPeriod].callsTrend})</span></span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-purple-600" /> Клики на сайт:</span>
+                  <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-purple-600" /> Website Clicks:</span>
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].websiteClicks} <span className="text-[10px] text-emerald-600 font-normal">({analyticsData[analyticsPeriod].websiteClicksTrend})</span></span>
                 </div>
               </div>
@@ -1332,7 +1332,7 @@ export default function DashboardPage() {
             {/* Card 3: Card Conversion Rate (CVR) */}
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Конверсия (CVR)</span>
+                <span className="flex items-center gap-1.5"><Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Conversion Rate (CVR)</span>
                 <span className="text-google-blue font-bold bg-google-blue-light px-1.5 py-0.2 rounded">
                   Top 10%
                 </span>
@@ -1342,11 +1342,11 @@ export default function DashboardPage() {
               </div>
               <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
                 <div className="flex justify-between">
-                  <span>Бенчмарк района:</span>
+                  <span>Area Benchmark:</span>
                   <span className="font-bold text-emerald-600">{analyticsData[analyticsPeriod].cvrBenchmark}</span>
                 </div>
                 <p className="text-[10px] text-slate-500 pt-1 leading-snug">
-                  Каждый 9-й посетитель карточки в Maps нажимает «Маршрут» или «Позвонить».
+                  1 in 9 visitors to your Google Maps listing clicks «Directions» or «Call».
                 </p>
               </div>
             </div>
@@ -1354,12 +1354,12 @@ export default function DashboardPage() {
             {/* Card 4: Devices & Mobility */}
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-purple-600" /> Устройства</span>
-                <span className="text-slate-500 text-[10px] font-semibold">Мобильность</span>
+                <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-purple-600" /> Devices</span>
+                <span className="text-slate-500 text-[10px] font-semibold">Mobility</span>
               </div>
               <div className="text-2xl font-black text-slate-900 tracking-tight flex items-baseline gap-1">
                 <span>{analyticsData[analyticsPeriod].deviceMobile}%</span>
-                <span className="text-xs text-slate-500 font-normal">мобильные</span>
+                <span className="text-xs text-slate-500 font-normal">mobile</span>
               </div>
               <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
                 <div className="flex justify-between">
@@ -1367,7 +1367,7 @@ export default function DashboardPage() {
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].deviceMobile}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Десктоп браузер:</span>
+                  <span>Desktop Browser:</span>
                   <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].deviceDesktop}%</span>
                 </div>
                 <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1 flex">
@@ -1388,14 +1388,14 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-google-blue" />
-                    Почасовая активность клиентов (Маршруты и звонки)
+                    Hourly Customer Activity (Directions & Calls)
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    В какое время дня гости чаще всего строят маршруты и связываются с заведением.
+                    Peak hours when prospective customers request directions and contact your business.
                   </p>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                  2 пика в день
+                  2 daily peaks
                 </span>
               </div>
 
@@ -1429,7 +1429,7 @@ export default function DashboardPage() {
               <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-google-blue shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <strong>AI Тактика:</strong> Пики приходятся на <strong>13:00 (Обед)</strong> и <strong>21:00 (Ужин)</strong>. Автопилот публикует Google Updates и спецпредложения за 1.5 часа до пиков (в 11:30 и 19:30), максимизируя бронирования.
+                  <strong>AI Strategy:</strong> Traffic peaks occur at <strong>1:00 PM (Lunch)</strong> and <strong>9:00 PM (Dinner)</strong>. Autopilot schedules Google Updates and offers 90 minutes before peaks (11:30 AM & 7:30 PM), maximizing table bookings.
                 </span>
               </div>
             </div>
@@ -1439,10 +1439,10 @@ export default function DashboardPage() {
               <div>
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Navigation className="w-4 h-4 text-google-green" />
-                  География запросов маршрутов
+                  Direction Request Geography
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Из каких районов города гости строят маршруты в Google Maps.
+                  Districts from which guests request navigation routes in Google Maps.
                 </p>
               </div>
 
@@ -1470,7 +1470,7 @@ export default function DashboardPage() {
               <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <strong>Локальный охват:</strong> 70% клиентов приезжают из радиуса до 3 км (Downtown и Business Bay). Ваш Geo-Grid радар настроен на защитное доминирование в этих зонах.
+                  <strong>Local Reach:</strong> 70% of visitors originate within a 3 km radius (Downtown and Business Bay). Your Geo-Grid radar is tuned for defensive dominance across these key zones.
                 </span>
               </div>
             </div>
@@ -1506,12 +1506,12 @@ export default function DashboardPage() {
         {/* Operational Triad 3-Column Intelligence Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           
-          {/* Column 1: Pillar 1 - Scout Radar (Разведка) */}
+          {/* Column 1: Pillar 1 - Scout Radar */}
           <div className="material-card p-5 space-y-4 border-t-4 border-t-google-blue">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-google-blue" />
-                <h3 className="font-bold text-google-text-primary text-sm">🧭 1. Разведка (Scout Radar)</h3>
+                <h3 className="font-bold text-google-text-primary text-sm">🧭 1. Scout Radar</h3>
               </div>
               <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded">
                 Dubai 3x3
@@ -1533,28 +1533,28 @@ export default function DashboardPage() {
 
             <div className="space-y-2 pt-2 border-t border-google-border-light text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Локация сетки:</span>
+                <span className="text-google-text-secondary">Grid Location:</span>
                 <span className="font-bold text-slate-800">Downtown & Business Bay</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Защищенная выручка:</span>
-                <span className="font-bold text-emerald-600">+AED 24,500 / мес</span>
+                <span className="text-google-text-secondary">Protected Revenue:</span>
+                <span className="font-bold text-emerald-600">+AED 24,500 / mo</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Трек 7 дней:</span>
+                <span className="text-google-text-secondary">7-Day Track:</span>
                 <span className="text-google-green font-bold flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5" /> +2 позиции вверх
+                  <TrendingUp className="w-3.5 h-3.5" /> +2 positions up
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Column 2: Pillar 2 - Action Copilot (Ассистент) */}
+          {/* Column 2: Pillar 2 - Action Copilot */}
           <div className="material-card p-5 space-y-4 border-t-4 border-t-amber-500">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <h3 className="font-bold text-google-text-primary text-sm">🤖 2. Ассистент (Action Copilot)</h3>
+                <h3 className="font-bold text-google-text-primary text-sm">🤖 2. Action Copilot</h3>
               </div>
               <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
                 24/7 AI
@@ -1564,42 +1564,42 @@ export default function DashboardPage() {
             <div className="space-y-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Phone className="w-4 h-4 text-google-blue" /> Звонки из профиля
+                  <Phone className="w-4 h-4 text-google-blue" /> Profile Calls
                 </span>
                 <span className="font-bold text-google-text-primary">342 (+18%)</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Navigation className="w-4 h-4 text-google-green" /> Запросы маршрутов
+                  <Navigation className="w-4 h-4 text-google-green" /> Direction Requests
                 </span>
                 <span className="font-bold text-google-text-primary">890 (+24%)</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Globe className="w-4 h-4 text-purple-600" /> Переходы на сайт
+                  <Globe className="w-4 h-4 text-purple-600" /> Website Visits
                 </span>
                 <span className="font-bold text-google-text-primary">1,240 (+12%)</span>
               </div>
 
               <div className="pt-2 border-t border-google-border-light flex items-center justify-between text-[11px]">
-                <span className="text-google-text-secondary">Режим Рамадана:</span>
+                <span className="text-google-text-secondary">Ramadan Mode:</span>
                 <span className={`font-bold px-2 py-0.5 rounded ${
                   isRamadanMode ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
                 }`}>
-                  {isRamadanMode ? '🌙 Iftar/Suhoor активен' : 'Стандартные часы'}
+                  {isRamadanMode ? '🌙 Iftar/Suhoor Active' : 'Standard Hours'}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Column 3: Pillar 3 - Defense Shield & Review Takedown (Гард) */}
+          {/* Column 3: Pillar 3 - Defense Shield & Review Takedown */}
           <div className="material-card p-5 space-y-4 border-t-4 border-t-google-red">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-google-red" />
-                <h3 className="font-bold text-google-text-primary text-sm">🛡️ 3. Гард (Review Defense)</h3>
+                <h3 className="font-bold text-google-text-primary text-sm">🛡️ 3. Review Defense</h3>
               </div>
               <span className="text-[10px] font-bold text-google-red bg-google-red-light px-2 py-0.5 rounded">
                 UAE Law 34/2021
@@ -1608,20 +1608,20 @@ export default function DashboardPage() {
 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
-                <span className="text-google-text-secondary">Лимит запросов отзывов:</span>
-                <span className="font-bold text-google-green">5 / 8 (Безопасно)</span>
+                <span className="text-google-text-secondary">Review Request Limit:</span>
+                <span className="font-bold text-google-green">5 / 8 (Safe)</span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Защита полей карточки:</span>
+                <span className="text-google-text-secondary">Profile Attributes Protection:</span>
                 <span className="font-bold text-emerald-600 flex items-center gap-1">
                   <Check className="w-3.5 h-3.5" /> 100% Locked
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Неотвеченные отзывы:</span>
-                <span className="font-bold text-google-blue">0 ожидают</span>
+                <span className="text-google-text-secondary">Pending Reviews:</span>
+                <span className="font-bold text-google-blue">0 pending</span>
               </div>
 
               {/* Takedown Trigger Button */}
@@ -1633,7 +1633,7 @@ export default function DashboardPage() {
                 className="w-full material-button-primary text-xs py-2.5 !bg-google-red hover:!bg-red-700 shadow-md shadow-red-500/20 font-bold flex items-center justify-center gap-2 mt-2"
               >
                 <ShieldAlert className="w-4 h-4" />
-                <span>⚡ Снести фейковый 1★ отзыв</span>
+                <span>⚡ Remove Fake 1★ Review</span>
               </button>
             </div>
           </div>
@@ -1653,9 +1653,9 @@ export default function DashboardPage() {
                     <ShieldAlert className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-google-text-primary text-base">Review Takedown™ (Снос отзыва)</h3>
+                    <h3 className="font-bold text-google-text-primary text-base">Review Takedown™</h3>
                     <p className="text-xs text-google-text-secondary">
-                      Генерация юридического досье по Google Maps Content Policy и юрисдикциям (ОАЭ, США, ЕС, Global).
+                      Legal dossier generation compliant with Google Maps Content Policy and jurisdictions (UAE, US, EU, Global).
                     </p>
                   </div>
                 </div>
@@ -1686,7 +1686,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>⚡ Подтянутые отзывы карточки ({detectedNegativeReviews.length})</span>
+                  <span>⚡ Pulled Profile Reviews ({detectedNegativeReviews.length})</span>
                 </button>
                 <button
                   type="button"
@@ -1697,7 +1697,7 @@ export default function DashboardPage() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <span>✏️ Ввести текст вручную</span>
+                  <span>✏️ Enter Review Manually</span>
                 </button>
               </div>
 
@@ -1708,9 +1708,9 @@ export default function DashboardPage() {
                 {takedownSourceMode === 'AUTO' && (
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <span>Нажмите на отзыв для авто-заполнения:</span>
+                      <span>Click a review to auto-fill dossier:</span>
                       <span className="text-emerald-700 font-bold flex items-center gap-1">
-                        <Check className="w-3 h-3 text-emerald-600" /> Без ручного ввода
+                        <Check className="w-3 h-3 text-emerald-600" /> No manual entry needed
                       </span>
                     </div>
 
@@ -1737,11 +1737,11 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                                  {rev.confidence_score}% снос
+                                  {rev.confidence_score}% removal
                                 </span>
                                 {isSelected && (
                                   <span className="text-[10px] bg-google-red text-white font-bold px-2 py-0.5 rounded-full">
-                                    Выбран ✓
+                                    Selected ✓
                                   </span>
                                 )}
                               </div>
@@ -1768,13 +1768,13 @@ export default function DashboardPage() {
                     {/* Pre-filled info pill */}
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-slate-500 shrink-0 font-medium">Выбранный отзыв:</span>
+                        <span className="text-slate-500 shrink-0 font-medium">Selected review:</span>
                         <span className="font-bold text-slate-900 truncate">
                           {takedownAuthor} ({takedownBusiness})
                         </span>
                       </div>
                       <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold shrink-0 border border-emerald-200">
-                        Готов к эскалации
+                        Ready for escalation
                       </span>
                     </div>
                   </div>
@@ -1786,7 +1786,7 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                          Компания в Google Maps *
+                          Google Maps Business Name *
                         </label>
                         <input 
                           type="text"
@@ -1799,11 +1799,11 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                          Автор отзыва (если известен)
+                          Review Author (if known)
                         </label>
                         <input 
                           type="text"
-                          placeholder="e.g. Anonymous или имя"
+                          placeholder="e.g. Anonymous or user name"
                           value={takedownAuthor}
                           onChange={(e) => setTakedownAuthor(e.target.value)}
                           className="material-input text-xs"
@@ -1813,12 +1813,12 @@ export default function DashboardPage() {
 
                     <div>
                       <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                        Текст токсичного отзыва *
+                        Toxic Review Text *
                       </label>
                       <textarea 
                         required
                         rows={3}
-                        placeholder="Вставьте текст необоснованного или фейкового 1★ отзыва..."
+                        placeholder="Paste text of the unfair or fake 1★ review..."
                         value={takedownReviewText}
                         onChange={(e) => setTakedownReviewText(e.target.value)}
                         className="material-input text-xs resize-none"
@@ -1830,12 +1830,12 @@ export default function DashboardPage() {
                 {/* Jurisdiction Switcher */}
                 <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Юрисдикция / Применимое право:</span>
+                    <span>Jurisdiction / Governing Law:</span>
                     <span className="text-[11px] text-google-blue font-bold">
-                      {takedownJurisdiction === 'UAE' && '🇦🇪 ОАЭ: Закон № 34/2021'}
-                      {takedownJurisdiction === 'USA' && '🇺🇸 США: FTC Act & Lanham Act'}
-                      {takedownJurisdiction === 'EU' && '🇪🇺 ЕС / UK: Digital Services Act'}
-                      {takedownJurisdiction === 'GLOBAL' && '🌍 Международный: Google Policy'}
+                      {takedownJurisdiction === 'UAE' && '🇦🇪 UAE: Decree-Law No. 34/2021'}
+                      {takedownJurisdiction === 'USA' && '🇺🇸 USA: FTC Act & Lanham Act'}
+                      {takedownJurisdiction === 'EU' && '🇪🇺 EU / UK: Digital Services Act'}
+                      {takedownJurisdiction === 'GLOBAL' && '🌍 Global: Google Content Policy'}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1849,7 +1849,7 @@ export default function DashboardPage() {
                       }`}
                     >
                       <span>🇦🇪</span>
-                      <span>ОАЭ / Дубай</span>
+                      <span>UAE / Dubai</span>
                     </button>
 
                     <button
@@ -1862,7 +1862,7 @@ export default function DashboardPage() {
                       }`}
                     >
                       <span>🇺🇸</span>
-                      <span>США (US)</span>
+                      <span>United States (US)</span>
                     </button>
 
                     <button
@@ -1875,7 +1875,7 @@ export default function DashboardPage() {
                       }`}
                     >
                       <span>🇪🇺</span>
-                      <span>Европа / UK</span>
+                      <span>Europe / UK</span>
                     </button>
 
                     <button
@@ -1902,16 +1902,16 @@ export default function DashboardPage() {
                     <>
                       <Sparkles className="w-4 h-4 animate-spin" />
                       <span>
-                        {takedownJurisdiction === 'UAE' && 'Анализ нарушений и законов ОАЭ...'}
-                        {takedownJurisdiction === 'USA' && 'Анализ законов США (FTC/Lanham)...'}
-                        {takedownJurisdiction === 'EU' && 'Анализ регламентов ЕС (DSA/GDPR)...'}
-                        {takedownJurisdiction === 'GLOBAL' && 'Анализ Google Maps Content Policy...'}
+                        {takedownJurisdiction === 'UAE' && 'Analyzing UAE laws and violations...'}
+                        {takedownJurisdiction === 'USA' && 'Analyzing US laws (FTC/Lanham)...'}
+                        {takedownJurisdiction === 'EU' && 'Analyzing EU regulations (DSA/GDPR)...'}
+                        {takedownJurisdiction === 'GLOBAL' && 'Analyzing Google Maps Content Policy...'}
                       </span>
                     </>
                   ) : (
                     <>
                       <Zap className="w-4 h-4 fill-white" />
-                      <span>⚡ Сгенерировать досье на снос</span>
+                      <span>⚡ Generate Takedown Dossier</span>
                     </>
                   )}
                 </button>
@@ -1923,11 +1923,11 @@ export default function DashboardPage() {
                   <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div>
                       <span className="font-bold text-emerald-800">
-                        ✓ Досье сформировано (Вероятность сноса: {takedownResult.confidence_score}%)
+                        ✓ Dossier Generated (Removal Probability: {takedownResult.confidence_score}%)
                       </span>
                       <div className="text-[11px] text-emerald-700 mt-0.5">
-                        Юрисдикция: <span className="font-bold">{takedownJurisdiction}</span> • {
-                          takedownJurisdiction === 'UAE' ? 'ОАЭ Декрет-Закон № 34/2021' :
+                        Jurisdiction: <span className="font-bold">{takedownJurisdiction}</span> • {
+                          takedownJurisdiction === 'UAE' ? 'UAE Decree-Law No. 34/2021' :
                           takedownJurisdiction === 'USA' ? 'FTC Act & Lanham Act § 43(a)' :
                           takedownJurisdiction === 'EU' ? 'EU Digital Services Act Art. 16' :
                           'Google Universal Content Policy'
@@ -1935,14 +1935,14 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                      Срок: {takedownResult.estimated_removal_time}
+                      Est. Time: {takedownResult.estimated_removal_time}
                     </span>
                   </div>
 
                   <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 relative">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Юридический текст для эскалации
+                        Legal Escalation Dossier
                       </span>
                       <button 
                         onClick={() => {
@@ -1953,7 +1953,7 @@ export default function DashboardPage() {
                         className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold rounded flex items-center gap-1 border border-slate-700"
                       >
                         <Copy className="w-3 h-3" />
-                        <span>{isCopied ? 'Скопировано!' : 'Копировать'}</span>
+                        <span>{isCopied ? 'Copied!' : 'Copy Dossier'}</span>
                       </button>
                     </div>
                     <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto select-all">
@@ -1968,7 +1968,7 @@ export default function DashboardPage() {
                       rel="noopener noreferrer"
                       className="material-button-primary text-xs py-2 px-4 !bg-red-600 hover:!bg-red-700 font-bold flex items-center gap-1.5"
                     >
-                      <span>🚀 {takedownJurisdiction === 'UAE' ? 'Открыть Google MENA форму' : 'Открыть форму эскалации Google'}</span>
+                      <span>🚀 {takedownJurisdiction === 'UAE' ? 'Open Google MENA Escalation Form' : 'Open Google Escalation Form'}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                     <button 
@@ -1978,7 +1978,7 @@ export default function DashboardPage() {
                       }}
                       className="material-button-ghost text-xs py-2"
                     >
-                      Закрыть
+                      Close
                     </button>
                   </div>
                 </div>
@@ -2017,7 +2017,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-google-text-secondary mt-0.5">
-                    Управление заведениями Google Business Profile с правами Владельца / Администратора.
+                    Manage Google Business Profiles with Owner / Manager permissions.
                   </p>
                 </div>
               </div>
@@ -2029,29 +2029,29 @@ export default function DashboardPage() {
                     <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div className="space-y-1 w-full">
                       <div className="font-bold text-amber-950 text-sm">
-                        Включите My Business Account Management API
+                        Enable My Business Account Management API
                       </div>
                       <p className="text-amber-800 leading-relaxed text-xs">
-                        Google Business Profile API разделен корпорацией Google на два независимых сервиса. Для чтения списка аккаунтов вашего профиля требуется включить Account Management API:
+                        Google Business Profile API is separated by Google into two independent services. To retrieve your account locations list, please enable the Account Management API:
                       </p>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pb-1">
                         <div className="p-2 rounded-lg bg-white border border-emerald-200 flex items-center justify-between">
                           <span className="font-medium text-[11px] text-slate-700">Business Information API:</span>
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            Включен ✅
+                            Enabled ✅
                           </span>
                         </div>
                         <div className="p-2 rounded-lg bg-white border border-amber-300 flex items-center justify-between">
                           <span className="font-medium text-[11px] text-slate-700">Account Management API:</span>
                           <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
-                            Требуется ⚠️
+                            Action Required ⚠️
                           </span>
                         </div>
                       </div>
 
                       <p className="text-[11px] text-slate-600 leading-normal">
-                        💡 <strong>Квоты Google (Quota = 0):</strong> Если после включения Google показывает 0 квот или ожидает модерации, вы можете <strong>мгновенно подключить любое ваше заведение через поиск ниже</strong> без ожидания модерации Google!
+                        💡 <strong>Google Quotas (Quota = 0):</strong> If Google displays 0 quota or pending verification, you can <strong>instantly connect any venue via search below</strong> without waiting for Google approval!
                       </p>
                     </div>
                   </div>
@@ -2063,20 +2063,20 @@ export default function DashboardPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm"
                     >
-                      <span>1. Включить Account Management API ↗</span>
+                      <span>1. Enable Account Management API ↗</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                     <button
                       onClick={handleGoogleLogin}
                       className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-lg hover:bg-amber-100 font-medium text-xs transition-colors"
                     >
-                      2. Повторить синхронизацию
+                      2. Retry Sync
                     </button>
                     <button
                       onClick={() => setShowAddVenueSection(true)}
                       className="px-3 py-1.5 bg-google-blue text-white rounded-lg hover:bg-blue-600 font-bold text-xs transition-colors ml-auto shadow-sm"
                     >
-                      ⚡ Добавить заведение через поиск
+                      ⚡ Add Venue via Search
                     </button>
                   </div>
                 </div>
@@ -2088,7 +2088,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-google-blue" />
                     <span className="font-bold text-xs text-slate-900">
-                      Подключить заведение из Google Maps
+                      Connect Venue from Google Maps
                     </span>
                   </div>
                   <button
@@ -2096,7 +2096,7 @@ export default function DashboardPage() {
                     onClick={() => setShowAddVenueSection(!showAddVenueSection)}
                     className="text-[11px] text-google-blue hover:underline font-semibold"
                   >
-                    {showAddVenueSection ? 'Свернуть' : '+ Развернуть поиск'}
+                    {showAddVenueSection ? 'Collapse' : '+ Expand Search'}
                   </button>
                 </div>
 
@@ -2108,7 +2108,7 @@ export default function DashboardPage() {
                           type="text"
                           value={venueSearchQuery}
                           onChange={(e) => setVenueSearchQuery(e.target.value)}
-                          placeholder="Название заведения (например, Banzai Marketing или Al Safadi)..."
+                          placeholder="Business name (e.g. Banzai Marketing or Al Safadi)..."
                           className="material-input text-xs pl-8 pr-3 py-2 w-full"
                         />
                         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -2123,7 +2123,7 @@ export default function DashboardPage() {
                         ) : (
                           <Search className="w-3.5 h-3.5" />
                         )}
-                        <span>Найти</span>
+                        <span>Search</span>
                       </button>
                     </form>
 
@@ -2131,7 +2131,7 @@ export default function DashboardPage() {
                     {venueSearchResults.length > 0 && (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Найдено в Google Maps ({venueSearchResults.length}):
+                          Found on Google Maps ({venueSearchResults.length}):
                         </div>
                         {venueSearchResults.map((item, idx) => (
                           <div
@@ -2157,7 +2157,7 @@ export default function DashboardPage() {
                               ) : (
                                 <Check className="w-3 h-3" />
                               )}
-                              <span>Подключить ⚡</span>
+                              <span>Connect ⚡</span>
                             </button>
                           </div>
                         ))}
@@ -2170,10 +2170,10 @@ export default function DashboardPage() {
               {/* List of Connected Google Business Profiles */}
               <div className="space-y-3 mb-5">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                  <span>Доступные заведения ({availableProfiles.length})</span>
+                  <span>Available Locations ({availableProfiles.length})</span>
                   <span className="text-[11px] text-google-green flex items-center gap-1 font-bold">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    Только проверенные Google точки
+                    Verified Google Locations Only
                   </span>
                 </div>
 
@@ -2210,7 +2210,7 @@ export default function DashboardPage() {
                                 <span>{prof.name}</span>
                                 {isActive && (
                                   <span className="text-[10px] bg-google-blue text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                    Активно
+                                    Active
                                   </span>
                                 )}
                               </div>
@@ -2220,11 +2220,11 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
-                                  {prof.category || prof.primary_category || 'Локальный бизнес'}
+                                  {prof.category || prof.primary_category || 'Local Business'}
                                 </span>
                                 <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
                                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                                  {prof.role || 'Владелец / Администратор'}
+                                  {prof.role || 'Owner / Manager'}
                                 </span>
                               </div>
                             </div>
@@ -2236,14 +2236,14 @@ export default function DashboardPage() {
                                 onClick={() => setIsUserProfileModalOpen(false)}
                                 className="px-3 py-1.5 bg-google-blue text-white rounded-lg font-bold text-xs hover:bg-google-blue/90 shadow-sm"
                               >
-                                Выбрано ✓
+                                Selected ✓
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleSelectProfile(prof)}
                                 className="px-3 py-1.5 bg-white border border-google-blue text-google-blue hover:bg-google-blue hover:text-white rounded-lg font-bold text-xs transition-colors shadow-sm"
                               >
-                                Выбрать →
+                                Select →
                               </button>
                             )}
                           </div>
@@ -2257,14 +2257,14 @@ export default function DashboardPage() {
               {/* Sync via Google Button */}
               <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p className="text-[11px] text-slate-500 leading-snug">
-                  Подключение и синхронизация новых точек осуществляется через Google OAuth.
+                  Connecting and syncing new locations is performed securely via Google OAuth.
                 </p>
                 <button
                   onClick={handleGoogleLogin}
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-2 shadow-sm whitespace-nowrap"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Синхронизировать из Google</span>
+                  <span>Sync from Google</span>
                 </button>
               </div>
 
@@ -2290,11 +2290,11 @@ export default function DashboardPage() {
               </div>
 
               <h3 className="text-xl font-bold text-google-text-primary tracking-tight mb-2">
-                Требуется вход через Google
+                Google Sign-In Required
               </h3>
 
               <p className="text-xs text-google-text-secondary leading-relaxed mb-6">
-                Вы находитесь в <strong>демо-режиме</strong>. Для смены заведений, применения рекомендаций Автопилота и управления карточкой в реальном времени необходим вход с учетной записью Google, являющейся <strong>Владельцем или Администратором</strong> профиля.
+                You are currently in <strong>Demo Mode</strong>. To switch businesses, apply Autopilot optimizations, and manage live profile cards, please sign in with a Google account that has <strong>Owner or Manager</strong> permissions.
               </p>
 
               <div className="space-y-2.5">
@@ -2308,20 +2308,20 @@ export default function DashboardPage() {
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                   </svg>
-                  <span>Войти через Google Workspace</span>
+                  <span>Sign In with Google Workspace</span>
                 </button>
 
                 <button
                   onClick={() => setIsRequireLoginModalOpen(false)}
                   className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-colors"
                 >
-                  Продолжить просмотр в демо-режиме
+                  Continue Viewing in Demo Mode
                 </button>
               </div>
 
               <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Безопасная OAuth 2.0 авторизация через Google Cloud API</span>
+                <span>Secure OAuth 2.0 authorization via Google Cloud API</span>
               </div>
             </div>
           </div>

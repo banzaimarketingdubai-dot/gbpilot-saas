@@ -281,11 +281,11 @@ export default function OnboardingPage() {
         });
       } else {
         const errorJson = await response.json().catch(() => ({}));
-        throw new Error(errorJson.detail || errorJson.message || `Ошибка сервера (${response.status})`);
+        throw new Error(errorJson.detail || errorJson.message || `Server error (${response.status})`);
       }
     } catch (err: any) {
       console.error("Website scrape error:", err);
-      alert(`Ошибка анализа сайта: ${err.message || 'Проверьте доступность URL и бэкенда'}`);
+      alert(`Website scraping error: ${err.message || 'Please verify URL and backend availability'}`);
       setScrapedData(null);
     } finally {
       setIsScraping(false);
@@ -324,7 +324,7 @@ export default function OnboardingPage() {
             { pos: 4, rank: 1 }, { pos: 5, rank: 4 }, { pos: 6, rank: 11 },
             { pos: 7, rank: 8 }, { pos: 8, rank: 14 }, { pos: 9, rank: 18 }
           ],
-          category: profile.primary_category || 'Локальный бизнес',
+          category: profile.primary_category || 'Local Business',
           rating: profile.rating || 4.7,
           reviews_count: profile.reviews_count || 120,
           phone: profile.phone_number || '+971 4 123 4567',
@@ -334,11 +334,11 @@ export default function OnboardingPage() {
         });
       } else {
         const errorJson = await response.json().catch(() => ({}));
-        throw new Error(errorJson.detail || errorJson.message || `Ошибка сервера (${response.status})`);
+        throw new Error(errorJson.detail || errorJson.message || `Server error (${response.status})`);
       }
     } catch (err: any) {
       console.error("Scan error:", err);
-      alert(`Ошибка при сканировании: ${err.message || 'Проверьте соединение с бэкендом'}`);
+      alert(`Scan error: ${err.message || 'Check connection to backend server'}`);
       setScanResult(null);
     } finally {
       setIsScanning(false);
@@ -370,15 +370,15 @@ export default function OnboardingPage() {
           name: scanResult.name,
           address: scanResult.address,
           city: scanResult.address.split(',').pop()?.trim() || 'Dubai',
-          category: scanResult.category || 'Локальный бизнес',
-          primary_category: scanResult.category || 'Локальный бизнес',
+          category: scanResult.category || 'Local Business',
+          primary_category: scanResult.category || 'Local Business',
           phone: scanResult.phone || '+971 4 123 4567',
           website_url: scanResult.website_url || `https://${scanResult.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
           rating: scanResult.rating || 4.7,
           reviews_count: scanResult.reviews_count || 120,
           health_score: scanResult.score || 64,
           cover_url: scanResult.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-          role: 'Владелец / Администратор',
+          role: 'Owner / Administrator',
           verified: true,
           is_admin: true
         }));
@@ -477,7 +477,7 @@ export default function OnboardingPage() {
                 UAE Law № 34/2021
               </span>
               <h2 className="text-lg font-bold text-google-text-primary mt-2.5 leading-tight">
-                Review Takedown™ (Снос)
+                Review Takedown™ (Removal)
               </h2>
               <p className="text-google-text-secondary text-xs mt-2 leading-relaxed">
                 Eliminate fake 1★ reviews. AI drafts an official escalation notice under Google Policy & UAE Cybercrime Law in 10 seconds.
@@ -518,13 +518,13 @@ export default function OnboardingPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-google-border-light pb-6">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-google-blue-light text-google-blue rounded-full text-xs font-bold mb-2">
-                  <Zap className="w-3.5 h-3.5 fill-google-blue" /> ОПЕРАЦИОННАЯ ТРИАДА GBPILOT ДУБАЙ
+                  <Zap className="w-3.5 h-3.5 fill-google-blue" /> GBPILOT DUBAI OPERATIONAL TRIAD
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-google-text-primary tracking-tight">
-                  Автономное превосходство в Google Maps без агентств
+                  Autonomous Google Maps Superiority Without Agencies
                 </h3>
                 <p className="text-xs sm:text-sm text-google-text-secondary mt-1">
-                  Три взаимосвязанных модуля, закрывающих ключевые боли бизнеса в Downtown, Marina, Business Bay и JLT.
+                  Three interconnected modules solving critical business challenges across Downtown, Marina, Business Bay, and JLT.
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -540,13 +540,13 @@ export default function OnboardingPage() {
                 <div className="w-10 h-10 rounded-lg bg-blue-100 text-google-blue flex items-center justify-center mb-3">
                   <MapPin className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider">Модуль 1</span>
-                <h4 className="text-base font-bold text-slate-900 mt-1">🧭 Разведка (Scout Radar)</h4>
+                <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider">Module 1</span>
+                <h4 className="text-base font-bold text-slate-900 mt-1">🧭 Scout Radar</h4>
                 <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                  Пространственная гео-сетка 3x3 по районам Дубая. Трекинг позиций конкурентов и расчет упущенной выручки в AED при падении ниже топ-3.
+                  Spatial 3x3 Geo-Grid across Dubai districts. Competitor rank tracking and estimated monthly lost revenue in AED when dropping below top 3.
                 </p>
                 <div className="mt-3 text-[11px] font-bold text-google-blue">
-                  ✓ Трекинг радиуса до 10 км
+                  ✓ Up to 10 km tracking radius
                 </div>
               </div>
 
@@ -555,10 +555,10 @@ export default function OnboardingPage() {
                 <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center mb-3">
                   <Bot className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Модуль 2</span>
-                <h4 className="text-base font-bold text-slate-900 mt-1">🤖 Ассистент (Action Copilot)</h4>
+                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Module 2</span>
+                <h4 className="text-base font-bold text-slate-900 mt-1">🤖 Action Copilot</h4>
                 <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                  Генерация постов и авто-ответы на 2 языках (EN/AR). Авто-режим Рамадана с авто-сменой расписания под Iftar/Suhoor в 1 клик.
+                  AI post generation and auto-replies in 2 languages (EN/AR). 1-click Ramadan Mode with automated schedule switching for Iftar/Suhoor.
                 </p>
                 <div className="mt-3 text-[11px] font-bold text-amber-700">
                   ✓ 🌙 Ramadan Hours Automation
@@ -570,13 +570,13 @@ export default function OnboardingPage() {
                 <div className="w-10 h-10 rounded-lg bg-red-100 text-google-red flex items-center justify-center mb-3">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-bold text-google-red uppercase tracking-wider">Модуль 3</span>
-                <h4 className="text-base font-bold text-slate-900 mt-1">🛡️ Гард (Defense & Takedown)</h4>
+                <span className="text-[10px] font-bold text-google-red uppercase tracking-wider">Module 3</span>
+                <h4 className="text-base font-bold text-slate-900 mt-1">🛡️ Review Defense & Takedown</h4>
                 <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                  24/7 защита карточки от правок конкурентов. AI-генератор юридических досье на снос фейковых 1★ отзывов по закону ОАЭ № 34/2021.
+                  24/7 profile guard against competitor edits. AI legal dossier generator to remove fake 1★ reviews under UAE Law No. 34/2021.
                 </p>
                 <div className="mt-3 text-[11px] font-bold text-google-red">
-                  ✓ ⚡ Снос фейков (1 тест бесплатно)
+                  ✓ ⚡ Remove fake reviews (1 free test)
                 </div>
               </div>
             </div>
@@ -586,13 +586,13 @@ export default function OnboardingPage() {
           <div className="mt-12">
             <div className="text-center max-w-xl mx-auto mb-8">
               <span className="text-xs font-bold text-google-blue uppercase tracking-wider bg-google-blue-light px-3 py-1 rounded-full">
-                🇦🇪 ПРОЗРАЧНЫЕ ТАРИФЫ В AED
+                🇦🇪 TRANSPARENT PRICING IN AED
               </span>
               <h3 className="text-2xl font-black text-slate-900 mt-2">
-                Окупается с первого сохраненного клиента в Дубае
+                Pays for itself with your first retained customer in Dubai
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Никаких скрытых платежей. Месячная подписка, мгновенная отмена в любое время.
+                No hidden fees. Monthly subscription, cancel anytime.
               </p>
             </div>
 
@@ -601,45 +601,45 @@ export default function OnboardingPage() {
               <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Starter</div>
-                  <div className="text-3xl font-black text-slate-900 mt-2">AED 99<span className="text-xs font-normal text-slate-500"> / мес</span></div>
-                  <p className="text-xs text-slate-600 mt-2">Для малого бизнеса и кофеен, начинающих продвижение.</p>
+                  <div className="text-3xl font-black text-slate-900 mt-2">AED 99<span className="text-xs font-normal text-slate-500"> / mo</span></div>
+                  <p className="text-xs text-slate-600 mt-2">For small businesses and cafes starting their local growth.</p>
                   <ul className="mt-5 space-y-2.5 text-xs text-slate-700">
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 1 локация на Google Maps</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Сканирование гео-сетки 3x3 (1 раз в неделю)</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> AI-ответы на отзывы (EN / AR)</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 1 снос отзыва в месяц</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 1 location on Google Maps</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 3x3 Geo-Grid scanning (weekly)</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> AI review responses (EN / AR)</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 1 review takedown per month</li>
                   </ul>
                 </div>
                 <button 
                   onClick={() => setOnboardingMode('MODE_B')}
                   className="material-button-secondary w-full text-xs font-bold mt-6 py-2.5"
                 >
-                  Выбрать Starter
+                  Choose Starter
                 </button>
               </div>
 
               {/* Pro (Recommended) */}
               <div className="bg-white rounded-2xl border-2 border-google-blue p-6 flex flex-col justify-between shadow-lg shadow-blue-500/10 relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-google-blue text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-                  ХИТ ПРОДАЖ В ДУБАЕ
+                  BESTSELLER IN DUBAI
                 </div>
                 <div>
                   <div className="text-xs font-bold text-google-blue uppercase tracking-wider">Pro Business</div>
-                  <div className="text-3xl font-black text-slate-900 mt-2">AED 249<span className="text-xs font-normal text-slate-500"> / мес</span></div>
-                  <p className="text-xs text-slate-600 mt-2">Полный автономный автопилот для ресторанов, клиник и салонов в Дубае.</p>
+                  <div className="text-3xl font-black text-slate-900 mt-2">AED 249<span className="text-xs font-normal text-slate-500"> / mo</span></div>
+                  <p className="text-xs text-slate-600 mt-2">Full autonomous autopilot for restaurants, clinics, and salons in Dubai.</p>
                   <ul className="mt-5 space-y-2.5 text-xs text-slate-700">
-                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> До 3 локаций филиальной сети</li>
-                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> Ежедневная гео-сетка 5x5 + трекинг конкурентов</li>
-                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> 🌙 Авто-режим Рамадана (часы работы)</li>
-                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> 24/7 Profile Guard (защита полей и фото)</li>
-                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> ⚡ До 5 сносов отзывов в месяц по закону ОАЭ</li>
+                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> Up to 3 branch locations</li>
+                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> Daily 5x5 Geo-Grid + competitor tracking</li>
+                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> 🌙 Ramadan Hours Automation</li>
+                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> 24/7 Profile Guard (fields and photos protection)</li>
+                    <li className="flex items-center gap-2 font-semibold"><Check className="w-4 h-4 text-google-blue shrink-0" /> ⚡ Up to 5 review takedowns per month under UAE Law</li>
                   </ul>
                 </div>
                 <button 
                   onClick={() => setOnboardingMode('MODE_B')}
                   className="material-button-primary w-full text-xs font-bold mt-6 py-2.5 !bg-google-blue"
                 >
-                  Подключить Pro (7 дней бесплатно)
+                  Activate Pro (7-Day Free Trial)
                 </button>
               </div>
 
@@ -647,20 +647,20 @@ export default function OnboardingPage() {
               <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div>
                   <div className="text-xs font-bold text-purple-600 uppercase tracking-wider">Agency / Chain</div>
-                  <div className="text-3xl font-black text-slate-900 mt-2">AED 749<span className="text-xs font-normal text-slate-500"> / мес</span></div>
-                  <p className="text-xs text-slate-600 mt-2">Для агентств и сетей с white-label отчетами для живых презентаций.</p>
+                  <div className="text-3xl font-black text-slate-900 mt-2">AED 749<span className="text-xs font-normal text-slate-500"> / mo</span></div>
+                  <p className="text-xs text-slate-600 mt-2">For agencies and multi-location brands with white-label presentation-ready reports.</p>
                   <ul className="mt-5 space-y-2.5 text-xs text-slate-700">
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> 10+ локаций клиентов в ОАЭ</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> White-Label PDF презентации аудитов</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> Экспресс-скан по ссылке карт (Path C)</li>
-                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> Неограниченные Review Takedown™ досье</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> 10+ client locations in UAE</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> White-Label PDF audit presentations</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> Express Google Maps URL scan (Path C)</li>
+                    <li className="flex items-center gap-2"><Check className="w-4 h-4 text-purple-600 shrink-0" /> Unlimited Review Takedown™ dossiers</li>
                   </ul>
                 </div>
                 <button 
                   onClick={() => setOnboardingMode('MODE_C')}
                   className="material-button-secondary w-full text-xs font-bold mt-6 py-2.5 border-purple-200 text-purple-700 hover:bg-purple-50"
                 >
-                  Пакет Agency
+                  Choose Agency Plan
                 </button>
               </div>
             </div>
@@ -668,7 +668,7 @@ export default function OnboardingPage() {
             {/* Payment badges & Agency shortcut */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4 bg-slate-100/60 p-4 rounded-xl border border-slate-200/60">
               <div className="flex items-center gap-3">
-                <span className="font-semibold text-slate-700">Принимаем к оплате:</span>
+                <span className="font-semibold text-slate-700">Accepted payment methods:</span>
                 <span className="px-2 py-0.5 bg-white rounded border border-slate-200 font-bold text-slate-800">Apple Pay</span>
                 <span className="px-2 py-0.5 bg-white rounded border border-slate-200 font-bold text-slate-800">Visa / Mastercard</span>
                 <span className="px-2 py-0.5 bg-white rounded border border-slate-200 font-bold text-slate-800">Stripe UAE (AED)</span>
@@ -677,7 +677,7 @@ export default function OnboardingPage() {
                 onClick={() => setOnboardingMode('MODE_C')}
                 className="text-google-blue font-bold hover:underline flex items-center gap-1"
               >
-                <span>Маркетинговое агентство в ОАЭ? Запустить экспресс-аудит (Path C)</span>
+                <span>Marketing agency in UAE? Run instant audit (Path C)</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -686,7 +686,7 @@ export default function OnboardingPage() {
         )}
 
         {/* ======================================================== */}
-        {/* KILLER FEATURE: REVIEW TAKEDOWN™ WORKFLOW (СНОС ОТЗЫВА)  */}
+        {/* KILLER FEATURE: REVIEW TAKEDOWN™ WORKFLOW (DISPUTE)       */}
         {/* ======================================================== */}
         {onboardingMode === 'MODE_TAKEDOWN' && (
           <div className="max-w-3xl mx-auto space-y-6">
@@ -707,13 +707,13 @@ export default function OnboardingPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-google-text-primary">Review Takedown™ (Снос отзыва)</h2>
+                      <h2 className="text-lg font-bold text-google-text-primary">Review Takedown™ (Removal)</h2>
                       <span className="text-[10px] bg-red-100 text-google-red font-bold px-2 py-0.5 rounded-full uppercase">
-                        1 тест бесплатно (0 AED / $0)
+                        1 test free (0 AED / $0)
                       </span>
                     </div>
                     <p className="text-xs text-google-text-secondary">
-                      Генерация официального юридического досье для Google Support по локальным законам и правилам Google.
+                      Generate official legal escalation dossiers for Google Support under local laws and Google policies.
                     </p>
                   </div>
                 </div>
@@ -722,12 +722,12 @@ export default function OnboardingPage() {
               {/* Jurisdiction Switcher */}
               <div className="mb-5 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                 <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                  <span>Юрисдикция бизнеса / Правовая база:</span>
+                  <span>Business Jurisdiction / Legal Framework:</span>
                   <span className="text-[11px] text-google-blue font-bold">
-                    {takedownJurisdiction === 'UAE' && '🇦🇪 ОАЭ: Закон № 34/2021'}
-                    {takedownJurisdiction === 'USA' && '🇺🇸 США: FTC Act & Lanham Act'}
-                    {takedownJurisdiction === 'EU' && '🇪🇺 ЕС / UK: Digital Services Act'}
-                    {takedownJurisdiction === 'GLOBAL' && '🌍 Международный: Google Policy'}
+                    {takedownJurisdiction === 'UAE' && '🇦🇪 UAE: Law No. 34/2021'}
+                    {takedownJurisdiction === 'USA' && '🇺🇸 USA: FTC Act & Lanham Act'}
+                    {takedownJurisdiction === 'EU' && '🇪🇺 EU / UK: Digital Services Act'}
+                    {takedownJurisdiction === 'GLOBAL' && '🌍 Global: Google Policy'}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -741,7 +741,7 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <span>🇦🇪</span>
-                    <span>ОАЭ / Дубай</span>
+                    <span>UAE / Dubai</span>
                   </button>
 
                   <button
@@ -754,7 +754,7 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <span>🇺🇸</span>
-                    <span>США (US)</span>
+                    <span>USA</span>
                   </button>
 
                   <button
@@ -767,7 +767,7 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <span>🇪🇺</span>
-                    <span>Европа / UK</span>
+                    <span>Europe / UK</span>
                   </button>
 
                   <button
@@ -789,7 +789,7 @@ export default function OnboardingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                      Название компании в Google Maps *
+                      Business Name in Google Maps *
                     </label>
                     <input 
                       type="text"
@@ -802,11 +802,11 @@ export default function OnboardingPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                      Имя автора отзыва (если указано)
+                      Review Author Name (if available)
                     </label>
                     <input 
                       type="text"
-                      placeholder="e.g. John Doe или Anonymous"
+                      placeholder="e.g. John Doe or Anonymous"
                       value={takedownAuthor}
                       onChange={(e) => setTakedownAuthor(e.target.value)}
                       className="material-input text-sm"
@@ -816,12 +816,12 @@ export default function OnboardingPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                    Текст токсичного или фейкового 1★ отзыва *
+                    Toxic or Fake 1★ Review Text *
                   </label>
                   <textarea 
                     required
                     rows={4}
-                    placeholder="Вставьте сюда текст негативного отзыва, оставленного конкурентом или фейковым аккаунтом..."
+                    placeholder="Paste the negative review left by a competitor or fake account here..."
                     value={takedownReviewText}
                     onChange={(e) => setTakedownReviewText(e.target.value)}
                     className="material-input text-sm resize-none"
@@ -836,12 +836,12 @@ export default function OnboardingPage() {
                   {isTakedownLoading ? (
                     <>
                       <Sparkles className="w-4 h-4 animate-spin text-white" />
-                      <span>Анализ нарушений и сборка юридического досье...</span>
+                      <span>Analyzing violations & drafting legal dossier...</span>
                     </>
                   ) : (
                     <>
                       <Zap className="w-4 h-4 fill-white" />
-                      <span>⚡ Сгенерировать досье на снос отзыва (0 AED)</span>
+                      <span>⚡ Generate Review Takedown Dossier (0 AED)</span>
                     </>
                   )}
                 </button>
@@ -860,21 +860,21 @@ export default function OnboardingPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-emerald-900 text-sm">Досье успешно сформировано</span>
+                        <span className="font-bold text-emerald-900 text-sm">Dossier Successfully Generated</span>
                         <span className="px-2 py-0.5 bg-emerald-200/80 text-emerald-800 text-[10px] font-extrabold rounded-full">
-                          Вероятность сноса: {takedownResult.confidence_score}%
+                          Removal Probability: {takedownResult.confidence_score}%
                         </span>
                       </div>
                       <p className="text-xs text-emerald-700 mt-0.5">
-                        Срок рассмотрения в Google MENA: {takedownResult.estimated_removal_time}
+                        Google MENA Review Window: {takedownResult.estimated_removal_time}
                       </p>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-emerald-800 bg-white px-3 py-1.5 rounded-lg border border-emerald-200 text-center">
-                    {takedownJurisdiction === 'UAE' && 'Основание: Закон ОАЭ № 34/2021'}
-                    {takedownJurisdiction === 'USA' && 'Основание: FTC Act & Lanham Act'}
-                    {takedownJurisdiction === 'EU' && 'Основание: EU Digital Services Act (DSA)'}
-                    {takedownJurisdiction === 'GLOBAL' && 'Основание: Google Maps Content Policy'}
+                    {takedownJurisdiction === 'UAE' && 'Basis: UAE Law No. 34/2021'}
+                    {takedownJurisdiction === 'USA' && 'Basis: FTC Act & Lanham Act'}
+                    {takedownJurisdiction === 'EU' && 'Basis: EU Digital Services Act (DSA)'}
+                    {takedownJurisdiction === 'GLOBAL' && 'Basis: Google Maps Content Policy'}
                   </span>
                 </div>
 
@@ -882,7 +882,7 @@ export default function OnboardingPage() {
                 <div className="material-card p-5">
                   <h4 className="text-xs font-bold text-google-text-primary uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <Scale className="w-4 h-4 text-google-red" />
-                    Выявленные нормативные и правовые нарушения:
+                    Identified Regulatory & Legal Violations:
                   </h4>
                   <div className="space-y-2.5">
                     {takedownResult.violations.map((v, i) => (
@@ -905,7 +905,7 @@ export default function OnboardingPage() {
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-emerald-400" />
                       <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                        Официальный текст эскалации (Legal Escalation Notice)
+                        Official Legal Escalation Notice
                       </span>
                     </div>
                     <button 
@@ -917,7 +917,7 @@ export default function OnboardingPage() {
                       className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-700"
                     >
                       <Copy className="w-3.5 h-3.5" />
-                      <span>{isCopied ? '✓ Скопировано!' : 'Скопировать досье'}</span>
+                      <span>{isCopied ? '✓ Copied!' : 'Copy Dossier'}</span>
                     </button>
                   </div>
                   <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto pr-2 select-all">
@@ -928,11 +928,11 @@ export default function OnboardingPage() {
                 {/* Action CTA with direct Google Support Deep Link */}
                 <div className="p-6 rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-lg space-y-4">
                   <div>
-                    <h4 className="text-base font-bold">Как отправить досье в Google Support за 60 секунд:</h4>
+                    <h4 className="text-base font-bold">How to submit dossier to Google Support in 60 seconds:</h4>
                     <ol className="text-xs text-red-100 mt-2 space-y-1 list-decimal list-inside leading-relaxed">
-                      <li>Нажмите кнопку <strong>«Скопировать досье»</strong> выше.</li>
-                      <li>Перейдите по прямой ссылке в форму эскалации Google Support (кнопка ниже).</li>
-                      <li>Выберите профиль {takedownBusiness || 'вашей компании'}, найдите отзыв и вставьте скопированное досье.</li>
+                      <li>Click the <strong>«Copy Dossier»</strong> button above.</li>
+                      <li>Follow the direct link to the Google Support escalation form (button below).</li>
+                      <li>Select the profile for {takedownBusiness || 'your company'}, find the review, and paste the copied dossier.</li>
                     </ol>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
@@ -942,14 +942,14 @@ export default function OnboardingPage() {
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto px-6 py-3 bg-white text-red-700 hover:bg-slate-100 font-extrabold rounded-xl shadow text-xs flex items-center justify-center gap-2 transition-all whitespace-nowrap"
                     >
-                      <span>🚀 Открыть форму эскалации в Google MENA</span>
+                      <span>🚀 Open Google MENA Escalation Form</span>
                       <ExternalLink className="w-4 h-4" />
                     </a>
                     <button 
                       onClick={() => setOnboardingMode('MODE_B')}
                       className="w-full sm:w-auto px-5 py-3 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all"
                     >
-                      <span>Провести полный аудит профиля →</span>
+                      <span>Run Full Profile Audit →</span>
                     </button>
                   </div>
                 </div>
@@ -957,8 +957,8 @@ export default function OnboardingPage() {
                 {/* Pro Upgrade Hook */}
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="font-bold text-slate-800">Устали бороться с атаками конкурентов вручную?</span>
-                    <p className="text-slate-500 mt-0.5">В тарифе Pro (AED 249/мес) GBPilot круглосуточно блокирует несанкционированные правки и готовит сносы на автомате.</p>
+                    <span className="font-bold text-slate-800">Tired of manually defending against competitor attacks?</span>
+                    <p className="text-slate-500 mt-0.5">On the Pro plan (AED 249/mo), GBPilot blocks unauthorized edits 24/7 and prepares takedowns automatically.</p>
                   </div>
                   <button 
                     onClick={() => {
@@ -966,7 +966,7 @@ export default function OnboardingPage() {
                     }}
                     className="material-button-primary text-xs whitespace-nowrap !bg-slate-900 hover:!bg-black"
                   >
-                    Подключить Pro Shield
+                    Activate Pro Shield
                   </button>
                 </div>
 
@@ -1290,7 +1290,7 @@ export default function OnboardingPage() {
                     <input 
                       type="text"
                       required
-                      placeholder="Введите название (напр. Al Safadi Dubai) или ссылку Google Maps (maps.app.goo.gl)..."
+                      placeholder="Enter business name (e.g. Al Safadi Dubai) or Google Maps link (maps.app.goo.gl)..."
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
@@ -1424,36 +1424,36 @@ export default function OnboardingPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-google-red px-2 py-0.5 rounded">
-                            ДУБАЙСКИЙ ФИНАНСОВЫЙ УЩЕРБ
+                            DUBAI FINANCIAL IMPACT
                           </span>
                         </div>
                         <h4 className="text-base font-black text-slate-900 mt-1">
-                          Упущенная выручка из-за слабых позиций на картах:
+                          Estimated lost revenue due to weak Google Maps rankings:
                         </h4>
                         <p className="text-xs text-slate-600 mt-1 max-w-lg leading-relaxed">
-                          Из-за красных точек (#4–#18) в зонах высокого спроса (Downtown, Marina, JLT) ваш бизнес не видит до 65% поискового трафика.
+                          Due to red pins (#4–#18) in high-demand zones (Downtown, Marina, JLT), your business misses out on up to 65% of local search traffic.
                         </p>
                       </div>
                     </div>
                     <div className="text-right sm:border-l sm:border-red-200 sm:pl-6 shrink-0 w-full sm:w-auto">
-                      <span className="text-[11px] font-semibold text-slate-500 block">Потери в месяц:</span>
+                      <span className="text-[11px] font-semibold text-slate-500 block">Monthly loss:</span>
                       <span className="text-2xl font-black text-google-red">AED 16,500 – 28,000</span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">на основе среднего чека в ОАЭ</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">based on average transaction values in UAE</span>
                     </div>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-red-200/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                     <span className="text-slate-600">
-                      💡 Подъем в Топ-3 в радиусе 2.5 км окупает подписку GBPilot в 50–100 раз.
+                      💡 Ranking in the Top 3 within a 2.5 km radius yields a 50x–100x return on your GBPilot plan.
                     </span>
                     <a 
-                      href={`https://wa.me/?text=${encodeURIComponent(`Здравствуйте! Я сделал аудит профиля ${scanResult.name} в GBPilot. Упущенная выручка оценена в AED 16,500+. Хочу получить подробный разбор аудита в PDF.`)}`}
+                      href={`https://wa.me/?text=${encodeURIComponent(`Hello! I ran an audit of ${scanResult.name} on GBPilot. Lost revenue is estimated at AED 16,500+. I'd like to get a detailed PDF breakdown of the audit.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5 whitespace-nowrap transition-all"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>Обсудить аудит в WhatsApp (+971)</span>
+                      <span>Discuss Audit on WhatsApp (+971)</span>
                     </a>
                   </div>
                 </div>
@@ -1462,15 +1462,15 @@ export default function OnboardingPage() {
                 <div className="material-card p-6 bg-gradient-to-r from-google-blue to-blue-700 text-white shadow-material-2">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold">Готовы исправить уязвимости и запустить Автопилот?</h3>
-                      <p className="text-xs text-blue-100 mt-1">Авторизуйтесь под управляющим аккаунтом для привязки карточки и включения защиты.</p>
+                      <h3 className="text-lg font-bold">Ready to fix vulnerabilities and activate Autopilot?</h3>
+                      <p className="text-xs text-blue-100 mt-1">Sign in with your managing account to connect your profile and enable 24/7 protection.</p>
                     </div>
                     <button 
                       onClick={() => setIsManageGatekeeperOpen(true)}
                       className="bg-white hover:bg-slate-50 text-google-blue font-bold px-6 py-3 rounded-xl shadow-lg transition-all flex items-center gap-2 whitespace-nowrap text-sm hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <Zap className="w-4 h-4 text-google-blue fill-google-blue" />
-                      <span>⚡ Начать управление заведением</span>
+                      <span>⚡ Start Managing Business</span>
                     </button>
                   </div>
                 </div>
@@ -1505,10 +1505,10 @@ export default function OnboardingPage() {
                           </div>
                           <div className="flex items-center gap-2 mt-1.5">
                             <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded border border-amber-200">
-                              ★ {scanResult.rating} ({scanResult.reviews_count} отзывов)
+                              ★ {scanResult.rating} ({scanResult.reviews_count} reviews)
                             </span>
                             <span className="text-[10px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded">
-                              {scanResult.category || 'Локальный бизнес'}
+                              {scanResult.category || 'Local Business'}
                             </span>
                           </div>
                         </div>
@@ -1518,10 +1518,10 @@ export default function OnboardingPage() {
                       <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 space-y-2 mb-6">
                         <div className="flex items-center gap-2 text-xs font-bold text-google-blue">
                           <ShieldCheck className="w-4 h-4 text-google-blue shrink-0" />
-                          <span>Требуется Google-аккаунт Владельца / Администратора</span>
+                          <span>Google Owner / Manager Account Required</span>
                         </div>
                         <p className="text-xs text-slate-700 leading-relaxed">
-                          Для применения рекомендаций Автопилота, сноса токсичных отзывов (Review Takedown™) и оперативного управления точкой войдите через аккаунт, являющийся <strong>Владельцем или Менеджером</strong> этого заведения в Google Business Profile.
+                          To apply Autopilot recommendations, remove toxic reviews (Review Takedown™), and manage this business in real time, please sign in with the Google account that is an <strong>Owner or Manager</strong> of this Google Business Profile.
                         </p>
                       </div>
 
@@ -1535,7 +1535,7 @@ export default function OnboardingPage() {
                           {isConnectingGoogle ? (
                             <>
                               <Sparkles className="w-4 h-4 animate-spin text-white" />
-                              <span>Подключение к Google...</span>
+                              <span>Connecting to Google...</span>
                             </>
                           ) : (
                             <>
@@ -1545,7 +1545,7 @@ export default function OnboardingPage() {
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                               </svg>
-                              <span>Войти через Google (Владелец / Администратор)</span>
+                              <span>Sign in with Google (Owner / Manager)</span>
                             </>
                           )}
                         </button>
@@ -1560,7 +1560,7 @@ export default function OnboardingPage() {
                                 city: scanResult.address.split(',').pop()?.trim() || 'Dubai',
                                 health_score: scanResult.score,
                                 cover_url: scanResult.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-                                role: 'Демо-просмотр',
+                                role: 'Demo Preview',
                                 verified: false,
                                 is_admin: false
                               }));
@@ -1570,13 +1570,13 @@ export default function OnboardingPage() {
                           }}
                           className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-colors"
                         >
-                          Продолжить в демо-режиме (только просмотр)
+                          Continue in Demo Mode (View Only)
                         </button>
                       </div>
 
                       <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Безопасная OAuth 2.0 авторизация через Google Cloud</span>
+                        <span>Secure OAuth 2.0 Authorization via Google Cloud</span>
                       </div>
                     </div>
                   </div>

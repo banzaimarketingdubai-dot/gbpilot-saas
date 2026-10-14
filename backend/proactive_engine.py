@@ -29,6 +29,7 @@ if GENAI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
 
 # Define the cascade models to use
 CASCADE_MODELS = [
+    'gemini-3.8-flash',
     'gemini-2.5-flash',
     'gemini-1.5-flash'
 ]

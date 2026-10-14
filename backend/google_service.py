@@ -88,7 +88,7 @@ def parse_google_location(loc: Dict[str, Any], role: str = "OWNER") -> Dict[str,
     lng = latlng.get("longitude", 55.2708) if isinstance(latlng, dict) else 55.2708
 
     role_str = str(role).upper()
-    role_display = "Владелец (Owner)" if "OWNER" in role_str else "Администратор (Manager)"
+    role_display = "Owner" if "OWNER" in role_str else "Manager"
 
     return {
         "id": f"profile_{loc_id}",
@@ -254,7 +254,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
                     if photo_name:
                         photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=600&maxWidthPx=800&key={GOOGLE_PLACES_API_KEY}"
                 
-                cat_name = place.get("primaryTypeDisplayName", {}).get("text") or "Локальный бизнес"
+                cat_name = place.get("primaryTypeDisplayName", {}).get("text") or "Local Business"
 
                 return {
                     "place_id": place.get("id"),

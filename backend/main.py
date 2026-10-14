@@ -130,12 +130,12 @@ async def system_diagnostics(db: Session = Depends(get_db)):
             res = await asyncio.wait_for(
                 asyncio.to_thread(
                     gemini_client.models.generate_content,
-                    model="gemini-2.5-flash",
+                    model="gemini-3.8-flash",
                     contents="ping"
                 ),
                 timeout=4.0
             )
-            diagnostics["gemini_ai"] = {"status": "healthy", "detail": "Gemini 2.5 Flash operational"}
+            diagnostics["gemini_ai"] = {"status": "healthy", "detail": "Gemini 3.8 Flash operational"}
         else:
             diagnostics["gemini_ai"] = {"status": "error", "detail": "Gemini client not initialized"}
     except Exception as e:
@@ -291,7 +291,7 @@ async def list_profiles_endpoint(db: Session = Depends(get_db)):
                     "phone_number": p.phone_number,
                     "website_url": p.website_url,
                     "health_score": p.health_score or 85,
-                    "role": "Владелец / Администратор",
+                    "role": "Owner / Manager",
                     "verified": True,
                     "is_admin": True,
                 }
@@ -672,7 +672,7 @@ async def get_negative_reviews_endpoint(profile_id: str, business_name: str = No
                             "id": r.google_review_id or f"rev_{r.id}",
                             "author_name": r.reviewer_name or "Anonymous",
                             "rating": r.rating or 1,
-                            "review_date": r.review_date.strftime("%Y-%m-%d") if r.review_date else "Недавно",
+                            "review_date": r.review_date.strftime("%Y-%m-%d") if r.review_date else "Recently",
                             "review_text": r.review_text or "",
                             "suspected_violation": "Section 3.2 - Deceptive Content & Fake Engagement",
                             "confidence_score": 92,
@@ -691,12 +691,12 @@ async def get_negative_reviews_endpoint(profile_id: str, business_name: str = No
         "negative_reviews": [
             {
                 "id": "rev_takedown_01",
-                "author_name": "Alex K. (Подозрение: Конкурент)",
+                "author_name": "Alex K. (Suspected: Competitor)",
                 "rating": 1,
-                "review_date": "2 дня назад",
+                "review_date": "2 days ago",
                 "review_text": "Never visited this terrible place! The owner was rude, refused to talk, and everything is completely fake. Avoid at all costs, they are buying 5-star reviews!",
                 "suspected_violation": "Section 3.2 - Deceptive Content & Coordinated Sabotage",
-                "violation_details": "Аккаунт без истории, шаблонный текст клеветы, не является реальным клиентом",
+                "violation_details": "Account with no history, boilerplate defamatory text, not a verified customer",
                 "confidence_score": 96,
                 "recommended_jurisdiction": "UAE" if "dubai" in b_name.lower() or "uae" in b_name.lower() else "USA"
             },
@@ -704,10 +704,10 @@ async def get_negative_reviews_endpoint(profile_id: str, business_name: str = No
                 "id": "rev_takedown_02",
                 "author_name": "Ghost User #489",
                 "rating": 1,
-                "review_date": "5 дней назад",
+                "review_date": "5 days ago",
                 "review_text": "Food poisoning! Waited 2 hours, staff cursed at customers. Total scam operation.",
                 "suspected_violation": "Defamation & Unsubstantiated Health Claims (Articles 43 & 44)",
-                "violation_details": "Отсутствие чека и транзакции в POS-системе, ложные обвинения",
+                "violation_details": "No POS receipt or customer transaction found, false allegations",
                 "confidence_score": 91,
                 "recommended_jurisdiction": "UAE"
             },
@@ -715,10 +715,10 @@ async def get_negative_reviews_endpoint(profile_id: str, business_name: str = No
                 "id": "rev_takedown_03",
                 "author_name": "SpamBot_NYC",
                 "rating": 2,
-                "review_date": "1 неделю назад",
+                "review_date": "1 week ago",
                 "review_text": "Check out best competitor bakery down the street at competitor-promo.com instead, much better quality!",
                 "suspected_violation": "Promotional Content & Commercial Advertising (Section 4.1)",
-                "violation_details": "Прямая реклама стороннего сайта и конкурента в теле отзыва",
+                "violation_details": "Direct competitor promotion and external website URL in review body",
                 "confidence_score": 98,
                 "recommended_jurisdiction": "USA"
             }

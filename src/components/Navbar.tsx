@@ -205,12 +205,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const navItems: { id: string; label: string; href: string; icon: any; badge?: string }[] = [
-    { id: 'nav-dashboard', label: '⚡ Кокпит', href: '/dashboard', icon: Zap },
-    { id: 'nav-geo-grid', label: '🧭 Разведка', href: '/geo-grid', icon: MapPin },
-    { id: 'nav-reviews-posts', label: '🤖 Ассистент', href: '/reviews-posts', icon: MessageSquare },
-    { id: 'nav-ai-copilot', label: '💬 AI Копилот', href: '/copilot', icon: Bot },
-    { id: 'nav-lead-outreach', label: '🎯 B2B Лидген', href: '/outreach', icon: Target },
-    { id: 'nav-b2b', label: '🇦🇪 Дубай Тарифы', href: '/b2b', icon: Sparkles },
+    { id: 'nav-dashboard', label: '⚡ Cockpit', href: '/dashboard', icon: Zap },
+    { id: 'nav-geo-grid', label: '🧭 Geo-Grid', href: '/geo-grid', icon: MapPin },
+    { id: 'nav-reviews-posts', label: '🤖 Assistant', href: '/reviews-posts', icon: MessageSquare },
+    { id: 'nav-ai-copilot', label: '💬 AI Copilot', href: '/copilot', icon: Bot },
+    { id: 'nav-lead-outreach', label: '🎯 B2B Leads', href: '/outreach', icon: Target },
+    { id: 'nav-b2b', label: '🇦🇪 Dubai Pricing', href: '/b2b', icon: Sparkles },
   ];
 
   const handleModeChange = (mode: 'OFF' | 'MANUAL_APPROVAL' | 'FULL_AUTOPILOT') => {
@@ -267,11 +267,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-semibold text-google-text-primary max-w-[130px] truncate">{selectedProfile}</span>
               {currentUser ? (
                 <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
-                  {(activeProfile as any)?.role?.includes('Владелец') ? 'Владелец' : 'Администратор'}
+                  {((activeProfile as any)?.role || '').toLowerCase().includes('own') || ((activeProfile as any)?.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
                 </span>
               ) : (
                 <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 hidden sm:inline-block">
-                  Демо
+                  Demo
                 </span>
               )}
               <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
@@ -283,7 +283,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="absolute left-0 mt-2 w-72 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
               >
                 <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light flex items-center justify-between">
-                  <span>Ваши заведения ({availableProfiles.length})</span>
+                  <span>Your Businesses ({availableProfiles.length})</span>
                   <span className="text-emerald-600 font-bold">Google Verified</span>
                 </div>
                 {availableProfiles.map((p, idx) => (
@@ -307,7 +307,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
                       </div>
                       <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
-                        {p.role ? (p.role.includes('Владелец') ? 'Владелец' : 'Админ') : 'Админ'}
+                        {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
                       </span>
                     </button>
                     <button 
@@ -321,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsLocationOpen(false);
                       }}
                       className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Удалить заведение"
+                      title="Delete business"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -340,7 +340,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
                 >
                   <Building2 className="w-3.5 h-3.5" />
-                  <span>🏢 Управление заведениями в профиле</span>
+                  <span>🏢 Manage Businesses in Profile</span>
                 </button>
               </div>
             )}
@@ -462,7 +462,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="font-bold text-slate-900 truncate">{currentUser.email}</div>
                     <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Google Business: Владелец
+                      Google Business: Owner
                     </div>
                   </div>
                   <button
@@ -473,21 +473,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg font-medium text-slate-700 flex items-center gap-2 mt-1"
                   >
                     <Building2 className="w-3.5 h-3.5 text-google-blue" />
-                    <span>Мои заведения GBP ({availableProfiles.length})</span>
+                    <span>My GBP Businesses ({availableProfiles.length})</span>
                   </button>
                   <button
                     onClick={handleGoogleLogin}
                     className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg text-slate-600 flex items-center gap-2"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Сменить Google аккаунт</span>
+                    <span>Switch Google Account</span>
                   </button>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 rounded-lg font-medium flex items-center gap-2 border-t border-slate-100 mt-1"
                   >
                     <X className="w-3.5 h-3.5" />
-                    <span>Выйти</span>
+                    <span>Sign Out</span>
                   </button>
                 </div>
               )}
@@ -503,7 +503,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              <span>Войти через Google</span>
+              <span>Sign in with Google</span>
             </button>
           )}
         </div>
