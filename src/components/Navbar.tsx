@@ -63,6 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [selectedProfile, setSelectedProfile] = useState<string>(activeProfile.name);
 
   const [availableProfiles, setAvailableProfiles] = useState<BusinessProfile[]>([]);
+  const isLandingMode = (pathname === '/' || pathname === '/onboarding') && !currentUser;
 
   useEffect(() => {
     // Load active and available profiles from local storage
@@ -250,194 +251,221 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </Link>
 
-          {/* Business Location Selector Dropdown */}
-          <div className="relative hidden md:block">
-            <button
-              onClick={() => {
-                if (!currentUser) {
-                  window.dispatchEvent(new CustomEvent('require_google_login'));
-                  return;
-                }
-                setIsLocationOpen(!isLocationOpen);
-              }}
-              data-testid="location-selector"
-              className="flex items-center space-x-2 bg-google-bg border border-google-border px-3 py-1.5 rounded-lg text-xs hover:bg-white transition-colors"
-            >
-              <Building2 className="w-3.5 h-3.5 text-google-blue" />
-              <span className="font-semibold text-google-text-primary max-w-[130px] truncate">{selectedProfile}</span>
-              {currentUser ? (
-                <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
-                  {((activeProfile as any)?.role || '').toLowerCase().includes('own') || ((activeProfile as any)?.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
-                </span>
-              ) : (
-                <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 hidden sm:inline-block">
-                  Demo
-                </span>
-              )}
-              <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
-            </button>
-
-            {isLocationOpen && (
-              <div 
-                data-testid="location-dropdown-menu" 
-                className="absolute left-0 mt-2 w-72 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
+          {/* Business Location Selector Dropdown - Only for authenticated users or internal pages */}
+          {(!isLandingMode || currentUser) && (
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => {
+                  if (!currentUser) {
+                    window.dispatchEvent(new CustomEvent('require_google_login'));
+                    return;
+                  }
+                  setIsLocationOpen(!isLocationOpen);
+                }}
+                data-testid="location-selector"
+                className="flex items-center space-x-2 bg-google-bg border border-google-border px-3 py-1.5 rounded-lg text-xs hover:bg-white transition-colors"
               >
-                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light flex items-center justify-between">
-                  <span>Your Businesses ({availableProfiles.length})</span>
-                  <span className="text-emerald-600 font-bold">Google Verified</span>
-                </div>
-                {availableProfiles.map((p, idx) => (
-                  <div key={idx} className="flex items-center justify-between mt-1 rounded-lg hover:bg-google-bg transition-colors group pr-1">
-                    <button
-                      onClick={() => {
-                        setSelectedProfile(p.name);
-                        setActiveProfile(p);
-                        if (typeof window !== 'undefined') {
-                          localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
-                          window.location.reload();
-                        }
-                        setIsLocationOpen(false);
-                      }}
-                      className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
-                        selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
-                      }`}
-                    >
-                      <div className="truncate max-w-[150px]">
-                        <div className="truncate font-semibold">{p.name}</div>
-                        <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
-                      </div>
-                      <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
-                        {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
-                      </span>
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!p.id) {
-                          alert("No ID to delete");
-                          return;
-                        }
-                        setProfileToDelete(p.id);
-                        setIsLocationOpen(false);
-                      }}
-                      className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Delete business"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLocationOpen(false);
-                    if (!currentUser) {
-                      window.dispatchEvent(new CustomEvent('require_google_login'));
-                      return;
-                    }
-                    window.dispatchEvent(new CustomEvent('open_user_profile_modal'));
-                  }}
-                  className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
+                <Building2 className="w-3.5 h-3.5 text-google-blue" />
+                <span className="font-semibold text-google-text-primary max-w-[130px] truncate">{selectedProfile}</span>
+                {currentUser ? (
+                  <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
+                    {((activeProfile as any)?.role || '').toLowerCase().includes('own') || ((activeProfile as any)?.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
+                  </span>
+                ) : (
+                  <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 hidden sm:inline-block">
+                    Demo
+                  </span>
+                )}
+                <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
+              </button>
+
+              {isLocationOpen && (
+                <div 
+                  data-testid="location-dropdown-menu" 
+                  className="absolute left-0 mt-2 w-72 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
                 >
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>🏢 Manage Businesses in Profile</span>
-                </button>
-              </div>
-            )}
-          </div>
+                  <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light flex items-center justify-between">
+                    <span>Your Businesses ({availableProfiles.length})</span>
+                    <span className="text-emerald-600 font-bold">Google Verified</span>
+                  </div>
+                  {availableProfiles.map((p, idx) => (
+                    <div key={idx} className="flex items-center justify-between mt-1 rounded-lg hover:bg-google-bg transition-colors group pr-1">
+                      <button
+                        onClick={() => {
+                          setSelectedProfile(p.name);
+                          setActiveProfile(p);
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
+                            window.location.reload();
+                          }
+                          setIsLocationOpen(false);
+                        }}
+                        className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
+                          selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
+                        }`}
+                      >
+                        <div className="truncate max-w-[150px]">
+                          <div className="truncate font-semibold">{p.name}</div>
+                          <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
+                        </div>
+                        <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
+                          {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
+                        </span>
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!p.id) {
+                            alert("No ID to delete");
+                            return;
+                          }
+                          setProfileToDelete(p.id);
+                          setIsLocationOpen(false);
+                        }}
+                        className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete business"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLocationOpen(false);
+                      if (!currentUser) {
+                        window.dispatchEvent(new CustomEvent('require_google_login'));
+                        return;
+                      }
+                      window.dispatchEvent(new CustomEvent('open_user_profile_modal'));
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>🏢 Manage Businesses in Profile</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
 
         {/* Desktop Navigation Tabs */}
-        <nav className="hidden lg:flex items-center space-x-1 bg-google-bg border border-google-border p-1 rounded-xl">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                data-testid={item.id}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-all ${
-                  isActive
-                    ? 'bg-white text-google-blue shadow-sm font-semibold border border-google-border-light'
-                    : 'text-google-text-secondary hover:text-google-text-primary hover:bg-white/60'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-google-blue' : 'text-google-text-tertiary'}`} />
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span className="text-[9px] bg-google-blue-light text-google-blue font-bold px-1.5 py-0.2 rounded font-mono">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        {isLandingMode ? (
+          <nav className="hidden lg:flex items-center space-x-2">
+            <a 
+              href="#triad"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-google-blue hover:bg-slate-50 transition-colors"
+            >
+              ⚡ Operational Triad
+            </a>
+            <a 
+              href="#takedown"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-google-red hover:bg-slate-50 transition-colors"
+            >
+              🛡️ Review Takedown™
+            </a>
+            <a 
+              href="#pricing"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-google-blue hover:bg-slate-50 transition-colors"
+            >
+              🇦🇪 Dubai Pricing
+            </a>
+          </nav>
+        ) : (
+          <nav className="hidden lg:flex items-center space-x-1 bg-google-bg border border-google-border p-1 rounded-xl">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-testid={item.id}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition-all ${
+                    isActive
+                      ? 'bg-white text-google-blue shadow-sm font-semibold border border-google-border-light'
+                      : 'text-google-text-secondary hover:text-google-text-primary hover:bg-white/60'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-google-blue' : 'text-google-text-tertiary'}`} />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="text-[9px] bg-google-blue-light text-google-blue font-bold px-1.5 py-0.2 rounded font-mono">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Right Controls: Autopilot + Google Auth Profile */}
         <div className="flex items-center space-x-2.5">
-          <div className="relative">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              data-testid="autopilot-dropdown"
-              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-google-bg border border-google-border hover:bg-white transition-colors"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-google-green opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-google-green"></span>
-              </span>
-              <span className="text-google-text-secondary hidden sm:inline">Autopilot:</span>
-              <span className="text-google-green font-bold uppercase">
-                {autopilotMode.replace('_', ' ')}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
-            </button>
-
-            {/* Dropdown Menu */}
-            {isDropdownOpen && (
-              <div 
-                data-testid="autopilot-dropdown-menu"
-                className="absolute right-0 mt-2 w-60 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
+          {!isLandingMode && (
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                data-testid="autopilot-dropdown"
+                className="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-google-bg border border-google-border hover:bg-white transition-colors"
               >
-                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light">
-                  Autopilot Strategy Mode
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-google-green opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-google-green"></span>
+                </span>
+                <span className="text-google-text-secondary hidden sm:inline">Autopilot:</span>
+                <span className="text-google-green font-bold uppercase">
+                  {autopilotMode.replace('_', ' ')}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div 
+                  data-testid="autopilot-dropdown-menu"
+                  className="absolute right-0 mt-2 w-60 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
+                >
+                  <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light">
+                    Autopilot Strategy Mode
+                  </div>
+                  <button
+                    onClick={() => handleModeChange('MANUAL_APPROVAL')}
+                    data-testid="mode-manual-approval"
+                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium mt-1 ${
+                      autopilotMode === 'MANUAL_APPROVAL' ? 'bg-google-blue-light text-google-blue font-semibold' : 'text-google-text-primary hover:bg-google-bg'
+                    }`}
+                  >
+                    <span>Manual Approval (1-Click)</span>
+                    {autopilotMode === 'MANUAL_APPROVAL' && <ShieldCheck className="w-4 h-4 text-google-blue" />}
+                  </button>
+
+                  <button
+                    onClick={() => handleModeChange('FULL_AUTOPILOT')}
+                    data-testid="mode-full-autopilot"
+                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium ${
+                      autopilotMode === 'FULL_AUTOPILOT' ? 'bg-google-green-light text-google-green font-semibold' : 'text-google-text-primary hover:bg-google-bg'
+                    }`}
+                  >
+                    <span>100% Full Autopilot</span>
+                    {autopilotMode === 'FULL_AUTOPILOT' && <ShieldCheck className="w-4 h-4 text-google-green" />}
+                  </button>
+
+                  <button
+                    onClick={() => handleModeChange('OFF')}
+                    data-testid="mode-off"
+                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium ${
+                      autopilotMode === 'OFF' ? 'bg-google-red-light text-google-red font-semibold' : 'text-google-text-primary hover:bg-google-bg'
+                    }`}
+                  >
+                    <span>Paused / Off</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleModeChange('MANUAL_APPROVAL')}
-                  data-testid="mode-manual-approval"
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium mt-1 ${
-                    autopilotMode === 'MANUAL_APPROVAL' ? 'bg-google-blue-light text-google-blue font-semibold' : 'text-google-text-primary hover:bg-google-bg'
-                  }`}
-                >
-                  <span>Manual Approval (1-Click)</span>
-                  {autopilotMode === 'MANUAL_APPROVAL' && <ShieldCheck className="w-4 h-4 text-google-blue" />}
-                </button>
-
-                <button
-                  onClick={() => handleModeChange('FULL_AUTOPILOT')}
-                  data-testid="mode-full-autopilot"
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium ${
-                    autopilotMode === 'FULL_AUTOPILOT' ? 'bg-google-green-light text-google-green font-semibold' : 'text-google-text-primary hover:bg-google-bg'
-                  }`}
-                >
-                  <span>100% Full Autopilot</span>
-                  {autopilotMode === 'FULL_AUTOPILOT' && <ShieldCheck className="w-4 h-4 text-google-green" />}
-                </button>
-
-                <button
-                  onClick={() => handleModeChange('OFF')}
-                  data-testid="mode-off"
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between font-medium ${
-                    autopilotMode === 'OFF' ? 'bg-google-red-light text-google-red font-semibold' : 'text-google-text-primary hover:bg-google-bg'
-                  }`}
-                >
-                  <span>Paused / Off</span>
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Google User Profile or Login Button */}
           {currentUser ? (
