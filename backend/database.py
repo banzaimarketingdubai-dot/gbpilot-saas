@@ -24,8 +24,16 @@ def get_db():
     if not SessionLocal:
         yield None
         return
-    db = SessionLocal()
+    db = None
     try:
+        db = SessionLocal()
         yield db
+    except Exception as e:
+        print(f"[Database] Connection error: {e}")
+        yield None
     finally:
-        db.close()
+        if db:
+            try:
+                db.close()
+            except Exception:
+                pass

@@ -73,16 +73,21 @@ class ScrapeResponse(BaseModel):
     profile: Optional[Dict[str, Any]] = None
 
 class GeoGridScanRequest(BaseModel):
-    profile_id: str
+    profile_id: Optional[str] = "default"
     keyword: str
     grid_size: int = 3
     distance_meters: float = 500.0
+    business_name: Optional[str] = None
+    address: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
 
 class GeoGridNode(BaseModel):
     pos: int
     rank: int
     lat: float
     lng: float
+    competitor: Optional[str] = None
 
 class GeoGridScanResponse(BaseModel):
     status: str
