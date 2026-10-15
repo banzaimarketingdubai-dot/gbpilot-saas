@@ -18,11 +18,50 @@ import {
   Check,
   X,
   Target,
-  Tag
+  Tag,
+  Map
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
+
+const getProfileCoords = (profile: any): { lat: number; lng: number } => {
+  if (!profile) return { lat: 12.2718, lng: 109.2016 };
+  
+  if (typeof profile.lat === 'number' && typeof profile.lng === 'number') {
+    return { lat: profile.lat, lng: profile.lng };
+  }
+  
+  if (profile.location && typeof profile.location === 'string') {
+    try {
+      const cleaned = profile.location.replace('POINT(', '').replace(')', '').trim();
+      const parts = cleaned.split(/\s+/);
+      if (parts.length >= 2) {
+        const lng = parseFloat(parts[0]);
+        const lat = parseFloat(parts[1]);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng };
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const name = (profile.name || '').toLowerCase();
+  const address = (profile.address || '').toLowerCase();
+  const city = (profile.city || '').toLowerCase();
+
+  if (name.includes('свои') || address.includes('nha trang') || address.includes('hòn chồng') || city.includes('nha trang')) {
+    return { lat: 12.2718, lng: 109.2016 }; // Hon Chong, Nha Trang
+  }
+
+  if (name.includes('dubai') || address.includes('dubai') || city.includes('dubai') || address.includes('uae')) {
+    return { lat: 25.1972, lng: 55.2744 }; // Downtown Dubai
+  }
+
+  return { lat: 12.2718, lng: 109.2016 };
+};
 
 export interface KeywordPill {
   id: string;
@@ -107,10 +146,12 @@ const getDefaultKeywordPills = (profile: any): KeywordPill[] => {
 
 export default function GeoGridPage() {
   const [activeTab, setActiveTab] = useState<'MAPS_GRID' | 'AI_LLM_GEO'>('MAPS_GRID');
-  const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string; city?: string; id?: string} | null>(null);
+  const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string; city?: string; id?: string; lat?: number; lng?: number; location?: string} | null>(null);
   const [selectedKeyword, setSelectedKeyword] = useState('');
   const [gridSize, setGridSize] = useState<'3x3' | '5x5' | '7x7'>('3x3');
   const [selectedNode, setSelectedNode] = useState<{ pos: number; rank: number; competitor: string } | null>(null);
+  const [showMapBackdrop, setShowMapBackdrop] = useState(true);
+  const mapCoords = getProfileCoords(activeProfile);
 
   // Keyword Grounding state
   const [keywordPills, setKeywordPills] = useState<KeywordPill[]>([]);
@@ -654,7 +695,20 @@ export default function GeoGridPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setShowMapBackdrop(!showMapBackdrop)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
+                      showMapBackdrop
+                        ? 'bg-blue-50 text-google-blue border-blue-200 hover:bg-blue-100'
+                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                    }`}
+                    title="Toggle pale Google Maps street backdrop"
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    <span>Map Backdrop: {showMapBackdrop ? 'ON' : 'OFF'}</span>
+                  </button>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-600" /> Top 3 (Dominance Zone)</span>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500" /> Rank 4-8 (Vulnerable Zone)</span>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-rose-500" /> Rank 9+ (Lost Customer Zone)</span>
@@ -662,9 +716,24 @@ export default function GeoGridPage() {
               </div>
 
               {/* Simulated Interactive Map Grid Box */}
-              <div className="w-full min-h-[380px] bg-slate-100 rounded-2xl relative flex items-center justify-center border border-google-border overflow-hidden p-4 sm:p-6">
-                {/* Background Map Graphic Pattern */}
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#1A73E8_1px,transparent_1px)] [background-size:16px_16px]" />
+              <div className="w-full min-h-[400px] sm:min-h-[440px] bg-slate-100 rounded-2xl relative flex items-center justify-center border border-google-border overflow-hidden p-4 sm:p-6 shadow-inner">
+                {showMapBackdrop ? (
+                  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+                    <iframe
+                      title="Google Maps Street Backdrop"
+                      src={`https://www.google.com/maps?q=${mapCoords.lat},${mapCoords.lng}&z=15&output=embed`}
+                      className="w-full h-full border-0 opacity-35 grayscale-[65%] contrast-[110%] scale-110 pointer-events-none"
+                      tabIndex={-1}
+                      loading="lazy"
+                      aria-hidden="true"
+                    />
+                    {/* Subtle translucent overlay to guarantee crisp pin badge contrast */}
+                    <div className="absolute inset-0 bg-white/45 backdrop-blur-[0.5px]" />
+                  </div>
+                ) : (
+                  /* Background Map Graphic Pattern */
+                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#1A73E8_1px,transparent_1px)] [background-size:16px_16px]" />
+                )}
                 
                 {/* Pin Matrix Overlay */}
                 <div className={`grid ${getColClass()} relative z-10 p-2 sm:p-4 max-w-full overflow-x-auto`}>
@@ -732,7 +801,7 @@ export default function GeoGridPage() {
             </div>
 
             {/* Competitor Differentiation Matrix Component */}
-            <CompetitorMatrix competitors={competitors} />
+            <CompetitorMatrix competitors={competitors} targetKeyword={selectedKeyword} />
 
           </div>
         )}
