@@ -31,7 +31,10 @@ import {
   Target,
   Share2,
   Trash2,
-  Camera
+  Camera,
+  Lock,
+  Activity,
+  Shield
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -81,6 +84,7 @@ export default function DashboardCockpitPage() {
   // Collapsible Digital Insurance & Safe Uptime Hub state
   const [isValueCardCollapsed, setIsValueCardCollapsed] = useState(false);
   const [sentinelState, setSentinelState] = useState<'QUIET_GUARD' | 'THREAT_INTERCEPTED'>('QUIET_GUARD');
+  const [isInsuranceModalOpen, setIsInsuranceModalOpen] = useState(false);
 
   // Cockpit Mode: Autonomous vs Manual Approval
   const [copilotMode, setCopilotMode] = useState<'AUTONOMOUS' | 'MANUAL_APPROVAL'>('MANUAL_APPROVAL');
@@ -324,137 +328,6 @@ export default function DashboardCockpitPage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 lg:pb-8 space-y-6">
 
-        {/* ======================================================== */}
-        {/* SECTION A: HEADER & PROFILE BAR                          */}
-        {/* ======================================================== */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          
-          {/* Business Switcher & Identity */}
-          <div className="flex items-center gap-3.5 w-full sm:w-auto">
-            <div className="relative w-12 h-12 rounded-2xl overflow-hidden border border-slate-200/90 shadow-xs shrink-0 bg-slate-100 group">
-              <img
-                src={venuePhotoUrl}
-                alt={activeProfile?.name || 'Venue Photo'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 rounded-full p-0.5 border-2 border-white shadow-xs" title="Google Verified Business">
-                <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
-              </div>
-            </div>
-
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-                className="flex items-center gap-2 text-left group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h1 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-google-blue transition-colors max-w-[200px] sm:max-w-xs truncate">
-                      {activeProfile?.name || 'Connect Business Profile'}
-                    </h1>
-                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-google-blue transition-colors shrink-0" />
-                  </div>
-                  <p className="text-xs text-slate-500 max-w-[240px] sm:max-w-sm truncate flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                    <span>{activeProfile?.address || activeProfile?.city || 'No verified address set'}</span>
-                  </p>
-                </div>
-              </button>
-
-              {/* Location Switcher Dropdown */}
-              {isLocationDropdownOpen && (
-                <div className="absolute left-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 p-2 shadow-xl z-50 text-xs">
-                  <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
-                    <span>Your Businesses ({availableProfiles.length})</span>
-                    <span className="text-emerald-600 font-semibold">Active Locations</span>
-                  </div>
-
-                  <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
-                    {availableProfiles.map((p, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSwitchProfile(p)}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
-                          activeProfile?.name === p.name ? 'bg-blue-50 text-google-blue font-bold' : 'hover:bg-slate-50 text-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 truncate pr-2">
-                          <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
-                            <img
-                              src={p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO}
-                              alt={p.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="truncate">
-                            <div className="font-semibold truncate">{p.name}</div>
-                            <div className="text-[10px] text-slate-400 truncate">{p.address || p.city}</div>
-                          </div>
-                        </div>
-                        {activeProfile?.name === p.name && (
-                          <Check className="w-4 h-4 text-google-blue shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  <Link
-                    href="/onboarding"
-                    className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 text-google-blue hover:bg-blue-50 font-bold border-t border-slate-100 transition-colors"
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>+ Connect New Location</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Header Status Bar: Guard Status Pill + Mode Toggle */}
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            
-            {/* Live Status Pill: 🟢 AI Shield Active & Guarding */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
-              </span>
-              <span>AI Shield Active &amp; Guarding</span>
-            </div>
-
-            {/* Mode Toggle: Autonomous vs Manual Approval */}
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => handleToggleMode('AUTONOMOUS')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  copilotMode === 'AUTONOMOUS'
-                    ? 'bg-white text-slate-900 shadow-xs font-bold'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-                title="AI executes verified growth actions automatically"
-              >
-                ⚡ Autonomous
-              </button>
-              <button
-                type="button"
-                onClick={() => handleToggleMode('MANUAL_APPROVAL')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  copilotMode === 'MANUAL_APPROVAL'
-                    ? 'bg-white text-google-blue shadow-xs font-bold'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-                title="Review each action in 1-click before publishing"
-              >
-                ✍️ Manual Approval
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-
         {/* If no profile is connected, show Graceful Onboarding Hero Card */}
         {(!activeProfile || !activeProfile.name || activeProfile.name === 'No Business Connected') ? (
           <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-700/60 relative overflow-hidden">
@@ -498,268 +371,298 @@ export default function DashboardCockpitPage() {
         ) : (
           <>
             {/* ======================================================== */}
-            {/* SECTION B: DIGITAL INSURANCE & SAFE UPTIME HUB (COLLAPSIBLE) */}
+            {/* BLOCK 1: DIGITAL TWIN OF THE VENUE (GOOGLE MAPS LIVE)   */}
             {/* ======================================================== */}
-            {isValueCardCollapsed ? (
-              /* Collapsed Mini Pill Bar with Ambient Venue Photo Slice */
-              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-800 text-white transition-all group">
-                {/* Ambient Background photo slice */}
-                <div className="absolute inset-0 pointer-events-none z-0">
-                  <img
-                    src={venuePhotoUrl}
-                    alt=""
-                    className="w-full h-full object-cover opacity-20 filter brightness-50"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#070D18] via-[#0A1120]/95 to-[#0F172A]/90" />
-                </div>
-
-                <div className="relative z-10 p-3 sm:px-5 sm:py-2.5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 overflow-hidden text-xs sm:text-sm">
-                    <div className="relative w-8 h-8 rounded-xl overflow-hidden border border-white/20 shrink-0 shadow-xs">
-                      <img src={venuePhotoUrl} alt={activeProfile.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-300 font-medium">
-                      <span className="font-bold text-white flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        100% Safe Uptime
-                      </span>
-                      <span className="text-slate-600 hidden sm:inline">•</span>
-                      <span className="text-slate-300">
-                        <strong className="text-emerald-400 font-bold">{protectedStats.safeUptimeDays} Days</strong> Continuous Guard
-                      </span>
-                      <span className="text-slate-600 hidden md:inline">•</span>
-                      <span className="text-slate-400 hidden md:inline">
-                        Risk Coverage: <strong className="text-slate-200 font-semibold">{protectedStats.dailyRiskCost}/day</strong>
-                      </span>
-                      <span className="text-slate-600 hidden lg:inline">•</span>
-                      <span className="text-slate-400 hidden lg:inline">
-                        Routine Saved: <strong className="text-purple-300 font-semibold">{protectedStats.hoursSaved} hrs</strong>
-                      </span>
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                
+                {/* Left Column: Real Knowledge Panel Card */}
+                <div className="flex items-start sm:items-center gap-4 sm:gap-5 w-full lg:w-auto">
+                  {/* Avatar / Cover Photo with Google Verified Badge */}
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-xs shrink-0 bg-slate-100 group">
+                    <img
+                      src={venuePhotoUrl}
+                      alt={activeProfile?.name || 'Venue Photo'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div 
+                      className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 border-2 border-white shadow-xs flex items-center justify-center" 
+                      title="Google Verified Business Profile"
+                    >
+                      <Check className="w-3 h-3 text-white stroke-[3]" />
                     </div>
                   </div>
 
-                  <button
-                    onClick={handleToggleValueCardCollapse}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer backdrop-blur-xs"
-                    title="Expand Digital Insurance & Uptime Hub"
-                  >
-                    <span>Expand Details</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Expanded Full Authority Card with Cinematic Venue Photo Background */
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 text-white group">
-                {/* Background Venue Cover Photo with Cinematic Dark Blur Gradients */}
-                <div className="absolute inset-0 pointer-events-none z-0">
-                  <img
-                    src={venuePhotoUrl}
-                    alt={activeProfile?.name || 'Venue Background'}
-                    className="w-full h-full object-cover object-center transform scale-105 group-hover:scale-100 transition-transform duration-700 opacity-25 filter brightness-75 contrast-125 saturate-125"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#070D18]/95 via-[#0A1120]/90 to-[#0F172A]/85 backdrop-blur-[1px]" />
-                  <div className="absolute inset-0 bg-radial-at-t from-transparent via-[#070D18]/50 to-[#070D18]" />
-                </div>
-
-                <div className="relative z-10 p-6 sm:p-7 space-y-6">
-                  {/* Header row with badges, venue asset badge, mode simulator toggle, and Collapse button */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
-                    <div className="space-y-1.5 max-w-xl">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                          Digital Insurance &amp; Safe Uptime Standard
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-400 bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-700">
-                          Cloudflare Grade for GBP
-                        </span>
-                        <span className="text-[11px] font-semibold text-blue-300 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-1">
-                          <Camera className="w-3 h-3 text-blue-400" />
-                          <span>Venue Photo Synced</span>
-                        </span>
-                      </div>
-                      <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                        <span>Autonomous Profile Uptime &amp; Risk Valuation</span>
-                      </h2>
-                      <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                        Continuous risk mitigation and verified profile integrity for <strong>{activeProfile.name}</strong>. Zero tampering, hours locked, and routine tasks automated.
-                      </p>
-                    </div>
-
-                    {/* Right Controls: Venue Asset Pill + Scenario Switcher + Collapse */}
-                    <div className="flex items-center gap-3 self-start md:self-center shrink-0 flex-wrap sm:flex-nowrap">
-                      {/* Venue Photo Badge */}
-                      <div className="hidden xl:flex items-center gap-2.5 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xs">
-                        <img 
-                          src={venuePhotoUrl} 
-                          alt={activeProfile.name} 
-                          className="w-8 h-8 rounded-lg object-cover border border-slate-600" 
-                        />
-                        <div className="text-left text-xs">
-                          <div className="font-bold text-white truncate max-w-[120px]">{activeProfile.name}</div>
-                          <div className="text-[10px] text-emerald-400 font-medium">Primary Asset</div>
-                        </div>
-                      </div>
-
-                      {/* Simulation Toggle */}
-                      <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold backdrop-blur-xs">
-                        <button
-                          onClick={() => setSentinelState('QUIET_GUARD')}
-                          className={`px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                            sentinelState === 'QUIET_GUARD'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold'
-                              : 'text-slate-400 hover:text-slate-200'
-                          }`}
-                          title="Simulate normal operation where profile integrity is 100% stable without alerts"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          <span>Quiet Guard</span>
-                        </button>
-                        <button
-                          onClick={() => setSentinelState('THREAT_INTERCEPTED')}
-                          className={`px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                            sentinelState === 'THREAT_INTERCEPTED'
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold'
-                              : 'text-slate-400 hover:text-slate-200'
-                          }`}
-                          title="Simulate when an unauthorized competitor edit is intercepted and averted"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-                          <span>Threat Blocked</span>
-                        </button>
-                      </div>
-
-                      {/* Collapse button */}
+                  {/* Identity & Knowledge Panel Details */}
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    {/* Business Name with Location Switcher Dropdown */}
+                    <div className="relative">
                       <button
-                        onClick={handleToggleValueCardCollapse}
-                        className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer backdrop-blur-xs"
-                        title="Collapse Digital Insurance & Uptime Hub"
+                        type="button"
+                        onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+                        className="flex items-center gap-2 text-left group cursor-pointer max-w-full"
                       >
-                        <span className="hidden sm:inline">Collapse</span>
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
+                        <h1 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-google-blue transition-colors truncate max-w-[260px] sm:max-w-md">
+                          {activeProfile?.name || 'Connect Business Profile'}
+                        </h1>
+                        <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-google-blue transition-colors shrink-0" />
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-google-blue border border-blue-200">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          Verified GBP
+                        </span>
                       </button>
+
+                      {/* Location Switcher Dropdown */}
+                      {isLocationDropdownOpen && (
+                        <div className="absolute left-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 p-2 shadow-xl z-50 text-xs">
+                          <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
+                            <span>Your Businesses ({availableProfiles.length})</span>
+                            <span className="text-emerald-600 font-semibold">Active Locations</span>
+                          </div>
+
+                          <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
+                            {availableProfiles.map((p, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => handleSwitchProfile(p)}
+                                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                                  activeProfile?.name === p.name ? 'bg-blue-50 text-google-blue font-bold' : 'hover:bg-slate-50 text-slate-700'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 truncate pr-2">
+                                  <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                                    <img
+                                      src={p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO}
+                                      alt={p.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="truncate">
+                                    <div className="font-semibold truncate">{p.name}</div>
+                                    <div className="text-[10px] text-slate-400 truncate">{p.address || p.city}</div>
+                                  </div>
+                                </div>
+                                {activeProfile?.name === p.name && (
+                                  <Check className="w-4 h-4 text-google-blue shrink-0" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+
+                          <Link
+                            href="/onboarding"
+                            className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 text-google-blue hover:bg-blue-50 font-bold border-t border-slate-100 transition-colors"
+                          >
+                            <Building2 className="w-3.5 h-3.5" />
+                            <span>+ Connect New Location</span>
+                          </Link>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Category, Stars & Live Open Status */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200/60">
+                        {activeProfile?.category || 'Specialty Coffee Shop & Roastery'}
+                      </span>
+                      
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <div className="flex items-center text-amber-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                        <span className="text-slate-900 font-extrabold">
+                          {activeProfile?.rating ? activeProfile.rating.toFixed(1) : '4.9'} ★
+                        </span>
+                        <span className="text-slate-500 font-normal">
+                          ({activeProfile?.reviews_count || 184} reviews)
+                        </span>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        Open Now • Closes at 22:00
+                      </span>
+                    </div>
+
+                    {/* Address, Phone & Direct Google Maps Live Link */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-0.5">
+                      <span className="flex items-center gap-1 truncate max-w-xs">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{activeProfile?.address || '102 Marina Promenade, Sector B, Downtown'}</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>+971 4 399 1234</span>
+                      </span>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          (activeProfile?.name || '') + ' ' + (activeProfile?.address || '')
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-google-blue hover:text-blue-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>View Live on Google Maps</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Right Column: 24/7 Guard Status Pill + Autopilot Mode Toggle */}
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                  
+                  {/* 24/7 Profile Guard Button (Triggers Digital Insurance & Security Drawer) */}
+                  <button
+                    type="button"
+                    onClick={() => setIsInsuranceModalOpen(true)}
+                    className="group px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 border border-emerald-300 text-emerald-900 text-xs font-bold shadow-2xs flex items-center gap-2.5 transition-all cursor-pointer"
+                    title="Click to view 24/7 Sentinel Protection, Golden Snapshot & Loss Prevention Valuation"
+                  >
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+                    </span>
+                    <div className="text-left">
+                      <div className="flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>24/7 Profile Guard: 100% Locked</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-semibold group-hover:underline">
+                        View Insurance &amp; Risk Valuation →
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Mode Toggle: Autonomous vs Manual Approval */}
+                  <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMode('AUTONOMOUS')}
+                      className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                        copilotMode === 'AUTONOMOUS'
+                          ? 'bg-white text-slate-900 shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                      title="AI executes verified growth actions automatically"
+                    >
+                      ⚡ Autonomous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMode('MANUAL_APPROVAL')}
+                      className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                        copilotMode === 'MANUAL_APPROVAL'
+                          ? 'bg-white text-google-blue shadow-xs font-bold'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                      title="Review each action in 1-click before publishing"
+                    >
+                      ✍️ Manual Approval
+                    </button>
                   </div>
 
-                  {/* 3 Core Value Pillars with Glassmorphism */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                    {/* Pillar 1: Safe Profile Uptime */}
-                    <div className="bg-slate-900/85 backdrop-blur-md border border-slate-800/90 p-4 rounded-2xl space-y-1.5 relative group/card hover:border-emerald-500/40 transition-colors shadow-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                          <span>Safe Profile Uptime</span>
-                        </div>
-                        <span className="text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                          100% Stability
-                        </span>
-                      </div>
-                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                        {protectedStats.safeUptimeDays} Days
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-snug">
-                        Zero unauthorized data breaches or profile hijacks. Operating hours, phone &amp; primary categories verified 24/7.
-                      </p>
-                    </div>
+                </div>
 
-                    {/* Pillar 2: Daily Risk Insurance */}
-                    <div className="bg-slate-900/85 backdrop-blur-md border border-slate-800/90 p-4 rounded-2xl space-y-1.5 relative group/card hover:border-blue-500/40 transition-colors shadow-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-blue-400">
-                          <DollarSign className="w-4 h-4 text-blue-400" />
-                          <span>Daily Protection Cost</span>
-                        </div>
-                        <span className="text-[10px] font-extrabold uppercase bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20">
-                          Micro-Insurance
-                        </span>
-                      </div>
-                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                        ~{protectedStats.dailyRiskCost} <span className="text-sm font-semibold text-slate-400">/ day</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-snug">
-                        Cost equivalent of $9.99/mo subscription. Cheaper than a cup of coffee for comprehensive catastrophic risk defense.
-                      </p>
-                    </div>
+              </div>
+            </div>
 
-                    {/* Pillar 3: Routine Hours Saved */}
-                    <div className="bg-slate-900/85 backdrop-blur-md border border-slate-800/90 p-4 rounded-2xl space-y-1.5 relative group/card hover:border-purple-500/40 transition-colors shadow-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-purple-400">
-                          <Clock className="w-4 h-4 text-purple-400" />
-                          <span>Routine Time Saved</span>
-                        </div>
-                        <span className="text-[10px] font-extrabold uppercase bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/20">
-                          Labor ROI
-                        </span>
-                      </div>
-                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                        {protectedStats.hoursSaved} Hours
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-snug">
-                        Automated {protectedStats.reviewsReplied} SEO review replies, {protectedStats.photosPublished} geotagged posts &amp; keyword pacing without manual owner labor.
-                      </p>
+            {/* ======================================================== */}
+            {/* BLOCK 2: OPERATIONAL MONITOR & ACTION HUB               */}
+            {/* ======================================================== */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-5">
+              
+              {/* Traffic Light Status Bar (Светофор статусов) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* 🟢 Protection Active */}
+                <button
+                  type="button"
+                  onClick={() => setIsInsuranceModalOpen(true)}
+                  className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 text-left hover:bg-emerald-100/60 transition-colors group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-black text-emerald-900 uppercase tracking-wide">
+                        Protection Active
+                      </span>
                     </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+                      100% Stability
+                    </span>
                   </div>
+                  <p className="text-xs text-emerald-800 font-semibold mt-1">
+                    0 breaches in {protectedStats.safeUptimeDays} days
+                  </p>
+                  <p className="text-[11px] text-emerald-700/80 mt-0.5 leading-snug">
+                    Golden Snapshot locked 24/7. Zero unauthorized tampering.
+                  </p>
+                </button>
 
-                  {/* Dynamic Scenario Callout: Quiet Guard vs Threat Intercepted */}
-                  {sentinelState === 'QUIET_GUARD' ? (
-                    <div className="bg-emerald-950/40 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <div className="space-y-0.5">
-                          <div className="text-xs font-bold text-emerald-300 flex items-center gap-2">
-                            <span>Quiet Guard Mode Active: Uninterrupted Profile Integrity</span>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">
-                            All Google Business attributes are in continuous compliance. No competitor changes detected over the past 45 days. Your risk protection functions identically to Cloudflare: zero disruptions while you run your daily business.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-left sm:text-right">
-                        <span className="text-[11px] font-semibold text-slate-400 block">Risk Evaluation</span>
-                        <span className="text-xs font-bold text-emerald-400">0 Breaches • 100% Stable</span>
-                      </div>
+                {/* 🟡 Requires Attention */}
+                <div className={`p-3.5 rounded-2xl border text-left transition-colors ${
+                  pendingActions.filter(a => a.type === 'REVIEW').length > 0 
+                    ? 'bg-amber-50/80 border-amber-200/90 text-amber-900' 
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${
+                        pendingActions.filter(a => a.type === 'REVIEW').length > 0 ? 'bg-amber-500 animate-ping' : 'bg-slate-400'
+                      }`} />
+                      <span className="text-xs font-black uppercase tracking-wide">
+                        Requires Attention
+                      </span>
                     </div>
-                  ) : (
-                    <div className="bg-amber-950/50 backdrop-blur-md border border-amber-500/40 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                          <ShieldAlert className="w-4 h-4 text-amber-400" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
-                            <span>Tampering Incident Intercepted &amp; Reverted via Google API</span>
-                            <span className="px-1.5 py-0.5 text-[10px] font-black uppercase rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                              High Severity Prevented
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed">
-                            A competitor suggested an unauthorized edit altering your Friday operating hours to <span className="text-rose-400 font-bold">&quot;Closed&quot;</span>. GB Pilot detected and blocked the change within 3 minutes before Google published it.
-                          </p>
-                          <div className="text-[11px] text-amber-200/90 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 inline-block font-mono">
-                            <strong>Loss Prevention Formula:</strong> (Avg Ticket $32 × 15 Peak Foot-Traffic Diners) = <strong>~${protectedStats.avertedDamage} Direct Revenue Saved</strong>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-left sm:text-right bg-slate-900/90 p-3 rounded-xl border border-slate-700/80 backdrop-blur-xs">
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase">Prevented Incident Damage</span>
-                        <span className="text-xl font-black text-amber-400">~${protectedStats.avertedDamage}</span>
-                        <span className="text-[10px] text-emerald-400 block font-medium">Reverted in 3m 12s</span>
-                      </div>
+                    <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-amber-200 text-amber-800">
+                      {pendingActions.filter(a => a.type === 'REVIEW').length} Pending
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold mt-1">
+                    {pendingActions.filter(a => a.type === 'REVIEW').length > 0 
+                      ? '1 review reply from Omar awaiting approval'
+                      : 'All reviews responded with local keywords'}
+                  </p>
+                  <p className="text-[11px] opacity-80 mt-0.5 leading-snug">
+                    {copilotMode === 'AUTONOMOUS' ? 'Auto-publishing enabled in 3 hrs' : 'Requires 1-click confirmation'}
+                  </p>
+                </div>
+
+                {/* 🔴 Competitor Alert */}
+                <div className={`p-3.5 rounded-2xl border text-left transition-colors ${
+                  pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 
+                    ? 'bg-rose-50/80 border-rose-200/90 text-rose-900' 
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${
+                        pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 ? 'bg-rose-500 animate-pulse' : 'bg-slate-400'
+                      }`} />
+                      <span className="text-xs font-black uppercase tracking-wide">
+                        Competitor Alert
+                      </span>
                     </div>
-                  )}
+                    <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200 text-rose-800">
+                      {pendingActions.filter(a => a.type === 'COMPETITOR').length} Shift
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold mt-1">
+                    {pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 
+                      ? 'Competitor shift detected in Sector B'
+                      : 'No competitor rank shifts in 1.5 km'}
+                  </p>
+                  <p className="text-[11px] opacity-80 mt-0.5 leading-snug">
+                    Catchment area: 1.2 km radius around venue
+                  </p>
                 </div>
               </div>
-            )}
 
-            {/* ======================================================== */}
-            {/* SECTION C: URGENT ACTION HUB (ACTION-ORIENTED FEED)      */}
-            {/* ======================================================== */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              {/* 1-Click Action Feed Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 pt-1">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -783,7 +686,7 @@ export default function DashboardCockpitPage() {
               {/* Action Stack */}
               {!isAllClear ? (
                 <div className="space-y-3">
-                  {actionItems.filter(a => a.status === 'PENDING').map((item) => (
+                  {pendingActions.map((item) => (
                     <div
                       key={item.id}
                       className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
@@ -855,7 +758,7 @@ export default function DashboardCockpitPage() {
                 /* Clean Green State */
                 <div className="p-6 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs animate-in fade-in">
                   <div className="flex items-center gap-3.5 text-center sm:text-left">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
@@ -880,7 +783,7 @@ export default function DashboardCockpitPage() {
             </div>
 
             {/* ======================================================== */}
-            {/* SECTION D: ESSENTIAL HEALTH METRICS (TOP 3 CLEAN CARDS)  */}
+            {/* BLOCK 3: PULSE OF GROWTH & LOCAL RANKS (3 VITAL METRICS) */}
             {/* ======================================================== */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
@@ -961,73 +864,46 @@ export default function DashboardCockpitPage() {
                 </div>
               </div>
 
-              {/* Metric 3: Reputation Score */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Reputation Score
-                  </span>
-                  <div className="p-2 rounded-xl bg-amber-50 text-amber-500">
-                    <Star className="w-4 h-4 fill-amber-400" />
-                  </div>
-                </div>
-
+              {/* Metric 3: Profile Health Score */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-slate-900">
-                      {activeProfile.rating ? activeProfile.rating.toFixed(1) : '4.9'} ★
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Profile Health Score
                     </span>
-                    <span className="text-xs font-bold text-emerald-600">
-                      0 Toxic Reviews
-                    </span>
+                    <div className="p-2 rounded-xl bg-amber-50 text-amber-500">
+                      <Star className="w-4 h-4 fill-amber-400" />
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Clean profile health score. 100% of reviews addressed with Google Maps keyword indexing.
-                  </p>
+
+                  <div className="mt-2">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-slate-900">
+                        88 / 100
+                      </span>
+                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        {activeProfile.rating ? activeProfile.rating.toFixed(1) : '4.9'} ★ ({activeProfile.reviews_count || 184})
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      0 toxic reviews, 100% keyword response coverage. 2 minor gap opportunities detected.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Shield Defense:</span>
-                  <Link href="/reviews-posts" className="font-bold text-google-blue hover:underline flex items-center gap-1">
-                    <span>Manage Reviews</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <span className="text-slate-500 font-medium">Audit Status:</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsInspectionModalOpen(true)}
+                    className="font-bold text-google-blue hover:text-blue-700 flex items-center gap-1.5 cursor-pointer bg-blue-50/80 hover:bg-blue-100/80 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-google-blue" />
+                    <span>⚡ Re-run Inspection / View Gaps</span>
+                  </button>
                 </div>
               </div>
 
-            </div>
-
-            {/* ======================================================== */}
-            {/* ONBOARDING INSPECTION & AUDIT BANNER (PLG PERSISTENCE)   */}
-            {/* ======================================================== */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-google-blue/20 text-blue-400 border border-blue-400/30 flex items-center justify-center font-black shrink-0">
-                  <Zap className="w-6 h-6 fill-blue-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-extrabold text-sm sm:text-base text-white tracking-tight">
-                      AI Profile Inspection &amp; Onboarding Audit
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      PLG Engine
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                    Continuous 5-gap inspection: SEO description, holiday schedules, customer attributes, menu catalog, and EXIF coordinates.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsInspectionModalOpen(true)}
-                className="px-4 py-2.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer shrink-0"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>⚡ Re-run Full Profile Inspection</span>
-              </button>
             </div>
 
             {/* Quick Hub Navigation Cards */}
@@ -1145,6 +1021,216 @@ export default function DashboardCockpitPage() {
       )}
 
       {/* Onboarding Inspection Flow Modal (PLG Framework) */}
+      
+      {/* Digital Insurance & Security Drawer / Modal */}
+      {isInsuranceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full text-white shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-800 flex items-start justify-between gap-4 bg-slate-950/50">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-base sm:text-lg text-white">
+                      Autonomous Profile Uptime &amp; Digital Insurance
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      Cloudflare Grade
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Continuous 24/7 profile integrity and loss mitigation for <strong>{activeProfile?.name}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsInsuranceModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs">
+              
+              {/* Simulator Switcher */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                <div>
+                  <span className="font-bold text-slate-200 block">Scenario Simulator</span>
+                  <span className="text-[11px] text-slate-400">Toggle to view normal vs intercepted threat modes</span>
+                </div>
+                <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-700 text-xs font-semibold">
+                  <button
+                    onClick={() => setSentinelState('QUIET_GUARD')}
+                    className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
+                      sentinelState === 'QUIET_GUARD'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>Quiet Guard</span>
+                  </button>
+                  <button
+                    onClick={() => setSentinelState('THREAT_INTERCEPTED')}
+                    className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
+                      sentinelState === 'THREAT_INTERCEPTED'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                    <span>Threat Blocked</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3 Core Value Pillars */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Pillar 1: Safe Profile Uptime */}
+                <div className="bg-slate-800/60 border border-slate-700/80 p-3.5 rounded-2xl space-y-1">
+                  <div className="flex items-center justify-between text-emerald-400 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Safe Uptime
+                    </span>
+                    <span className="text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                      100% Locked
+                    </span>
+                  </div>
+                  <div className="text-xl font-black text-white">
+                    {protectedStats.safeUptimeDays} Days
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Golden Snapshot verified. Zero unauthorized edits.
+                  </p>
+                </div>
+
+                {/* Pillar 2: Daily Risk Insurance */}
+                <div className="bg-slate-800/60 border border-slate-700/80 p-3.5 rounded-2xl space-y-1">
+                  <div className="flex items-center justify-between text-blue-400 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      Daily Protection
+                    </span>
+                    <span className="text-[10px] bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">
+                      Micro-Cost
+                    </span>
+                  </div>
+                  <div className="text-xl font-black text-white">
+                    ~{protectedStats.dailyRiskCost} <span className="text-xs font-normal text-slate-400">/ day</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Equivalent of $9.99/mo plan. Cheaper than 1 coffee cup.
+                  </p>
+                </div>
+
+                {/* Pillar 3: Routine Hours Saved */}
+                <div className="bg-slate-800/60 border border-slate-700/80 p-3.5 rounded-2xl space-y-1">
+                  <div className="flex items-center justify-between text-purple-400 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      Labor Saved
+                    </span>
+                    <span className="text-[10px] bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+                      Labor ROI
+                    </span>
+                  </div>
+                  <div className="text-xl font-black text-white">
+                    {protectedStats.hoursSaved} Hours
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Automated {protectedStats.reviewsReplied} review replies &amp; {protectedStats.photosPublished} photo posts.
+                  </p>
+                </div>
+              </div>
+
+              {/* Dynamic Scenario Callout */}
+              {sentinelState === 'QUIET_GUARD' ? (
+                <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Quiet Guard Mode Active: Baseline Golden Snapshot Locked</span>
+                  </div>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    Operating hours, phone numbers, and primary categories are locked against competitor crowd-sourced suggestions. Risk mitigation works in the background like Cloudflare DNS: 100% quiet protection without spamming false alarms.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-amber-950/50 border border-amber-500/40 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                      <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Competitor Edit Intercepted &amp; Reverted via Google API</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      Reverted in 3m 12s
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    A competitor attempted to alter your Friday operating hours to <strong className="text-rose-400">"Closed"</strong>. GB Pilot detected and blocked the change before Google published it.
+                  </p>
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs font-mono">
+                    <strong>Loss Prevention Formula:</strong> (Avg Ticket $32 × 15 Peak Foot-Traffic Diners) = <strong>~$${protectedStats.avertedDamage} Direct Revenue Saved</strong>
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Audit & Defense Log Feed */}
+              <div className="space-y-2 pt-1">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Live Sentinel Integrity Verifications:
+                </span>
+                <div className="space-y-1.5">
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span className="text-slate-300 font-medium">Hourly Baseline Snapshot verified via Google API</span>
+                    </div>
+                    <span className="text-slate-500 text-[10px]">12 mins ago</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <span className="text-slate-300 font-medium">EXIF Geotags &amp; Category integrity checksum verified</span>
+                    </div>
+                    <span className="text-slate-500 text-[10px]">2 hours ago</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between gap-3">
+              <Link
+                href="/reviews-posts"
+                onClick={() => setIsInsuranceModalOpen(false)}
+                className="text-xs font-bold text-google-blue hover:underline flex items-center gap-1.5"
+              >
+                <span>View Full Tamper Defense Logs in Shield</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsInsuranceModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       <OnboardingInspectionModal
         isOpen={isInspectionModalOpen}
         onClose={() => setIsInspectionModalOpen(false)}
