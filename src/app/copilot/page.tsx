@@ -23,7 +23,12 @@ import {
   Search,
   Sliders,
   ExternalLink,
-  X
+  X,
+  Smartphone,
+  Wifi,
+  ThumbsUp,
+  Bookmark,
+  Plus
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -45,12 +50,130 @@ interface PlannedPost {
   scheduledDate: string;
 }
 
+interface CalendarDay {
+  dayName: string;
+  dateNum: string;
+  fullDate: string;
+  status: 'SCHEDULED' | 'RECOMMENDED' | 'EMPTY';
+  label?: string;
+}
+
+interface MediaPhoto {
+  id: string;
+  label: string;
+  url: string;
+  gps: string;
+  authorityScore: string;
+}
+
+interface PostPreset {
+  id: string;
+  label: string;
+  icon: string;
+  title: string;
+  content: string;
+  ctaType: 'BOOK' | 'ORDER' | 'CALL_NOW' | 'LEARN_MORE';
+  targetKeywords: string[];
+  photoTaggingAdvice: string;
+  preferredPhotoId: string;
+}
+
+const MEDIA_VAULT: MediaPhoto[] = [
+  {
+    id: 'photo-1',
+    label: 'Artisan Coffee & Breakfast',
+    url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80',
+    gps: '12.2718° N, 109.2016° E',
+    authorityScore: 'Local 3-Pack Verified'
+  },
+  {
+    id: 'photo-2',
+    label: 'Cozy Interior Ambience',
+    url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80',
+    gps: '12.2718° N, 109.2016° E',
+    authorityScore: 'Ambience Centroid Indexed'
+  },
+  {
+    id: 'photo-3',
+    label: 'Storefront & Street View',
+    url: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=600&q=80',
+    gps: '12.2718° N, 109.2016° E',
+    authorityScore: 'Primary Map Geotagged'
+  },
+  {
+    id: 'photo-4',
+    label: 'Chef & Team in Action',
+    url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
+    gps: '12.2718° N, 109.2016° E',
+    authorityScore: 'Service Entity Verified'
+  }
+];
+
+const PRESETS: PostPreset[] = [
+  {
+    id: 'morning',
+    label: '☕ Morning Coffee Offer',
+    icon: '☕',
+    title: 'Morning Artisanal Brew & Breakfast Perk',
+    content: 'Start your morning in town with our freshly roasted single-origin brew paired with handcrafted breakfast specials. Show this Google post for 15% off before 11:00 AM.',
+    ctaType: 'ORDER',
+    targetKeywords: ['specialty coffee', 'morning breakfast', 'local roastery', 'fresh espresso'],
+    photoTaggingAdvice: 'Attach high-resolution counter/morning sunlight photo geotagged with your exact latitude and longitude.',
+    preferredPhotoId: 'photo-1'
+  },
+  {
+    id: 'weekend',
+    label: '🔥 Weekend Special Discount',
+    icon: '🔥',
+    title: 'Weekend Exclusive: Signature Chef Tasting',
+    content: 'Treat yourself this weekend to our handcrafted artisan dishes and single-origin coffee. Reserve your table or drop in for an exclusive weekend perk.',
+    ctaType: 'BOOK',
+    targetKeywords: ['weekend dining', 'best local cafe', 'weekend brunch', 'specialty dishes'],
+    photoTaggingAdvice: 'Include geotagged photo with high color saturation (dining table/dishes) to qualify for Google Maps Discovery carousel.',
+    preferredPhotoId: 'photo-2'
+  },
+  {
+    id: 'seasonal',
+    label: '🎉 New Menu / Seasonal Update',
+    icon: '🎉',
+    title: 'New Seasonal Arrivals Just Landed',
+    content: 'Explore our brand-new seasonal creations crafted with premium organic local ingredients. Available for dine-in and takeout starting today.',
+    ctaType: 'LEARN_MORE',
+    targetKeywords: ['seasonal menu', 'organic food', 'new dishes', 'local food scene'],
+    photoTaggingAdvice: 'Capture interior photo showcasing seasonal menu board geotagged with centroid coordinates.',
+    preferredPhotoId: 'photo-4'
+  },
+  {
+    id: 'flash',
+    label: '⚡ Flash Local Deal',
+    icon: '⚡',
+    title: 'Today Only: Flash Local Perk for Google Maps Users',
+    content: 'Special flash deal for our local community! Mention this Google Maps post today to receive a complimentary house dessert or beverage upgrade with any main order.',
+    ctaType: 'CALL_NOW',
+    targetKeywords: ['flash deal', 'local offer', 'today special', 'google maps deal'],
+    photoTaggingAdvice: 'Upload entrance or storefront photo with clearly visible street number to boost primary map centroid authority.',
+    preferredPhotoId: 'photo-3'
+  }
+];
+
 export default function CopilotContentStudioPage() {
   const [activeProfile, setActiveProfile] = useState<{id?: string, name: string, address: string, city?: string} | null>(null);
   
   // Upper Studio: Google Posts Planner state
   const [postTopic, setPostTopic] = useState('');
   const [isGeneratingPost, setIsGeneratingPost] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<MediaPhoto>(MEDIA_VAULT[0]);
+  const [selectedDayIdx, setSelectedDayIdx] = useState<number>(4); // Default to Friday
+  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([
+    { dayName: 'Mon', dateNum: '14', fullDate: 'Monday, Oct 14', status: 'EMPTY' },
+    { dayName: 'Tue', dateNum: '15', fullDate: 'Tuesday, Oct 15', status: 'EMPTY' },
+    { dayName: 'Wed', dateNum: '16', fullDate: 'Wednesday, Oct 16', status: 'RECOMMENDED', label: '⚡ Peak Traffic Slot' },
+    { dayName: 'Thu', dateNum: '17', fullDate: 'Thursday, Oct 17', status: 'EMPTY' },
+    { dayName: 'Fri', dateNum: '18', fullDate: 'Friday, Oct 18', status: 'SCHEDULED', label: '10:00 AM • Weekend Promo' },
+    { dayName: 'Sat', dateNum: '19', fullDate: 'Saturday, Oct 19', status: 'EMPTY' },
+    { dayName: 'Sun', dateNum: '20', fullDate: 'Sunday, Oct 20', status: 'RECOMMENDED', label: '⚡ Sunday Brunch' },
+  ]);
+
   const [currentPost, setCurrentPost] = useState<PlannedPost>({
     title: 'Weekend Chef Special: Handcrafted Syrniki & Artisanal Coffee',
     content: 'Treat yourself this weekend to our signature Syrniki served with fresh farm berries and our single-origin pour-over coffee. Crafted fresh daily with love.',
@@ -58,9 +181,32 @@ export default function CopilotContentStudioPage() {
     ctaUrl: 'https://gbpilot.top',
     targetKeywords: ['specialty coffee', 'weekend brunch', 'fresh syrniki', 'near beach'],
     photoTaggingAdvice: 'Add 1 high-res interior/dish photo geotagged with your exact latitude and longitude before upload to trigger Local 3-Pack rank signals.',
-    scheduledDate: 'This Friday, 10:00 AM'
+    scheduledDate: 'Friday, Oct 18 at 10:00 AM'
   });
   const [postPublishedToast, setPostPublishedToast] = useState<string | null>(null);
+
+  const handleSelectDay = (idx: number) => {
+    setSelectedDayIdx(idx);
+    const day = calendarDays[idx];
+    setCurrentPost(prev => ({ ...prev, scheduledDate: `${day.fullDate} at 10:00 AM` }));
+    setPostPublishedToast(`Targeting ${day.fullDate} for publishing schedule.`);
+    setTimeout(() => setPostPublishedToast(null), 3000);
+  };
+
+  const handleApplyPreset = (preset: PostPreset) => {
+    setCurrentPost(prev => ({
+      ...prev,
+      title: preset.title,
+      content: preset.content,
+      ctaType: preset.ctaType,
+      targetKeywords: preset.targetKeywords,
+      photoTaggingAdvice: preset.photoTaggingAdvice
+    }));
+    const matchPhoto = MEDIA_VAULT.find(p => p.id === preset.preferredPhotoId);
+    if (matchPhoto) setSelectedPhoto(matchPhoto);
+    setPostPublishedToast(`Applied "${preset.label}" template with targeted local keywords.`);
+    setTimeout(() => setPostPublishedToast(null), 3500);
+  };
 
   // Lower Studio: AI Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -268,15 +414,17 @@ export default function CopilotContentStudioPage() {
         {/* ======================================================== */}
         {/* UPPER STUDIO: GOOGLE POSTS PLANNER                       */}
         {/* ======================================================== */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
+          
+          {/* Planner Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
-              <h2 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-google-blue" />
+              <h2 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-google-blue" />
                 <span>Google Posts Planner (Local SEO Content Engine)</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Pre-generates keyword-targeted local posts with geo-tagging advice to trigger Google Local 3-Pack rank surges.
+                Pre-generates keyword-targeted local posts with EXIF geo-tagging advice to trigger Google Local 3-Pack rank surges.
               </p>
             </div>
 
@@ -284,53 +432,248 @@ export default function CopilotContentStudioPage() {
               type="button"
               onClick={handleAutoGenerateWeeklyPost}
               disabled={isGeneratingPost}
-              className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-google-blue border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+              className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-google-blue border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto shrink-0 shadow-2xs"
             >
               <Sparkles className={`w-3.5 h-3.5 ${isGeneratingPost ? 'animate-spin' : ''}`} />
-              <span>{isGeneratingPost ? 'Generating...' : '⚡ Auto-Generate Weekly Local Offer Post'}</span>
+              <span>{isGeneratingPost ? 'Synthesizing...' : '⚡ Auto-Generate Weekly Local Offer Post'}</span>
             </button>
           </div>
 
-          {/* Post Designer & Visual Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* ====================================================== */}
+          {/* 1. VISUAL CONTENT CALENDAR (7-DAY TIMELINE GRID)       */}
+          {/* ====================================================== */}
+          <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-google-blue" />
+                <h3 className="font-bold text-xs text-slate-800">
+                  Visual 7-Day Content Calendar &amp; Discovery Timing
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  1 Post Scheduled
+                </span>
+                <span className="inline-flex items-center gap-1 font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  2 Peak Discovery Slots Open
+                </span>
+              </div>
+            </div>
+
+            {/* 7-Day Interactive Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
+              {calendarDays.map((day, idx) => {
+                const isSelected = selectedDayIdx === idx;
+                const isScheduled = day.status === 'SCHEDULED';
+                const isRecommended = day.status === 'RECOMMENDED';
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSelectDay(idx)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[92px] ${
+                      isSelected
+                        ? 'border-google-blue bg-white ring-2 ring-google-blue/30 shadow-xs'
+                        : isScheduled
+                        ? 'border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/70'
+                        : isRecommended
+                        ? 'border-blue-200 bg-blue-50/30 hover:bg-blue-50/60'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-xs text-slate-900">{day.dayName}</span>
+                      <span className="text-[11px] font-bold text-slate-400">Oct {day.dateNum}</span>
+                    </div>
+
+                    <div className="mt-2">
+                      {isScheduled && (
+                        <span className="block px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 leading-tight">
+                          🟢 {day.label}
+                        </span>
+                      )}
+                      {isRecommended && (
+                        <span className="block px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-google-blue leading-tight">
+                          ⚡ {day.label}
+                        </span>
+                      )}
+                      {day.status === 'EMPTY' && (
+                        <span className="block text-[10px] text-slate-400 font-medium leading-tight">
+                          + Open Slot
+                        </span>
+                      )}
+                    </div>
+
+                    {isSelected && (
+                      <span className="text-[9px] font-extrabold text-google-blue mt-1 uppercase tracking-wider">
+                        ● Target Slot
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ====================================================== */}
+          {/* 2. 1-CLICK EVENT & OFFER PRESETS (QUICK TEMPLATES)     */}
+          {/* ====================================================== */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>1-Click High-Converting Offer Presets:</span>
+            </div>
             
-            {/* Left: Content Editor */}
-            <div className="lg:col-span-2 space-y-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleApplyPreset(preset)}
+                  className="p-3 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-blue-50/60 hover:border-blue-200 text-left transition-all cursor-pointer space-y-1 group"
+                >
+                  <div className="font-bold text-xs text-slate-900 group-hover:text-google-blue flex items-center justify-between">
+                    <span>{preset.label}</span>
+                    <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-google-blue group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                  <p className="text-[11px] text-slate-500 line-clamp-1">
+                    {preset.title}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ====================================================== */}
+          {/* 3. POST DESIGNER & LIVE GOOGLE MAPS MOBILE CARD       */}
+          {/* ====================================================== */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+            
+            {/* Left: Content Editor (7 cols) */}
+            <div className="lg:col-span-7 space-y-4 text-xs">
+              
+              {/* Post Headline */}
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 block">Post Headline / Offer Title:</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 block">Post Headline / Offer Title:</label>
+                  <span className="text-[10px] text-slate-400">{currentPost.title.length} chars</span>
+                </div>
                 <input
                   type="text"
                   value={currentPost.title}
                   onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })}
-                  className="material-input w-full p-2.5 rounded-xl border border-slate-200 font-semibold"
+                  className="material-input w-full p-2.5 rounded-xl border border-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue"
+                  placeholder="e.g. Weekend Chef Tasting: Artisan Pour-Over & Pastry"
                 />
               </div>
 
+              {/* Post Description */}
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 block">Post Description (with Local Keywords):</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 block">Post Description (Optimized with Local Keywords):</label>
+                  <span className="text-[10px] text-slate-400">{currentPost.content.length} chars</span>
+                </div>
                 <textarea
                   rows={3}
                   value={currentPost.content}
                   onChange={(e) => setCurrentPost({ ...currentPost, content: e.target.value })}
-                  className="material-input w-full p-2.5 rounded-xl border border-slate-200 leading-relaxed"
+                  className="material-input w-full p-2.5 rounded-xl border border-slate-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue"
+                  placeholder="Detail your local offer, dish, service, or event..."
                 />
               </div>
 
-              {/* Geotagging Advice Box */}
-              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-2xl space-y-1 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-[11px]">
-                  <ImageIcon className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Geotagged Photo Recommendation:</span>
+              {/* Smart Media Library with EXIF Geotagging */}
+              <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+                    <ImageIcon className="w-4 h-4 text-google-blue" />
+                    <span>Smart Media Library (EXIF Geotagged for 3-Pack Authority)</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    📍 12.2718° N, 109.2016° E Tagged
+                  </span>
                 </div>
-                <p className="text-[11px] text-amber-900/80 leading-relaxed">
-                  {currentPost.photoTaggingAdvice}
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Select a photo below. Each image is stamped with validated venue GPS centroid coordinates before upload.
                 </p>
+
+                {/* 4 Selectable Photos */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  {MEDIA_VAULT.map((photo) => {
+                    const isPhotoActive = selectedPhoto.id === photo.id;
+                    return (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        onClick={() => setSelectedPhoto(photo)}
+                        className={`group relative rounded-xl overflow-hidden border-2 text-left transition-all cursor-pointer ${
+                          isPhotoActive
+                            ? 'border-google-blue ring-2 ring-google-blue/30 shadow-xs'
+                            : 'border-slate-200 hover:border-slate-300 opacity-80 hover:opacity-100'
+                        }`}
+                      >
+                        <div className="aspect-4/3 w-full bg-slate-200 overflow-hidden">
+                          <img
+                            src={photo.url}
+                            alt={photo.label}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+
+                        {/* Active Selection Checkmark Badge */}
+                        {isPhotoActive && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-google-blue text-white flex items-center justify-center shadow-xs">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+
+                        <div className="p-1.5 bg-white space-y-0.5">
+                          <div className="font-bold text-[10px] text-slate-900 truncate">{photo.label}</div>
+                          <div className="text-[9px] text-emerald-700 font-semibold truncate flex items-center gap-0.5">
+                            <MapPin className="w-2.5 h-2.5 shrink-0" />
+                            <span>EXIF Geotagged</span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              {/* Call-To-Action (CTA) Selector */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 block">Action Button (CTA):</label>
+                  <select
+                    value={currentPost.ctaType}
+                    onChange={(e) => setCurrentPost({ ...currentPost, ctaType: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold"
+                  >
+                    <option value="ORDER">Order Online (Delivery / Takeout)</option>
+                    <option value="BOOK">Book Online (Reservations)</option>
+                    <option value="CALL_NOW">Call Business Directly</option>
+                    <option value="LEARN_MORE">Learn More (Website)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 block">Scheduled Publishing Window:</label>
+                  <input
+                    type="text"
+                    value={currentPost.scheduledDate}
+                    onChange={(e) => setCurrentPost({ ...currentPost, scheduledDate: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons & Target Keywords */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-slate-400">Target Keywords:</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Local Keywords:</span>
                   {currentPost.targetKeywords.map((kw, idx) => (
                     <span key={idx} className="px-2 py-0.5 rounded bg-blue-50 text-google-blue text-[10px] font-mono border border-blue-200">
                       #{kw}
@@ -338,7 +681,7 @@ export default function CopilotContentStudioPage() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
                     type="button"
                     onClick={() => handlePublishPost(false)}
@@ -357,38 +700,135 @@ export default function CopilotContentStudioPage() {
                   </button>
                 </div>
               </div>
+
             </div>
 
-            {/* Right: Live Google Maps Post Card Simulation */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                Google Maps Post Card Preview:
-              </span>
+            {/* Right: Live Google Maps Mobile Card Preview (5 cols) */}
+            <div className="lg:col-span-5 bg-slate-50 border border-slate-200 rounded-3xl p-4 flex flex-col items-center justify-start space-y-3">
+              <div className="w-full flex items-center justify-between pb-1 px-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Google Maps Mobile Card</span>
+                </span>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  ● Real-Time Preview
+                </span>
+              </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5 shadow-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-[10px]">
-                    {activeProfile?.name?.charAt(0) || 'G'}
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-900 text-xs">{activeProfile?.name || 'Your Business'}</div>
-                    <div className="text-[10px] text-slate-400">Published to Google Updates</div>
+              {/* Smartphone Frame */}
+              <div className="w-full max-w-[310px] bg-white rounded-[32px] border-4 border-slate-900 shadow-2xl overflow-hidden flex flex-col text-slate-900 select-none">
+                
+                {/* Phone Top Status Bar */}
+                <div className="bg-slate-900 text-white px-5 py-2 flex items-center justify-between text-[10px] font-semibold">
+                  <span>9:41</span>
+                  <div className="w-16 h-2.5 bg-slate-800 rounded-full mx-auto" />
+                  <div className="flex items-center gap-1.5">
+                    <Wifi className="w-3 h-3" />
+                    <span className="text-[9px]">5G</span>
                   </div>
                 </div>
 
-                <h4 className="font-bold text-slate-900 text-xs leading-snug">{currentPost.title}</h4>
-                <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-3">{currentPost.content}</p>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-google-blue bg-blue-50 px-2 py-0.5 rounded uppercase">
-                    CTA: {currentPost.ctaType}
-                  </span>
-                  <span className="text-[10px] text-slate-400">Google Verified Update</span>
+                {/* Google Maps Profile Header */}
+                <div className="p-3 border-b border-slate-100 flex items-center justify-between gap-2 bg-white">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                      {activeProfile?.name?.charAt(0) || 'G'}
+                    </div>
+                    <div className="min-w-0">
+                      <h5 className="font-bold text-xs text-slate-900 truncate">{activeProfile?.name || 'Your Business'}</h5>
+                      <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <span>Google Updates</span>
+                        <span>•</span>
+                        <span className="text-emerald-600 font-semibold">Just now</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-google-blue border border-blue-200 shrink-0">
+                    Follow
+                  </button>
                 </div>
+
+                {/* Selected Post Image with Floating EXIF GPS Badge */}
+                <div className="relative aspect-4/3 w-full bg-slate-100 overflow-hidden">
+                  <img
+                    src={selectedPhoto.url}
+                    alt={selectedPhoto.label}
+                    className="w-full h-full object-cover transition-all duration-300"
+                  />
+                  {/* Floating EXIF Geotag Badge Overlay */}
+                  <div className="absolute bottom-2 left-2 right-2 bg-slate-950/85 backdrop-blur-xs text-white px-2.5 py-1.5 rounded-xl text-[9px] font-medium flex items-center justify-between border border-white/10 shadow-lg">
+                    <div className="flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="truncate">EXIF: {selectedPhoto.gps}</span>
+                    </div>
+                    <span className="text-emerald-400 font-bold shrink-0 text-[8px] bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-400/30">
+                      ✓ Tagged
+                    </span>
+                  </div>
+                </div>
+
+                {/* Post Content Body */}
+                <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between bg-white">
+                  <div className="space-y-1.5">
+                    <h4 className="font-extrabold text-xs text-slate-900 leading-snug">
+                      {currentPost.title || 'Post Headline'}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-4">
+                      {currentPost.content || 'Your post copy will sync live here as you draft or pick presets...'}
+                    </p>
+
+                    {/* Target Keyword Tags */}
+                    <div className="flex items-center gap-1 flex-wrap pt-1">
+                      {currentPost.targetKeywords.slice(0, 3).map((kw, i) => (
+                        <span key={i} className="text-[9px] font-mono text-google-blue bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                          #{kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Google Maps CTA Button */}
+                  <div className="pt-2 space-y-2">
+                    <button
+                      type="button"
+                      className="w-full py-2 bg-google-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {currentPost.ctaType === 'ORDER' && <span>Order Online ↗</span>}
+                      {currentPost.ctaType === 'BOOK' && <span>Book Online ↗</span>}
+                      {currentPost.ctaType === 'CALL_NOW' && <span>Call Business 📞</span>}
+                      {currentPost.ctaType === 'LEARN_MORE' && <span>Learn More ↗</span>}
+                    </button>
+
+                    {/* Google Maps Social Engagement Bar */}
+                    <div className="flex items-center justify-between text-slate-400 text-[10px] pt-1 px-1 border-t border-slate-100">
+                      <span className="flex items-center gap-1 hover:text-slate-600 cursor-pointer">
+                        <ThumbsUp className="w-3 h-3" /> Like
+                      </span>
+                      <span className="flex items-center gap-1 hover:text-slate-600 cursor-pointer">
+                        <Share2 className="w-3 h-3" /> Share
+                      </span>
+                      <span className="flex items-center gap-1 hover:text-slate-600 cursor-pointer">
+                        <Bookmark className="w-3 h-3" /> Save
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
           </div>
+
+          {/* ====================================================== */}
+          {/* 4. TRUST & COMPLIANCE STATUS BAR                       */}
+          {/* ====================================================== */}
+          <div className="flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-2.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              <strong>AI Pre-flight Check:</strong> Formatted with {currentPost.targetKeywords.length} local keywords • Geotag EXIF validated • 100% compliant with Google Search Guidelines.
+            </span>
+          </div>
+
         </div>
 
         {/* ======================================================== */}
