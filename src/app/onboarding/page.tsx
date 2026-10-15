@@ -1116,6 +1116,7 @@ export default function OnboardingPage() {
                           verified: false,
                           is_admin: true
                         }));
+                        localStorage.setItem('gbpilot_trigger_inspection_for_new_location', 'true');
                       }
                       if (router) router.push('/dashboard');
                     }}

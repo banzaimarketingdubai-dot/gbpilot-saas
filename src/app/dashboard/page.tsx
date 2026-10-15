@@ -202,10 +202,12 @@ export default function DashboardCockpitPage() {
         } catch (e) {}
       }
 
-      // Check if initial onboarding inspection was completed
-      const auditCompleted = localStorage.getItem('gbpilot_initial_audit_completed');
-      if (auditCompleted !== 'true') {
+      // Launch inspection modal ONLY if explicitly triggered by newly added location onboarding
+      const newLocationOnboardingTriggered = localStorage.getItem('gbpilot_trigger_inspection_for_new_location');
+      if (newLocationOnboardingTriggered === 'true') {
         setIsInspectionModalOpen(true);
+        // Immediately clear the one-time trigger so refreshing the page will NEVER reopen it
+        localStorage.removeItem('gbpilot_trigger_inspection_for_new_location');
       }
 
       // Check if digital insurance card was previously collapsed by user
