@@ -143,9 +143,10 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
 
     health_score = max(40, min(95, 100 - len(issues) * 9 - random.randint(1, 10)))
 
-    phone = place_details.get("phone") if place_details and place_details.get("phone") else f"+971 4 {random.randint(100,999)} {random.randint(1000,9999)}"
-    website = place_details.get("website_url") if place_details and place_details.get("website_url") else f"https://www.{business_name.lower().replace(' ', '')}.com"
+    phone = place_details.get("phone") if (place_details and place_details.get("phone")) else ""
+    website = place_details.get("website_url") if (place_details and place_details.get("website_url")) else ""
     cover_photo = place_details.get("cover_url") if place_details else None
+    real_reviews = place_details.get("reviews", []) if place_details else []
 
     return {
         "google_location_id": real_place_id,
@@ -164,7 +165,8 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
         "health_score": health_score,
         "reviews_count": reviews_count,
         "rating": rating,
-        "issues": issues
+        "issues": issues,
+        "reviews": real_reviews
     }
 
 async def scrape_website_url(website_url: str) -> Dict[str, Any]:

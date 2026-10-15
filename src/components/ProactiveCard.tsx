@@ -12,7 +12,10 @@ import {
   ChevronDown, 
   ChevronUp, 
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  HelpCircle,
+  TrendingUp,
+  Eye
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -50,27 +53,27 @@ export const ProactiveCard: React.FC<ProactiveCardProps> = ({
   const getBadgeStyle = (badge: string) => {
     switch (badge) {
       case '⚡ High Impact':
-        return 'bg-google-green-light text-google-green border-google-green/30';
+        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
       case '🚨 Rank Alert':
-        return 'bg-google-red-light text-google-red border-google-red/30';
+        return 'bg-rose-50 text-rose-800 border-rose-200';
       case '💬 Review Opportunity':
-        return 'bg-google-blue-light text-google-blue border-google-blue/30';
+        return 'bg-blue-50 text-blue-800 border-blue-200';
       case '🛠️ Profile Fix':
-        return 'bg-google-yellow-light text-amber-700 border-google-yellow/40';
+        return 'bg-amber-50 text-amber-800 border-amber-200';
       case '🌙 Dynamic Hours':
-        return 'bg-purple-100 text-purple-700 border-purple-300';
+        return 'bg-purple-50 text-purple-800 border-purple-200';
       default:
-        return 'bg-google-bg text-google-text-secondary border-google-border';
+        return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
   const getBadgeIcon = (badge: string) => {
-    if (badge.includes('⚡')) return <Zap className="w-3.5 h-3.5 mr-1 fill-google-green text-google-green" />;
-    if (badge.includes('🚨')) return <AlertTriangle className="w-3.5 h-3.5 mr-1 text-google-red" />;
-    if (badge.includes('💬')) return <MessageSquare className="w-3.5 h-3.5 mr-1 text-google-blue" />;
+    if (badge.includes('⚡')) return <Zap className="w-3.5 h-3.5 mr-1 fill-emerald-600 text-emerald-600" />;
+    if (badge.includes('🚨')) return <AlertTriangle className="w-3.5 h-3.5 mr-1 text-rose-600" />;
+    if (badge.includes('💬')) return <MessageSquare className="w-3.5 h-3.5 mr-1 text-blue-600" />;
     if (badge.includes('🛠️')) return <Wrench className="w-3.5 h-3.5 mr-1 text-amber-700" />;
     if (badge.includes('🌙')) return <Clock className="w-3.5 h-3.5 mr-1 text-purple-700" />;
-    return <Sparkles className="w-3.5 h-3.5 mr-1 text-google-blue" />;
+    return <Sparkles className="w-3.5 h-3.5 mr-1 text-blue-600" />;
   };
 
   const handle1ClickExecute = async (e: React.MouseEvent) => {
@@ -81,16 +84,16 @@ export const ProactiveCard: React.FC<ProactiveCardProps> = ({
 
     try {
       confetti({
-        particleCount: 60,
+        particleCount: 70,
         spread: 60,
         origin: { y: 0.7 },
-        colors: ['#1A73E8', '#1E8E3E', '#F9AB00']
+        colors: ['#1A73E8', '#1E8E3E', '#F9AB00', '#10B981']
       });
     } catch {
       // Fallback
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 900));
 
     setIsExecuting(false);
     setIsDone(true);
@@ -103,101 +106,124 @@ export const ProactiveCard: React.FC<ProactiveCardProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`material-card p-5 border transition-all duration-200 ${
-        isDone ? 'border-google-green/40 bg-google-green-light/20' : 'border-google-border-light hover:shadow-material-2'
+      className={`material-card p-5 sm:p-6 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
+        isDone 
+          ? 'border-emerald-300 bg-emerald-50/20 shadow-xs' 
+          : 'border-slate-200 bg-white hover:shadow-material-2 hover:border-slate-300'
       }`}
     >
-      {/* Top Header Row */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="flex items-center space-x-2">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getBadgeStyle(recommendation.impactBadge)}`}>
-            {getBadgeIcon(recommendation.impactBadge)}
-            {recommendation.impactBadge}
-          </span>
-          <span className="text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-google-bg text-google-text-secondary border border-google-border">
-            {recommendation.category.replace(/_/g, ' ')}
-          </span>
+      <div className="space-y-4">
+        {/* Top Header Row: Impact Badge & Target Projection */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="flex items-center space-x-2">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getBadgeStyle(recommendation.impactBadge)}`}>
+              {getBadgeIcon(recommendation.impactBadge)}
+              {recommendation.impactBadge}
+            </span>
+            <span className="text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+              {recommendation.category.replace(/_/g, ' ')}
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-1.5 text-xs font-extrabold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 shadow-2xs">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{recommendation.targetProjection}</span>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-1 text-xs font-bold text-google-green bg-google-green-light px-2.5 py-0.5 rounded-full border border-google-green/20">
-          <ArrowUpRight className="w-3.5 h-3.5" />
-          <span>{recommendation.targetProjection}</span>
+        {/* 1. What was detected */}
+        <div>
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+            <span>Issue Detected:</span>
+          </div>
+          <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+            {recommendation.title}
+          </h3>
+          <p className="text-xs text-slate-600 leading-relaxed mt-1">
+            {recommendation.description}
+          </p>
         </div>
+
+        {/* 2. What this gives the business */}
+        <div className="p-3 bg-gradient-to-r from-emerald-50/60 to-blue-50/40 rounded-xl border border-emerald-100 text-xs text-slate-700 flex items-start gap-2.5">
+          <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+            📈
+          </div>
+          <div className="space-y-0.5">
+            <span className="font-bold text-emerald-950 block">Projected Business Impact:</span>
+            <span className="text-[11px] text-slate-600 leading-normal">
+              Improves Google Maps local visibility and yields approx. <strong>{recommendation.targetProjection}</strong> without paid advertising.
+            </span>
+          </div>
+        </div>
+
+        {/* 3. Expandable Action Details / Payload */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="pt-2 text-xs"
+            >
+              <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between text-slate-700 font-medium">
+                  <span className="flex items-center text-google-blue font-bold text-xs">
+                    <Sparkles className="w-3.5 h-3.5 mr-1" />
+                    Pre-computed changes for Google Maps:
+                  </span>
+                  <span className="text-[10px] bg-blue-50 text-google-blue px-2 py-0.5 rounded font-bold border border-blue-200">
+                    AI Verified
+                  </span>
+                </div>
+
+                {recommendation.previewContent.text && (
+                  <p className="text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200 text-xs italic leading-relaxed">
+                    &ldquo;{recommendation.previewContent.text}&rdquo;
+                  </p>
+                )}
+
+                {recommendation.previewContent.keywords && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-slate-500 text-[10px] font-bold">SEO Keywords:</span>
+                    {recommendation.previewContent.keywords.map((kw, i) => (
+                      <span key={i} className="bg-white text-google-blue border border-blue-200 px-2 py-0.5 rounded text-[10px] font-mono font-medium">
+                        #{kw}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {recommendation.previewContent.details && (
+                  <ul className="space-y-1 text-slate-600 pt-1">
+                    {recommendation.previewContent.details.map((dt, idx) => (
+                      <li key={idx} className="flex items-center text-[11px]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 shrink-0" />
+                        {dt}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Title & Description */}
-      <h3 className="text-base font-bold text-google-text-primary mb-1 leading-snug">
-        {recommendation.title}
-      </h3>
-      <p className="text-xs text-google-text-secondary leading-relaxed mb-3">
-        {recommendation.description}
-      </p>
-
-      {/* Expandable Preview Section */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-3 pt-3 border-t border-google-border-light text-xs"
-          >
-            <div className="bg-google-bg rounded-lg p-3 border border-google-border space-y-2">
-              <div className="flex items-center justify-between text-google-text-secondary font-medium">
-                <span className="flex items-center text-google-blue font-bold">
-                  <Sparkles className="w-3.5 h-3.5 mr-1" />
-                  Pre-Computed AI Action Payload:
-                </span>
-                <span className="text-[10px] bg-google-blue-light text-google-blue px-2 py-0.5 rounded font-bold">
-                  GEO LSI Ready
-                </span>
-              </div>
-
-              {recommendation.previewContent.text && (
-                <p className="text-google-text-primary bg-white p-2.5 rounded border border-google-border text-xs italic">
-                  "{recommendation.previewContent.text}"
-                </p>
-              )}
-
-              {recommendation.previewContent.keywords && (
-                <div className="flex flex-wrap gap-1 pt-1">
-                  <span className="text-google-text-tertiary text-[11px] font-semibold">LSI Tags:</span>
-                  {recommendation.previewContent.keywords.map((kw, i) => (
-                    <span key={i} className="bg-white text-google-text-secondary border border-google-border px-2 py-0.5 rounded text-[10px] font-medium">
-                      #{kw}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {recommendation.previewContent.details && (
-                <ul className="space-y-1 text-google-text-secondary pt-1">
-                  {recommendation.previewContent.details.map((dt, idx) => (
-                    <li key={idx} className="flex items-center text-[11px]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-google-green mr-2" />
-                      {dt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Footer Action Buttons */}
-      <div className="flex items-center justify-between pt-2 border-t border-google-border-light">
+      {/* Footer Action Controls: Preview & 1-Click Approval */}
+      <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-xs text-google-text-secondary hover:text-google-blue flex items-center font-medium transition-colors"
+          className="text-xs text-slate-500 hover:text-google-blue flex items-center font-medium transition-colors cursor-pointer"
         >
           {isExpanded ? (
             <>
-              Hide Payload Details <ChevronUp className="w-3.5 h-3.5 ml-1" />
+              Hide Details <ChevronUp className="w-3.5 h-3.5 ml-1" />
             </>
           ) : (
             <>
-              Preview Content Payload <ChevronDown className="w-3.5 h-3.5 ml-1" />
+              <Eye className="w-3.5 h-3.5 mr-1" />
+              What will change? <ChevronDown className="w-3.5 h-3.5 ml-0.5" />
             </>
           )}
         </button>
@@ -206,7 +232,7 @@ export const ProactiveCard: React.FC<ProactiveCardProps> = ({
           {!isDone && (
             <button
               onClick={() => onDismiss(recommendation.id)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-google-text-secondary hover:text-google-red hover:bg-google-red-light transition-all"
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
             >
               Dismiss
             </button>
@@ -215,26 +241,26 @@ export const ProactiveCard: React.FC<ProactiveCardProps> = ({
           <button
             onClick={handle1ClickExecute}
             disabled={isExecuting || isDone}
-            className={`material-button-primary text-xs py-2 px-3.5 ${
+            className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
               isDone
-                ? '!bg-google-green-light !text-google-green border border-google-green/30 cursor-default'
-                : ''
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-default'
+                : 'bg-google-blue hover:bg-blue-600 text-white'
             }`}
           >
             {isExecuting ? (
               <>
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-1.5" />
-                Executing...
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Applying...</span>
               </>
             ) : isDone ? (
               <>
-                <CheckCircle2 className="w-4 h-4 mr-1 text-google-green" />
-                Executed (1-Click)
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                <span>Executed (1-Click)</span>
               </>
             ) : (
               <>
-                <Zap className="w-3.5 h-3.5 mr-1 fill-white" />
-                {recommendation.actionButtonText}
+                <Zap className="w-3.5 h-3.5 fill-white text-white" />
+                <span>{recommendation.actionButtonText || 'Apply in 1-Click'}</span>
               </>
             )}
           </button>

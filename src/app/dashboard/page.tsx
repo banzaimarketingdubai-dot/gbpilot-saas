@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { HealthGauge } from '@/components/HealthGauge';
@@ -41,7 +42,8 @@ import {
   ChevronUp,
   Share2,
   Smartphone,
-  Calendar
+  Calendar,
+  MessageSquare
 } from 'lucide-react';
 
 interface ActiveBusinessProfile {
@@ -72,160 +74,110 @@ interface ActiveBusinessProfile {
 }
 
 const defaultBusiness: ActiveBusinessProfile = {
-  id: 'profile_123',
-  name: 'Manhattan Bakery & Cafe',
-  address: '540 Broadway, New York, NY 10012',
-  city: 'New York',
-  category: 'Specialty Bakery & Artisan Cafe',
-  phone: '+1 (212) 555-0192',
-  website_url: 'https://manhattanbakery.com',
-  google_maps_url: 'https://maps.google.com/?q=Manhattan+Bakery+%26+Cafe+Broadway',
-  rating: 4.9,
-  reviews_count: 148,
-  health_score: 88,
-  cover_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-  snapshot_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-  opening_hours: '08:00 – 23:00',
-  is_open_now: true,
-  role: 'Owner / Administrator',
-  verified: true,
-  is_admin: true,
-  attributes_count: 12,
-  total_attributes: 20,
-  weekly_hours: [
-    { day: 'Monday', hours: '08:00 – 23:00', isToday: false },
-    { day: 'Tuesday', hours: '08:00 – 23:00', isToday: false },
-    { day: 'Wednesday', hours: '08:00 – 23:00', isToday: true },
-    { day: 'Thursday', hours: '08:00 – 23:00', isToday: false },
-    { day: 'Friday', hours: '08:00 – 00:00', isToday: false },
-    { day: 'Saturday', hours: '08:00 – 00:00', isToday: false },
-    { day: 'Sunday', hours: '08:00 – 22:00', isToday: false },
-  ]
+  id: '',
+  name: 'No Business Connected',
+  address: 'Select or connect your Google Business Profile',
+  city: '',
+  category: 'Local Business',
+  phone: '',
+  website_url: '',
+  google_maps_url: '',
+  rating: 0,
+  reviews_count: 0,
+  health_score: 0,
+  cover_url: '',
+  snapshot_url: '',
+  opening_hours: '—',
+  is_open_now: false,
+  role: 'Administrator',
+  verified: false,
+  is_admin: false,
+  attributes_count: 0,
+  total_attributes: 0,
+  weekly_hours: []
 };
 
 const analyticsData = {
   '7d': {
     label: '7 days',
-    totalImpressions: '5,420',
-    impressionsTrend: '+12.4%',
-    mapsImpressions: '3,840',
-    mapsPercent: 71,
-    searchImpressions: '1,580',
-    searchPercent: 29,
-    discoveryPercent: 73,
-    brandPercent: 27,
-    totalActions: '612',
-    actionsTrend: '+18.2%',
-    directions: '215',
-    directionsTrend: '+19%',
-    calls: '88',
-    callsTrend: '+14%',
-    websiteClicks: '285',
-    websiteClicksTrend: '+16%',
-    messages: '24',
-    messagesTrend: '+28%',
-    cvr: '11.3%',
-    cvrBenchmark: '+3.1% above benchmark',
-    deviceMobile: 88,
-    deviceDesktop: 12,
-    hourly: [
-      { hour: '09:00', val: 32, label: 'Morning' },
-      { hour: '11:00', val: 56, label: '' },
-      { hour: '13:00', val: 94, label: 'Lunch (Peak)', peak: true },
-      { hour: '15:00', val: 48, label: '' },
-      { hour: '17:00', val: 64, label: '' },
-      { hour: '19:00', val: 86, label: '' },
-      { hour: '21:00', val: 100, label: 'Evening (Peak)', peak: true },
-      { hour: '23:00', val: 30, label: '' },
-    ],
-    districts: [
-      { name: 'Downtown Dubai', percent: 43, count: '92 routes' },
-      { name: 'Business Bay', percent: 28, count: '60 routes' },
-      { name: 'DIFC', percent: 17, count: '37 routes' },
-      { name: 'Dubai Marina & others', percent: 12, count: '26 routes' },
-    ]
+    totalImpressions: '—',
+    impressionsTrend: 'Requires GBP Insights API',
+    mapsImpressions: '—',
+    mapsPercent: 0,
+    searchImpressions: '—',
+    searchPercent: 0,
+    discoveryPercent: 0,
+    brandPercent: 0,
+    totalActions: '—',
+    actionsTrend: 'No Data',
+    directions: '—',
+    directionsTrend: '',
+    calls: '—',
+    callsTrend: '',
+    websiteClicks: '—',
+    websiteClicksTrend: '',
+    messages: '—',
+    messagesTrend: '',
+    cvr: '—',
+    cvrBenchmark: 'No benchmark data available',
+    deviceMobile: 0,
+    deviceDesktop: 0,
+    hourly: [] as { hour: string; val: number; label: string; peak?: boolean }[],
+    districts: [] as { name: string; percent: number; count: string }[]
   },
   '30d': {
     label: '30 days',
-    totalImpressions: '21,800',
-    impressionsTrend: '+14.2%',
-    mapsImpressions: '14,820',
-    mapsPercent: 68,
-    searchImpressions: '6,980',
-    searchPercent: 32,
-    discoveryPercent: 74,
-    brandPercent: 26,
-    totalActions: '2,567',
-    actionsTrend: '+22.5%',
-    directions: '890',
-    directionsTrend: '+24%',
-    calls: '342',
-    callsTrend: '+18%',
-    websiteClicks: '1,240',
-    websiteClicksTrend: '+12%',
-    messages: '95',
-    messagesTrend: '+35%',
-    cvr: '11.8%',
-    cvrBenchmark: '+3.4% above benchmark',
-    deviceMobile: 86,
-    deviceDesktop: 14,
-    hourly: [
-      { hour: '09:00', val: 40, label: 'Morning' },
-      { hour: '11:00', val: 65, label: '' },
-      { hour: '13:00', val: 98, label: 'Lunch (Peak)', peak: true },
-      { hour: '15:00', val: 50, label: '' },
-      { hour: '17:00', val: 72, label: '' },
-      { hour: '19:00', val: 92, label: '' },
-      { hour: '21:00', val: 100, label: 'Evening (Peak)', peak: true },
-      { hour: '23:00', val: 38, label: '' },
-    ],
-    districts: [
-      { name: 'Downtown Dubai', percent: 42, count: '374 routes' },
-      { name: 'Business Bay', percent: 28, count: '249 routes' },
-      { name: 'DIFC', percent: 18, count: '160 routes' },
-      { name: 'Dubai Marina & others', percent: 12, count: '107 routes' },
-    ]
+    totalImpressions: '—',
+    impressionsTrend: 'Requires GBP Insights API',
+    mapsImpressions: '—',
+    mapsPercent: 0,
+    searchImpressions: '—',
+    searchPercent: 0,
+    discoveryPercent: 0,
+    brandPercent: 0,
+    totalActions: '—',
+    actionsTrend: 'No Data',
+    directions: '—',
+    directionsTrend: '',
+    calls: '—',
+    callsTrend: '',
+    websiteClicks: '—',
+    websiteClicksTrend: '',
+    messages: '—',
+    messagesTrend: '',
+    cvr: '—',
+    cvrBenchmark: 'No benchmark data available',
+    deviceMobile: 0,
+    deviceDesktop: 0,
+    hourly: [] as { hour: string; val: number; label: string; peak?: boolean }[],
+    districts: [] as { name: string; percent: number; count: string }[]
   },
   '90d': {
     label: '90 days',
-    totalImpressions: '68,450',
-    impressionsTrend: '+16.8%',
-    mapsImpressions: '47,200',
-    mapsPercent: 69,
-    searchImpressions: '21,250',
-    searchPercent: 31,
-    discoveryPercent: 76,
-    brandPercent: 24,
-    totalActions: '8,120',
-    actionsTrend: '+25.1%',
-    directions: '2,840',
-    directionsTrend: '+26%',
-    calls: '1,090',
-    callsTrend: '+21%',
-    websiteClicks: '3,880',
-    websiteClicksTrend: '+19%',
-    messages: '310',
-    messagesTrend: '+42%',
-    cvr: '11.9%',
-    cvrBenchmark: '+3.8% above benchmark',
-    deviceMobile: 85,
-    deviceDesktop: 15,
-    hourly: [
-      { hour: '09:00', val: 42, label: 'Morning' },
-      { hour: '11:00', val: 68, label: '' },
-      { hour: '13:00', val: 100, label: 'Lunch (Peak)', peak: true },
-      { hour: '15:00', val: 54, label: '' },
-      { hour: '17:00', val: 75, label: '' },
-      { hour: '19:00', val: 94, label: '' },
-      { hour: '21:00', val: 98, label: 'Evening (Peak)', peak: true },
-      { hour: '23:00', val: 35, label: '' },
-    ],
-    districts: [
-      { name: 'Downtown Dubai', percent: 41, count: '1,164 routes' },
-      { name: 'Business Bay', percent: 29, count: '824 routes' },
-      { name: 'DIFC', percent: 19, count: '540 routes' },
-      { name: 'Dubai Marina & others', percent: 11, count: '312 routes' },
-    ]
+    totalImpressions: '—',
+    impressionsTrend: 'Requires GBP Insights API',
+    mapsImpressions: '—',
+    mapsPercent: 0,
+    searchImpressions: '—',
+    searchPercent: 0,
+    discoveryPercent: 0,
+    brandPercent: 0,
+    totalActions: '—',
+    actionsTrend: 'No Data',
+    directions: '—',
+    directionsTrend: '',
+    calls: '—',
+    callsTrend: '',
+    websiteClicks: '—',
+    websiteClicksTrend: '',
+    messages: '—',
+    messagesTrend: '',
+    cvr: '—',
+    cvrBenchmark: 'No benchmark data available',
+    deviceMobile: 0,
+    deviceDesktop: 0,
+    hourly: [] as { hour: string; val: number; label: string; peak?: boolean }[],
+    districts: [] as { name: string; percent: number; count: string }[]
   }
 };
 
@@ -280,43 +232,9 @@ export default function DashboardPage() {
     violation_details?: string;
     confidence_score: number;
     recommended_jurisdiction?: 'UAE' | 'USA' | 'EU' | 'GLOBAL';
-  }[]>([
-    {
-      id: 'rev_takedown_01',
-      author_name: 'Alex K. (Suspected: Competitor)',
-      rating: 1,
-      review_date: '2 days ago',
-      review_text: 'Never visited this terrible place! The owner was rude, refused to talk, and everything is completely fake. Avoid at all costs, they are buying 5-star reviews!',
-      suspected_violation: 'Section 3.2: Deceptive Content & Coordinated Sabotage',
-      violation_details: 'Account with no prior history, boilerplate defamatory text, not a genuine customer',
-      confidence_score: 96,
-      recommended_jurisdiction: 'UAE'
-    },
-    {
-      id: 'rev_takedown_02',
-      author_name: 'Ghost User #489',
-      rating: 1,
-      review_date: '5 days ago',
-      review_text: 'Food poisoning! Waited 2 hours, staff cursed at customers. Total scam operation.',
-      suspected_violation: 'Defamation & Unverified Claims (UAE Law No. 34/2021, Articles 43 & 44)',
-      violation_details: 'No record of transaction in POS system, unsubstantiated medical claims',
-      confidence_score: 91,
-      recommended_jurisdiction: 'UAE'
-    },
-    {
-      id: 'rev_takedown_03',
-      author_name: 'SpamBot_NYC',
-      rating: 2,
-      review_date: '1 week ago',
-      review_text: 'Check out best competitor bakery down the street at competitor-promo.com instead, much better quality!',
-      suspected_violation: 'Competitor Advertising & Spam (Google Content Policy Section 4.1)',
-      violation_details: 'Direct link to external third-party site promoting competitor',
-      confidence_score: 98,
-      recommended_jurisdiction: 'USA'
-    }
-  ]);
-  const [selectedReviewId, setSelectedReviewId] = useState<string>('rev_takedown_01');
-  const [takedownSourceMode, setTakedownSourceMode] = useState<'AUTO' | 'MANUAL'>('AUTO');
+  }[]>([]);
+  const [selectedReviewId, setSelectedReviewId] = useState<string>('');
+  const [takedownSourceMode, setTakedownSourceMode] = useState<'AUTO' | 'MANUAL'>('MANUAL');
 
   // Business Location Management State (JTBD Flow)
   const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
@@ -427,16 +345,16 @@ export default function DashboardPage() {
             name: pendingVenue.name,
             business_name: pendingVenue.name,
             address: pendingVenue.address,
-            city: pendingVenue.city || 'Dubai',
+            city: pendingVenue.city || '',
             category: pendingVenue.category || pendingVenue.primary_category || 'Local Business',
             primary_category: pendingVenue.primary_category || pendingVenue.category || 'Local Business',
-            phone: pendingVenue.phone || pendingVenue.phone_number || '+971 4 123 4567',
-            website_url: pendingVenue.website_url || `https://${pendingVenue.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+            phone: pendingVenue.phone || pendingVenue.phone_number || '',
+            website_url: pendingVenue.website_url || '',
             google_maps_url: pendingVenue.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(pendingVenue.name)}`,
-            cover_url: pendingVenue.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-            snapshot_url: pendingVenue.snapshot_url || pendingVenue.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-            rating: pendingVenue.rating || 4.8,
-            reviews_count: pendingVenue.reviews_count || 142,
+            cover_url: pendingVenue.cover_url || '',
+            snapshot_url: pendingVenue.snapshot_url || pendingVenue.cover_url || '',
+            rating: pendingVenue.rating !== undefined ? pendingVenue.rating : 5.0,
+            reviews_count: pendingVenue.reviews_count !== undefined ? pendingVenue.reviews_count : 0,
             opening_hours: pendingVenue.opening_hours || '08:00 – 23:00',
             is_open_now: true,
             role: 'Owner / Administrator',
@@ -514,26 +432,91 @@ export default function DashboardPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
+      const fetchNegativeReviews = async (profName: string, profId: string) => {
+        if (!profName || profName === 'No Business Connected') return;
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+          const res = await fetch(`${baseUrl}/api/v1/guard/negative-reviews/${profId}?business_name=${encodeURIComponent(profName)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.negative_reviews)) {
+              setDetectedNegativeReviews(data.negative_reviews);
+              if (data.negative_reviews.length > 0) {
+                setSelectedReviewId(data.negative_reviews[0].id);
+              } else {
+                setSelectedReviewId('');
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch negative reviews", e);
+        }
+      };
+
+      const refreshProfileDetails = async (profName: string) => {
+        if (!profName || profName === 'No Business Connected') return;
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+          const res = await fetch(`${baseUrl}/api/v1/onboarding/scrape`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ business_name: profName })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.profile) {
+              setActiveProfile(prev => {
+                const updated = {
+                  ...prev,
+                  cover_url: data.profile.cover_url || (prev.cover_url && !prev.cover_url.includes('unsplash.com') ? prev.cover_url : ''),
+                  phone: data.profile.phone_number || prev.phone,
+                  rating: data.profile.rating !== undefined ? data.profile.rating : prev.rating,
+                  reviews_count: data.profile.reviews_count !== undefined ? data.profile.reviews_count : prev.reviews_count,
+                  category: data.profile.primary_category || prev.category,
+                  address: data.profile.address_line || prev.address
+                };
+                localStorage.setItem('gbpilot_active_profile', JSON.stringify(updated));
+                return updated;
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Failed to refresh profile details", err);
+        }
+      };
+
       // Check active profile in storage
       const stored = localStorage.getItem('gbpilot_active_profile');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
+          let profToUse = parsed;
           if (parsed.name === 'Manhattan Bakery & Cafe' && loadedList.length > 0) {
-            setActiveProfile(loadedList[0]);
-            localStorage.setItem('gbpilot_active_profile', JSON.stringify(loadedList[0]));
-            if (loadedList[0].id) currentProfileId = loadedList[0].id;
-          } else {
-            setActiveProfile(parsed);
-            if (parsed.id) currentProfileId = parsed.id;
+            profToUse = loadedList[0];
+          }
+          if (profToUse) {
+            if (profToUse.cover_url && profToUse.cover_url.includes('unsplash.com')) {
+              profToUse.cover_url = '';
+            }
+            setActiveProfile(profToUse);
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(profToUse));
+            if (profToUse.id) currentProfileId = profToUse.id;
+            fetchNegativeReviews(profToUse.name, profToUse.id || 'current');
+            refreshProfileDetails(profToUse.name);
           }
         } catch (e) {
           console.error(e);
         }
       } else if (loadedList.length > 0) {
-        setActiveProfile(loadedList[0]);
-        localStorage.setItem('gbpilot_active_profile', JSON.stringify(loadedList[0]));
-        if (loadedList[0].id) currentProfileId = loadedList[0].id;
+        const firstProf = loadedList[0];
+        if (firstProf.cover_url && firstProf.cover_url.includes('unsplash.com')) {
+          firstProf.cover_url = '';
+        }
+        setActiveProfile(firstProf);
+        localStorage.setItem('gbpilot_active_profile', JSON.stringify(firstProf));
+        if (firstProf.id) currentProfileId = firstProf.id;
+        fetchNegativeReviews(firstProf.name, firstProf.id || 'current');
+        refreshProfileDetails(firstProf.name);
       }
 
       // Also query backend for registered profiles
@@ -556,6 +539,7 @@ export default function DashboardPage() {
             if (!storedCur || JSON.parse(storedCur).name === 'Manhattan Bakery & Cafe') {
               setActiveProfile(data.profiles[0]);
               localStorage.setItem('gbpilot_active_profile', JSON.stringify(data.profiles[0]));
+              fetchNegativeReviews(data.profiles[0].name, data.profiles[0].id || 'current');
             }
           }
         })
@@ -612,12 +596,12 @@ export default function DashboardPage() {
   const handleSelectProfile = (prof: any) => {
     const formattedProf: ActiveBusinessProfile = {
       ...prof,
-      cover_url: prof.cover_url || prof.snapshot_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-      snapshot_url: prof.snapshot_url || prof.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+      cover_url: (prof.cover_url && !prof.cover_url.includes('unsplash.com')) ? prof.cover_url : '',
+      snapshot_url: (prof.snapshot_url && !prof.snapshot_url.includes('unsplash.com')) ? prof.snapshot_url : '',
       opening_hours: prof.opening_hours || '08:00 – 23:00',
       is_open_now: prof.is_open_now !== undefined ? prof.is_open_now : true,
-      phone: prof.phone || prof.phone_number || '+1 (212) 555-0192',
-      website_url: prof.website_url || 'https://manhattanbakery.com',
+      phone: prof.phone || prof.phone_number || '',
+      website_url: prof.website_url || '',
       google_maps_url: prof.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(prof.name || 'Business')}`,
       role: prof.role || 'Owner / Administrator',
       verified: true,
@@ -627,6 +611,7 @@ export default function DashboardPage() {
     localStorage.setItem('gbpilot_active_profile', JSON.stringify(formattedProf));
     setActiveProfile(formattedProf);
     setIsUserProfileModalOpen(false);
+    window.dispatchEvent(new CustomEvent('active_profile_updated'));
     setAuthBanner({
       type: 'success',
       message: `Business "${formattedProf.name}" successfully activated for management.`
@@ -674,15 +659,15 @@ export default function DashboardPage() {
         id: profileData?.id || `profile_${Date.now()}`,
         name: profileData?.business_name || item.main_text || item.description,
         address: profileData?.address_line || item.description,
-        city: profileData?.city || 'Dubai',
+        city: profileData?.city || '',
         category: profileData?.primary_category || 'Local Business',
-        phone: profileData?.phone_number || '+971 4 123 4567',
-        website_url: profileData?.website_url || `https://${(item.main_text || 'business').toLowerCase().replace(/\s+/g, '')}.com`,
-        cover_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-        snapshot_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-        rating: profileData?.rating || 4.8,
-        reviews_count: profileData?.reviews_count || 142,
-        opening_hours: '08:00 – 23:00',
+        phone: profileData?.phone_number || profileData?.phone || '',
+        website_url: profileData?.website_url || '',
+        cover_url: profileData?.cover_url || '',
+        snapshot_url: profileData?.snapshot_url || profileData?.cover_url || '',
+        rating: profileData?.rating !== undefined ? profileData.rating : 5.0,
+        reviews_count: profileData?.reviews_count !== undefined ? profileData.reviews_count : 0,
+        opening_hours: profileData?.opening_hours || '08:00 – 23:00',
         is_open_now: true,
         google_maps_url: `https://maps.google.com/?q=${encodeURIComponent(item.description || item.main_text)}`,
         role: 'Owner / Administrator',
@@ -794,8 +779,8 @@ export default function DashboardPage() {
   };
 
   const openReviewTakedown = (review?: any) => {
-    const targetRev = review || detectedNegativeReviews.find(r => r.id === selectedReviewId) || detectedNegativeReviews[0];
-    setTakedownBusiness(activeProfile?.name || 'Manhattan Bakery & Cafe');
+    const targetRev = review || (detectedNegativeReviews.length > 0 ? detectedNegativeReviews.find(r => r.id === selectedReviewId) || detectedNegativeReviews[0] : null);
+    setTakedownBusiness(activeProfile?.name || '');
     if (targetRev) {
       setSelectedReviewId(targetRev.id);
       setTakedownAuthor(targetRev.author_name);
@@ -804,6 +789,13 @@ export default function DashboardPage() {
         setTakedownJurisdiction(targetRev.recommended_jurisdiction);
       }
       setTakedownSourceMode('AUTO');
+    } else {
+      setSelectedReviewId('');
+      setTakedownAuthor('');
+      setTakedownReviewText('');
+      const isUae = (activeProfile?.address || '').toLowerCase().includes('dubai') || (activeProfile?.address || '').toLowerCase().includes('uae');
+      setTakedownJurisdiction(isUae ? 'UAE' : 'GLOBAL');
+      setTakedownSourceMode('MANUAL');
     }
     setTakedownResult(null);
     setIsTakedownModalOpen(true);
@@ -912,64 +904,71 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-google-bg flex flex-col">
-      <Navbar />
+      <Navbar currentProfile={activeProfile ? { id: activeProfile.id, name: activeProfile.name, address: activeProfile.address, city: activeProfile.city, autopilotMode: 'MANUAL_APPROVAL', role: activeProfile.role, is_admin: activeProfile.is_admin, verified: activeProfile.verified } : undefined} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 lg:pb-8 space-y-6">
         
-        {/* Dubai Triad Command Bar: Profile Guard & Fast Triggers */}
-        <div className="material-card p-4 border-l-4 border-l-google-blue bg-white flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-google-blue-light text-google-blue rounded-xl">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-google-text-primary text-sm">🇦🇪 Dubai Profile Guard Active</span>
-                <span className="w-2 h-2 rounded-full bg-google-green animate-pulse" />
-                <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded uppercase">
-                  UAE Law № 34/2021 Ready
-                </span>
+        {/* Profile Guard Command Bar */}
+        {(() => {
+          const isUae = (activeProfile?.address || '').toLowerCase().includes('dubai') || 
+                        (activeProfile?.address || '').toLowerCase().includes('uae') ||
+                        (activeProfile?.address || '').toLowerCase().includes('united arab emirates');
+          return (
+            <div className="material-card p-4 border-l-4 border-l-google-blue bg-white flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-google-blue-light text-google-blue rounded-xl">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-google-text-primary text-sm">
+                      {isUae ? '🇦🇪 Dubai Profile Guard Active' : '🛡️ Sentinel Profile Guard Active'}
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-google-green animate-pulse" />
+                    <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded uppercase">
+                      {isUae ? 'UAE Law № 34/2021 Ready' : 'Google Content Policy Ready'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-google-text-secondary mt-0.5">
+                    24/7 Sentinel monitors attributes and blocks competitor edits. 0 unauthorized changes.
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-google-text-secondary mt-0.5">
-                24/7 Sentinel monitors attributes and blocks competitor edits. 0 unauthorized changes.
-              </p>
+              
+              <div className="flex items-center flex-wrap gap-2 w-full lg:w-auto">
+                {isUae && (
+                  <button 
+                    onClick={handleToggleRamadan}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                      isRamadanMode 
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-sm' 
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Moon className="w-3.5 h-3.5" />
+                    <span>🌙 Ramadan: {isRamadanMode ? 'ON' : 'OFF'}</span>
+                  </button>
+                )}
+
+                {/* Quick Review Takedown Trigger */}
+                <button 
+                  onClick={() => openReviewTakedown()}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-google-red-light text-google-red border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1.5"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>⚡ Remove Review</span>
+                </button>
+
+                <button 
+                  onClick={() => setProfileGuardAlert(`Competitor attribute edit attempt for "${activeProfile?.name || 'business'}" successfully blocked by Sentinel Guard!`)}
+                  className="material-button-ghost text-xs text-google-blue font-semibold hover:bg-google-blue-light py-1.5"
+                >
+                  Test Guard
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center flex-wrap gap-2 w-full lg:w-auto">
-            {/* Ramadan Hours Toggle */}
-            <button 
-              onClick={handleToggleRamadan}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
-                isRamadanMode 
-                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm' 
-                  : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-              }`}
-            >
-              <Moon className="w-3.5 h-3.5" />
-              <span>🌙 Ramadan: {isRamadanMode ? 'ON' : 'OFF'}</span>
-            </button>
-
-            {/* Quick Review Takedown Trigger */}
-            <button 
-              onClick={() => {
-                setTakedownBusiness(activeProfile?.name || '');
-                setIsTakedownModalOpen(true);
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-google-red-light text-google-red border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1.5"
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>⚡ Remove Review</span>
-            </button>
-
-            <button 
-              onClick={() => setProfileGuardAlert("Competitor phone number replacement attempt in Business Bay successfully blocked by Profile Guard!")}
-              className="material-button-ghost text-xs text-google-blue font-semibold hover:bg-google-blue-light py-1.5"
-            >
-              Test Guard
-            </button>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Google OAuth Status Banner */}
         {authBanner && (
@@ -1022,6 +1021,105 @@ export default function DashboardPage() {
         )}
 
         {/* ======================================================== */}
+        {/* JTBD SENIOR AI GROWTH DIRECTOR: MORNING BRIEFING & ROADMAP */}
+        {/* ======================================================== */}
+        <div className="rounded-2xl p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl border border-slate-800 space-y-5">
+          {/* Top Bar: Persona Identity & Live Status */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 text-white font-black text-sm">
+                AI
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-extrabold text-base text-white tracking-tight">
+                    Your Senior Local SEO Growth Director
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    On Duty 24/7
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Morning status briefing for <strong>{activeProfile?.name || 'Your Business'}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-slate-400">Today&apos;s Focus:</span>
+              <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">
+                {pendingCount > 0 ? `${pendingCount} growth actions ready` : 'All in check'}
+              </span>
+            </div>
+          </div>
+
+          {/* 3 Executive Briefing Highlights */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Profile Defense</span>
+              </div>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Listing active. No unauthorized competitor edits or business hours tampering detected in the last 24h.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <div className="flex items-center gap-2 text-amber-300 font-bold">
+                <Star className="w-4 h-4 fill-amber-300" />
+                <span>Reputation &amp; Reviews</span>
+              </div>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Rating: <strong>{activeProfile?.rating || '—'}★</strong>. Semi-automated AI responder active to maintain top placement.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <div className="flex items-center gap-2 text-blue-400 font-bold">
+                <Sparkles className="w-4 h-4" />
+                <span>Next Best Actions</span>
+              </div>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                AI pre-computed <strong>{pendingCount} actions</strong>. 1-click confirmation required below.
+              </p>
+            </div>
+          </div>
+
+          {/* Gamified Growth Roadmap: Levels to Top-1 */}
+          <div className="pt-2 border-t border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-slate-300 flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+                <span>Growth Roadmap: Path to #1 in Sector</span>
+              </span>
+              <span className="text-[11px] font-semibold text-emerald-400">
+                Level 2 of 4 (Reputation Defense)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+              <div className="p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-between">
+                <span>1. Foundation Setup</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              </div>
+              <div className="p-2.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-200 font-bold flex items-center justify-between">
+                <span>2. Reputation Shield</span>
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              </div>
+              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 flex items-center justify-between">
+                <span>3. Territory Dominance</span>
+                <span>🔒</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 flex items-center justify-between">
+                <span>4. Market Leader</span>
+                <span>🔒</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
         {/* JTBD HERO VENUE IDENTITY & OPERATIONAL COCKPIT CARD      */}
         {/* ======================================================== */}
         <div className="material-card p-6 bg-white border border-google-border shadow-sm rounded-2xl">
@@ -1030,15 +1128,23 @@ export default function DashboardPage() {
             {/* Col 1: Venue Cover Photo & Live Badges (3 cols) */}
             <div className="lg:col-span-3 space-y-3">
               <div className="w-full h-44 sm:h-48 rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-slate-100 relative group">
-                <img 
-                  src={activeProfile?.cover_url || activeProfile?.snapshot_url || defaultBusiness.cover_url} 
-                  alt={activeProfile?.name || 'Venue Cover'} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+                {activeProfile?.cover_url && !activeProfile.cover_url.includes('unsplash.com') ? (
+                  <img 
+                    src={activeProfile.cover_url} 
+                    alt={activeProfile?.name || 'Venue Cover'} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 flex flex-col items-center justify-center p-4 text-center">
+                    <Building2 className="w-10 h-10 text-slate-400 mb-2" />
+                    <span className="font-bold text-white text-sm line-clamp-1">{activeProfile?.name || 'Business Entity'}</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">{activeProfile?.category || 'Google Business Profile'}</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
                 
                 {/* Live Status Badge */}
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-bold shadow-md">
@@ -1062,11 +1168,11 @@ export default function DashboardPage() {
               {/* Geo Rank & Rating Pills */}
               <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                 <span className="flex items-center gap-1 font-semibold text-slate-700">
-                  <MapPin className="w-3.5 h-3.5 text-google-red" /> Rank: <strong className="text-google-green font-bold">#2 Avg</strong>
+                  <MapPin className="w-3.5 h-3.5 text-google-red" /> Rank: <strong className="text-slate-500 font-bold">—</strong>
                 </span>
                 <span className="w-px h-3.5 bg-slate-200" />
                 <span className="flex items-center gap-1 font-semibold text-slate-700">
-                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> <strong className="text-slate-900">{activeProfile?.rating || 4.9}</strong> ({activeProfile?.reviews_count || 148})
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> <strong className="text-slate-900">{activeProfile?.rating || '—'}</strong> ({activeProfile?.reviews_count !== undefined ? activeProfile.reviews_count : '—'})
                 </span>
               </div>
             </div>
@@ -1076,7 +1182,7 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                    {activeProfile?.category || 'Specialty Bakery & Artisan Cafe'}
+                    {activeProfile?.category || 'Local Business'}
                   </span>
                   <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" />
@@ -1177,11 +1283,19 @@ export default function DashboardPage() {
                   </a>
                 )}
 
+                <Link
+                  href="/reviews-posts"
+                  className="px-3 py-1.5 bg-amber-50 border border-amber-300 text-amber-900 font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 ml-auto text-xs shadow-xs"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-amber-700" />
+                  <span>💬 Review Copilot (Semi-Auto) ↗</span>
+                </Link>
+
                 <a
                   href={activeProfile?.google_maps_url || 'https://maps.google.com'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-google-blue-light/30 border border-google-blue/30 text-google-blue font-bold rounded-lg hover:bg-google-blue-light transition-colors flex items-center gap-1.5 ml-auto"
+                  className="px-3 py-1.5 bg-google-blue-light/30 border border-google-blue/30 text-google-blue font-bold rounded-lg hover:bg-google-blue-light transition-colors flex items-center gap-1.5"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Open in Google Maps ↗</span>
@@ -1229,9 +1343,16 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center justify-between text-slate-700">
                   <span className="flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5 text-google-red" /> 1★ Fake Reviews
+                    {detectedNegativeReviews.length > 0 ? (
+                      <ShieldAlert className="w-3.5 h-3.5 text-google-red" />
+                    ) : (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    )}
+                    1★ Toxic Reviews
                   </span>
-                  <span className="font-bold text-google-red">1 Ready to Remove</span>
+                  <span className={`font-bold ${detectedNegativeReviews.length > 0 ? 'text-google-red' : 'text-emerald-600'}`}>
+                    {detectedNegativeReviews.length > 0 ? `${detectedNegativeReviews.length} Ready to Remove` : '0 (Clean)'}
+                  </span>
                 </div>
               </div>
 
@@ -1425,42 +1546,51 @@ export default function DashboardPage() {
                     Peak hours when prospective customers request directions and contact your business.
                   </p>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                  2 daily peaks
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                  {analyticsData[analyticsPeriod].hourly.length > 0 ? 'Active' : 'No Data'}
                 </span>
               </div>
 
               {/* Bar Chart Visualization */}
-              <div className="pt-4 pb-2">
-                <div className="h-36 flex items-end justify-between gap-2 px-2 border-b border-slate-200">
-                  {analyticsData[analyticsPeriod].hourly.map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                      {/* Hover / Peak Tooltip */}
-                      {h.peak && (
-                        <span className="absolute -top-7 text-[9px] font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded whitespace-nowrap shadow-sm">
-                          {h.label}
+              <div className="pt-2 pb-2">
+                {analyticsData[analyticsPeriod].hourly.length > 0 ? (
+                  <div className="h-36 flex items-end justify-between gap-2 px-2 border-b border-slate-200">
+                    {analyticsData[analyticsPeriod].hourly.map((h, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                        {h.peak && (
+                          <span className="absolute -top-7 text-[9px] font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded whitespace-nowrap shadow-sm">
+                            {h.label}
+                          </span>
+                        )}
+                        <div 
+                          className={`w-full rounded-t-lg transition-all duration-300 group-hover:opacity-90 ${
+                            h.peak 
+                              ? 'bg-gradient-to-t from-google-blue to-google-blue/80 ring-2 ring-google-blue/30' 
+                              : 'bg-slate-300 group-hover:bg-slate-400'
+                          }`}
+                          style={{ height: `${h.val}%` }}
+                        />
+                        <span className="text-[10px] font-semibold text-slate-600 mt-1 font-mono">
+                          {h.hour}
                         </span>
-                      )}
-                      <div 
-                        className={`w-full rounded-t-lg transition-all duration-300 group-hover:opacity-90 ${
-                          h.peak 
-                            ? 'bg-gradient-to-t from-google-blue to-google-blue/80 ring-2 ring-google-blue/30' 
-                            : 'bg-slate-300 group-hover:bg-slate-400'
-                        }`}
-                        style={{ height: `${h.val}%` }}
-                      />
-                      <span className="text-[10px] font-semibold text-slate-600 mt-1 font-mono">
-                        {h.hour}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-36 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-200 rounded-xl bg-white/70">
+                    <Clock className="w-6 h-6 text-slate-300 mb-1" />
+                    <span className="text-xs font-semibold text-slate-700">Hourly Activity Data Unavailable</span>
+                    <span className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                      Requires Google Business Profile Performance API sync to display hourly customer calls and route requests.
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-google-blue shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <strong>AI Strategy:</strong> Traffic peaks occur at <strong>1:00 PM (Lunch)</strong> and <strong>9:00 PM (Dinner)</strong>. Autopilot schedules Google Updates and offers 90 minutes before peaks (11:30 AM & 7:30 PM), maximizing table bookings.
+                  <strong>AI Activity Insights:</strong> Automated promotion schedules will activate once your profile records its first 50 customer interactions.
                 </span>
               </div>
             </div>
@@ -1477,31 +1607,41 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              <div className="space-y-3 pt-1">
-                {analyticsData[analyticsPeriod].districts.map((d, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-slate-800">{d.name}</span>
-                      <span className="text-slate-500 font-medium text-[11px]">
-                        <strong>{d.percent}%</strong> ({d.count})
-                      </span>
+              {analyticsData[analyticsPeriod].districts.length > 0 ? (
+                <div className="space-y-3 pt-1">
+                  {analyticsData[analyticsPeriod].districts.map((d, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-800">{d.name}</span>
+                        <span className="text-slate-500 font-medium text-[11px]">
+                          <strong>{d.percent}%</strong> ({d.count})
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${
+                            i === 0 ? 'bg-google-blue' : i === 1 ? 'bg-emerald-500' : i === 2 ? 'bg-amber-500' : 'bg-slate-400'
+                          }`}
+                          style={{ width: `${d.percent}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${
-                          i === 0 ? 'bg-google-blue' : i === 1 ? 'bg-emerald-500' : i === 2 ? 'bg-amber-500' : 'bg-slate-400'
-                        }`}
-                        style={{ width: `${d.percent}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-36 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-200 rounded-xl bg-white/70">
+                  <Navigation className="w-6 h-6 text-slate-300 mb-1" />
+                  <span className="text-xs font-semibold text-slate-700">Direction Origin Geography Unavailable</span>
+                  <span className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                    Customer starting zones are calculated from navigation route requests in Google Maps via GBP Performance API.
+                  </span>
+                </div>
+              )}
 
-              <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <strong>Local Reach:</strong> 70% of visitors originate within a 3 km radius (Downtown and Business Bay). Your Geo-Grid radar is tuned for defensive dominance across these key zones.
+                  <strong>Local Coverage:</strong> Catchment radius and primary guest zones are mapped as direction requests accumulate.
                 </span>
               </div>
             </div>
@@ -1510,15 +1650,22 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* Central Hero Section: Proactive Next Best Actions */}
+        {/* Central Hero Section: Proactive Next Best Actions (JTBD Decision Hub) */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-google-blue" />
-              <h2 className="text-lg font-bold text-google-text-primary">Today's Proactive Next Best Actions</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-google-blue" />
+                <h2 className="text-lg font-bold text-slate-900">
+                  🎯 Today's Action Plan: High-Impact Steps to Grow Local Ranking
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Every action is pre-engineered by AI. Review projected ROI and execute in 1-click or dismiss.
+              </p>
             </div>
-            <span className="text-xs font-semibold text-google-text-secondary bg-google-bg px-2.5 py-1 rounded-lg border border-google-border">
-              {pendingCount} Actions Pending
+            <span className="text-xs font-semibold text-google-blue bg-blue-50 px-3 py-1 rounded-xl border border-blue-200 w-fit">
+              {pendingCount} actions awaiting your decision
             </span>
           </div>
 
@@ -1538,57 +1685,66 @@ export default function DashboardPage() {
         <div className="grid md:grid-cols-3 gap-6">
           
           {/* Column 1: Pillar 1 - Scout Radar */}
-          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-blue">
+          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-blue bg-white rounded-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-google-blue" />
-                <h3 className="font-bold text-google-text-primary text-sm">🧭 1. Scout Radar</h3>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-google-blue" />
+                  <h3 className="font-bold text-slate-900 text-sm">🧭 1. Neighborhood Radar (Visibility)</h3>
+                </div>
+                <p className="text-[11px] text-slate-500">Track where customers see you vs. nearby competitors</p>
               </div>
-              <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded">
-                Dubai 3x3
+              <span className="text-[10px] font-bold text-google-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                Geo-Grid
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 py-1">
-              {[1, 2, 1, 2, 3, 2, 4, 3, 2].map((rank, i) => (
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div 
                   key={i} 
-                  className={`h-14 rounded-lg flex items-center justify-center font-extrabold text-white text-base shadow-sm ${
-                    rank <= 2 ? 'bg-google-green' : rank <= 3 ? 'bg-google-yellow' : 'bg-google-red'
-                  }`}
+                  className="h-14 rounded-lg flex items-center justify-center font-bold text-slate-400 text-sm bg-slate-50 border border-dashed border-slate-200"
                 >
-                  #{rank}
+                  —
                 </div>
               ))}
             </div>
 
             <div className="space-y-2 pt-2 border-t border-google-border-light text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Grid Location:</span>
-                <span className="font-bold text-slate-800">Downtown & Business Bay</span>
+                <span className="text-slate-500">Scan Location:</span>
+                <span className="font-bold text-slate-800 truncate max-w-[160px]">{activeProfile?.city || activeProfile?.address || '—'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Protected Revenue:</span>
-                <span className="font-bold text-emerald-600">+AED 24,500 / mo</span>
+                <span className="text-slate-500">Protected Revenue:</span>
+                <span className="font-bold text-slate-500">—</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">7-Day Track:</span>
-                <span className="text-google-green font-bold flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5" /> +2 positions up
-                </span>
+                <span className="text-slate-500">7-Day Rank Momentum:</span>
+                <span className="text-slate-500 font-medium">Scan not initiated yet</span>
               </div>
             </div>
+
+            <a 
+              href={`/geo-grid?keyword=${encodeURIComponent(activeProfile?.name || '')}`} 
+              className="w-full text-center block text-xs text-google-blue font-bold py-2 border border-google-blue/30 rounded-xl hover:bg-blue-50 transition-colors"
+            >
+              Launch Geo-Grid Rank Scan ↗
+            </a>
           </div>
 
           {/* Column 2: Pillar 2 - Action Copilot */}
-          <div className="material-card p-5 space-y-4 border-t-4 border-t-amber-500">
+          <div className="material-card p-5 space-y-4 border-t-4 border-t-amber-500 bg-white rounded-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <h3 className="font-bold text-google-text-primary text-sm">🤖 2. Action Copilot</h3>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <h3 className="font-bold text-slate-900 text-sm">🤖 2. Reputation & Reviews</h3>
+                </div>
+                <p className="text-[11px] text-slate-500">Fast AI responses with keywords boost map placement</p>
               </div>
-              <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                24/7 AI
+              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded">
+                Semi-Auto
               </span>
             </div>
 
@@ -1597,74 +1753,76 @@ export default function DashboardPage() {
                 <span className="flex items-center gap-2 text-google-text-secondary">
                   <Phone className="w-4 h-4 text-google-blue" /> Profile Calls
                 </span>
-                <span className="font-bold text-google-text-primary">342 (+18%)</span>
+                <span className="font-bold text-slate-500">—</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
                   <Navigation className="w-4 h-4 text-google-green" /> Direction Requests
                 </span>
-                <span className="font-bold text-google-text-primary">890 (+24%)</span>
+                <span className="font-bold text-slate-500">—</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-google-text-secondary">
                   <Globe className="w-4 h-4 text-purple-600" /> Website Visits
                 </span>
-                <span className="font-bold text-google-text-primary">1,240 (+12%)</span>
+                <span className="font-bold text-slate-500">—</span>
               </div>
 
               <div className="pt-2 border-t border-google-border-light flex items-center justify-between text-[11px]">
-                <span className="text-google-text-secondary">Ramadan Mode:</span>
-                <span className={`font-bold px-2 py-0.5 rounded ${
-                  isRamadanMode ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  {isRamadanMode ? '🌙 Iftar/Suhoor Active' : 'Standard Hours'}
+                <span className="text-google-text-secondary">Operating Hours Mode:</span>
+                <span className="font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                  Standard Hours
                 </span>
               </div>
             </div>
           </div>
 
           {/* Column 3: Pillar 3 - Defense Shield & Review Takedown */}
-          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-red">
+          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-red bg-white rounded-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-google-red" />
-                <h3 className="font-bold text-google-text-primary text-sm">🛡️ 3. Review Defense</h3>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-google-red" />
+                  <h3 className="font-bold text-slate-900 text-sm">🛡️ 3. Spam & Threat Defense</h3>
+                </div>
+                <p className="text-[11px] text-slate-500">Shield against competitor edits and toxic reviews</p>
               </div>
-              <span className="text-[10px] font-bold text-google-red bg-google-red-light px-2 py-0.5 rounded">
-                UAE Law 34/2021
+              <span className="text-[10px] font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
+                Cyber Shield
               </span>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
-                <span className="text-google-text-secondary">Review Request Limit:</span>
-                <span className="font-bold text-google-green">5 / 8 (Safe)</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Profile Attributes Protection:</span>
-                <span className="font-bold text-emerald-600 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> 100% Locked
+              <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <span className="text-slate-500">Safe Velocity Pacing:</span>
+                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  Zero Google Ban Risk
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-google-text-secondary">Pending Reviews:</span>
-                <span className="font-bold text-google-blue">0 pending</span>
+                <span className="text-slate-500">Hours & NAP Defense:</span>
+                <span className="font-bold text-emerald-600 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> 100% Protected
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Toxic 1★ Reviews:</span>
+                <span className={`font-bold ${detectedNegativeReviews.length > 0 ? 'text-google-red' : 'text-emerald-600'}`}>
+                  {detectedNegativeReviews.length > 0 ? `${detectedNegativeReviews.length} Detected` : '0 (Clean)'}
+                </span>
               </div>
 
               {/* Takedown Trigger Button */}
               <button 
-                onClick={() => {
-                  setTakedownBusiness(activeProfile?.name || '');
-                  setIsTakedownModalOpen(true);
-                }}
-                className="w-full material-button-primary text-xs py-2.5 !bg-google-red hover:!bg-red-700 shadow-md shadow-red-500/20 font-bold flex items-center justify-center gap-2 mt-2"
+                onClick={() => openReviewTakedown()}
+                className="w-full text-xs py-2.5 px-4 font-bold flex items-center justify-center gap-1.5 bg-google-red hover:bg-red-700 text-white rounded-xl shadow-sm transition-all mt-2 cursor-pointer"
               >
                 <ShieldAlert className="w-4 h-4" />
-                <span>⚡ Remove Fake 1★ Review</span>
+                <span>⚡ Generate Fake Review Takedown Dossier</span>
               </button>
             </div>
           </div>
@@ -1738,76 +1896,103 @@ export default function DashboardPage() {
                 {/* AUTO MODE: Detected Negative Reviews List */}
                 {takedownSourceMode === 'AUTO' && (
                   <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <span>Click a review to auto-fill dossier:</span>
-                      <span className="text-emerald-700 font-bold flex items-center gap-1">
-                        <Check className="w-3 h-3 text-emerald-600" /> No manual entry needed
-                      </span>
-                    </div>
+                    {detectedNegativeReviews.length > 0 ? (
+                      <>
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          <span>Select review to generate legal dossier:</span>
+                          <span className="text-emerald-700 font-bold flex items-center gap-1">
+                            <Check className="w-3 h-3 text-emerald-600" /> Ready for Removal
+                          </span>
+                        </div>
 
-                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                      {detectedNegativeReviews.map((rev) => {
-                        const isSelected = selectedReviewId === rev.id;
-                        return (
-                          <div
-                            key={rev.id}
-                            onClick={() => handleSelectNegativeReview(rev)}
-                            className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                              isSelected
-                                ? 'border-google-red bg-red-50/70 ring-1 ring-google-red shadow-sm'
-                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-xs text-slate-900">{rev.author_name}</span>
-                                <span className="text-[10px] bg-red-100 text-google-red font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
-                                  <Star className="w-3 h-3 fill-google-red" /> {rev.rating}★
-                                </span>
-                                <span className="text-[10px] text-slate-400 font-medium">{rev.review_date}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                                  {rev.confidence_score}% removal
-                                </span>
-                                {isSelected && (
-                                  <span className="text-[10px] bg-google-red text-white font-bold px-2 py-0.5 rounded-full">
-                                    Selected ✓
+                        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                          {detectedNegativeReviews.map((rev) => {
+                            const isSelected = selectedReviewId === rev.id;
+                            return (
+                              <div
+                                key={rev.id}
+                                onClick={() => handleSelectNegativeReview(rev)}
+                                className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                                  isSelected
+                                    ? 'border-google-red bg-red-50/70 ring-1 ring-google-red shadow-sm'
+                                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-xs text-slate-900">{rev.author_name}</span>
+                                    <span className="text-[10px] bg-red-100 text-google-red font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                                      <Star className="w-3 h-3 fill-google-red" /> {rev.rating}★
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-medium">{rev.review_date}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                                      {rev.confidence_score}% removal
+                                    </span>
+                                    {isSelected && (
+                                      <span className="text-[10px] bg-google-red text-white font-bold px-2 py-0.5 rounded-full">
+                                        Selected ✓
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="text-xs text-slate-700 italic leading-relaxed line-clamp-2">
+                                  "{rev.review_text}"
+                                </p>
+
+                                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                                  <span className="text-google-red font-semibold flex items-center gap-1">
+                                    <ShieldAlert className="w-3 h-3" />
+                                    {rev.suspected_violation}
                                   </span>
-                                )}
+                                  {rev.violation_details && (
+                                    <span className="text-slate-500 hidden sm:inline">{rev.violation_details}</span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
+                            );
+                          })}
+                        </div>
 
-                            <p className="text-xs text-slate-700 italic leading-relaxed line-clamp-2">
-                              "{rev.review_text}"
-                            </p>
-
-                            <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
-                              <span className="text-google-red font-semibold flex items-center gap-1">
-                                <ShieldAlert className="w-3 h-3" />
-                                {rev.suspected_violation}
-                              </span>
-                              {rev.violation_details && (
-                                <span className="text-slate-500 hidden sm:inline">{rev.violation_details}</span>
-                              )}
-                            </div>
+                        {/* Pre-filled info pill */}
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-slate-500 shrink-0 font-medium">Selected Review:</span>
+                            <span className="font-bold text-slate-900 truncate">
+                              {takedownAuthor} ({takedownBusiness})
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Pre-filled info pill */}
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-slate-500 shrink-0 font-medium">Selected review:</span>
-                        <span className="font-bold text-slate-900 truncate">
-                          {takedownAuthor} ({takedownBusiness})
-                        </span>
+                          <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold shrink-0 border border-emerald-200">
+                            Ready for escalation
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                          <CheckCircle2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-800">
+                            No negative reviews (1-2★) detected
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                            Your business {activeProfile?.name ? `"${activeProfile.name}"` : ''} has a strong reputation ({activeProfile?.rating || 5.0}★)! No toxic or defamatory reviews detected on your profile.
+                          </p>
+                        </div>
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setTakedownSourceMode('MANUAL')}
+                            className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-google-blue shadow-2xs inline-flex items-center gap-1.5 transition-colors"
+                          >
+                            <span>✏️ Enter review manually to test legal dossier generator</span>
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold shrink-0 border border-emerald-200">
-                        Ready for escalation
-                      </span>
-                    </div>
+                    )}
                   </div>
                 )}
 
@@ -1822,8 +2007,8 @@ export default function DashboardPage() {
                         <input 
                           type="text"
                           required
-                          placeholder="e.g. Al Safadi Restaurant"
-                          value={takedownBusiness}
+                          placeholder="Business Name (e.g., Downtown Bistro)"
+                          value={takedownBusiness || activeProfile?.name || ''}
                           onChange={(e) => setTakedownBusiness(e.target.value)}
                           className="material-input text-xs"
                         />
@@ -1834,7 +2019,7 @@ export default function DashboardPage() {
                         </label>
                         <input 
                           type="text"
-                          placeholder="e.g. Anonymous or user name"
+                          placeholder="Reviewer Name (e.g., Anonymous Critic)"
                           value={takedownAuthor}
                           onChange={(e) => setTakedownAuthor(e.target.value)}
                           className="material-input text-xs"
@@ -1849,7 +2034,7 @@ export default function DashboardPage() {
                       <textarea 
                         required
                         rows={3}
-                        placeholder="Paste text of the unfair or fake 1★ review..."
+                        placeholder="Enter or paste the negative review text to generate an official legal takedown dossier..."
                         value={takedownReviewText}
                         onChange={(e) => setTakedownReviewText(e.target.value)}
                         className="material-input text-xs resize-none"

@@ -238,7 +238,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
         url = 'https://places.googleapis.com/v1/places:searchText'
         headers = {
             'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos',
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos,places.reviews,places.googleMapsUri',
             'Content-Type': 'application/json'
         }
         data = {'textQuery': query}
@@ -247,6 +247,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
             results = res.json().get("places", [])
             if results:
                 place = results[0]
+                place_maps_uri = place.get("googleMapsUri") or f"https://www.google.com/maps/place/?q=place_id:{place.get('id')}"
                 photo_url = None
                 photos = place.get("photos", [])
                 if photos:
@@ -256,10 +257,28 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
                 
                 cat_name = place.get("primaryTypeDisplayName", {}).get("text") or "Local Business"
 
+                parsed_reviews = []
+                for r in place.get("reviews", []):
+                    r_rating = r.get("rating", 5)
+                    r_text = (r.get("text", {}) or {}).get("text", "") or (r.get("originalText", {}) or {}).get("text", "")
+                    author_obj = r.get("authorAttribution", {}) or {}
+                    author_name = author_obj.get("displayName", "Anonymous")
+                    publish_time = r.get("relativePublishTimeDescription", "")
+                    rev_url = r.get("googleMapsUri") or place_maps_uri
+                    parsed_reviews.append({
+                        "id": r.get("name", "").split("/")[-1] if "/" in r.get("name", "") else f"rev_{len(parsed_reviews)}",
+                        "author_name": author_name,
+                        "rating": r_rating,
+                        "review_date": publish_time,
+                        "review_text": r_text,
+                        "google_review_url": rev_url
+                    })
+
                 return {
                     "place_id": place.get("id"),
                     "business_name": place.get("displayName", {}).get("text"),
                     "address": place.get("formattedAddress"),
+                    "google_maps_url": place_maps_uri,
                     "rating": place.get("rating", 4.5),
                     "reviews_count": place.get("userRatingCount", 0),
                     "lat": place.get("location", {}).get("latitude"),
@@ -268,7 +287,8 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
                     "website_url": place.get("websiteUri", ""),
                     "category": cat_name,
                     "primary_category": cat_name,
-                    "cover_url": photo_url
+                    "cover_url": photo_url,
+                    "reviews": parsed_reviews
                 }
     except Exception as e:
         print(f"[GoogleService] Public Place API lookup failed: {e}")

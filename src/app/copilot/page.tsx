@@ -34,14 +34,16 @@ export default function CopilotPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   React.useEffect(() => {
-    let profileName = 'Manhattan Bakery & Cafe';
+    let profileName = 'Your Business';
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('gbpilot_active_profile');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           setActiveProfile(parsed);
-          profileName = parsed.name;
+          if (parsed.name && parsed.name !== 'Manhattan Bakery & Cafe') {
+            profileName = parsed.name;
+          }
         } catch (e) {
           console.error(e);
         }
@@ -51,14 +53,8 @@ export default function CopilotPage() {
       {
         id: 'msg-1',
         sender: 'assistant',
-        timestamp: '10:42 AM',
-        text: `Hello! I am your 24/7 AI Local SEO Manager for **${profileName}**. I have continuously monitored your local competitors and spatial Geo-Grid maps today. How can I boost your search visibility?`,
-      },
-      {
-        id: 'msg-2',
-        sender: 'user',
-        timestamp: '10:43 AM',
-        text: "How can I improve my ranking for my primary keyword this week?",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: `Welcome! I am your 24/7 AI Local SEO Director for **${profileName}**. How can I help boost your Google Maps ranking and customer conversion today?`,
       }
     ]);
   }, []);
@@ -137,7 +133,7 @@ export default function CopilotPage() {
     <div className="min-h-screen bg-google-bg flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 flex gap-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 lg:pb-8 flex gap-6">
         
         {/* Left Sidebar: Prompt Starters & Context */}
         <div className="hidden md:flex flex-col w-72 space-y-4">
@@ -161,9 +157,9 @@ export default function CopilotPage() {
                 <span>Model Scope:</span>
                 <span className="font-bold text-google-text-primary">GPT-4o / Claude 3.5</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span>Active Business:</span>
-                <span className="font-bold text-google-blue">Manhattan Bakery</span>
+                <span className="font-bold text-google-blue truncate max-w-[130px]">{activeProfile?.name || '—'}</span>
               </div>
             </div>
           </div>
@@ -206,7 +202,7 @@ export default function CopilotPage() {
                     GPT-4o Active
                   </span>
                 </h2>
-                <p className="text-[11px] text-google-text-secondary">Proactive Assistant • Manhattan Bakery & Cafe</p>
+                <p className="text-[11px] text-google-text-secondary">Proactive Assistant • {activeProfile?.name || 'Google Business Profile'}</p>
               </div>
             </div>
           </div>

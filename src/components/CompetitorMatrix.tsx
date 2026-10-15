@@ -19,6 +19,30 @@ interface CompetitorMatrixProps {
 }
 
 export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({ competitors }) => {
+  if (!competitors || competitors.length === 0) {
+    return (
+      <div className="material-card p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-google-border-light pb-4">
+          <div>
+            <h2 className="text-base font-bold text-google-text-primary flex items-center gap-2">
+              <Award className="w-5 h-5 text-google-blue" />
+              5-Factor Competitor Differentiation Matrix
+            </h2>
+            <p className="text-xs text-google-text-secondary">
+              Real-time local market benchmarking against top category leaders
+            </p>
+          </div>
+        </div>
+        <div className="p-8 text-center text-xs text-google-text-secondary space-y-2">
+          <p className="font-semibold text-google-text-primary">Competitor Intelligence Awaiting Scan</p>
+          <p className="text-[11px] max-w-md mx-auto">
+            Run a live Geo-Grid scan for your target keyword to benchmark your ranking against real local competitors in your radius.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="material-card p-6 space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-google-border-light pb-4">
@@ -32,7 +56,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({ competitors 
           </p>
         </div>
         <button 
-          onClick={() => alert("Public Competitor Challenge Link generated: https://gbpilot.ai/challenge/manhattan-bakery-vs-green-bakery")}
+          onClick={() => alert("Public Competitor Challenge Link generated: https://gbpilot.ai/challenge/leader-vs-competitors")}
           className="material-button-secondary text-xs py-1.5 px-3"
         >
           <Share2 className="w-3.5 h-3.5" />

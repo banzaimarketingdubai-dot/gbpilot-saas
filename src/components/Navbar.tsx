@@ -18,8 +18,11 @@ import {
   X,
   Plus,
   Sparkles,
-  Trash2
+  Trash2,
+  Bell
 } from 'lucide-react';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 interface BusinessProfile {
   id?: string;
@@ -57,13 +60,80 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<GoogleUser | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   
-  const defaultProfile = { name: 'Manhattan Bakery & Cafe', address: '540 Broadway, New York, NY', autopilotMode: 'MANUAL_APPROVAL' };
+  const defaultProfile = { name: 'Connect Business Profile', address: '', autopilotMode: 'MANUAL_APPROVAL' };
   const [activeProfile, setActiveProfile] = useState<BusinessProfile>(initialProfile || defaultProfile);
   const [selectedProfile, setSelectedProfile] = useState<string>(activeProfile.name);
 
   const [availableProfiles, setAvailableProfiles] = useState<BusinessProfile[]>([]);
   const isLandingMode = (pathname === '/' || pathname === '/onboarding') && !currentUser;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loadCount = () => {
+        const stored = localStorage.getItem('gbpilot_notifications');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              setUnreadNotificationCount(parsed.filter(n => !n.read).length);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      };
+
+      loadCount();
+
+      const handleCountUpdate = (e: any) => {
+        if (e.detail && typeof e.detail.count === 'number') {
+          setUnreadNotificationCount(e.detail.count);
+        } else {
+          loadCount();
+        }
+      };
+
+      const handleOpenNotifs = () => setIsNotificationCenterOpen(true);
+
+      window.addEventListener('unread_notifications_count_updated', handleCountUpdate);
+      window.addEventListener('open_notification_center', handleOpenNotifs);
+
+      return () => {
+        window.removeEventListener('unread_notifications_count_updated', handleCountUpdate);
+        window.removeEventListener('open_notification_center', handleOpenNotifs);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (initialProfile && initialProfile.name && initialProfile.name !== 'Manhattan Bakery & Cafe') {
+      setActiveProfile(initialProfile);
+      setSelectedProfile(initialProfile.name);
+    }
+  }, [initialProfile]);
+
+  useEffect(() => {
+    const handleProfileSync = () => {
+      const storedActive = localStorage.getItem('gbpilot_active_profile');
+      if (storedActive) {
+        try {
+          const parsed = JSON.parse(storedActive);
+          if (parsed && parsed.name) {
+            setActiveProfile(parsed);
+            setSelectedProfile(parsed.name);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    };
+
+    window.addEventListener('active_profile_updated', handleProfileSync);
+    return () => window.removeEventListener('active_profile_updated', handleProfileSync);
+  }, []);
 
   useEffect(() => {
     // Load active and available profiles from local storage
@@ -76,8 +146,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         try {
           const list = JSON.parse(storedList);
           if (Array.isArray(list) && list.length > 0) {
-            parsedList = list;
-            setAvailableProfiles(list);
+            parsedList = list.filter(p => p.name !== 'Manhattan Bakery & Cafe');
+            setAvailableProfiles(parsedList);
           }
         } catch (e) {
           console.error(e);
@@ -91,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             setActiveProfile(parsedList[0]);
             setSelectedProfile(parsedList[0].name);
             localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedList[0]));
-          } else {
+          } else if (parsed.name !== 'Manhattan Bakery & Cafe') {
             setActiveProfile(parsed);
             setSelectedProfile(parsed.name);
             setAutopilotMode(parsed.autopilotMode || 'MANUAL_APPROVAL');
@@ -221,8 +291,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-google-border shadow-sm px-4 lg:px-8 py-2.5">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <>
+      <header className="sticky top-0 z-50 bg-white border-b border-google-border shadow-sm px-4 lg:px-8 py-2.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         
         {/* Brand Logo & Profile Dropdown */}
         <div className="flex items-center space-x-3 sm:space-x-5">
@@ -402,8 +473,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
         )}
 
-        {/* Right Controls: Autopilot + Google Auth Profile */}
-        <div className="flex items-center space-x-2.5">
+        {/* Right Controls: Notification Bell + Autopilot + Google Auth Profile */}
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5">
+          {/* Notification Center Trigger Bell */}
+          <button
+            onClick={() => setIsNotificationCenterOpen(true)}
+            aria-label="Open notifications"
+            data-testid="navbar-notifications-bell"
+            className="relative p-2 text-slate-600 hover:text-google-blue hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+          >
+            <Bell className="w-4 h-4 text-slate-600 hover:text-google-blue" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-google-red text-white text-[9px] font-black border-2 border-white shadow-xs animate-in zoom-in duration-150">
+                {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+              </span>
+            )}
+          </button>
+
           {!isLandingMode && (
             <div className="relative">
               <button
@@ -605,6 +691,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+
+    {/* Slide-over Actionable Notification Center Drawer */}
+    <NotificationCenter 
+      isOpen={isNotificationCenterOpen} 
+      onClose={() => setIsNotificationCenterOpen(false)} 
+    />
+
+    {/* Persistent Mobile Bottom Navigation (Visible only on mobile/tablet) */}
+    {!isLandingMode && <MobileBottomNav />}
+  </>
   );
 };
 

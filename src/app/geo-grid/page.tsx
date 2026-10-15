@@ -52,25 +52,49 @@ const MOCK_COMPETITORS: CompetitorComparison[] = [
 
 export default function GeoGridPage() {
   const [activeTab, setActiveTab] = useState<'MAPS_GRID' | 'AI_LLM_GEO'>('MAPS_GRID');
-  const [selectedKeyword, setSelectedKeyword] = useState('organic sourdough bread');
+  const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string} | null>(null);
+  const [selectedKeyword, setSelectedKeyword] = useState('');
   const [gridSize, setGridSize] = useState<'3x3' | '5x5' | '7x7'>('3x3');
   const [timelineIndex, setTimelineIndex] = useState(3); // Today
 
   // State for grid ranks
   const [isScanning, setIsScanning] = useState(false);
   const [gridRanks, setGridRanks] = useState([
-    { pos: 1, rank: 0, competitor: 'No Data' },
-    { pos: 2, rank: 0, competitor: 'No Data' },
-    { pos: 3, rank: 0, competitor: 'No Data' },
-    { pos: 4, rank: 0, competitor: 'No Data' },
-    { pos: 5, rank: 0, competitor: 'No Data' },
-    { pos: 6, rank: 0, competitor: 'No Data' },
-    { pos: 7, rank: 0, competitor: 'No Data' },
-    { pos: 8, rank: 0, competitor: 'No Data' },
-    { pos: 9, rank: 0, competitor: 'No Data' },
+    { pos: 1, rank: 0, competitor: '—' },
+    { pos: 2, rank: 0, competitor: '—' },
+    { pos: 3, rank: 0, competitor: '—' },
+    { pos: 4, rank: 0, competitor: '—' },
+    { pos: 5, rank: 0, competitor: '—' },
+    { pos: 6, rank: 0, competitor: '—' },
+    { pos: 7, rank: 0, competitor: '—' },
+    { pos: 8, rank: 0, competitor: '—' },
+    { pos: 9, rank: 0, competitor: '—' },
   ]);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('gbpilot_active_profile');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setActiveProfile(parsed);
+          if (parsed.category) {
+            setSelectedKeyword(parsed.category);
+          } else if (parsed.name) {
+            setSelectedKeyword(parsed.name);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
   const handleScan = async () => {
+    if (!selectedKeyword.trim()) {
+      alert("Please enter a target keyword for the ranking scan");
+      return;
+    }
     setIsScanning(true);
     try {
       const stored = localStorage.getItem('gbpilot_active_profile');
@@ -89,7 +113,6 @@ export default function GeoGridPage() {
       
       if (res.ok) {
         const data = await res.json();
-        // data.grid: [{pos: 1, rank: 1, lat: X, lng: Y}, ...]
         const newRanks = data.grid.map((g: any) => ({
           pos: g.pos,
           rank: g.rank,
@@ -111,7 +134,7 @@ export default function GeoGridPage() {
     <div className="min-h-screen bg-google-bg flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 lg:pb-8 space-y-6">
         
         {/* Header & Tab Bar */}
         <div className="material-card p-6 bg-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -161,16 +184,13 @@ export default function GeoGridPage() {
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-google-text-tertiary" />
                 <span className="font-semibold text-google-text-secondary">Target Keyword:</span>
-                <select
+                <input
+                  type="text"
                   value={selectedKeyword}
                   onChange={(e) => setSelectedKeyword(e.target.value)}
-                  className="material-input text-xs py-1.5 px-3 w-56 font-medium bg-white"
-                >
-                  <option value="bakery in new york">bakery in new york</option>
-                  <option value="organic sourdough bread">organic sourdough bread</option>
-                  <option value="artisan espresso bar">artisan espresso bar</option>
-                  <option value="best breakfast cafe near me">best breakfast cafe near me</option>
-                </select>
+                  placeholder="e.g. coffee shop, visa service, bakery..."
+                  className="material-input text-xs py-1.5 px-3 w-64 font-medium bg-white border border-google-border rounded-lg"
+                />
               </div>
 
               {/* Grid Selector */}
@@ -217,16 +237,18 @@ export default function GeoGridPage() {
 
             {/* Spatial Map Viewport & Pin Heatmap */}
             <div className="material-card p-6 bg-white relative overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className="font-bold text-google-text-primary text-sm">Spatial Pin Heatmap ({gridSize})</h3>
-                  <p className="text-xs text-google-text-secondary">Distance Step: 0.5 km radius around 540 Broadway, NY</p>
+                  <p className="text-xs text-google-text-secondary">
+                    Distance Step: 0.5 km radius around {activeProfile?.address || 'Your Venue Address'}
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-medium">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-google-green" /> Top 3 (Winning)</span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-google-yellow" /> Rank 4-8 (Warning)</span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-google-red" /> Rank 9+ (Lost Traffic)</span>
+                <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-google-green" /> Top 3 (Dominance Zone)</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-google-yellow" /> Rank 4-8 (Vulnerable Zone)</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-google-red" /> Rank 9+ (Lost Customer Zone)</span>
                 </div>
               </div>
 
@@ -238,16 +260,15 @@ export default function GeoGridPage() {
                 {/* Pin Matrix Overlay */}
                 <div className="grid grid-cols-3 gap-6 relative z-10 p-4">
                   {gridRanks.map((item) => {
-                    const isWinning = item.rank <= 3;
                     return (
                       <div
                         key={item.pos}
                         className={`w-20 h-20 rounded-2xl shadow-material-2 flex flex-col items-center justify-center text-white transition-all transform hover:scale-110 cursor-pointer ${
-                          item.rank <= 2 ? 'bg-google-green' : item.rank <= 3 ? 'bg-google-yellow' : 'bg-google-red'
+                          item.rank === 0 ? 'bg-slate-400' : item.rank <= 2 ? 'bg-google-green' : item.rank <= 3 ? 'bg-google-yellow' : 'bg-google-red'
                         }`}
                       >
                         <MapPin className="w-4 h-4 mb-0.5 fill-white" />
-                        <span className="text-lg font-black leading-none">#{item.rank}</span>
+                        <span className="text-lg font-black leading-none">{item.rank === 0 ? '—' : `#${item.rank}`}</span>
                         <span className="text-[9px] opacity-90 truncate max-w-[60px]">{item.competitor}</span>
                       </div>
                     );
@@ -257,7 +278,7 @@ export default function GeoGridPage() {
             </div>
 
             {/* Competitor Differentiation Matrix Component */}
-            <CompetitorMatrix competitors={MOCK_COMPETITORS} />
+            <CompetitorMatrix competitors={[]} />
 
           </div>
         )}
@@ -271,20 +292,20 @@ export default function GeoGridPage() {
               
               <div className="material-card p-5 bg-white space-y-2">
                 <span className="text-xs font-semibold text-google-text-secondary block">ChatGPT Brand Mention Rate</span>
-                <span className="text-2xl font-black text-google-blue">78%</span>
-                <p className="text-[11px] text-google-green font-bold">Recommended in 8/10 Local Bakery Prompts</p>
+                <span className="text-2xl font-black text-google-blue">—</span>
+                <p className="text-[11px] text-google-text-tertiary">Awaiting LLM Crawl API sync</p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2">
                 <span className="text-xs font-semibold text-google-text-secondary block">Gemini AI Overviews Share</span>
-                <span className="text-2xl font-black text-google-green">92%</span>
-                <p className="text-[11px] text-google-green font-bold">Featured in Top 3 Local Snippets</p>
+                <span className="text-2xl font-black text-google-green">—</span>
+                <p className="text-[11px] text-google-text-tertiary">Awaiting Gemini Search sync</p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2">
                 <span className="text-xs font-semibold text-google-text-secondary block">Perplexity Recommendation Index</span>
-                <span className="text-2xl font-black text-purple-600">65%</span>
-                <p className="text-[11px] text-google-text-secondary">Needs structured citation backlinks</p>
+                <span className="text-2xl font-black text-purple-600">—</span>
+                <p className="text-[11px] text-google-text-tertiary">Requires citation audit scan</p>
               </div>
 
             </div>
@@ -297,34 +318,15 @@ export default function GeoGridPage() {
                     <Sparkles className="w-4 h-4 text-google-blue" />
                     Expert Curated Lists & Citation Targets
                   </h3>
-                  <p className="text-xs text-google-text-secondary">High-authority local blogs feeding data directly into LLM models.</p>
+                  <p className="text-xs text-google-text-secondary">High-authority local directories and citations referenced by generative AI models.</p>
                 </div>
               </div>
 
-              <div className="space-y-2 text-xs">
-                {[
-                  { title: "Top 10 Artisanal Bakeries in NYC (2026)", status: "MISSING", impact: "High", domain: "eater.com/nyc" },
-                  { title: "Best Espresso & Coffee Shops in Broadway", status: "FEATURED (#2)", impact: "Verified", domain: "timeout.com/nyc" },
-                  { title: "Dog-Friendly Cafes in Sector 4", status: "MISSING", impact: "Medium", domain: "nyceats.org" },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-google-bg rounded-xl border border-google-border-light">
-                    <div>
-                      <h4 className="font-bold text-google-text-primary">{item.title}</h4>
-                      <span className="text-[10px] text-google-text-tertiary font-mono">{item.domain}</span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
-                        item.status.includes('FEATURED') ? 'bg-google-green-light text-google-green' : 'bg-google-red-light text-google-red'
-                      }`}>
-                        {item.status}
-                      </span>
-                      <button className="material-button-ghost text-xs text-google-blue">
-                        Outreach <ExternalLink className="w-3 h-3 ml-1" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="p-8 text-center text-xs text-google-text-secondary space-y-2">
+                <p className="font-semibold text-google-text-primary">No Active Citation Data Available</p>
+                <p className="text-[11px] max-w-md mx-auto">
+                  For "{activeProfile?.name || 'your business'}", the citation index is compiled after running a direct keyword scan. NYC demo placeholders are disabled.
+                </p>
               </div>
             </div>
 
