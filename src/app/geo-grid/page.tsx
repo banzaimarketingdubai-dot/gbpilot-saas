@@ -19,7 +19,8 @@ import {
   X,
   Target,
   Tag,
-  Map
+  Map,
+  RotateCcw
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -103,44 +104,174 @@ const DEMO_COMPETITORS: CompetitorComparison[] = [
   }
 ];
 
+const isPlaceholderCategory = (cat?: string): boolean => {
+  if (!cat || typeof cat !== 'string') return true;
+  const c = cat.trim().toLowerCase();
+  return (
+    c === '' ||
+    c === 'local business' ||
+    c === 'localbusiness' ||
+    c === 'establishment' ||
+    c === 'point of interest' ||
+    c === 'store' ||
+    c === 'company' ||
+    c === 'corporate office' ||
+    c === 'unverified' ||
+    c === 'null' ||
+    c === 'undefined'
+  );
+};
+
+const sanitizeQueryLabel = (label: string): boolean => {
+  if (!label || typeof label !== 'string') return false;
+  const l = label.toLowerCase();
+  // Filter out any garbage containing "local business", "establishment", or placeholder phrases
+  if (
+    l.includes('local business') ||
+    l.includes('establishment') ||
+    l.includes('point of interest') ||
+    l.includes('undefined') ||
+    l.includes('null')
+  ) {
+    return false;
+  }
+  return true;
+};
+
 const getDefaultKeywordPills = (profile: any): KeywordPill[] => {
   const name = (profile?.name || '').toLowerCase();
-  const cat = (profile?.category || '').toLowerCase();
-  
+  const rawCat = profile?.category || '';
+  const cat = rawCat.toLowerCase();
+  const address = ((profile?.address || '') + ' ' + (profile?.city || '')).toLowerCase();
+  const isVietnam = address.includes('vietnam') || address.includes('nha trang') || address.includes('вьетнам') || address.includes('нячанг') || address.includes('hòn chồng');
+  const isDubai = address.includes('dubai') || address.includes('uae') || address.includes('дубай') || address.includes('оаэ');
+
+  // 1. Visa, Visa Run, Relocation & Immigration (Russian & English keywords)
+  if (
+    name.includes('виза') || 
+    name.includes('визар') || 
+    name.includes('visa') || 
+    name.includes('релокац') || 
+    name.includes('relocat') || 
+    name.includes('иммиграц') || 
+    cat.includes('visa') || 
+    cat.includes('виза') || 
+    cat.includes('immigration') || 
+    cat.includes('legal')
+  ) {
+    if (isVietnam) {
+      return [
+        { id: 'kw-v1', label: 'Vietnam Visa Extension', category: 'PRODUCT' },
+        { id: 'kw-v2', label: 'Visa Run Nha Trang', category: 'PRODUCT' },
+        { id: 'kw-v3', label: 'Cambodia Border Run', category: 'OCCASION' },
+        { id: 'kw-v4', label: 'Fast Track Visa Service', category: 'PRODUCT' },
+        { id: 'kw-v5', label: 'Work Permit & TRC Vietnam', category: 'PRODUCT' },
+        { id: 'kw-v6', label: 'Urgent Visa Renewal', category: 'AREA' },
+      ];
+    }
+    if (isDubai) {
+      return [
+        { id: 'kw-d1', label: 'UAE Golden Visa', category: 'PRODUCT' },
+        { id: 'kw-d2', label: 'Business Setup Dubai', category: 'PRODUCT' },
+        { id: 'kw-d3', label: 'Freelance Visa Services', category: 'PRODUCT' },
+        { id: 'kw-d4', label: 'Corporate Bank Account Opening', category: 'OCCASION' },
+        { id: 'kw-d5', label: 'PRO Services Downtown', category: 'AREA' },
+        { id: 'kw-d6', label: 'Emirates ID & Medical Typing', category: 'PRODUCT' },
+      ];
+    }
+    return [
+      { id: 'kw-g1', label: 'Visa Extension Services', category: 'PRODUCT' },
+      { id: 'kw-g2', label: 'Border Run & Fast Track', category: 'PRODUCT' },
+      { id: 'kw-g3', label: 'Work Permit & Residence Visa', category: 'PRODUCT' },
+      { id: 'kw-g4', label: 'Express Visa Renewal', category: 'OCCASION' },
+      { id: 'kw-g5', label: 'Expat Legal Consulting', category: 'AREA' },
+    ];
+  }
+
+  // 2. Cafe, Coffee, Bakery & Restaurant (Russian & English keywords)
   if (
     name.includes('bakery') || 
     name.includes('cafe') || 
     name.includes('coffee') || 
+    name.includes('кафе') || 
+    name.includes('кофе') || 
+    name.includes('пекарн') || 
     name.includes('свои') || 
+    name.includes('ресторан') || 
     cat.includes('cafe') || 
-    cat.includes('restaurant')
+    cat.includes('restaurant') || 
+    cat.includes('coffee') || 
+    cat.includes('bakery')
   ) {
     return [
-      { id: 'kw-1', label: 'Specialty Coffee', category: 'PRODUCT' },
-      { id: 'kw-2', label: 'Breakfast & Syrniki', category: 'PRODUCT' },
-      { id: 'kw-3', label: 'Fresh Bakery & Pastry', category: 'PRODUCT' },
-      { id: 'kw-4', label: 'Work Friendly Cafe with WiFi', category: 'OCCASION' },
-      { id: 'kw-5', label: 'Matcha Latte', category: 'PRODUCT' },
-      { id: 'kw-6', label: 'Best Cafe Near Beach', category: 'AREA' },
-    ];
-  }
-  
-  if (name.includes('visa') || cat.includes('legal') || cat.includes('consulting') || cat.includes('corporate')) {
-    return [
-      { id: 'kw-1', label: 'UAE Golden Visa', category: 'PRODUCT' },
-      { id: 'kw-2', label: 'Business Setup Dubai', category: 'PRODUCT' },
-      { id: 'kw-3', label: 'Freelance Visa Services', category: 'PRODUCT' },
-      { id: 'kw-4', label: 'Corporate Bank Account Opening', category: 'OCCASION' },
-      { id: 'kw-5', label: 'PRO Services Downtown', category: 'AREA' },
+      { id: 'kw-c1', label: 'Specialty Coffee', category: 'PRODUCT' },
+      { id: 'kw-c2', label: 'Breakfast & Syrniki', category: 'PRODUCT' },
+      { id: 'kw-c3', label: 'Fresh Bakery & Pastry', category: 'PRODUCT' },
+      { id: 'kw-c4', label: 'Work Friendly Cafe with WiFi', category: 'OCCASION' },
+      { id: 'kw-c5', label: 'Matcha Latte', category: 'PRODUCT' },
+      { id: 'kw-c6', label: 'Best Cafe Near Beach', category: 'AREA' },
     ];
   }
 
-  const primaryTerm = profile?.category || profile?.name || 'Local Business';
+  // 3. Beauty, Hair Salon, Spa, Barber
+  if (
+    name.includes('salon') || 
+    name.includes('barber') || 
+    name.includes('spa') || 
+    name.includes('beauty') || 
+    name.includes('салон') || 
+    name.includes('барбер') || 
+    name.includes('спа') || 
+    name.includes('массаж') || 
+    cat.includes('salon') || 
+    cat.includes('barber') || 
+    cat.includes('spa')
+  ) {
+    return [
+      { id: 'kw-b1', label: 'Hair Salon & Styling', category: 'PRODUCT' },
+      { id: 'kw-b2', label: 'English Speaking Barber', category: 'PRODUCT' },
+      { id: 'kw-b3', label: 'Relaxing Spa & Massage', category: 'PRODUCT' },
+      { id: 'kw-b4', label: 'Manicure & Pedicure', category: 'OCCASION' },
+      { id: 'kw-b5', label: 'Facial & Skin Care Near Me', category: 'AREA' },
+    ];
+  }
+
+  // 4. Real Estate & Rental
+  if (
+    name.includes('realty') || 
+    name.includes('real estate') || 
+    name.includes('property') || 
+    name.includes('rent') || 
+    name.includes('недвиж') || 
+    name.includes('аренд') || 
+    name.includes('квартир') || 
+    cat.includes('real estate')
+  ) {
+    return [
+      { id: 'kw-r1', label: 'Apartment Rental', category: 'PRODUCT' },
+      { id: 'kw-r2', label: 'Luxury Villa Rental', category: 'PRODUCT' },
+      { id: 'kw-r3', label: 'Long Term Condo Lease', category: 'PRODUCT' },
+      { id: 'kw-r4', label: 'Expat Housing Service', category: 'OCCASION' },
+    ];
+  }
+
+  // 5. If category is valid and not a placeholder
+  if (!isPlaceholderCategory(rawCat)) {
+    return [
+      { id: 'kw-u1', label: `${rawCat}`, category: 'PRODUCT' },
+      { id: 'kw-u2', label: `Best ${rawCat} Near Me`, category: 'AREA' },
+      { id: 'kw-u3', label: `Top Rated ${rawCat}`, category: 'PRODUCT' },
+      { id: 'kw-u4', label: `${rawCat} Open Now`, category: 'OCCASION' },
+    ];
+  }
+
+  // 6. Generic or unverified category fallback - NEVER use "Local Business"
+  const businessTitle = profile?.name ? profile.name.trim() : 'Local Services';
   return [
-    { id: 'kw-1', label: `${primaryTerm}`, category: 'PRODUCT' },
-    { id: 'kw-2', label: `Best ${primaryTerm} Near Me`, category: 'AREA' },
-    { id: 'kw-3', label: `Top Rated ${primaryTerm}`, category: 'PRODUCT' },
-    { id: 'kw-4', label: `${primaryTerm} Open Now`, category: 'OCCASION' },
+    { id: 'kw-gen-1', label: `${businessTitle}`, category: 'PRODUCT' },
+    { id: 'kw-gen-2', label: `${businessTitle} Services`, category: 'PRODUCT' },
+    { id: 'kw-gen-3', label: `${businessTitle} Reviews`, category: 'AREA' },
+    { id: 'kw-gen-4', label: `Customer Service Contact`, category: 'OCCASION' },
   ];
 };
 
@@ -162,6 +293,22 @@ export default function GeoGridPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [competitors, setCompetitors] = useState<CompetitorComparison[]>(DEMO_COMPETITORS);
   const [scanNotice, setScanNotice] = useState<string | null>(null);
+
+  // Category deficiency check
+  const isCategoryDeficient = isPlaceholderCategory(activeProfile?.category);
+  const getCategoryRecommendation = () => {
+    const name = (activeProfile?.name || '').toLowerCase();
+    if (name.includes('виза') || name.includes('визар') || name.includes('visa')) {
+      return 'Visa Consultant, Immigration Attorney, or Travel Agency';
+    }
+    if (name.includes('cafe') || name.includes('coffee') || name.includes('кафе') || name.includes('пекарн') || name.includes('свои')) {
+      return 'Cafe, Coffee Shop, or Bakery';
+    }
+    if (name.includes('salon') || name.includes('barber') || name.includes('салон') || name.includes('барбер') || name.includes('spa')) {
+      return 'Hair Salon, Barber Shop, or Day Spa';
+    }
+    return 'Consultant, Specialist Clinic, Retail, or Restaurant';
+  };
 
   // Build grid node template
   const buildGridTemplate = (size: '3x3' | '5x5' | '7x7') => {
@@ -189,38 +336,36 @@ export default function GeoGridPage() {
         }
       }
 
-      // Load initial keyword pills
-      const basePills = getDefaultKeywordPills(parsedProfile);
+      const profileKey = parsedProfile?.id || parsedProfile?.name || 'default';
       
-      // Load saved custom keywords from localStorage
-      let customPills: KeywordPill[] = [];
-      const storedCustom = localStorage.getItem('gbpilot_custom_keywords');
-      if (storedCustom) {
+      // Load saved pills from localStorage for this profile
+      let loadedPills: KeywordPill[] = [];
+      const savedPillsJson = localStorage.getItem(`gbpilot_keywords_${profileKey}`);
+      
+      if (savedPillsJson) {
         try {
-          const parsedCustom = JSON.parse(storedCustom);
-          if (Array.isArray(parsedCustom)) {
-            customPills = parsedCustom.map((item: any, idx: number) => ({
-              id: item.id || `custom-${idx}`,
-              label: typeof item === 'string' ? item : item.label,
-              category: 'CUSTOM' as const,
-              isCustom: true
-            }));
+          const parsed = JSON.parse(savedPillsJson);
+          if (Array.isArray(parsed)) {
+            // Strictly sanitize: purge any generic "Local Business" or broken tokens
+            loadedPills = parsed.filter((p: any) => p && typeof p.label === 'string' && sanitizeQueryLabel(p.label));
           }
         } catch (e) {
           console.error(e);
         }
       }
 
-      const mergedPills = [...basePills, ...customPills];
-      setKeywordPills(mergedPills);
+      // If no valid stored pills or they were purged, load intelligent niche defaults
+      if (loadedPills.length === 0) {
+        loadedPills = getDefaultKeywordPills(parsedProfile).filter(p => sanitizeQueryLabel(p.label));
+      }
+
+      setKeywordPills(loadedPills);
 
       // Set initial selected keyword
-      if (mergedPills.length > 0) {
-        setSelectedKeyword(mergedPills[0].label);
-      } else if (parsedProfile?.category) {
-        setSelectedKeyword(parsedProfile.category);
+      if (loadedPills.length > 0) {
+        setSelectedKeyword(loadedPills[0].label);
       } else {
-        setSelectedKeyword('Specialty Coffee');
+        setSelectedKeyword('Visa Run Nha Trang');
       }
     }
   }, []);
@@ -229,6 +374,11 @@ export default function GeoGridPage() {
     e.preventDefault();
     const trimmed = newCustomKeyword.trim();
     if (!trimmed) return;
+
+    if (!sanitizeQueryLabel(trimmed)) {
+      setScanNotice(`Cannot add generic placeholder queries like "Local Business".`);
+      return;
+    }
 
     // Check if duplicate exists
     const exists = keywordPills.some(p => p.label.toLowerCase() === trimmed.toLowerCase());
@@ -252,29 +402,48 @@ export default function GeoGridPage() {
     setSelectedKeyword(trimmed);
     setIsAddingCustom(false);
     setNewCustomKeyword('');
-    setScanNotice(`Added custom search query "${trimmed}". Ready for live scan.`);
+    setScanNotice(`Added search query "${trimmed}". Ready for live scan.`);
 
     // Persist to localStorage
     if (typeof window !== 'undefined') {
-      const customOnly = updated.filter(p => p.isCustom);
-      localStorage.setItem('gbpilot_custom_keywords', JSON.stringify(customOnly));
+      const profileKey = activeProfile?.id || activeProfile?.name || 'default';
+      localStorage.setItem(`gbpilot_keywords_${profileKey}`, JSON.stringify(updated));
     }
   };
 
-  const handleRemoveCustomKeyword = (id: string) => {
+  const handleRemoveKeyword = (id: string) => {
+    const removedPill = keywordPills.find(p => p.id === id);
     const updated = keywordPills.filter(p => p.id !== id);
     setKeywordPills(updated);
     
     // If the removed pill was currently selected, select the first remaining pill
-    const removedPill = keywordPills.find(p => p.id === id);
-    if (removedPill && selectedKeyword.toLowerCase() === removedPill.label.toLowerCase() && updated.length > 0) {
-      setSelectedKeyword(updated[0].label);
+    if (removedPill && selectedKeyword.toLowerCase() === removedPill.label.toLowerCase()) {
+      if (updated.length > 0) {
+        setSelectedKeyword(updated[0].label);
+      } else {
+        setSelectedKeyword('');
+      }
     }
 
     if (typeof window !== 'undefined') {
-      const customOnly = updated.filter(p => p.isCustom);
-      localStorage.setItem('gbpilot_custom_keywords', JSON.stringify(customOnly));
+      const profileKey = activeProfile?.id || activeProfile?.name || 'default';
+      localStorage.setItem(`gbpilot_keywords_${profileKey}`, JSON.stringify(updated));
     }
+
+    setScanNotice(removedPill ? `Removed query "${removedPill.label}".` : 'Search query removed.');
+  };
+
+  const handleResetKeywords = () => {
+    const fresh = getDefaultKeywordPills(activeProfile).filter(p => sanitizeQueryLabel(p.label));
+    setKeywordPills(fresh);
+    if (fresh.length > 0) {
+      setSelectedKeyword(fresh[0].label);
+    }
+    if (typeof window !== 'undefined') {
+      const profileKey = activeProfile?.id || activeProfile?.name || 'default';
+      localStorage.setItem(`gbpilot_keywords_${profileKey}`, JSON.stringify(fresh));
+    }
+    setScanNotice("Grounding queries restored to AI suggested niche terms.");
   };
 
   const handleGridSizeChange = (newSize: '3x3' | '5x5' | '7x7') => {
@@ -508,7 +677,7 @@ export default function GeoGridPage() {
             {/* SMART KEYWORD GROUNDING HUB (JTBD Zero-Hallucination)    */}
             {/* ======================================================== */}
             <div className="material-card p-5 bg-white border border-google-border rounded-2xl shadow-sm space-y-3.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-google-border-light pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-google-border-light pb-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-google-blue" />
@@ -516,49 +685,95 @@ export default function GeoGridPage() {
                       Target Search Queries (Grounding Hub)
                     </h2>
                     <span className="text-[10px] font-bold text-google-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                      Grounded on Reviews & Menu
+                      Grounded on Reviews & Niche
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    AI pre-extracted high-intent terms real guests use in Google Maps. Select a cluster or add your own custom dishes & services.
+                    AI pre-extracted high-intent terms real guests use in Google Maps. Select a query, add your own custom terms, or remove unneeded chips.
                   </p>
                 </div>
 
-                {/* Add Custom Keyword Button or Inline Form */}
-                {!isAddingCustom ? (
+                {/* Actions: Reset Suggestions + Add Custom Query */}
+                <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
                   <button
-                    onClick={() => setIsAddingCustom(true)}
-                    className="text-xs font-bold text-google-blue hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 px-3 py-1.5 rounded-xl border border-blue-200/80 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    type="button"
+                    onClick={handleResetKeywords}
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1.5 rounded-xl border border-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Reset to AI suggested niche queries"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>+ Add Custom Search Query</span>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset Suggestions</span>
                   </button>
-                ) : (
-                  <form onSubmit={handleAddCustomKeyword} className="flex items-center gap-1.5 self-start sm:self-auto">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={newCustomKeyword}
-                      onChange={(e) => setNewCustomKeyword(e.target.value)}
-                      placeholder="e.g. syrniki, matcha latte, golden visa..."
-                      className="material-input text-xs py-1 px-2.5 w-52 rounded-lg border border-google-blue ring-1 ring-google-blue/30"
-                    />
-                    <button
-                      type="submit"
-                      className="px-2.5 py-1 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold cursor-pointer"
-                    >
-                      Add ✓
-                    </button>
+
+                  {!isAddingCustom ? (
                     <button
                       type="button"
-                      onClick={() => { setIsAddingCustom(false); setNewCustomKeyword(''); }}
-                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg text-xs"
+                      onClick={() => setIsAddingCustom(true)}
+                      className="text-xs font-bold text-google-blue hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 px-3 py-1.5 rounded-xl border border-blue-200/80 transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
-                      <X className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Add Custom Search Query</span>
                     </button>
-                  </form>
-                )}
+                  ) : (
+                    <form onSubmit={handleAddCustomKeyword} className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={newCustomKeyword}
+                        onChange={(e) => setNewCustomKeyword(e.target.value)}
+                        placeholder="e.g. visa extension, border run, coffee..."
+                        className="material-input text-xs py-1 px-2.5 w-52 rounded-lg border border-google-blue ring-1 ring-google-blue/30"
+                      />
+                      <button
+                        type="submit"
+                        className="px-2.5 py-1 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold cursor-pointer"
+                      >
+                        Add ✓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingCustom(false); setNewCustomKeyword(''); }}
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded-lg text-xs cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
+
+              {/* Category Deficiency Warning Banner */}
+              {isCategoryDeficient && (
+                <div className="p-4 bg-amber-50/90 border border-amber-300 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-amber-100 rounded-xl text-amber-700 shrink-0 mt-0.5 md:mt-0">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-amber-950 flex flex-wrap items-center gap-2">
+                        <span>Critical Profile Optimization Alert: Missing Verified Category</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-extrabold uppercase tracking-wide">
+                          Rank Penalty Risk
+                        </span>
+                      </div>
+                      <p className="text-amber-900/80 text-[11px] mt-0.5 leading-relaxed">
+                        Your Google Business Profile has assigned fallback placeholder <strong>"{activeProfile?.category || 'Local Business'}"</strong> because no primary niche category is set. Google Maps rank algorithms cannot route high-intent customer searches without a verified category (e.g. <em>{getCategoryRecommendation()}</em>).
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+                    <a
+                      href="https://business.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Update in Google Profile</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {/* Visual Interactive Chips Flow */}
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -578,29 +793,37 @@ export default function GeoGridPage() {
                       }`}
                     >
                       {isSelected ? (
-                        <Check className="w-3.5 h-3.5 text-white" />
+                        <Check className="w-3.5 h-3.5 text-white shrink-0" />
                       ) : (
                         <span className="text-slate-400 font-normal">#</span>
                       )}
                       <span>{pill.label}</span>
                       
-                      {pill.isCustom && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveCustomKeyword(pill.id);
-                          }}
-                          className={`p-0.5 rounded-full hover:bg-white/30 transition-colors ml-0.5 ${
-                            isSelected ? 'text-white' : 'text-slate-400 hover:text-google-red'
-                          }`}
-                          title="Remove custom keyword"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
+                      {/* Delete button available on EVERY chip */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveKeyword(pill.id);
+                        }}
+                        className={`p-0.5 rounded-full transition-colors ml-0.5 cursor-pointer ${
+                          isSelected
+                            ? 'text-white/80 hover:text-white hover:bg-white/20'
+                            : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                        }`}
+                        title={`Remove "${pill.label}"`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
                   );
                 })}
+
+                {keywordPills.length === 0 && (
+                  <div className="text-xs text-slate-400 italic py-1">
+                    No active search queries. Click "+ Add Custom Search Query" or "Reset Suggestions".
+                  </div>
+                )}
               </div>
 
               {/* Active Focus Pill Status Bar */}
