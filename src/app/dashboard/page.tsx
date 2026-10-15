@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Zap, 
   ShieldCheck, 
@@ -19,7 +20,8 @@ import {
   Navigation, 
   MousePointerClick, 
   Check, 
-  Edit3, 
+  Edit3,
+  Copy, 
   DollarSign, 
   X,
   Sliders,
@@ -72,6 +74,11 @@ interface ActiveBusinessProfile {
 }
 
 export default function DashboardCockpitPage() {
+  const router = useRouter();
+  const [isLocationQuotaModalOpen, setIsLocationQuotaModalOpen] = useState(false);
+  const [isProTrialModalOpen, setIsProTrialModalOpen] = useState(false);
+  const [isProUser, setIsProUser] = useState(false);
+  const [pendingActionToExecute, setPendingActionToExecute] = useState<string | null>(null);
   const [activeProfile, setActiveProfile] = useState<ActiveBusinessProfile | null>(null);
   const [availableProfiles, setAvailableProfiles] = useState<ActiveBusinessProfile[]>([]);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
@@ -190,6 +197,10 @@ export default function DashboardCockpitPage() {
         localStorage.setItem('gbpilot_available_profiles', JSON.stringify([defaultDemoProfile]));
       }
 
+      const storedPro = localStorage.getItem('gbpilot_pro_activated');
+      if (storedPro === 'true') {
+        setIsProUser(true);
+      }
       const storedMode = localStorage.getItem('gbpilot_autopilot_mode');
       if (storedMode === 'FULL_AUTOPILOT') {
         setCopilotMode('AUTONOMOUS');
@@ -244,6 +255,36 @@ export default function DashboardCockpitPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4500);
+  };
+
+  const handleCopyManual = (item: ActionItem) => {
+    const textToCopy = item.aiDraft || (item.title + ' - ' + item.subtitle);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(textToCopy);
+      showToast('📋 Copied to clipboard! You can now manually paste it into Google Maps.');
+    }
+  };
+
+  const handleStartProTrialAndExecute = () => {
+    setIsProUser(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gbpilot_pro_activated', 'true');
+    }
+    setIsProTrialModalOpen(false);
+    showToast('🎉 14-Day Pro Autopilot Activated ($0.00 today)!');
+    if (pendingActionToExecute) {
+      handleExecuteAction(pendingActionToExecute);
+      setPendingActionToExecute(null);
+    }
+  };
+
+  const handleActionClick = (actionId: string) => {
+    if (!isProUser) {
+      setPendingActionToExecute(actionId);
+      setIsProTrialModalOpen(true);
+    } else {
+      handleExecuteAction(actionId);
+    }
   };
 
   const handleExecuteAction = (actionId: string) => {
@@ -419,6 +460,12 @@ export default function DashboardCockpitPage() {
                             <span>Your Businesses ({availableProfiles.length})</span>
                             <span className="text-emerald-600 font-semibold">Active Locations</span>
                           </div>
+                          <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500 font-medium">Location Quota:</span>
+                            <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
+                              {availableProfiles.length} / 1 Location Used (Starter)
+                            </span>
+                          </div>
 
                           <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
                             {availableProfiles.map((p, idx) => (
@@ -449,13 +496,25 @@ export default function DashboardCockpitPage() {
                             ))}
                           </div>
 
-                          <Link
-                            href="/onboarding"
-                            className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 text-google-blue hover:bg-blue-50 font-bold border-t border-slate-100 transition-colors"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (availableProfiles.length >= 1 && !isProUser) {
+                                setIsLocationQuotaModalOpen(true);
+                              } else {
+                                router.push('/onboarding');
+                              }
+                            }}
+                            className="w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between text-google-blue hover:bg-blue-50 font-bold border-t border-slate-100 transition-colors cursor-pointer"
                           >
-                            <Building2 className="w-3.5 h-3.5" />
-                            <span>+ Connect New Location</span>
-                          </Link>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-3.5 h-3.5" />
+                              <span>+ Connect New Location</span>
+                            </div>
+                            <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
+                              Quota 1/1
+                            </span>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -731,6 +790,17 @@ export default function DashboardCockpitPage() {
 
                       {/* 1-Click Action Buttons */}
                       <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0 flex-wrap">
+                        {/* Free Manual Copy Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleCopyManual(item)}
+                          className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                          title="Free manual option: copy text and paste directly into Google Maps"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Copy Manual</span>
+                        </button>
+
                         {item.aiDraft && (
                           <button
                             type="button"
@@ -742,13 +812,14 @@ export default function DashboardCockpitPage() {
                           </button>
                         )}
 
+                        {/* 1-Click Pro Automated Publish */}
                         <button
                           type="button"
-                          onClick={() => handleExecuteAction(item.id)}
+                          onClick={() => handleActionClick(item.id)}
                           className="flex-1 md:flex-none px-4 py-2 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
                         >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>{item.primaryCtaText}</span>
+                          <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                          <span>{isProUser ? item.primaryCtaText : '⚡ 1-Click Auto-Publish (Pro)'}</span>
                         </button>
                       </div>
                     </div>
@@ -1227,6 +1298,144 @@ export default function DashboardCockpitPage() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      
+      {/* Location Quota Paywall Modal (Avatar 2 in MVP) */}
+      {isLocationQuotaModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl animate-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-50 rounded-xl text-amber-600 border border-amber-200">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    Location Limit Reached
+                  </h3>
+                  <span className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    1 / 1 Locations Used
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setIsLocationQuotaModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Your current <strong>Starter / Trial plan</strong> includes 1 active Google Business Profile. To connect, monitor, and defend multiple locations or franchise branches, upgrade to the <strong>Pro Multi-Location plan</strong> (up to 5 locations).
+            </p>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-google-blue" />
+                <span>Manage up to 5 locations in 1 account</span>
+              </div>
+              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-google-blue" />
+                <span>Unified Sentinel Guard protection for all branches</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsLocationQuotaModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+              >
+                Maybe Later
+              </button>
+              <Link
+                href="/b2b"
+                onClick={() => setIsLocationQuotaModalOpen(false)}
+                className="flex-1 py-2.5 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition-all text-center"
+              >
+                <span>Upgrade to Pro →</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 14-Day Pro Autopilot Trial Modal (PLG Reverse Trial Activation) */}
+      {isProTrialModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl animate-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-blue-50 rounded-xl text-google-blue border border-blue-200">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    Activate 14-Day Pro Autopilot Trial
+                  </h3>
+                  <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    $0.00 Today • 100% Free
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setIsProTrialModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Experience the power of hands-off Google Business Profile growth. Publish LSI-optimized review responses and deploy rank-overtake strategies in <strong>1 click via official Google API</strong>.
+            </p>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-start gap-2.5">
+                <Check className="w-4 h-4 text-google-blue shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-900 block">1-Click Instant API Publishing</strong>
+                  <span className="text-slate-500 text-[11px]">No manual copy-pasting or switching between Google dashboards.</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-start gap-2.5">
+                <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-900 block">24/7 Sentinel Auto-Revert Guard</strong>
+                  <span className="text-slate-500 text-[11px]">Automatic background rollback of competitor tampering within 3 minutes.</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-purple-50/60 border border-purple-100 flex items-start gap-2.5">
+                <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-900 block">Autonomous Copilot Mode</strong>
+                  <span className="text-slate-500 text-[11px]">Automatic review responses to 5★ reviews without waiting for owner confirmation.</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 flex items-center justify-between">
+              <span>Zero commitment: Cancel anytime in 1 click before day 14.</span>
+              <span className="font-bold text-slate-800">$0.00 Due Now</span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setIsProTrialModalOpen(false)}
+                className="py-3 px-4 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+              >
+                Keep Manual Mode
+              </button>
+              <button
+                type="button"
+                onClick={handleStartProTrialAndExecute}
+                className="flex-1 py-3 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+              >
+                <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+                <span>Start 14-Day Free Pro Trial ($0)</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
