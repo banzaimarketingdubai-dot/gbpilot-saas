@@ -13,11 +13,23 @@ import {
   ArrowRight,
   ShieldCheck,
   Building2,
-  Info
+  Info,
+  Plus,
+  Check,
+  X,
+  Target,
+  Tag
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
+
+export interface KeywordPill {
+  id: string;
+  label: string;
+  category: 'PRODUCT' | 'OCCASION' | 'AREA' | 'CUSTOM';
+  isCustom?: boolean;
+}
 
 const DEMO_COMPETITORS: CompetitorComparison[] = [
   {
@@ -52,12 +64,58 @@ const DEMO_COMPETITORS: CompetitorComparison[] = [
   }
 ];
 
+const getDefaultKeywordPills = (profile: any): KeywordPill[] => {
+  const name = (profile?.name || '').toLowerCase();
+  const cat = (profile?.category || '').toLowerCase();
+  
+  if (
+    name.includes('bakery') || 
+    name.includes('cafe') || 
+    name.includes('coffee') || 
+    name.includes('свои') || 
+    cat.includes('cafe') || 
+    cat.includes('restaurant')
+  ) {
+    return [
+      { id: 'kw-1', label: 'Specialty Coffee', category: 'PRODUCT' },
+      { id: 'kw-2', label: 'Breakfast & Syrniki', category: 'PRODUCT' },
+      { id: 'kw-3', label: 'Fresh Bakery & Pastry', category: 'PRODUCT' },
+      { id: 'kw-4', label: 'Work Friendly Cafe with WiFi', category: 'OCCASION' },
+      { id: 'kw-5', label: 'Matcha Latte', category: 'PRODUCT' },
+      { id: 'kw-6', label: 'Best Cafe Near Beach', category: 'AREA' },
+    ];
+  }
+  
+  if (name.includes('visa') || cat.includes('legal') || cat.includes('consulting') || cat.includes('corporate')) {
+    return [
+      { id: 'kw-1', label: 'UAE Golden Visa', category: 'PRODUCT' },
+      { id: 'kw-2', label: 'Business Setup Dubai', category: 'PRODUCT' },
+      { id: 'kw-3', label: 'Freelance Visa Services', category: 'PRODUCT' },
+      { id: 'kw-4', label: 'Corporate Bank Account Opening', category: 'OCCASION' },
+      { id: 'kw-5', label: 'PRO Services Downtown', category: 'AREA' },
+    ];
+  }
+
+  const primaryTerm = profile?.category || profile?.name || 'Local Business';
+  return [
+    { id: 'kw-1', label: `${primaryTerm}`, category: 'PRODUCT' },
+    { id: 'kw-2', label: `Best ${primaryTerm} Near Me`, category: 'AREA' },
+    { id: 'kw-3', label: `Top Rated ${primaryTerm}`, category: 'PRODUCT' },
+    { id: 'kw-4', label: `${primaryTerm} Open Now`, category: 'OCCASION' },
+  ];
+};
+
 export default function GeoGridPage() {
   const [activeTab, setActiveTab] = useState<'MAPS_GRID' | 'AI_LLM_GEO'>('MAPS_GRID');
   const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string; city?: string; id?: string} | null>(null);
   const [selectedKeyword, setSelectedKeyword] = useState('');
   const [gridSize, setGridSize] = useState<'3x3' | '5x5' | '7x7'>('3x3');
   const [selectedNode, setSelectedNode] = useState<{ pos: number; rank: number; competitor: string } | null>(null);
+
+  // Keyword Grounding state
+  const [keywordPills, setKeywordPills] = useState<KeywordPill[]>([]);
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [newCustomKeyword, setNewCustomKeyword] = useState('');
 
   // State for grid ranks & competitors
   const [isScanning, setIsScanning] = useState(false);
@@ -80,25 +138,103 @@ export default function GeoGridPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('gbpilot_active_profile');
+      let parsedProfile: any = null;
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
-          setActiveProfile(parsed);
-          if (parsed.category) {
-            setSelectedKeyword(parsed.category);
-          } else if (parsed.name) {
-            setSelectedKeyword(parsed.name);
-          } else {
-            setSelectedKeyword('coffee');
+          parsedProfile = JSON.parse(stored);
+          setActiveProfile(parsedProfile);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // Load initial keyword pills
+      const basePills = getDefaultKeywordPills(parsedProfile);
+      
+      // Load saved custom keywords from localStorage
+      let customPills: KeywordPill[] = [];
+      const storedCustom = localStorage.getItem('gbpilot_custom_keywords');
+      if (storedCustom) {
+        try {
+          const parsedCustom = JSON.parse(storedCustom);
+          if (Array.isArray(parsedCustom)) {
+            customPills = parsedCustom.map((item: any, idx: number) => ({
+              id: item.id || `custom-${idx}`,
+              label: typeof item === 'string' ? item : item.label,
+              category: 'CUSTOM' as const,
+              isCustom: true
+            }));
           }
         } catch (e) {
           console.error(e);
         }
+      }
+
+      const mergedPills = [...basePills, ...customPills];
+      setKeywordPills(mergedPills);
+
+      // Set initial selected keyword
+      if (mergedPills.length > 0) {
+        setSelectedKeyword(mergedPills[0].label);
+      } else if (parsedProfile?.category) {
+        setSelectedKeyword(parsedProfile.category);
       } else {
-        setSelectedKeyword('coffee');
+        setSelectedKeyword('Specialty Coffee');
       }
     }
   }, []);
+
+  const handleAddCustomKeyword = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newCustomKeyword.trim();
+    if (!trimmed) return;
+
+    // Check if duplicate exists
+    const exists = keywordPills.some(p => p.label.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      setSelectedKeyword(trimmed);
+      setIsAddingCustom(false);
+      setNewCustomKeyword('');
+      setScanNotice(`Switched to existing keyword "${trimmed}".`);
+      return;
+    }
+
+    const newPill: KeywordPill = {
+      id: `custom-${Date.now()}`,
+      label: trimmed,
+      category: 'CUSTOM',
+      isCustom: true
+    };
+
+    const updated = [...keywordPills, newPill];
+    setKeywordPills(updated);
+    setSelectedKeyword(trimmed);
+    setIsAddingCustom(false);
+    setNewCustomKeyword('');
+    setScanNotice(`Added custom search query "${trimmed}". Ready for live scan.`);
+
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      const customOnly = updated.filter(p => p.isCustom);
+      localStorage.setItem('gbpilot_custom_keywords', JSON.stringify(customOnly));
+    }
+  };
+
+  const handleRemoveCustomKeyword = (id: string) => {
+    const updated = keywordPills.filter(p => p.id !== id);
+    setKeywordPills(updated);
+    
+    // If the removed pill was currently selected, select the first remaining pill
+    const removedPill = keywordPills.find(p => p.id === id);
+    if (removedPill && selectedKeyword.toLowerCase() === removedPill.label.toLowerCase() && updated.length > 0) {
+      setSelectedKeyword(updated[0].label);
+    }
+
+    if (typeof window !== 'undefined') {
+      const customOnly = updated.filter(p => p.isCustom);
+      localStorage.setItem('gbpilot_custom_keywords', JSON.stringify(customOnly));
+    }
+  };
 
   const handleGridSizeChange = (newSize: '3x3' | '5x5' | '7x7') => {
     setGridSize(newSize);
@@ -176,7 +312,7 @@ export default function GeoGridPage() {
 
   const handleScan = async () => {
     if (!selectedKeyword.trim()) {
-      alert("Please enter a target keyword for the ranking scan");
+      alert("Please enter or select a target keyword for the ranking scan");
       return;
     }
     setIsScanning(true);
@@ -326,14 +462,127 @@ export default function GeoGridPage() {
         {/* TAB 1: GOOGLE MAPS GEO-GRID */}
         {activeTab === 'MAPS_GRID' && (
           <div className="space-y-6">
+
+            {/* ======================================================== */}
+            {/* SMART KEYWORD GROUNDING HUB (JTBD Zero-Hallucination)    */}
+            {/* ======================================================== */}
+            <div className="material-card p-5 bg-white border border-google-border rounded-2xl shadow-sm space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-google-border-light pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-google-blue" />
+                    <h2 className="text-sm font-bold text-slate-900">
+                      Target Search Queries (Grounding Hub)
+                    </h2>
+                    <span className="text-[10px] font-bold text-google-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                      Grounded on Reviews & Menu
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    AI pre-extracted high-intent terms real guests use in Google Maps. Select a cluster or add your own custom dishes & services.
+                  </p>
+                </div>
+
+                {/* Add Custom Keyword Button or Inline Form */}
+                {!isAddingCustom ? (
+                  <button
+                    onClick={() => setIsAddingCustom(true)}
+                    className="text-xs font-bold text-google-blue hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 px-3 py-1.5 rounded-xl border border-blue-200/80 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Add Custom Search Query</span>
+                  </button>
+                ) : (
+                  <form onSubmit={handleAddCustomKeyword} className="flex items-center gap-1.5 self-start sm:self-auto">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newCustomKeyword}
+                      onChange={(e) => setNewCustomKeyword(e.target.value)}
+                      placeholder="e.g. syrniki, matcha latte, golden visa..."
+                      className="material-input text-xs py-1 px-2.5 w-52 rounded-lg border border-google-blue ring-1 ring-google-blue/30"
+                    />
+                    <button
+                      type="submit"
+                      className="px-2.5 py-1 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold cursor-pointer"
+                    >
+                      Add ✓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddingCustom(false); setNewCustomKeyword(''); }}
+                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg text-xs"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* Visual Interactive Chips Flow */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {keywordPills.map((pill) => {
+                  const isSelected = selectedKeyword.toLowerCase().trim() === pill.label.toLowerCase().trim();
+                  return (
+                    <div
+                      key={pill.id}
+                      onClick={() => {
+                        setSelectedKeyword(pill.label);
+                        setScanNotice(`Target keyword updated to "${pill.label}". Click "Run Live Grid Scan" to refresh ranking.`);
+                      }}
+                      className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        isSelected
+                          ? 'bg-google-blue text-white border-google-blue shadow-sm ring-2 ring-blue-200'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                      }`}
+                    >
+                      {isSelected ? (
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      ) : (
+                        <span className="text-slate-400 font-normal">#</span>
+                      )}
+                      <span>{pill.label}</span>
+                      
+                      {pill.isCustom && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCustomKeyword(pill.id);
+                          }}
+                          className={`p-0.5 rounded-full hover:bg-white/30 transition-colors ml-0.5 ${
+                            isSelected ? 'text-white' : 'text-slate-400 hover:text-google-red'
+                          }`}
+                          title="Remove custom keyword"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Active Focus Pill Status Bar */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-google-blue shrink-0" />
+                  <span className="text-slate-700">
+                    Active Geo-Grid Query: <strong className="text-slate-900">"{selectedKeyword}"</strong>
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 w-fit">
+                  High Commercial Intent • Ready for Scan
+                </span>
+              </div>
+            </div>
             
             {/* Control Filters Bar */}
             <div className="material-card p-4 bg-white flex flex-wrap items-center justify-between gap-4 text-xs border border-google-border rounded-2xl shadow-sm">
               
-              {/* Keyword Selector */}
+              {/* Keyword Selector Input */}
               <div className="flex items-center gap-2 flex-wrap">
                 <Search className="w-4 h-4 text-google-text-tertiary" />
-                <span className="font-semibold text-google-text-secondary">Target Keyword:</span>
+                <span className="font-semibold text-google-text-secondary">Selected Query:</span>
                 <input
                   type="text"
                   value={selectedKeyword}
