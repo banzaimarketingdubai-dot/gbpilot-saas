@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
 
 interface ActionItem {
   id: string;
@@ -65,6 +66,7 @@ export default function DashboardCockpitPage() {
   const [availableProfiles, setAvailableProfiles] = useState<ActiveBusinessProfile[]>([]);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isInspectionModalOpen, setIsInspectionModalOpen] = useState(false);
   
   // Cockpit Mode: Autonomous vs Manual Approval
   const [copilotMode, setCopilotMode] = useState<'AUTONOMOUS' | 'MANUAL_APPROVAL'>('MANUAL_APPROVAL');
@@ -146,6 +148,12 @@ export default function DashboardCockpitPage() {
           const handledIds: string[] = JSON.parse(handled);
           setActionItems(prev => prev.map(a => handledIds.includes(a.id) ? { ...a, status: 'EXECUTED' } : a));
         } catch (e) {}
+      }
+
+      // Check if initial onboarding inspection was completed
+      const auditCompleted = localStorage.getItem('gbpilot_initial_audit_completed');
+      if (auditCompleted !== 'true') {
+        setIsInspectionModalOpen(true);
       }
     }
   }, []);
@@ -712,6 +720,39 @@ export default function DashboardCockpitPage() {
 
             </div>
 
+            {/* ======================================================== */}
+            {/* ONBOARDING INSPECTION & AUDIT BANNER (PLG PERSISTENCE)   */}
+            {/* ======================================================== */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-google-blue/20 text-blue-400 border border-blue-400/30 flex items-center justify-center font-black shrink-0">
+                  <Zap className="w-6 h-6 fill-blue-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+                      AI Profile Inspection &amp; Onboarding Audit
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      PLG Engine
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                    Continuous 5-gap inspection: SEO description, holiday schedules, customer attributes, menu catalog, and EXIF coordinates.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsInspectionModalOpen(true)}
+                className="px-4 py-2.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>⚡ Re-run Full Profile Inspection</span>
+              </button>
+            </div>
+
             {/* Quick Hub Navigation Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               
@@ -825,6 +866,18 @@ export default function DashboardCockpitPage() {
           </div>
         </div>
       )}
+
+      {/* Onboarding Inspection Flow Modal (PLG Framework) */}
+      <OnboardingInspectionModal
+        isOpen={isInspectionModalOpen}
+        onClose={() => setIsInspectionModalOpen(false)}
+        businessName={activeProfile?.name || 'Artisan Specialty Cafe & Roastery'}
+        businessAddress={activeProfile?.address || '102 Marina Promenade, Dubai, UAE'}
+        onComplete={() => {
+          setIsInspectionModalOpen(false);
+          showToast('Profile optimization applied successfully! AI Sentinel Shield Active.');
+        }}
+      />
 
       <Footer />
     </div>

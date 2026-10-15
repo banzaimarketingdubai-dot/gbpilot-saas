@@ -31,6 +31,7 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { useRouter } from 'next/navigation';
+import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -39,6 +40,13 @@ export default function OnboardingPage() {
   const [heroActiveTab, setHeroActiveTab] = useState<'AUDIT' | 'TAKEDOWN'>('AUDIT');
   const [showWebsiteExtraction, setShowWebsiteExtraction] = useState(false);
   const [showAgencyModal, setShowAgencyModal] = useState(false);
+
+  // Onboarding Inspection Flow state (PLG)
+  const [isInspectionModalOpen, setIsInspectionModalOpen] = useState(false);
+  const [inspectionTarget, setInspectionTarget] = useState({
+    name: 'Artisan Specialty Cafe & Roastery',
+    address: '102 Marina Promenade, Dubai, UAE'
+  });
 
   // Review Takedown state
   const [takedownJurisdiction, setTakedownJurisdiction] = useState<'UAE' | 'USA' | 'EU' | 'GLOBAL'>('UAE');
@@ -519,6 +527,24 @@ export default function OnboardingPage() {
                 <ShieldAlert className="w-4 h-4" />
                 <span>Review Takedown™</span>
                 <span className="text-[10px] bg-red-100 text-google-red font-bold px-2 py-0.5 rounded-full uppercase">1 Test Free</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const targetName = (scanResult as any)?.name || 'Artisan Specialty Cafe & Roastery';
+                  const targetAddress = (scanResult as any)?.address || '102 Marina Promenade, Dubai, UAE';
+                  setInspectionTarget({
+                    name: targetName,
+                    address: targetAddress
+                  });
+                  setIsInspectionModalOpen(true);
+                }}
+                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-indigo-500/20 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>AI Profile Inspection (PLG)</span>
+                <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full uppercase font-extrabold">Instant</span>
               </button>
             </div>
           )}
@@ -1362,26 +1388,35 @@ export default function OnboardingPage() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => {
-                    if (typeof window !== 'undefined' && scanResult) {
-                      localStorage.setItem('gbpilot_active_profile', JSON.stringify({
-                        id: scanResult.id || `profile_${Date.now()}`,
-                        name: scanResult.name,
-                        address: scanResult.address,
-                        city: scanResult.address.split(',').pop()?.trim() || 'Dubai',
-                        health_score: scanResult.score,
-                        cover_url: scanResult.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-                        role: 'Demo Preview',
-                        verified: false,
-                        is_admin: false
-                      }));
+                    const prof = scanResult ? {
+                      id: scanResult.id || `profile_${Date.now()}`,
+                      name: scanResult.name,
+                      address: scanResult.address,
+                      city: scanResult.address.split(',').pop()?.trim() || 'Dubai',
+                      health_score: scanResult.score,
+                      cover_url: scanResult.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+                      role: 'Demo Preview',
+                      verified: false,
+                      is_admin: false
+                    } : {
+                      name: 'Artisan Specialty Cafe & Roastery',
+                      address: '102 Marina Promenade, Dubai, UAE'
+                    };
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('gbpilot_active_profile', JSON.stringify(prof));
                     }
                     setIsManageGatekeeperOpen(false);
-                    if (router) router.push('/dashboard');
+                    setInspectionTarget({
+                      name: prof.name,
+                      address: prof.address
+                    });
+                    setIsInspectionModalOpen(true);
                   }}
-                  className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-colors"
+                  className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  Continue in Demo Mode (View Only)
+                  Continue to Profile Inspection (PLG Flow)
                 </button>
               </div>
 
@@ -1451,6 +1486,19 @@ export default function OnboardingPage() {
         )}
 
       </main>
+
+      {/* Onboarding Inspection Flow Modal (PLG Framework) */}
+      <OnboardingInspectionModal
+        isOpen={isInspectionModalOpen}
+        onClose={() => setIsInspectionModalOpen(false)}
+        businessName={inspectionTarget.name}
+        businessAddress={inspectionTarget.address}
+        onComplete={() => {
+          setIsInspectionModalOpen(false);
+          if (router) router.push('/dashboard');
+        }}
+      />
+
       <Footer />
     </div>
   );
