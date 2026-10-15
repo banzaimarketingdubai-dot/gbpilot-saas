@@ -2,2610 +2,830 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
-import { HealthGauge } from '@/components/HealthGauge';
-import { ProactiveCard, Recommendation } from '@/components/ProactiveCard';
 import { 
-  ShieldCheck, 
-  AlertOctagon, 
   Zap, 
-  TrendingUp, 
-  Phone, 
-  Navigation, 
-  Globe, 
+  ShieldCheck, 
   Star, 
   MapPin, 
+  TrendingUp, 
+  CheckCircle2, 
   Clock, 
+  AlertTriangle, 
+  ArrowRight, 
+  Sparkles, 
+  ChevronRight, 
+  Building2, 
+  Phone, 
+  Navigation, 
+  MousePointerClick, 
   Check, 
-  Flame,
-  Layers,
-  Sparkles,
-  Building2,
-  ShieldAlert,
-  Moon,
-  Scale,
-  Copy,
-  ExternalLink,
-  FileText,
-  CheckCircle2,
-  DollarSign,
+  Edit3, 
+  DollarSign, 
   X,
-  Search,
-  Loader2,
-  ChevronRight,
-  Plus,
-  BarChart3,
-  Eye,
-  MousePointerClick,
+  Sliders,
   ChevronDown,
-  ChevronUp,
+  ExternalLink,
+  ShieldAlert,
+  Bot,
+  Target,
   Share2,
-  Smartphone,
-  Calendar,
-  MessageSquare
+  Trash2
 } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+
+interface ActionItem {
+  id: string;
+  type: 'COMPETITOR' | 'REVIEW';
+  title: string;
+  subtitle: string;
+  impact: string;
+  reviewAuthor?: string;
+  reviewRating?: number;
+  aiDraft?: string;
+  primaryCtaText: string;
+  primaryCtaUrl?: string;
+  status: 'PENDING' | 'EXECUTED';
+}
 
 interface ActiveBusinessProfile {
   id?: string;
   name: string;
-  business_name?: string;
   address: string;
   city?: string;
   category?: string;
-  primary_category?: string;
-  phone?: string;
-  phone_number?: string;
-  website_url?: string;
-  google_maps_url?: string;
   rating?: number;
   reviews_count?: number;
-  health_score?: number;
-  snapshot_url?: string;
-  cover_url?: string;
-  opening_hours?: string;
-  is_open_now?: boolean;
   role?: string;
   verified?: boolean;
-  is_admin?: boolean;
-  weekly_hours?: { day: string; hours: string; isToday?: boolean }[];
-  attributes_count?: number;
-  total_attributes?: number;
 }
 
-const defaultBusiness: ActiveBusinessProfile = {
-  id: '',
-  name: 'No Business Connected',
-  address: 'Select or connect your Google Business Profile',
-  city: '',
-  category: 'Local Business',
-  phone: '',
-  website_url: '',
-  google_maps_url: '',
-  rating: 0,
-  reviews_count: 0,
-  health_score: 0,
-  cover_url: '',
-  snapshot_url: '',
-  opening_hours: '—',
-  is_open_now: false,
-  role: 'Administrator',
-  verified: false,
-  is_admin: false,
-  attributes_count: 0,
-  total_attributes: 0,
-  weekly_hours: []
-};
+export default function DashboardCockpitPage() {
+  const [activeProfile, setActiveProfile] = useState<ActiveBusinessProfile | null>(null);
+  const [availableProfiles, setAvailableProfiles] = useState<ActiveBusinessProfile[]>([]);
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  
+  // Cockpit Mode: Autonomous vs Manual Approval
+  const [copilotMode, setCopilotMode] = useState<'AUTONOMOUS' | 'MANUAL_APPROVAL'>('MANUAL_APPROVAL');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-const analyticsData = {
-  '7d': {
-    label: '7 days',
-    totalImpressions: '—',
-    impressionsTrend: 'Requires GBP Insights API',
-    mapsImpressions: '—',
-    mapsPercent: 0,
-    searchImpressions: '—',
-    searchPercent: 0,
-    discoveryPercent: 0,
-    brandPercent: 0,
-    totalActions: '—',
-    actionsTrend: 'No Data',
-    directions: '—',
-    directionsTrend: '',
-    calls: '—',
-    callsTrend: '',
-    websiteClicks: '—',
-    websiteClicksTrend: '',
-    messages: '—',
-    messagesTrend: '',
-    cvr: '—',
-    cvrBenchmark: 'No benchmark data available',
-    deviceMobile: 0,
-    deviceDesktop: 0,
-    hourly: [] as { hour: string; val: number; label: string; peak?: boolean }[],
-    districts: [] as { name: string; percent: number; count: string }[]
-  },
-  '30d': {
-    label: '30 days',
-    totalImpressions: '—',
-    impressionsTrend: 'Requires GBP Insights API',
-    mapsImpressions: '—',
-    mapsPercent: 0,
-    searchImpressions: '—',
-    searchPercent: 0,
-    discoveryPercent: 0,
-    brandPercent: 0,
-    totalActions: '—',
-    actionsTrend: 'No Data',
-    directions: '—',
-    directionsTrend: '',
-    calls: '—',
-    callsTrend: '',
-    websiteClicks: '—',
-    websiteClicksTrend: '',
-    messages: '—',
-    messagesTrend: '',
-    cvr: '—',
-    cvrBenchmark: 'No benchmark data available',
-    deviceMobile: 0,
-    deviceDesktop: 0,
-    hourly: [] as { hour: string; val: number; label: string; peak?: boolean }[],
-    districts: [] as { name: string; percent: number; count: string }[]
-  },
-  '90d': {
-    label: '90 days',
-    totalImpressions: '—',
-    impressionsTrend: 'Requires GBP Insights API',
-    mapsImpressions: '—',
-    mapsPercent: 0,
-    searchImpressions: '—',
-    searchPercent: 0,
-    discoveryPercent: 0,
-    brandPercent: 0,
-    totalActions: '—',
-    actionsTrend: 'No Data',
-    directions: '—',
-    directionsTrend: '',
-    calls: '—',
-    callsTrend: '',
-    websiteClicks: '—',
-    websiteClicksTrend: '',
-    messages: '—',
-    messagesTrend: '',
-    cvr: '—',
-    cvrBenchmark: 'No benchmark data available',
-    deviceMobile: 0,
-    deviceDesktop: 0,
-    hourly: [] as { hour: string; val: number; label: string; peak?: boolean }[],
-    districts: [] as { name: string; percent: number; count: string }[]
-  }
-};
+  // Review editing modal state
+  const [editingActionId, setEditingActionId] = useState<string | null>(null);
+  const [editedDraft, setEditedDraft] = useState('');
 
-export default function DashboardPage() {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [profileGuardAlert, setProfileGuardAlert] = useState<string | null>(null);
-  const [healthScore, setHealthScore] = useState(88);
-  const [allApproved, setAllApproved] = useState(false);
-
-  const [activeProfile, setActiveProfile] = useState<ActiveBusinessProfile>(defaultBusiness);
-  const [currentUser, setCurrentUser] = useState<{ email: string; name?: string; role?: string; loggedIn: boolean } | null>(null);
-
-  // Behavioral & Operational Modals and Views
-  const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
-  const [isRequireLoginModalOpen, setIsRequireLoginModalOpen] = useState(false);
-  const [isWeeklyHoursOpen, setIsWeeklyHoursOpen] = useState(false);
-  const [copiedAddress, setCopiedAddress] = useState(false);
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<'7d' | '30d' | '90d'>('30d');
-
-  // Dubai Specific: Ramadan Mode
-  const [isRamadanMode, setIsRamadanMode] = useState(false);
-  const [ramadanNotice, setRamadanNotice] = useState<string | null>(null);
-
-  // Review Takedown Modal State & Automated Negative Review Detection
-  const [takedownJurisdiction, setTakedownJurisdiction] = useState<'UAE' | 'USA' | 'EU' | 'GLOBAL'>('UAE');
-  const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
-  const [takedownBusiness, setTakedownBusiness] = useState('');
-  const [takedownReviewText, setTakedownReviewText] = useState('');
-  const [takedownAuthor, setTakedownAuthor] = useState('');
-  const [isTakedownLoading, setIsTakedownLoading] = useState(false);
-  const [takedownResult, setTakedownResult] = useState<{
-    status: string;
-    confidence_score: number;
-    estimated_removal_time: string;
-    violations: { clause: string; policy_name: string; explanation: string }[];
-    dossier_text: string;
-    google_escalation_url: string;
-    jurisdiction?: string;
-  } | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
-  const [authBanner, setAuthBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-  // Auto-detected 1-star & 2-star Negative Reviews from Connected Profile
-  const [detectedNegativeReviews, setDetectedNegativeReviews] = useState<{
-    id: string;
-    author_name: string;
-    rating: number;
-    review_date: string;
-    review_text: string;
-    suspected_violation: string;
-    violation_details?: string;
-    confidence_score: number;
-    recommended_jurisdiction?: 'UAE' | 'USA' | 'EU' | 'GLOBAL';
-  }[]>([]);
-  const [selectedReviewId, setSelectedReviewId] = useState<string>('');
-  const [takedownSourceMode, setTakedownSourceMode] = useState<'AUTO' | 'MANUAL'>('MANUAL');
-
-  // Business Location Management State (JTBD Flow)
-  const [availableProfiles, setAvailableProfiles] = useState<any[]>([]);
-  const [apiDisabledWarning, setApiDisabledWarning] = useState(false);
-  const [missingApiName, setMissingApiName] = useState('mybusinessaccountmanagement.googleapis.com');
-  const [venueSearchQuery, setVenueSearchQuery] = useState('');
-  const [venueSearchResults, setVenueSearchResults] = useState<any[]>([]);
-  const [isSearchingVenues, setIsSearchingVenues] = useState(false);
-  const [isConnectingVenue, setIsConnectingVenue] = useState(false);
-  const [showAddVenueSection, setShowAddVenueSection] = useState(true);
-  const [showVenueDropdown, setShowVenueDropdown] = useState(false);
-
-  // Live Google Places Autocomplete as user types in venue search
-  useEffect(() => {
-    const q = venueSearchQuery.trim();
-    if (q.length < 2) {
-      setVenueSearchResults([]);
-      setShowVenueDropdown(false);
-      setIsSearchingVenues(false);
-      return;
+  // Urgent Action Hub items
+  const [actionItems, setActionItems] = useState<ActionItem[]>([
+    {
+      id: 'action-competitor-overtake',
+      type: 'COMPETITOR',
+      title: 'Competitor updated photo menu and overtook #1 rank at Main Crossroad',
+      subtitle: 'Catchment Area: 1.2 km radius around venue • Traffic impact: ~15 calls/wk redirected',
+      impact: 'Est. Revenue at risk: $450/week',
+      primaryCtaText: 'Deploy Overtake Counter-Strategy',
+      primaryCtaUrl: '/geo-grid',
+      status: 'PENDING',
+    },
+    {
+      id: 'action-review-omar',
+      type: 'REVIEW',
+      title: 'New 5-star review received from Omar',
+      subtitle: '"Exceptional experience! The staff was super attentive and service was fast. Will definitely come back regularly."',
+      impact: 'Review velocity: +4/week • LSI keywords injected into draft response',
+      reviewAuthor: 'Omar K.',
+      reviewRating: 5,
+      aiDraft: 'Thank you so much, Omar! Our team takes immense pride in providing attentive, fast local service. We look forward to welcoming you back regularly!',
+      primaryCtaText: 'Approve & Publish',
+      status: 'PENDING',
     }
+  ]);
 
-    setIsSearchingVenues(true);
-    const delayDebounceFn = setTimeout(async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-        const res = await fetch(`${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(q)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setVenueSearchResults(data.suggestions || []);
-          setShowVenueDropdown(true);
-        }
-      } catch (err) {
-        console.error("Venue live autocomplete failed", err);
-      } finally {
-        setIsSearchingVenues(false);
-      }
-    }, 300);
+  // Protected ROI stats
+  const [protectedStats, setProtectedStats] = useState({
+    revenueProtected: '$1,800+',
+    reviewsReplied: 14,
+    photosPublished: 5,
+    unauthorizedEditsBlocked: 3
+  });
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [venueSearchQuery]);
-
+  // Load active profile and settings on mount
   useEffect(() => {
-    let currentProfileId = 'profile_123';
-
     if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const auth = urlParams.get('auth');
-      const detail = urlParams.get('detail');
-      const email = urlParams.get('email');
-      const profilesParam = urlParams.get('profiles');
-      const needsLocation = urlParams.get('needs_location');
-      const selectLocation = urlParams.get('select_location');
-      const apiDisabled = urlParams.get('api_disabled');
-      const missingApi = urlParams.get('missing_api');
-      const addLoc = urlParams.get('add_location');
-
-      if (missingApi) {
-        setMissingApiName(missingApi);
+      const storedActive = localStorage.getItem('gbpilot_active_profile');
+      let currentProf: ActiveBusinessProfile | null = null;
+      if (storedActive) {
+        try {
+          currentProf = JSON.parse(storedActive);
+          setActiveProfile(currentProf);
+        } catch (e) {
+          console.error(e);
+        }
       }
 
-      // User session management from Google OAuth or localStorage
-      if (email) {
-        const userObj = {
-          email,
-          name: email.split('@')[0],
-          role: 'Owner / Administrator',
-          loggedIn: true
-        };
-        localStorage.setItem('gbpilot_user', JSON.stringify(userObj));
-        setCurrentUser(userObj);
-        window.dispatchEvent(new CustomEvent('user_session_updated'));
+      const storedAvailable = localStorage.getItem('gbpilot_available_profiles');
+      if (storedAvailable) {
+        try {
+          const list = JSON.parse(storedAvailable);
+          if (Array.isArray(list)) setAvailableProfiles(list);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      const storedMode = localStorage.getItem('gbpilot_autopilot_mode');
+      if (storedMode === 'FULL_AUTOPILOT') {
+        setCopilotMode('AUTONOMOUS');
       } else {
-        const storedUser = localStorage.getItem('gbpilot_user');
-        if (storedUser) {
-          try {
-            const u = JSON.parse(storedUser);
-            if (u.loggedIn) setCurrentUser(u);
-          } catch (e) {
-            console.error(e);
-          }
-        }
+        setCopilotMode('MANUAL_APPROVAL');
       }
 
-      // Load available profiles from storage first
-      const storedList = localStorage.getItem('gbpilot_available_profiles');
-      let loadedList: any[] = [];
-      if (storedList) {
+      // Check if user handled actions previously
+      const handled = localStorage.getItem('gbpilot_handled_actions');
+      if (handled) {
         try {
-          const parsed = JSON.parse(storedList);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            loadedList = parsed;
-            setAvailableProfiles(parsed);
-          }
-        } catch (e) {
-          console.error(e);
-        }
+          const handledIds: string[] = JSON.parse(handled);
+          setActionItems(prev => prev.map(a => handledIds.includes(a.id) ? { ...a, status: 'EXECUTED' } : a));
+        } catch (e) {}
       }
-
-      // Check for pending venue saved before OAuth redirect (PLG Flow)
-      const pendingVenueStr = localStorage.getItem('gbpilot_pending_venue');
-      let hasAttachedPending = false;
-      if (pendingVenueStr) {
-        try {
-          const pendingVenue = JSON.parse(pendingVenueStr);
-          const fullProf: ActiveBusinessProfile = {
-            id: pendingVenue.id || `profile_${Date.now()}`,
-            name: pendingVenue.name,
-            business_name: pendingVenue.name,
-            address: pendingVenue.address,
-            city: pendingVenue.city || '',
-            category: pendingVenue.category || pendingVenue.primary_category || 'Local Business',
-            primary_category: pendingVenue.primary_category || pendingVenue.category || 'Local Business',
-            phone: pendingVenue.phone || pendingVenue.phone_number || '',
-            website_url: pendingVenue.website_url || '',
-            google_maps_url: pendingVenue.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(pendingVenue.name)}`,
-            cover_url: pendingVenue.cover_url || '',
-            snapshot_url: pendingVenue.snapshot_url || pendingVenue.cover_url || '',
-            rating: pendingVenue.rating !== undefined ? pendingVenue.rating : 5.0,
-            reviews_count: pendingVenue.reviews_count !== undefined ? pendingVenue.reviews_count : 0,
-            opening_hours: pendingVenue.opening_hours || '08:00 – 23:00',
-            is_open_now: true,
-            role: 'Owner / Administrator',
-            verified: true,
-            is_admin: true,
-            weekly_hours: defaultBusiness.weekly_hours
-          };
-
-          const combinedList = [fullProf, ...loadedList.filter(p => p.name !== fullProf.name)];
-          localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combinedList));
-          localStorage.setItem('gbpilot_active_profile', JSON.stringify(fullProf));
-          localStorage.removeItem('gbpilot_pending_venue');
-          setAvailableProfiles(combinedList);
-          setActiveProfile(fullProf);
-          loadedList = combinedList;
-          hasAttachedPending = true;
-          currentProfileId = fullProf.id || 'profile_123';
-          setAuthBanner({
-            type: 'success',
-            message: `Business "${fullProf.name}" successfully attached to ${email || 'Google'} with Owner / Administrator privileges!`
-          });
-        } catch (e) {
-          console.error("Failed to parse pending venue", e);
-        }
-      }
-
-      if (apiDisabled === 'true' && !hasAttachedPending) {
-        setApiDisabledWarning(true);
-        if (missingApi) setMissingApiName(missingApi);
-        setIsUserProfileModalOpen(true);
-        setAuthBanner({
-          type: 'error',
-          message: `Google account (${email || 'verified'}) connected. My Business Account Management API needs to be enabled in Google Cloud or add venue via search.`
-        });
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (profilesParam) {
-        try {
-          const jsonStr = decodeURIComponent(escape(atob(profilesParam)));
-          const profilesList = JSON.parse(jsonStr);
-          if (Array.isArray(profilesList) && profilesList.length > 0) {
-            localStorage.setItem('gbpilot_available_profiles', JSON.stringify(profilesList));
-            localStorage.setItem('gbpilot_active_profile', JSON.stringify(profilesList[0]));
-            setActiveProfile(profilesList[0]);
-            setAvailableProfiles(profilesList);
-            if (profilesList[0].id) currentProfileId = profilesList[0].id;
-            setIsUserProfileModalOpen(true);
-            setAuthBanner({
-              type: 'success',
-              message: `Synced ${profilesList.length} business locations from your Google profile (${email || 'verified'})! Select a location to manage.`
-            });
-          }
-        } catch (e) {
-          console.error("Failed to parse profiles param", e);
-        }
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (auth === 'success') {
-        setAuthBanner({
-          type: 'success',
-          message: `Google account (${email || 'verified'}) successfully connected! Profile synchronization active.`
-        });
-        if (needsLocation || selectLocation) {
-          setIsUserProfileModalOpen(true);
-        }
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (auth === 'error') {
-        setAuthBanner({
-          type: 'error',
-          message: `Google OAuth connection error: ${detail ? decodeURIComponent(detail) : 'Failed to complete authorization'}`
-        });
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-
-      if (addLoc === 'true' || selectLocation === 'true') {
-        setIsUserProfileModalOpen(true);
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-
-      const fetchNegativeReviews = async (profName: string, profId: string) => {
-        if (!profName || profName === 'No Business Connected') return;
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-          const res = await fetch(`${baseUrl}/api/v1/guard/negative-reviews/${profId}?business_name=${encodeURIComponent(profName)}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data.negative_reviews)) {
-              setDetectedNegativeReviews(data.negative_reviews);
-              if (data.negative_reviews.length > 0) {
-                setSelectedReviewId(data.negative_reviews[0].id);
-              } else {
-                setSelectedReviewId('');
-              }
-            }
-          }
-        } catch (e) {
-          console.error("Failed to fetch negative reviews", e);
-        }
-      };
-
-      const refreshProfileDetails = async (profName: string) => {
-        if (!profName || profName === 'No Business Connected') return;
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-          const res = await fetch(`${baseUrl}/api/v1/onboarding/scrape`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ business_name: profName })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data?.profile) {
-              setActiveProfile(prev => {
-                const updated = {
-                  ...prev,
-                  cover_url: data.profile.cover_url || (prev.cover_url && !prev.cover_url.includes('unsplash.com') ? prev.cover_url : ''),
-                  phone: data.profile.phone_number || prev.phone,
-                  rating: data.profile.rating !== undefined ? data.profile.rating : prev.rating,
-                  reviews_count: data.profile.reviews_count !== undefined ? data.profile.reviews_count : prev.reviews_count,
-                  category: data.profile.primary_category || prev.category,
-                  address: data.profile.address_line || prev.address
-                };
-                localStorage.setItem('gbpilot_active_profile', JSON.stringify(updated));
-                return updated;
-              });
-            }
-          }
-        } catch (err) {
-          console.error("Failed to refresh profile details", err);
-        }
-      };
-
-      // Check active profile in storage
-      const stored = localStorage.getItem('gbpilot_active_profile');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          let profToUse = parsed;
-          if (parsed.name === 'Manhattan Bakery & Cafe' && loadedList.length > 0) {
-            profToUse = loadedList[0];
-          }
-          if (profToUse) {
-            if (profToUse.cover_url && profToUse.cover_url.includes('unsplash.com')) {
-              profToUse.cover_url = '';
-            }
-            setActiveProfile(profToUse);
-            localStorage.setItem('gbpilot_active_profile', JSON.stringify(profToUse));
-            if (profToUse.id) currentProfileId = profToUse.id;
-            fetchNegativeReviews(profToUse.name, profToUse.id || 'current');
-            refreshProfileDetails(profToUse.name);
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      } else if (loadedList.length > 0) {
-        const firstProf = loadedList[0];
-        if (firstProf.cover_url && firstProf.cover_url.includes('unsplash.com')) {
-          firstProf.cover_url = '';
-        }
-        setActiveProfile(firstProf);
-        localStorage.setItem('gbpilot_active_profile', JSON.stringify(firstProf));
-        if (firstProf.id) currentProfileId = firstProf.id;
-        fetchNegativeReviews(firstProf.name, firstProf.id || 'current');
-        refreshProfileDetails(firstProf.name);
-      }
-
-      // Also query backend for registered profiles
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      fetch(`${baseUrl}/api/v1/profiles`)
-        .then(res => res.json())
-        .then(data => {
-          if (data?.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
-            setAvailableProfiles(prev => {
-              const combined = [...prev];
-              data.profiles.forEach((p: any) => {
-                if (!combined.some(c => c.name === p.name || c.id === p.id)) {
-                  combined.push(p);
-                }
-              });
-              localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combined));
-              return combined;
-            });
-            const storedCur = localStorage.getItem('gbpilot_active_profile');
-            if (!storedCur || JSON.parse(storedCur).name === 'Manhattan Bakery & Cafe') {
-              setActiveProfile(data.profiles[0]);
-              localStorage.setItem('gbpilot_active_profile', JSON.stringify(data.profiles[0]));
-              fetchNegativeReviews(data.profiles[0].name, data.profiles[0].id || 'current');
-            }
-          }
-        })
-        .catch(e => console.error("Could not fetch profiles from backend", e));
-
-      const handleOpenProfileModal = () => setIsUserProfileModalOpen(true);
-      const handleRequireLogin = () => setIsRequireLoginModalOpen(true);
-      const handleUserUpdate = () => {
-        const s = localStorage.getItem('gbpilot_user');
-        if (s) {
-          try {
-            setCurrentUser(JSON.parse(s));
-          } catch (e) {}
-        } else {
-          setCurrentUser(null);
-        }
-      };
-
-      window.addEventListener('open_user_profile_modal', handleOpenProfileModal);
-      window.addEventListener('open_add_location_modal', handleOpenProfileModal);
-      window.addEventListener('require_google_login', handleRequireLogin);
-      window.addEventListener('user_session_updated', handleUserUpdate);
-
-      return () => {
-        window.removeEventListener('open_user_profile_modal', handleOpenProfileModal);
-        window.removeEventListener('open_add_location_modal', handleOpenProfileModal);
-        window.removeEventListener('require_google_login', handleRequireLogin);
-        window.removeEventListener('user_session_updated', handleUserUpdate);
-      };
     }
-    
-    // Fetch proactive recommendations from FastAPI backend
-    const fetchRecommendations = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-        const response = await fetch(`${baseUrl}/api/v1/recommendations/${currentProfileId}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          setRecommendations(data);
-        } else {
-          console.error("Failed to fetch recommendations");
-        }
-      } catch (error) {
-        console.error("Error fetching recommendations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchRecommendations();
   }, []);
 
-  const handleSelectProfile = (prof: any) => {
-    const formattedProf: ActiveBusinessProfile = {
-      ...prof,
-      cover_url: (prof.cover_url && !prof.cover_url.includes('unsplash.com')) ? prof.cover_url : '',
-      snapshot_url: (prof.snapshot_url && !prof.snapshot_url.includes('unsplash.com')) ? prof.snapshot_url : '',
-      opening_hours: prof.opening_hours || '08:00 – 23:00',
-      is_open_now: prof.is_open_now !== undefined ? prof.is_open_now : true,
-      phone: prof.phone || prof.phone_number || '',
-      website_url: prof.website_url || '',
-      google_maps_url: prof.google_maps_url || `https://maps.google.com/?q=${encodeURIComponent(prof.name || 'Business')}`,
-      role: prof.role || 'Owner / Administrator',
-      verified: true,
-      is_admin: true,
-      weekly_hours: prof.weekly_hours || defaultBusiness.weekly_hours
-    };
-    localStorage.setItem('gbpilot_active_profile', JSON.stringify(formattedProf));
-    setActiveProfile(formattedProf);
-    setIsUserProfileModalOpen(false);
-    window.dispatchEvent(new CustomEvent('active_profile_updated'));
-    setAuthBanner({
-      type: 'success',
-      message: `Business "${formattedProf.name}" successfully activated for management.`
-    });
-    window.location.reload();
+  const handleToggleMode = (mode: 'AUTONOMOUS' | 'MANUAL_APPROVAL') => {
+    setCopilotMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gbpilot_autopilot_mode', mode === 'AUTONOMOUS' ? 'FULL_AUTOPILOT' : 'MANUAL_APPROVAL');
+      window.dispatchEvent(new CustomEvent('autopilot_mode_changed', { detail: { mode } }));
+    }
+    showToast(`Switched Cockpit to ${mode === 'AUTONOMOUS' ? 'Autonomous Autopilot' : 'Manual Approval'} mode.`);
   };
 
-  const handleSearchVenues = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!venueSearchQuery.trim()) return;
-    setIsSearchingVenues(true);
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      const res = await fetch(`${baseUrl}/api/v1/onboarding/autocomplete?query=${encodeURIComponent(venueSearchQuery.trim())}`);
-      if (res.ok) {
-        const data = await res.json();
-        setVenueSearchResults(data.suggestions || []);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4500);
+  };
+
+  const handleExecuteAction = (actionId: string) => {
+    const item = actionItems.find(a => a.id === actionId);
+    if (!item) return;
+
+    setActionItems(prev => prev.map(a => a.id === actionId ? { ...a, status: 'EXECUTED' } : a));
+
+    if (typeof window !== 'undefined') {
+      const handled = localStorage.getItem('gbpilot_handled_actions');
+      const list = handled ? JSON.parse(handled) : [];
+      if (!list.includes(actionId)) {
+        list.push(actionId);
+        localStorage.setItem('gbpilot_handled_actions', JSON.stringify(list));
       }
-    } catch (err) {
-      console.error("Venue search failed", err);
-    } finally {
-      setIsSearchingVenues(false);
     }
-  };
 
-  const handleConnectVenueItem = async (item: any) => {
-    setIsConnectingVenue(true);
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      const scrapeRes = await fetch(`${baseUrl}/api/v1/onboarding/scrape`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          business_name: item.main_text || item.description,
-          location: item.description
-        })
-      });
-      let profileData: any = null;
-      if (scrapeRes.ok) {
-        const resJson = await scrapeRes.json();
-        profileData = resJson.profile;
-      }
-      
-      const newProf: ActiveBusinessProfile = {
-        id: profileData?.id || `profile_${Date.now()}`,
-        name: profileData?.business_name || item.main_text || item.description,
-        address: profileData?.address_line || item.description,
-        city: profileData?.city || '',
-        category: profileData?.primary_category || 'Local Business',
-        phone: profileData?.phone_number || profileData?.phone || '',
-        website_url: profileData?.website_url || '',
-        cover_url: profileData?.cover_url || '',
-        snapshot_url: profileData?.snapshot_url || profileData?.cover_url || '',
-        rating: profileData?.rating !== undefined ? profileData.rating : 5.0,
-        reviews_count: profileData?.reviews_count !== undefined ? profileData.reviews_count : 0,
-        opening_hours: profileData?.opening_hours || '08:00 – 23:00',
-        is_open_now: true,
-        google_maps_url: `https://maps.google.com/?q=${encodeURIComponent(item.description || item.main_text)}`,
-        role: 'Owner / Administrator',
-        verified: true,
-        is_admin: true,
-        weekly_hours: defaultBusiness.weekly_hours
-      };
-
-      const updatedList = [newProf, ...availableProfiles.filter(p => p.name !== newProf.name)];
-      localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updatedList));
-      localStorage.setItem('gbpilot_active_profile', JSON.stringify(newProf));
-      setAvailableProfiles(updatedList);
-      setActiveProfile(newProf);
-      setVenueSearchResults([]);
-      setVenueSearchQuery('');
-      setShowAddVenueSection(false);
-      setAuthBanner({
-        type: 'success',
-        message: `Business "${newProf.name}" successfully attached to your Google account with Administrator privileges!`
-      });
-      setIsUserProfileModalOpen(false);
-    } catch (err) {
-      console.error("Connect venue error", err);
-    } finally {
-      setIsConnectingVenue(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
-    const loginUrl = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
-    try {
-      const res = await fetch(`${loginUrl}&raw_json=true`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.auth_url) {
-          window.location.href = data.auth_url;
-          return;
-        }
-      }
-    } catch (e) {
-      console.error("Direct auth fetch failed", e);
-    }
-    window.location.href = loginUrl;
-  };
-
-  const handleCopyAddress = () => {
-    const addr = activeProfile?.address || '540 Broadway, New York, NY 10012';
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(addr);
-      setCopiedAddress(true);
-      setTimeout(() => setCopiedAddress(false), 2000);
-    }
-  };
-
-  const handleExecute = async (id: string) => {
-    if (!currentUser) {
-      setIsRequireLoginModalOpen(true);
-      return;
-    }
-    const targetRec = recommendations.find(r => r.id === id);
-    setRecommendations((prev) =>
-      prev.map((rec) => (rec.id === id ? { ...rec, status: 'EXECUTED' } : rec))
-    );
-    setHealthScore((prev) => Math.min(100, prev + 3));
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      await fetch(`${baseUrl}/api/v1/recommendations/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recommendation_id: id,
-          action_type: targetRec?.category || '1CLICK_OPTIMIZATION',
-          profile_id: activeProfile?.id || 'profile_123'
-        })
-      });
-    } catch (e) {
-      console.error("Execute API error:", e);
-    }
-  };
-
-  const handleDismiss = (id: string) => {
-    setRecommendations((prev) => prev.filter((rec) => rec.id !== id));
-  };
-
-  const handleApproveAll = () => {
-    if (!currentUser) {
-      setIsRequireLoginModalOpen(true);
-      return;
-    }
-    setRecommendations((prev) =>
-      prev.map((rec) => ({ ...rec, status: 'EXECUTED' }))
-    );
-    setHealthScore(98);
-    setAllApproved(true);
-  };
-
-  const handleToggleRamadan = () => {
-    const nextState = !isRamadanMode;
-    setIsRamadanMode(nextState);
-    if (nextState) {
-      setRamadanNotice("🌙 Ramadan Mode activated: Google Maps operating hours automatically adapted for Iftar/Suhoor (18:30–02:00)!");
+    if (item.type === 'COMPETITOR') {
+      setProtectedStats(prev => ({
+        ...prev,
+        photosPublished: prev.photosPublished + 1,
+        unauthorizedEditsBlocked: prev.unauthorizedEditsBlocked + 1
+      }));
+      showToast('⚡ Overtake Strategy deployed: Keyword-targeted local post scheduled & review pacing adjusted.');
     } else {
-      setRamadanNotice("Standard operating hours successfully restored on your Google Business Profile.");
+      setProtectedStats(prev => ({
+        ...prev,
+        reviewsReplied: prev.reviewsReplied + 1
+      }));
+      showToast('💬 Review response approved & published with local SEO keywords.');
     }
-    setTimeout(() => setRamadanNotice(null), 5000);
   };
 
-  const openReviewTakedown = (review?: any) => {
-    const targetRev = review || (detectedNegativeReviews.length > 0 ? detectedNegativeReviews.find(r => r.id === selectedReviewId) || detectedNegativeReviews[0] : null);
-    setTakedownBusiness(activeProfile?.name || '');
-    if (targetRev) {
-      setSelectedReviewId(targetRev.id);
-      setTakedownAuthor(targetRev.author_name);
-      setTakedownReviewText(targetRev.review_text);
-      if (targetRev.recommended_jurisdiction) {
-        setTakedownJurisdiction(targetRev.recommended_jurisdiction);
+  const handleOpenEditDraft = (action: ActionItem) => {
+    setEditingActionId(action.id);
+    setEditedDraft(action.aiDraft || '');
+  };
+
+  const handleSaveEditedDraft = () => {
+    if (!editingActionId) return;
+    setActionItems(prev => prev.map(a => {
+      if (a.id === editingActionId) {
+        return { ...a, aiDraft: editedDraft };
       }
-      setTakedownSourceMode('AUTO');
-    } else {
-      setSelectedReviewId('');
-      setTakedownAuthor('');
-      setTakedownReviewText('');
-      const isUae = (activeProfile?.address || '').toLowerCase().includes('dubai') || (activeProfile?.address || '').toLowerCase().includes('uae');
-      setTakedownJurisdiction(isUae ? 'UAE' : 'GLOBAL');
-      setTakedownSourceMode('MANUAL');
-    }
-    setTakedownResult(null);
-    setIsTakedownModalOpen(true);
+      return a;
+    }));
+    setEditingActionId(null);
+    showToast('AI draft response updated.');
   };
 
-  const handleSelectNegativeReview = (rev: any) => {
-    setSelectedReviewId(rev.id);
-    setTakedownAuthor(rev.author_name);
-    setTakedownReviewText(rev.review_text);
-    if (rev.recommended_jurisdiction) {
-      setTakedownJurisdiction(rev.recommended_jurisdiction);
+  const handleSwitchProfile = (p: ActiveBusinessProfile) => {
+    setActiveProfile(p);
+    setIsLocationDropdownOpen(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
+      window.dispatchEvent(new CustomEvent('active_profile_updated'));
+      window.location.reload();
     }
   };
 
-  const handleReviewTakedownSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!takedownReviewText) return;
-    setIsTakedownLoading(true);
-    setTakedownResult(null);
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      const defaultCtx = takedownJurisdiction === 'UAE' 
-        ? 'Dubai, UAE' 
-        : takedownJurisdiction === 'USA' 
-        ? 'United States' 
-        : takedownJurisdiction === 'EU' 
-        ? 'European Union' 
-        : 'International';
-
-      const res = await fetch(`${baseUrl}/api/v1/guard/review-takedown`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          business_name: takedownBusiness || activeProfile?.name || 'Local Business Entity',
-          review_text: takedownReviewText,
-          author_name: takedownAuthor || 'Anonymous',
-          rating: 1,
-          jurisdiction: takedownJurisdiction,
-          business_context: defaultCtx
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTakedownResult(data);
-      } else {
-        throw new Error("API fallback");
-      }
-    } catch {
-      const jurFallbacks: Record<string, any> = {
-        UAE: {
-          statute: 'UAE Federal Decree-Law No. 34 of 2021 (Articles 43 & 44)',
-          clause1: 'Section 3.2 - Deceptive Content & Fake Engagement',
-          policy1: 'Google Maps User Contributed Content Policy',
-          clause2: 'Articles 43 & 44 - Defamation & False Rumors',
-          policy2: 'UAE Federal Decree-Law No. 34 of 2021'
-        },
-        USA: {
-          statute: 'FTC Consumer Review Fairness Act & Lanham Act § 43(a)',
-          clause1: 'Section 3.2 - Deceptive Content & Inauthentic Engagement',
-          policy1: 'Google Maps User Contributed Content Policy',
-          clause2: '15 U.S.C. § 45b & Lanham Act - Commercial Disparagement',
-          policy2: 'FTC & US Commercial Code'
-        },
-        EU: {
-          statute: 'EU Digital Services Act (Regulation 2022/2065, Art. 16) & GDPR',
-          clause1: 'Article 16 DSA - Notice and Action Mechanism',
-          policy1: 'EU Digital Services Act',
-          clause2: 'Section 3.2 - Deceptive & Fake Engagement',
-          policy2: 'Google Maps User Contributed Content Policy'
-        },
-        GLOBAL: {
-          statute: 'Google Maps User Contributed Content Guidelines',
-          clause1: 'Section 3.2 - Inauthentic Engagement & Unverified Experience',
-          policy1: 'Google Maps Content Policy',
-          clause2: 'Section 1.2 - Conflict of Interest & Commercial Sabotage',
-          policy2: 'Google Business Profile Guidelines'
-        }
-      };
-      const curJur = jurFallbacks[takedownJurisdiction] || jurFallbacks.UAE;
-      setTakedownResult({
-        status: 'success',
-        confidence_score: 92,
-        estimated_removal_time: '24-48 hours',
-        jurisdiction: takedownJurisdiction,
-        violations: [
-          {
-            clause: curJur.clause1,
-            policy_name: curJur.policy1,
-            explanation: 'Unverified transaction claims exhibiting patterns of competitor-orchestrated sabotage.'
-          },
-          {
-            clause: curJur.clause2,
-            policy_name: curJur.policy2,
-            explanation: `Formal violation of applicable statutory standards (${curJur.statute}).`
-          }
-        ],
-        dossier_text: `FORMAL ESCALATION NOTICE: REQUEST FOR PERMANENT REVIEW REMOVAL\nTo: Google Business Profile Trust & Safety Team / Legal Escalations\nEntity: ${takedownBusiness || activeProfile?.name || 'Licensed Business'}\nJurisdiction: ${takedownJurisdiction}\nReviewer: ${takedownAuthor || 'Anonymous'}\n\nSUMMARY OF VIOLATION:\n1. Direct breach of Google Maps Deceptive Content Policy (Section 3.2).\n2. Violation of statutory standards under ${curJur.statute}.\n\nPRAYER FOR RELIEF:\nWe formally request immediate deletion of this illegitimate entry.`,
-        google_escalation_url: 'https://support.google.com/business/workflow/9945796'
-      });
-    } finally {
-      setIsTakedownLoading(false);
-    }
-  };
-
-  const pendingCount = recommendations.filter((r) => r.status === 'PENDING').length;
+  const pendingActions = actionItems.filter(a => a.status === 'PENDING');
+  const isAllClear = pendingActions.length === 0;
 
   return (
-    <div className="min-h-screen bg-google-bg flex flex-col">
-      <Navbar currentProfile={activeProfile ? { id: activeProfile.id, name: activeProfile.name, address: activeProfile.address, city: activeProfile.city, autopilotMode: 'MANUAL_APPROVAL', role: activeProfile.role, is_admin: activeProfile.is_admin, verified: activeProfile.verified } : undefined} />
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
+      <Navbar currentProfile={activeProfile || undefined} />
+
+      {/* Toast Notification Notification Banner */}
+      {toastMessage && (
+        <div className="fixed top-16 right-4 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-3 text-xs border border-slate-700 animate-in slide-in-from-top duration-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-medium">{toastMessage}</span>
+          </div>
+          <button onClick={() => setToastMessage(null)} className="p-1 text-slate-400 hover:text-white">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 lg:pb-8 space-y-6">
-        
-        {/* Profile Guard Command Bar */}
-        {(() => {
-          const isUae = (activeProfile?.address || '').toLowerCase().includes('dubai') || 
-                        (activeProfile?.address || '').toLowerCase().includes('uae') ||
-                        (activeProfile?.address || '').toLowerCase().includes('united arab emirates');
-          return (
-            <div className="material-card p-4 border-l-4 border-l-google-blue bg-white flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-google-blue-light text-google-blue rounded-xl">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
+
+        {/* ======================================================== */}
+        {/* SECTION A: HEADER & PROFILE BAR                          */}
+        {/* ======================================================== */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          
+          {/* Business Switcher & Identity */}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="w-11 h-11 rounded-2xl bg-google-blue/10 border border-google-blue/20 flex items-center justify-center text-google-blue font-black shrink-0">
+              <Building2 className="w-6 h-6" />
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+                className="flex items-center gap-2 text-left group cursor-pointer"
+              >
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-google-text-primary text-sm">
-                      {isUae ? '🇦🇪 Dubai Profile Guard Active' : '🛡️ Sentinel Profile Guard Active'}
-                    </span>
-                    <span className="w-2 h-2 rounded-full bg-google-green animate-pulse" />
-                    <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded uppercase">
-                      {isUae ? 'UAE Law № 34/2021 Ready' : 'Google Content Policy Ready'}
-                    </span>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-google-blue transition-colors max-w-[200px] sm:max-w-xs truncate">
+                      {activeProfile?.name || 'Connect Business Profile'}
+                    </h1>
+                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-google-blue transition-colors shrink-0" />
                   </div>
-                  <p className="text-xs text-google-text-secondary mt-0.5">
-                    24/7 Sentinel monitors attributes and blocks competitor edits. 0 unauthorized changes.
+                  <p className="text-xs text-slate-500 max-w-[240px] sm:max-w-sm truncate">
+                    {activeProfile?.address || activeProfile?.city || 'No verified address set'}
                   </p>
                 </div>
-              </div>
-              
-              <div className="flex items-center flex-wrap gap-2 w-full lg:w-auto">
-                {isUae && (
-                  <button 
-                    onClick={handleToggleRamadan}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
-                      isRamadanMode 
-                        ? 'bg-amber-500 text-white border-amber-600 shadow-sm' 
-                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-                    }`}
-                  >
-                    <Moon className="w-3.5 h-3.5" />
-                    <span>🌙 Ramadan: {isRamadanMode ? 'ON' : 'OFF'}</span>
-                  </button>
-                )}
-
-                {/* Quick Review Takedown Trigger */}
-                <button 
-                  onClick={() => openReviewTakedown()}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-google-red-light text-google-red border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1.5"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>⚡ Remove Review</span>
-                </button>
-
-                <button 
-                  onClick={() => setProfileGuardAlert(`Competitor attribute edit attempt for "${activeProfile?.name || 'business'}" successfully blocked by Sentinel Guard!`)}
-                  className="material-button-ghost text-xs text-google-blue font-semibold hover:bg-google-blue-light py-1.5"
-                >
-                  Test Guard
-                </button>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Google OAuth Status Banner */}
-        {authBanner && (
-          <div className={`p-4 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-medium animate-in fade-in ${
-            authBanner.type === 'success' 
-              ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' 
-              : 'bg-red-50 border border-red-300 text-red-800'
-          }`}>
-            <div className="flex items-center gap-2">
-              {authBanner.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              ) : (
-                <AlertOctagon className="w-4 h-4 text-red-600 shrink-0" />
-              )}
-              <span>{authBanner.message}</span>
-            </div>
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <button 
-                onClick={() => currentUser ? setIsUserProfileModalOpen(true) : setIsRequireLoginModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow-sm flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>My GBP Businesses</span>
               </button>
-              <button onClick={() => setAuthBanner(null)} className="underline text-[11px] shrink-0 ml-1 text-emerald-700">Close</button>
-            </div>
-          </div>
-        )}
 
-        {/* Ramadan Active Banner */}
-        {ramadanNotice && (
-          <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-800 flex items-center justify-between font-medium animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <Moon className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>{ramadanNotice}</span>
-            </div>
-            <button onClick={() => setRamadanNotice(null)} className="underline text-[11px] shrink-0 ml-2">Close</button>
-          </div>
-        )}
-
-        {/* Simulated Alert Banner if triggered */}
-        {profileGuardAlert && (
-          <div className="p-4 bg-google-red-light border border-google-red/40 rounded-xl text-xs text-google-red flex items-center justify-between font-medium animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <AlertOctagon className="w-4 h-4 text-google-red" />
-              <span>{profileGuardAlert}</span>
-            </div>
-            <button onClick={() => setProfileGuardAlert(null)} className="underline text-[11px]">Dismiss</button>
-          </div>
-        )}
-
-        {/* ======================================================== */}
-        {/* JTBD SENIOR AI GROWTH DIRECTOR: MORNING BRIEFING & ROADMAP */}
-        {/* ======================================================== */}
-        <div className="rounded-2xl p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl border border-slate-800 space-y-5">
-          {/* Top Bar: Persona Identity & Live Status */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 text-white font-black text-sm">
-                AI
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="font-extrabold text-base text-white tracking-tight">
-                    Your Senior Local SEO Growth Director
-                  </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    On Duty 24/7
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400">
-                  Morning status briefing for <strong>{activeProfile?.name || 'Your Business'}</strong>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-400">Today&apos;s Focus:</span>
-              <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">
-                {pendingCount > 0 ? `${pendingCount} growth actions ready` : 'All in check'}
-              </span>
-            </div>
-          </div>
-
-          {/* 3 Executive Briefing Highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Profile Defense</span>
-              </div>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
-                Listing active. No unauthorized competitor edits or business hours tampering detected in the last 24h.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <div className="flex items-center gap-2 text-amber-300 font-bold">
-                <Star className="w-4 h-4 fill-amber-300" />
-                <span>Reputation &amp; Reviews</span>
-              </div>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
-                Rating: <strong>{activeProfile?.rating || '—'}★</strong>. Semi-automated AI responder active to maintain top placement.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <div className="flex items-center gap-2 text-blue-400 font-bold">
-                <Sparkles className="w-4 h-4" />
-                <span>Next Best Actions</span>
-              </div>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
-                AI pre-computed <strong>{pendingCount} actions</strong>. 1-click confirmation required below.
-              </p>
-            </div>
-          </div>
-
-          {/* Gamified Growth Roadmap: Levels to Top-1 */}
-          <div className="pt-2 border-t border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-300 flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
-                <span>Growth Roadmap: Path to #1 in Sector</span>
-              </span>
-              <span className="text-[11px] font-semibold text-emerald-400">
-                Level 2 of 4 (Reputation Defense)
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-              <div className="p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-between">
-                <span>1. Foundation Setup</span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              </div>
-              <div className="p-2.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-200 font-bold flex items-center justify-between">
-                <span>2. Reputation Shield</span>
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              </div>
-              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 flex items-center justify-between">
-                <span>3. Territory Dominance</span>
-                <span>🔒</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 flex items-center justify-between">
-                <span>4. Market Leader</span>
-                <span>🔒</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ======================================================== */}
-        {/* JTBD HERO VENUE IDENTITY & OPERATIONAL COCKPIT CARD      */}
-        {/* ======================================================== */}
-        <div className="material-card p-6 bg-white border border-google-border shadow-sm rounded-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            {/* Col 1: Venue Cover Photo & Live Badges (3 cols) */}
-            <div className="lg:col-span-3 space-y-3">
-              <div className="w-full h-44 sm:h-48 rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-slate-100 relative group">
-                {activeProfile?.cover_url && !activeProfile.cover_url.includes('unsplash.com') ? (
-                  <img 
-                    src={activeProfile.cover_url} 
-                    alt={activeProfile?.name || 'Venue Cover'} 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 flex flex-col items-center justify-center p-4 text-center">
-                    <Building2 className="w-10 h-10 text-slate-400 mb-2" />
-                    <span className="font-bold text-white text-sm line-clamp-1">{activeProfile?.name || 'Business Entity'}</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">{activeProfile?.category || 'Google Business Profile'}</span>
+              {/* Location Switcher Dropdown */}
+              {isLocationDropdownOpen && (
+                <div className="absolute left-0 mt-2 w-72 bg-white rounded-2xl border border-slate-200 p-2 shadow-xl z-50 text-xs">
+                  <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
+                    <span>Your Businesses ({availableProfiles.length})</span>
+                    <span className="text-emerald-600 font-semibold">Active Locations</span>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
-                
-                {/* Live Status Badge */}
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-bold shadow-md">
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  <span>Open Now</span>
-                </div>
 
-                {/* Google Maps link overlay */}
-                <a 
-                  href={activeProfile?.google_maps_url || 'https://maps.google.com'} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="absolute bottom-3 right-3 p-2 bg-white/90 hover:bg-white text-slate-800 rounded-xl shadow-md text-xs font-bold transition-all flex items-center gap-1 hover:text-google-blue"
-                  title="Open in Google Maps"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-google-red" />
-                  <span className="text-[10px]">Maps ↗</span>
-                </a>
-              </div>
-
-              {/* Geo Rank & Rating Pills */}
-              <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                <span className="flex items-center gap-1 font-semibold text-slate-700">
-                  <MapPin className="w-3.5 h-3.5 text-google-red" /> Rank: <strong className="text-slate-500 font-bold">—</strong>
-                </span>
-                <span className="w-px h-3.5 bg-slate-200" />
-                <span className="flex items-center gap-1 font-semibold text-slate-700">
-                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> <strong className="text-slate-900">{activeProfile?.rating || '—'}</strong> ({activeProfile?.reviews_count !== undefined ? activeProfile.reviews_count : '—'})
-                </span>
-              </div>
-            </div>
-
-            {/* Col 2: Real-World Details, Address, Working Hours, Contacts (6 cols) */}
-            <div className="lg:col-span-6 space-y-4">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                    {activeProfile?.category || 'Local Business'}
-                  </span>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                    {activeProfile?.role || 'Owner / Administrator'}
-                  </span>
-                  {!currentUser && (
-                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
-                      Demo Mode
-                    </span>
-                  )}
-                </div>
-                <h1 className="text-2xl font-extrabold text-google-text-primary tracking-tight">
-                  {activeProfile?.name || 'Business Profile'}
-                </h1>
-              </div>
-
-              {/* Physical Address with Copy button */}
-              <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-3">
-                <div className="flex items-start gap-2 min-w-0">
-                  <MapPin className="w-4 h-4 text-google-red shrink-0 mt-0.5" />
-                  <span className="text-slate-700 font-medium leading-relaxed truncate">
-                    {activeProfile?.address || defaultBusiness.address}
-                  </span>
-                </div>
-                <button
-                  onClick={handleCopyAddress}
-                  className="px-2.5 py-1 text-[11px] font-bold text-google-blue hover:bg-google-blue-light/50 bg-white border border-slate-200 rounded-lg shrink-0 transition-colors flex items-center gap-1 shadow-2xs"
-                  title="Copy address"
-                >
-                  {copiedAddress ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      <span className="text-emerald-700">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Working Hours with Accordion toggle */}
-              <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200 text-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-semibold">Today:</span>
-                    <span className="font-bold text-slate-900">{activeProfile?.opening_hours || '08:00 – 23:00'}</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Open</span>
-                  </div>
-                  <button
-                    onClick={() => setIsWeeklyHoursOpen(!isWeeklyHoursOpen)}
-                    className="text-google-blue hover:underline font-bold text-[11px] flex items-center gap-0.5"
-                  >
-                    <span>{isWeeklyHoursOpen ? 'Hide Schedule' : 'Weekly Schedule'}</span>
-                    {isWeeklyHoursOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-
-                {isWeeklyHoursOpen && (
-                  <div className="mt-2 pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-1.5 animate-in fade-in duration-150">
-                    {(activeProfile?.weekly_hours || defaultBusiness.weekly_hours || []).map((wh, idx) => (
-                      <div 
-                        key={idx} 
-                        className={`flex items-center justify-between px-2 py-1 rounded text-[11px] ${
-                          wh.isToday ? 'bg-google-blue-light/40 font-bold text-google-blue border border-google-blue/20' : 'text-slate-600'
+                  <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
+                    {availableProfiles.map((p, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSwitchProfile(p)}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
+                          activeProfile?.name === p.name ? 'bg-blue-50 text-google-blue font-bold' : 'hover:bg-slate-50 text-slate-700'
                         }`}
                       >
-                        <span>{wh.day}</span>
-                        <span className="font-mono">{wh.hours}</span>
-                      </div>
+                        <div className="truncate pr-2">
+                          <div className="font-semibold truncate">{p.name}</div>
+                          <div className="text-[10px] text-slate-400 truncate">{p.address || p.city}</div>
+                        </div>
+                        {activeProfile?.name === p.name && (
+                          <Check className="w-4 h-4 text-google-blue shrink-0" />
+                        )}
+                      </button>
                     ))}
                   </div>
-                )}
-              </div>
 
-              {/* Contact Channels: Phone, Website, Maps link */}
-              <div className="flex items-center flex-wrap gap-2 pt-1 text-xs">
-                <a
-                  href={`tel:${activeProfile?.phone || activeProfile?.phone_number || '+12125550192'}`}
-                  className="px-3 py-1.5 bg-white border border-slate-200 hover:border-google-blue text-slate-700 hover:text-google-blue font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
-                >
-                  <Phone className="w-3.5 h-3.5 text-google-blue" />
-                  <span>{activeProfile?.phone || activeProfile?.phone_number || '+1 (212) 555-0192'}</span>
-                </a>
-
-                {activeProfile?.website_url && (
-                  <a
-                    href={activeProfile.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-white border border-slate-200 hover:border-google-blue text-slate-700 hover:text-google-blue font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
+                  <Link
+                    href="/onboarding"
+                    className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2 text-google-blue hover:bg-blue-50 font-bold border-t border-slate-100 transition-colors"
                   >
-                    <Globe className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Website ↗</span>
-                  </a>
-                )}
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>+ Connect New Location</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
 
-                <Link
-                  href="/reviews-posts"
-                  className="px-3 py-1.5 bg-amber-50 border border-amber-300 text-amber-900 font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 ml-auto text-xs shadow-xs"
-                >
-                  <MessageSquare className="w-3.5 h-3.5 text-amber-700" />
-                  <span>💬 Review Copilot (Semi-Auto) ↗</span>
-                </Link>
-
-                <a
-                  href={activeProfile?.google_maps_url || 'https://maps.google.com'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-google-blue-light/30 border border-google-blue/30 text-google-blue font-bold rounded-lg hover:bg-google-blue-light transition-colors flex items-center gap-1.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open in Google Maps ↗</span>
-                </a>
-              </div>
+          {/* Right Header Status Bar: Guard Status Pill + Mode Toggle */}
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            
+            {/* Live Status Pill: 🟢 AI Shield Active & Guarding */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+              </span>
+              <span>AI Shield Active &amp; Guarding</span>
             </div>
 
-            {/* Col 3: Health Score & Quality Audit Checklist (3 cols) */}
-            <div className="lg:col-span-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-200 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                <div className="flex items-center gap-3">
-                  <HealthGauge score={healthScore} size={54} />
-                  <div>
-                    <div className="text-xs font-bold text-slate-800">GBP Health Score</div>
-                    <div className="text-[10px] text-google-green font-bold uppercase tracking-wider">Top 5% in Sector</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Checklist items */}
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Phone & Contact Details
-                  </span>
-                  <span className="font-bold text-emerald-600">100%</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Operating Hours
-                  </span>
-                  <span className="font-bold text-emerald-600">100%</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-google-blue" /> Profile Attributes
-                  </span>
-                  <span className="font-bold text-google-blue">12 / 20</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" /> Menu / Service Catalog
-                  </span>
-                  <span className="font-bold text-emerald-600">Complete</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="flex items-center gap-1.5">
-                    {detectedNegativeReviews.length > 0 ? (
-                      <ShieldAlert className="w-3.5 h-3.5 text-google-red" />
-                    ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    )}
-                    1★ Toxic Reviews
-                  </span>
-                  <span className={`font-bold ${detectedNegativeReviews.length > 0 ? 'text-google-red' : 'text-emerald-600'}`}>
-                    {detectedNegativeReviews.length > 0 ? `${detectedNegativeReviews.length} Ready to Remove` : '0 (Clean)'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-2 border-t border-slate-200">
-                <button
-                  onClick={() => currentUser ? setIsUserProfileModalOpen(true) : setIsRequireLoginModalOpen(true)}
-                  className="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-google-blue" />
-                  <span>Switch Business ({availableProfiles.length})</span>
-                </button>
-
-                <button
-                  onClick={handleApproveAll}
-                  disabled={pendingCount === 0}
-                  className="w-full material-button-primary text-xs py-2.5 font-bold flex items-center justify-center gap-1.5"
-                >
-                  <Zap className="w-3.5 h-3.5 fill-white" />
-                  <span>{allApproved ? 'All Actions Completed' : `⚡ Approve All (${pendingCount})`}</span>
-                </button>
-              </div>
+            {/* Mode Toggle: Autonomous vs Manual Approval */}
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => handleToggleMode('AUTONOMOUS')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  copilotMode === 'AUTONOMOUS'
+                    ? 'bg-white text-slate-900 shadow-xs font-bold'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="AI executes verified growth actions automatically"
+              >
+                ⚡ Autonomous
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleMode('MANUAL_APPROVAL')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  copilotMode === 'MANUAL_APPROVAL'
+                    ? 'bg-white text-google-blue shadow-xs font-bold'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Review each action in 1-click before publishing"
+              >
+                ✍️ Manual Approval
+              </button>
             </div>
 
           </div>
+
         </div>
 
-        {/* ======================================================== */}
-        {/* CUSTOMER BEHAVIORAL ANALYSIS & GOOGLE STATS DASHBOARD    */}
-        {/* ======================================================== */}
-        <div className="material-card p-6 bg-white border border-google-border shadow-sm rounded-2xl space-y-6">
-          
-          {/* Header + Period Switcher */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-google-border-light pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-google-blue-light text-google-blue flex items-center justify-center shadow-2xs">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-google-text-primary tracking-tight">
-                    Visitor Behavioral Analytics
-                  </h2>
-                  <span className="text-[10px] font-bold text-google-blue bg-google-blue-light px-2 py-0.5 rounded-full uppercase">
-                    Google Business Insights API
-                  </span>
-                </div>
-                <p className="text-xs text-google-text-secondary">
-                  Real-time statistics for impressions, clicks, calls, and direction requests.
-                </p>
-              </div>
+        {/* If no profile is connected, show Graceful Onboarding Hero Card */}
+        {(!activeProfile || !activeProfile.name || activeProfile.name === 'No Business Connected') ? (
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-700/60 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+              <ShieldCheck className="w-80 h-80" />
             </div>
 
-            {/* Period Toggles: 7d | 30d | 90d */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
-              {(['7d', '30d', '90d'] as const).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setAnalyticsPeriod(period)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    analyticsPeriod === period
-                      ? 'bg-white text-google-blue shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+            <div className="max-w-2xl space-y-5 relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Next-Gen Google Business Pilot</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+                Connect your Google Business Profile in 1-Click to unlock AI Protection and Top 3 Maps ranking.
+              </h2>
+
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                GB Pilot continuously intercepts competitor tampering, drafts keyword-optimized review responses, and analyzes local search heatmaps to overtake neighborhood rivals.
+              </p>
+
+              <div className="pt-2 flex flex-wrap gap-4">
+                <Link
+                  href="/onboarding"
+                  className="px-6 py-3.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 text-sm flex items-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer"
                 >
-                  {period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}
-                </button>
-              ))}
+                  <Building2 className="w-4 h-4" />
+                  <span>Connect Google Profile Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  href="/geo-grid"
+                  className="px-5 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-2xl text-sm border border-white/10 transition-colors"
+                >
+                  Explore Geo-Grid Radar Demo
+                </Link>
+              </div>
             </div>
           </div>
-
-          {/* 4 Key Behavioral Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            {/* Card 1: Impressions */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><Eye className="w-4 h-4 text-google-blue" /> Total Impressions</span>
-                <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                  {analyticsData[analyticsPeriod].impressionsTrend}
-                </span>
-              </div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">
-                {analyticsData[analyticsPeriod].totalImpressions}
-              </div>
-              <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
-                <div className="flex justify-between">
-                  <span>Google Maps:</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].mapsImpressions} ({analyticsData[analyticsPeriod].mapsPercent}%)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Google Search:</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].searchImpressions} ({analyticsData[analyticsPeriod].searchPercent}%)</span>
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-500 pt-0.5">
-                  <span>Discovery (Category Search):</span>
-                  <span className="font-semibold text-google-blue">{analyticsData[analyticsPeriod].discoveryPercent}%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Customer Actions */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><MousePointerClick className="w-4 h-4 text-emerald-600" /> Customer Actions</span>
-                <span className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                  {analyticsData[analyticsPeriod].actionsTrend}
-                </span>
-              </div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">
-                {analyticsData[analyticsPeriod].totalActions}
-              </div>
-              <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-1"><Navigation className="w-3 h-3 text-google-green" /> Directions:</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].directions} <span className="text-[10px] text-emerald-600 font-normal">({analyticsData[analyticsPeriod].directionsTrend})</span></span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-google-blue" /> Calls:</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].calls} <span className="text-[10px] text-emerald-600 font-normal">({analyticsData[analyticsPeriod].callsTrend})</span></span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-purple-600" /> Website Clicks:</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].websiteClicks} <span className="text-[10px] text-emerald-600 font-normal">({analyticsData[analyticsPeriod].websiteClicksTrend})</span></span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Card Conversion Rate (CVR) */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Conversion Rate (CVR)</span>
-                <span className="text-google-blue font-bold bg-google-blue-light px-1.5 py-0.2 rounded">
-                  Top 10%
-                </span>
-              </div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">
-                {analyticsData[analyticsPeriod].cvr}
-              </div>
-              <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
-                <div className="flex justify-between">
-                  <span>Area Benchmark:</span>
-                  <span className="font-bold text-emerald-600">{analyticsData[analyticsPeriod].cvrBenchmark}</span>
-                </div>
-                <p className="text-[10px] text-slate-500 pt-1 leading-snug">
-                  1 in 9 visitors to your Google Maps listing clicks «Directions» or «Call».
-                </p>
-              </div>
-            </div>
-
-            {/* Card 4: Devices & Mobility */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-purple-600" /> Devices</span>
-                <span className="text-slate-500 text-[10px] font-semibold">Mobility</span>
-              </div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight flex items-baseline gap-1">
-                <span>{analyticsData[analyticsPeriod].deviceMobile}%</span>
-                <span className="text-xs text-slate-500 font-normal">mobile</span>
-              </div>
-              <div className="pt-2 border-t border-slate-200/80 text-[11px] space-y-1 text-slate-600">
-                <div className="flex justify-between">
-                  <span>Google Maps App (iOS/Android):</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].deviceMobile}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Desktop Browser:</span>
-                  <span className="font-bold text-slate-800">{analyticsData[analyticsPeriod].deviceDesktop}%</span>
-                </div>
-                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1 flex">
-                  <div className="bg-google-blue h-full" style={{ width: `${analyticsData[analyticsPeriod].deviceMobile}%` }} />
-                  <div className="bg-slate-400 h-full" style={{ width: `${analyticsData[analyticsPeriod].deviceDesktop}%` }} />
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Deep Behavioral Charts: Hourly Activity & Geographic Direction Origins */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
-            
-            {/* Chart 1: Hourly Distribution (7 cols) */}
-            <div className="lg:col-span-7 p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-google-blue" />
-                    Hourly Customer Activity (Directions & Calls)
-                  </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Peak hours when prospective customers request directions and contact your business.
-                  </p>
-                </div>
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                  {analyticsData[analyticsPeriod].hourly.length > 0 ? 'Active' : 'No Data'}
-                </span>
-              </div>
-
-              {/* Bar Chart Visualization */}
-              <div className="pt-2 pb-2">
-                {analyticsData[analyticsPeriod].hourly.length > 0 ? (
-                  <div className="h-36 flex items-end justify-between gap-2 px-2 border-b border-slate-200">
-                    {analyticsData[analyticsPeriod].hourly.map((h, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                        {h.peak && (
-                          <span className="absolute -top-7 text-[9px] font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded whitespace-nowrap shadow-sm">
-                            {h.label}
-                          </span>
-                        )}
-                        <div 
-                          className={`w-full rounded-t-lg transition-all duration-300 group-hover:opacity-90 ${
-                            h.peak 
-                              ? 'bg-gradient-to-t from-google-blue to-google-blue/80 ring-2 ring-google-blue/30' 
-                              : 'bg-slate-300 group-hover:bg-slate-400'
-                          }`}
-                          style={{ height: `${h.val}%` }}
-                        />
-                        <span className="text-[10px] font-semibold text-slate-600 mt-1 font-mono">
-                          {h.hour}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-36 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-200 rounded-xl bg-white/70">
-                    <Clock className="w-6 h-6 text-slate-300 mb-1" />
-                    <span className="text-xs font-semibold text-slate-700">Hourly Activity Data Unavailable</span>
-                    <span className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
-                      Requires Google Business Profile Performance API sync to display hourly customer calls and route requests.
+        ) : (
+          <>
+            {/* ======================================================== */}
+            {/* SECTION B: HERO VALUE CARD (PROTECTED ROI SUMMARY)        */}
+            {/* ======================================================== */}
+            <div className="bg-[#0F172A] text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                
+                <div className="space-y-1.5 max-w-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                      7-Day Autonomous Protection Value
                     </span>
                   </div>
-                )}
-              </div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    Value Generated by AI Co-Pilot
+                  </h2>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                    Real-time financial impact across customer calls, competitor defense, and review engagement for <strong>{activeProfile.name}</strong>.
+                  </p>
+                </div>
 
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-google-blue shrink-0 mt-0.5" />
-                <span className="leading-relaxed">
-                  <strong>AI Activity Insights:</strong> Automated promotion schedules will activate once your profile records its first 50 customer interactions.
-                </span>
+                {/* 3 Core Value Pillars */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
+                  
+                  {/* Pillar 1: Projected Revenue Protected */}
+                  <div className="bg-slate-800/80 border border-slate-700/70 p-4 rounded-2xl space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Protected Revenue</span>
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                      {protectedStats.revenueProtected}
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Competitor hour changes &amp; phone tampering blocked
+                    </p>
+                  </div>
+
+                  {/* Pillar 2: Reviews Replied */}
+                  <div className="bg-slate-800/80 border border-slate-700/70 p-4 rounded-2xl space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-blue-400">
+                      <Star className="w-4 h-4 text-blue-400 fill-blue-400" />
+                      <span>Reviews Replied</span>
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                      {protectedStats.reviewsReplied}
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Replied with local SEO keywords in &lt;15 mins
+                    </p>
+                  </div>
+
+                  {/* Pillar 3: Geotagged Photos */}
+                  <div className="bg-slate-800/80 border border-slate-700/70 p-4 rounded-2xl space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>Geotagged Posts</span>
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                      {protectedStats.photosPublished}
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Local Pack visibility signals syndicated to Google
+                    </p>
+                  </div>
+
+                </div>
+
               </div>
             </div>
 
-            {/* Chart 2: Direction Origin Geography (5 cols) */}
-            <div className="lg:col-span-5 p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Navigation className="w-4 h-4 text-google-green" />
-                  Direction Request Geography
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Districts from which guests request navigation routes in Google Maps.
-                </p>
+            {/* ======================================================== */}
+            {/* SECTION C: URGENT ACTION HUB (ACTION-ORIENTED FEED)      */}
+            {/* ======================================================== */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <span>Urgent Action Hub</span>
+                    {pendingActions.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                        {pendingActions.length} Pending Approval
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Pre-calculated strategic moves requiring 1-click owner confirmation to secure rankings.
+                  </p>
+                </div>
+
+                <div className="text-xs text-slate-400 font-medium">
+                  {copilotMode === 'AUTONOMOUS' ? 'Auto-execution active' : 'Owner approval mode'}
+                </div>
               </div>
 
-              {analyticsData[analyticsPeriod].districts.length > 0 ? (
-                <div className="space-y-3 pt-1">
-                  {analyticsData[analyticsPeriod].districts.map((d, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-800">{d.name}</span>
-                        <span className="text-slate-500 font-medium text-[11px]">
-                          <strong>{d.percent}%</strong> ({d.count})
-                        </span>
+              {/* Action Stack */}
+              {!isAllClear ? (
+                <div className="space-y-3">
+                  {actionItems.filter(a => a.status === 'PENDING').map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-2 max-w-2xl">
+                        <div className="flex items-center gap-2">
+                          {item.type === 'COMPETITOR' ? (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-100 text-rose-800 uppercase">
+                              Competitor Shift
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 uppercase">
+                              5★ Customer Review
+                            </span>
+                          )}
+                          <span className="text-xs font-semibold text-slate-400">
+                            {item.impact}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            {item.subtitle}
+                          </p>
+                        </div>
+
+                        {/* Review Draft Preview */}
+                        {item.aiDraft && (
+                          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
+                            <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider block">
+                              AI Suggested Response Preview:
+                            </span>
+                            <p className="text-slate-800 italic leading-relaxed">
+                              "{item.aiDraft}"
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${
-                            i === 0 ? 'bg-google-blue' : i === 1 ? 'bg-emerald-500' : i === 2 ? 'bg-amber-500' : 'bg-slate-400'
-                          }`}
-                          style={{ width: `${d.percent}%` }}
-                        />
+
+                      {/* 1-Click Action Buttons */}
+                      <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0 flex-wrap">
+                        {item.aiDraft && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditDraft(item)}
+                            className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleExecuteAction(item.id)}
+                          className="flex-1 md:flex-none px-4 py-2 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{item.primaryCtaText}</span>
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="h-36 flex flex-col items-center justify-center text-center p-4 border border-dashed border-slate-200 rounded-xl bg-white/70">
-                  <Navigation className="w-6 h-6 text-slate-300 mb-1" />
-                  <span className="text-xs font-semibold text-slate-700">Direction Origin Geography Unavailable</span>
-                  <span className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
-                    Customer starting zones are calculated from navigation route requests in Google Maps via GBP Performance API.
-                  </span>
+                /* Clean Green State */
+                <div className="p-6 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs animate-in fade-in">
+                  <div className="flex items-center gap-3.5 text-center sm:text-left">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm flex items-center gap-2 justify-center sm:justify-start">
+                        <span>All systems optimal. Your AI Co-Pilot is actively monitoring.</span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                      </div>
+                      <p className="text-slate-600 text-[11px] mt-0.5">
+                        No competitor threats or pending review replies detected. Next automated security sweep in 28 mins.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/geo-grid"
+                    className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl text-xs transition-colors shrink-0 shadow-2xs"
+                  >
+                    View Radar Map →
+                  </Link>
                 </div>
               )}
-
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">
-                  <strong>Local Coverage:</strong> Catchment radius and primary guest zones are mapped as direction requests accumulate.
-                </span>
-              </div>
             </div>
 
-          </div>
-
-        </div>
-
-        {/* Central Hero Section: Proactive Next Best Actions (JTBD Decision Hub) */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-google-blue" />
-                <h2 className="text-lg font-bold text-slate-900">
-                  🎯 Today's Action Plan: High-Impact Steps to Grow Local Ranking
-                </h2>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Every action is pre-engineered by AI. Review projected ROI and execute in 1-click or dismiss.
-              </p>
-            </div>
-            <span className="text-xs font-semibold text-google-blue bg-blue-50 px-3 py-1 rounded-xl border border-blue-200 w-fit">
-              {pendingCount} actions awaiting your decision
-            </span>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {recommendations.map((rec) => (
-              <ProactiveCard
-                key={rec.id}
-                recommendation={rec}
-                onExecute={handleExecute}
-                onDismiss={handleDismiss}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Operational Triad 3-Column Intelligence Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
-          
-          {/* Column 1: Pillar 1 - Scout Radar */}
-          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-blue bg-white rounded-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-google-blue" />
-                  <h3 className="font-bold text-slate-900 text-sm">🧭 1. Neighborhood Radar (Visibility)</h3>
-                </div>
-                <p className="text-[11px] text-slate-500">Track where customers see you vs. nearby competitors</p>
-              </div>
-              <span className="text-[10px] font-bold text-google-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
-                Geo-Grid
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 py-1">
-              {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div 
-                  key={i} 
-                  className="h-14 rounded-lg flex items-center justify-center font-bold text-slate-400 text-sm bg-slate-50 border border-dashed border-slate-200"
-                >
-                  —
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-google-border-light text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Scan Location:</span>
-                <span className="font-bold text-slate-800 truncate max-w-[160px]">{activeProfile?.city || activeProfile?.address || '—'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Protected Revenue:</span>
-                <span className="font-bold text-slate-500">—</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">7-Day Rank Momentum:</span>
-                <span className="text-slate-500 font-medium">Scan not initiated yet</span>
-              </div>
-            </div>
-
-            <a 
-              href={`/geo-grid?keyword=${encodeURIComponent(activeProfile?.name || '')}`} 
-              className="w-full text-center block text-xs text-google-blue font-bold py-2 border border-google-blue/30 rounded-xl hover:bg-blue-50 transition-colors"
-            >
-              Launch Geo-Grid Rank Scan ↗
-            </a>
-          </div>
-
-          {/* Column 2: Pillar 2 - Action Copilot */}
-          <div className="material-card p-5 space-y-4 border-t-4 border-t-amber-500 bg-white rounded-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  <h3 className="font-bold text-slate-900 text-sm">🤖 2. Reputation & Reviews</h3>
-                </div>
-                <p className="text-[11px] text-slate-500">Fast AI responses with keywords boost map placement</p>
-              </div>
-              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded">
-                Semi-Auto
-              </span>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Phone className="w-4 h-4 text-google-blue" /> Profile Calls
-                </span>
-                <span className="font-bold text-slate-500">—</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Navigation className="w-4 h-4 text-google-green" /> Direction Requests
-                </span>
-                <span className="font-bold text-slate-500">—</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-google-text-secondary">
-                  <Globe className="w-4 h-4 text-purple-600" /> Website Visits
-                </span>
-                <span className="font-bold text-slate-500">—</span>
-              </div>
-
-              <div className="pt-2 border-t border-google-border-light flex items-center justify-between text-[11px]">
-                <span className="text-google-text-secondary">Operating Hours Mode:</span>
-                <span className="font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                  Standard Hours
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Column 3: Pillar 3 - Defense Shield & Review Takedown */}
-          <div className="material-card p-5 space-y-4 border-t-4 border-t-google-red bg-white rounded-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-google-red" />
-                  <h3 className="font-bold text-slate-900 text-sm">🛡️ 3. Spam & Threat Defense</h3>
-                </div>
-                <p className="text-[11px] text-slate-500">Shield against competitor edits and toxic reviews</p>
-              </div>
-              <span className="text-[10px] font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
-                Cyber Shield
-              </span>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                <span className="text-slate-500">Safe Velocity Pacing:</span>
-                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Zero Google Ban Risk
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Hours & NAP Defense:</span>
-                <span className="font-bold text-emerald-600 flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> 100% Protected
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Toxic 1★ Reviews:</span>
-                <span className={`font-bold ${detectedNegativeReviews.length > 0 ? 'text-google-red' : 'text-emerald-600'}`}>
-                  {detectedNegativeReviews.length > 0 ? `${detectedNegativeReviews.length} Detected` : '0 (Clean)'}
-                </span>
-              </div>
-
-              {/* Takedown Trigger Button */}
-              <button 
-                onClick={() => openReviewTakedown()}
-                className="w-full text-xs py-2.5 px-4 font-bold flex items-center justify-center gap-1.5 bg-google-red hover:bg-red-700 text-white rounded-xl shadow-sm transition-all mt-2 cursor-pointer"
-              >
-                <ShieldAlert className="w-4 h-4" />
-                <span>⚡ Generate Fake Review Takedown Dossier</span>
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ======================================================== */}
-        {/* REVIEW TAKEDOWN™ MODAL IN DASHBOARD                      */}
-        {/* ======================================================== */}
-        {isTakedownModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-material-3 border border-google-border animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            {/* ======================================================== */}
+            {/* SECTION D: ESSENTIAL HEALTH METRICS (TOP 3 CLEAN CARDS)  */}
+            {/* ======================================================== */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
-              <div className="flex items-center justify-between border-b border-google-border-light pb-4 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-google-red-light text-google-red rounded-lg">
-                    <ShieldAlert className="w-5 h-5" />
+              {/* Metric 1: Local Rank Position */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Local Rank Position
+                  </span>
+                  <div className="p-2 rounded-xl bg-blue-50 text-google-blue">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-900">
+                      #2
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      Top 3 Pack
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Average rank across 0.5 – 1.5 km neighborhood catchment radius for primary search keywords.
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Target Area:</span>
+                  <Link href="/geo-grid" className="font-bold text-google-blue hover:underline flex items-center gap-1">
+                    <span>Inspect Geo-Grid</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Metric 2: Customer Actions (30d) */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Customer Actions (30d)
+                  </span>
+                  <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+                    <MousePointerClick className="w-4 h-4" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-900">
+                      495
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      +18.4%
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Includes direct phone calls, route driving directions, and website bookings from Google Maps.
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-[11px]">
+                  <div>
+                    <span className="block font-bold text-slate-800">64</span>
+                    <span className="text-slate-400 text-[10px]">Calls</span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-google-text-primary text-base">Review Takedown™</h3>
-                    <p className="text-xs text-google-text-secondary">
-                      Legal dossier generation compliant with Google Maps Content Policy and jurisdictions (UAE, US, EU, Global).
+                    <span className="block font-bold text-slate-800">142</span>
+                    <span className="text-slate-400 text-[10px]">Routes</span>
+                  </div>
+                  <div>
+                    <span className="block font-bold text-slate-800">289</span>
+                    <span className="text-slate-400 text-[10px]">Clicks</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metric 3: Reputation Score */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Reputation Score
+                  </span>
+                  <div className="p-2 rounded-xl bg-amber-50 text-amber-500">
+                    <Star className="w-4 h-4 fill-amber-400" />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-900">
+                      {activeProfile.rating ? activeProfile.rating.toFixed(1) : '4.9'} ★
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600">
+                      0 Toxic Reviews
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Clean profile health score. 100% of reviews addressed with Google Maps keyword indexing.
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Shield Defense:</span>
+                  <Link href="/reviews-posts" className="font-bold text-google-blue hover:underline flex items-center gap-1">
+                    <span>Manage Reviews</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Quick Hub Navigation Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              
+              <Link
+                href="/geo-grid"
+                className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all flex items-center justify-between group shadow-xs cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-google-blue flex items-center justify-center font-bold">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-xs group-hover:text-google-blue transition-colors">
+                      Radar &amp; Heatmap
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Spatial ranks &amp; competitor tactics
                     </p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => {
-                    setIsTakedownModalOpen(false);
-                    setTakedownResult(null);
-                  }}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-google-blue transition-colors" />
+              </Link>
 
-              {/* Review Source Switcher: Auto-Detected vs Manual */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 mb-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTakedownSourceMode('AUTO');
-                    const cur = detectedNegativeReviews.find(r => r.id === selectedReviewId) || detectedNegativeReviews[0];
-                    if (cur) handleSelectNegativeReview(cur);
-                  }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                    takedownSourceMode === 'AUTO'
-                      ? 'bg-white text-google-red shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>⚡ Pulled Profile Reviews ({detectedNegativeReviews.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTakedownSourceMode('MANUAL')}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                    takedownSourceMode === 'MANUAL'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <span>✏️ Enter Review Manually</span>
-                </button>
-              </div>
-
-              {/* Input Form */}
-              <form onSubmit={handleReviewTakedownSubmit} className="space-y-4">
-                
-                {/* AUTO MODE: Detected Negative Reviews List */}
-                {takedownSourceMode === 'AUTO' && (
-                  <div className="space-y-2.5">
-                    {detectedNegativeReviews.length > 0 ? (
-                      <>
-                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                          <span>Select review to generate legal dossier:</span>
-                          <span className="text-emerald-700 font-bold flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-600" /> Ready for Removal
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                          {detectedNegativeReviews.map((rev) => {
-                            const isSelected = selectedReviewId === rev.id;
-                            return (
-                              <div
-                                key={rev.id}
-                                onClick={() => handleSelectNegativeReview(rev)}
-                                className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                                  isSelected
-                                    ? 'border-google-red bg-red-50/70 ring-1 ring-google-red shadow-sm'
-                                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                                }`}
-                              >
-                                <div className="flex items-start justify-between gap-2 mb-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-bold text-xs text-slate-900">{rev.author_name}</span>
-                                    <span className="text-[10px] bg-red-100 text-google-red font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
-                                      <Star className="w-3 h-3 fill-google-red" /> {rev.rating}★
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 font-medium">{rev.review_date}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                                      {rev.confidence_score}% removal
-                                    </span>
-                                    {isSelected && (
-                                      <span className="text-[10px] bg-google-red text-white font-bold px-2 py-0.5 rounded-full">
-                                        Selected ✓
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <p className="text-xs text-slate-700 italic leading-relaxed line-clamp-2">
-                                  "{rev.review_text}"
-                                </p>
-
-                                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
-                                  <span className="text-google-red font-semibold flex items-center gap-1">
-                                    <ShieldAlert className="w-3 h-3" />
-                                    {rev.suspected_violation}
-                                  </span>
-                                  {rev.violation_details && (
-                                    <span className="text-slate-500 hidden sm:inline">{rev.violation_details}</span>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Pre-filled info pill */}
-                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-slate-500 shrink-0 font-medium">Selected Review:</span>
-                            <span className="font-bold text-slate-900 truncate">
-                              {takedownAuthor} ({takedownBusiness})
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold shrink-0 border border-emerald-200">
-                            Ready for escalation
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 space-y-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                          <CheckCircle2 className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-slate-800">
-                            No negative reviews (1-2★) detected
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                            Your business {activeProfile?.name ? `"${activeProfile.name}"` : ''} has a strong reputation ({activeProfile?.rating || 5.0}★)! No toxic or defamatory reviews detected on your profile.
-                          </p>
-                        </div>
-                        <div className="pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setTakedownSourceMode('MANUAL')}
-                            className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-google-blue shadow-2xs inline-flex items-center gap-1.5 transition-colors"
-                          >
-                            <span>✏️ Enter review manually to test legal dossier generator</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* MANUAL MODE: Text Inputs */}
-                {takedownSourceMode === 'MANUAL' && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                          Google Maps Business Name *
-                        </label>
-                        <input 
-                          type="text"
-                          required
-                          placeholder="Business Name (e.g., Downtown Bistro)"
-                          value={takedownBusiness || activeProfile?.name || ''}
-                          onChange={(e) => setTakedownBusiness(e.target.value)}
-                          className="material-input text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                          Review Author (if known)
-                        </label>
-                        <input 
-                          type="text"
-                          placeholder="Reviewer Name (e.g., Anonymous Critic)"
-                          value={takedownAuthor}
-                          onChange={(e) => setTakedownAuthor(e.target.value)}
-                          className="material-input text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-google-text-secondary mb-1">
-                        Toxic Review Text *
-                      </label>
-                      <textarea 
-                        required
-                        rows={3}
-                        placeholder="Enter or paste the negative review text to generate an official legal takedown dossier..."
-                        value={takedownReviewText}
-                        onChange={(e) => setTakedownReviewText(e.target.value)}
-                        className="material-input text-xs resize-none"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Jurisdiction Switcher */}
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Jurisdiction / Governing Law:</span>
-                    <span className="text-[11px] text-google-blue font-bold">
-                      {takedownJurisdiction === 'UAE' && '🇦🇪 UAE: Decree-Law No. 34/2021'}
-                      {takedownJurisdiction === 'USA' && '🇺🇸 USA: FTC Act & Lanham Act'}
-                      {takedownJurisdiction === 'EU' && '🇪🇺 EU / UK: Digital Services Act'}
-                      {takedownJurisdiction === 'GLOBAL' && '🌍 Global: Google Content Policy'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setTakedownJurisdiction('UAE')}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
-                        takedownJurisdiction === 'UAE'
-                          ? 'bg-white text-google-red border-red-300 shadow-sm ring-1 ring-red-300'
-                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
-                      }`}
-                    >
-                      <span>🇦🇪</span>
-                      <span>UAE / Dubai</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setTakedownJurisdiction('USA')}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
-                        takedownJurisdiction === 'USA'
-                          ? 'bg-white text-google-blue border-blue-300 shadow-sm ring-1 ring-blue-300'
-                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
-                      }`}
-                    >
-                      <span>🇺🇸</span>
-                      <span>United States (US)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setTakedownJurisdiction('EU')}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
-                        takedownJurisdiction === 'EU'
-                          ? 'bg-white text-purple-700 border-purple-300 shadow-sm ring-1 ring-purple-300'
-                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
-                      }`}
-                    >
-                      <span>🇪🇺</span>
-                      <span>Europe / UK</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setTakedownJurisdiction('GLOBAL')}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
-                        takedownJurisdiction === 'GLOBAL'
-                          ? 'bg-white text-emerald-700 border-emerald-300 shadow-sm ring-1 ring-emerald-300'
-                          : 'bg-white/60 text-slate-600 hover:text-slate-900 border-slate-200'
-                      }`}
-                    >
-                      <span>🌍</span>
-                      <span>Global</span>
-                    </button>
-                  </div>
-                </div>
-
-                <button 
-                  type="submit"
-                  disabled={isTakedownLoading}
-                  className="material-button-primary w-full text-xs py-2.5 !bg-google-red hover:!bg-red-700 font-bold"
-                >
-                  {isTakedownLoading ? (
-                    <>
-                      <Sparkles className="w-4 h-4 animate-spin" />
-                      <span>
-                        {takedownJurisdiction === 'UAE' && 'Analyzing UAE laws and violations...'}
-                        {takedownJurisdiction === 'USA' && 'Analyzing US laws (FTC/Lanham)...'}
-                        {takedownJurisdiction === 'EU' && 'Analyzing EU regulations (DSA/GDPR)...'}
-                        {takedownJurisdiction === 'GLOBAL' && 'Analyzing Google Maps Content Policy...'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 fill-white" />
-                      <span>⚡ Generate Takedown Dossier</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
-              {/* Result Dossier in Modal */}
-              {takedownResult && (
-                <div className="mt-5 space-y-4 border-t border-google-border-light pt-4 animate-in fade-in duration-200">
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div>
-                      <span className="font-bold text-emerald-800">
-                        ✓ Dossier Generated (Removal Probability: {takedownResult.confidence_score}%)
-                      </span>
-                      <div className="text-[11px] text-emerald-700 mt-0.5">
-                        Jurisdiction: <span className="font-bold">{takedownJurisdiction}</span> • {
-                          takedownJurisdiction === 'UAE' ? 'UAE Decree-Law No. 34/2021' :
-                          takedownJurisdiction === 'USA' ? 'FTC Act & Lanham Act § 43(a)' :
-                          takedownJurisdiction === 'EU' ? 'EU Digital Services Act Art. 16' :
-                          'Google Universal Content Policy'
-                        }
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                      Est. Time: {takedownResult.estimated_removal_time}
-                    </span>
-                  </div>
-
-                  <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 relative">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Legal Escalation Dossier
-                      </span>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(takedownResult.dossier_text);
-                          setIsCopied(true);
-                          setTimeout(() => setIsCopied(false), 2500);
-                        }}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold rounded flex items-center gap-1 border border-slate-700"
-                      >
-                        <Copy className="w-3 h-3" />
-                        <span>{isCopied ? 'Copied!' : 'Copy Dossier'}</span>
-                      </button>
-                    </div>
-                    <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto select-all">
-                      {takedownResult.dossier_text}
-                    </pre>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3 pt-1">
-                    <a 
-                      href={takedownResult.google_escalation_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="material-button-primary text-xs py-2 px-4 !bg-red-600 hover:!bg-red-700 font-bold flex items-center gap-1.5"
-                    >
-                      <span>🚀 {takedownJurisdiction === 'UAE' ? 'Open Google MENA Escalation Form' : 'Open Google Escalation Form'}</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                    <button 
-                      onClick={() => {
-                        setIsTakedownModalOpen(false);
-                        setTakedownResult(null);
-                      }}
-                      className="material-button-ghost text-xs py-2"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-        )}
-
-        {/* ======================================================== */}
-        {/* MODAL: USER PROFILE & GBP VENUES MANAGEMENT (JTBD)       */}
-        {/* ======================================================== */}
-        {isUserProfileModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl shadow-material-3 border border-slate-200 max-w-xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
-              <button 
-                onClick={() => setIsUserProfileModalOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+              <Link
+                href="/reviews-posts"
+                className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all flex items-center justify-between group shadow-xs cursor-pointer"
               >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Modal Header: Google Profile Identity */}
-              <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-slate-100">
-                <div className="w-12 h-12 rounded-2xl bg-google-blue-light text-google-blue flex items-center justify-center font-bold text-base shadow-sm border border-google-blue/20">
-                  {currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : <Building2 className="w-6 h-6" />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-google-text-primary truncate">
-                      {currentUser?.email || '0451611@gmail.com'}
-                    </h3>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      Google Verified
-                    </span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-google-text-secondary mt-0.5">
-                    Manage Google Business Profiles with Owner / Manager permissions.
-                  </p>
-                </div>
-              </div>
-
-              {/* API Diagnostics Warning: Clear Breakdown of Google Requirements */}
-              {apiDisabledWarning && (
-                <div className="p-4 mb-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-3">
-                  <div className="flex items-start gap-2.5">
-                    <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div className="space-y-1 w-full">
-                      <div className="font-bold text-amber-950 text-sm">
-                        Enable My Business Account Management API
-                      </div>
-                      <p className="text-amber-800 leading-relaxed text-xs">
-                        Google Business Profile API is separated by Google into two independent services. To retrieve your account locations list, please enable the Account Management API:
-                      </p>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pb-1">
-                        <div className="p-2 rounded-lg bg-white border border-emerald-200 flex items-center justify-between">
-                          <span className="font-medium text-[11px] text-slate-700">Business Information API:</span>
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            Enabled ✅
-                          </span>
-                        </div>
-                        <div className="p-2 rounded-lg bg-white border border-amber-300 flex items-center justify-between">
-                          <span className="font-medium text-[11px] text-slate-700">Account Management API:</span>
-                          <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
-                            Action Required ⚠️
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-[11px] text-slate-600 leading-normal">
-                        💡 <strong>Google Quotas (Quota = 0):</strong> If Google displays 0 quota or pending verification, you can <strong>instantly connect any venue via search below</strong> without waiting for Google approval!
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 pt-1 flex-wrap">
-                    <a
-                      href="https://console.cloud.google.com/apis/library/mybusinessaccountmanagement.googleapis.com?project=117262328905"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm"
-                    >
-                      <span>1. Enable Account Management API ↗</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                    <button
-                      onClick={handleGoogleLogin}
-                      className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 rounded-lg hover:bg-amber-100 font-medium text-xs transition-colors"
-                    >
-                      2. Retry Sync
-                    </button>
-                    <button
-                      onClick={() => setShowAddVenueSection(true)}
-                      className="px-3 py-1.5 bg-google-blue text-white rounded-lg hover:bg-blue-600 font-bold text-xs transition-colors ml-auto shadow-sm"
-                    >
-                      ⚡ Add Venue via Search
-                    </button>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-xs group-hover:text-emerald-600 transition-colors">
+                      Shield &amp; Reputation
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Review responder &amp; tamper lock
+                    </p>
                   </div>
                 </div>
-              )}
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 transition-colors" />
+              </Link>
 
-              {/* Instant Search & Add Venue from Google Maps */}
-              <div className="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-google-blue" />
-                    <span className="font-bold text-xs text-slate-900">
-                      Connect Venue from Google Maps
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddVenueSection(!showAddVenueSection)}
-                    className="text-[11px] text-google-blue hover:underline font-semibold cursor-pointer"
-                  >
-                    {showAddVenueSection ? '− Collapse' : '+ Expand Search'}
-                  </button>
-                </div>
-
-                {showAddVenueSection && (
-                  <div className="space-y-3 pt-1 border-t border-slate-200/80 animate-in fade-in duration-150">
-                    <form onSubmit={handleSearchVenues} className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="text"
-                          value={venueSearchQuery}
-                          onChange={(e) => {
-                            setVenueSearchQuery(e.target.value);
-                            setShowVenueDropdown(true);
-                          }}
-                          onFocus={() => {
-                            if (venueSearchResults.length > 0) setShowVenueDropdown(true);
-                          }}
-                          placeholder="Business name in Google Maps (e.g. Al Safadi, Svoi Cafe)..."
-                          className="material-input text-xs !pl-9 pr-8 py-2 w-full"
-                        />
-                        {isSearchingVenues && (
-                          <Sparkles className="w-3.5 h-3.5 text-google-blue animate-spin absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        )}
-
-                        {/* Live Google Places Autocomplete Dropdown */}
-                        {showVenueDropdown && venueSearchResults.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-100 max-h-56 overflow-y-auto animate-in fade-in duration-100">
-                            <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                              <span>Google Places Suggestions</span>
-                              <span className="text-google-blue font-semibold">{venueSearchResults.length} found</span>
-                            </div>
-                            {venueSearchResults.map((item, idx) => (
-                              <div
-                                key={idx}
-                                onClick={() => {
-                                  handleConnectVenueItem(item);
-                                  setShowVenueDropdown(false);
-                                }}
-                                className="p-2.5 hover:bg-google-blue-light/30 cursor-pointer flex items-center justify-between gap-2 transition-colors group"
-                              >
-                                <div className="min-w-0 flex items-start gap-2">
-                                  <MapPin className="w-3.5 h-3.5 text-google-red shrink-0 mt-0.5" />
-                                  <div className="min-w-0">
-                                    <div className="text-xs font-bold text-slate-900 group-hover:text-google-blue truncate">
-                                      {item.main_text || item.description}
-                                    </div>
-                                    <div className="text-[11px] text-slate-500 truncate">
-                                      {item.description}
-                                    </div>
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  disabled={isConnectingVenue}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleConnectVenueItem(item);
-                                    setShowVenueDropdown(false);
-                                  }}
-                                  className="px-2.5 py-1 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold shrink-0 transition-colors flex items-center gap-1 shadow-xs"
-                                >
-                                  {isConnectingVenue ? (
-                                    <Sparkles className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <Check className="w-3 h-3" />
-                                  )}
-                                  <span>Connect ⚡</span>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isSearchingVenues || !venueSearchQuery.trim()}
-                        className="px-3.5 py-2 bg-google-blue hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shrink-0 disabled:opacity-50"
-                      >
-                        {isSearchingVenues ? (
-                          <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Search className="w-3.5 h-3.5" />
-                        )}
-                        <span>Search</span>
-                      </button>
-                    </form>
-
-                    {/* Persistent Search Results list below when dropdown closed */}
-                    {!showVenueDropdown && venueSearchResults.length > 0 && (
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                          Found on Google Maps ({venueSearchResults.length}):
-                        </div>
-                        {venueSearchResults.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="p-2.5 bg-white border border-slate-200 hover:border-google-blue rounded-xl flex items-center justify-between gap-2 shadow-xs transition-all"
-                          >
-                            <div className="min-w-0 flex items-start gap-2">
-                              <MapPin className="w-3.5 h-3.5 text-google-red shrink-0 mt-0.5" />
-                              <div className="min-w-0">
-                                <div className="text-xs font-bold text-slate-900 truncate">
-                                  {item.main_text || item.description}
-                                </div>
-                                <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                                  {item.description}
-                                </div>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              disabled={isConnectingVenue}
-                              onClick={() => handleConnectVenueItem(item)}
-                              className="px-2.5 py-1.5 bg-google-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold shrink-0 transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
-                            >
-                              {isConnectingVenue ? (
-                                <Sparkles className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Check className="w-3 h-3" />
-                              )}
-                              <span>Connect ⚡</span>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* List of Connected Google Business Profiles */}
-              <div className="space-y-3 mb-5">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                  <span>Available Locations ({availableProfiles.length})</span>
-                  <span className="text-[11px] text-google-green flex items-center gap-1 font-bold">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Verified Google Locations Only
-                  </span>
-                </div>
-
-                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                  {(availableProfiles.length > 0 ? availableProfiles : [defaultBusiness]).map((prof, idx) => {
-                    const isActive = activeProfile?.name === prof.name;
-                    return (
-                      <div 
-                        key={idx}
-                        className={`p-3.5 rounded-xl border transition-all ${
-                          isActive 
-                            ? 'border-google-blue bg-google-blue-light/20 ring-1 ring-google-blue shadow-sm' 
-                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-100 flex items-center justify-center">
-                              {prof.cover_url || prof.snapshot_url ? (
-                                <img 
-                                  src={prof.cover_url || prof.snapshot_url} 
-                                  alt={prof.name} 
-                                  className="w-full h-full object-cover" 
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              ) : (
-                                <Building2 className="w-5 h-5 text-google-blue" />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-sm font-bold text-slate-900 truncate flex items-center gap-2">
-                                <span>{prof.name}</span>
-                                {isActive && (
-                                  <span className="text-[10px] bg-google-blue text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                    Active
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-xs text-slate-500 truncate mt-0.5 flex items-center gap-1">
-                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                <span className="truncate">{prof.address || prof.city || 'Google Business Profile'}</span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
-                                  {prof.category || prof.primary_category || 'Local Business'}
-                                </span>
-                                <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                                  {prof.role || 'Owner / Manager'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="shrink-0 pt-1">
-                            {isActive ? (
-                              <button
-                                onClick={() => setIsUserProfileModalOpen(false)}
-                                className="px-3 py-1.5 bg-google-blue text-white rounded-lg font-bold text-xs hover:bg-google-blue/90 shadow-sm"
-                              >
-                                Selected ✓
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleSelectProfile(prof)}
-                                className="px-3 py-1.5 bg-white border border-google-blue text-google-blue hover:bg-google-blue hover:text-white rounded-lg font-bold text-xs transition-colors shadow-sm"
-                              >
-                                Select →
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Sync via Google Button */}
-              <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  Connecting and syncing new locations is performed securely via Google OAuth.
-                </p>
-                <button
-                  onClick={handleGoogleLogin}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-2 shadow-sm whitespace-nowrap"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Sync from Google</span>
-                </button>
-              </div>
-
-            </div>
-          </div>
-        )}
-
-        {/* ======================================================== */}
-        {/* MODAL: REQUIRE GOOGLE LOGIN (GATEKEEPER)                 */}
-        {/* ======================================================== */}
-        {isRequireLoginModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl shadow-material-3 border border-slate-200 max-w-md w-full p-6 relative text-center">
-              <button 
-                onClick={() => setIsRequireLoginModalOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+              <Link
+                href="/copilot"
+                className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all flex items-center justify-between group shadow-xs cursor-pointer"
               >
-                <X className="w-5 h-5" />
-              </button>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <Bot className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-xs group-hover:text-indigo-600 transition-colors">
+                      Copilot AI Studio
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Post planner &amp; 24/7 AI chat
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 transition-colors" />
+              </Link>
 
-              <div className="w-16 h-16 rounded-3xl bg-google-blue-light text-google-blue flex items-center justify-center mx-auto mb-4 shadow-sm border border-google-blue/20">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-
-              <h3 className="text-xl font-bold text-google-text-primary tracking-tight mb-2">
-                Google Sign-In Required
-              </h3>
-
-              <p className="text-xs text-google-text-secondary leading-relaxed mb-6">
-                You are currently in <strong>Demo Mode</strong>. To switch businesses, apply Autopilot optimizations, and manage live profile cards, please sign in with a Google account that has <strong>Owner or Manager</strong> permissions.
-              </p>
-
-              <div className="space-y-2.5">
-                <button
-                  onClick={handleGoogleLogin}
-                  className="w-full py-3 px-4 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span>Sign In with Google Workspace</span>
-                </button>
-
-                <button
-                  onClick={() => setIsRequireLoginModalOpen(false)}
-                  className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold transition-colors"
-                >
-                  Continue Viewing in Demo Mode
-                </button>
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Secure OAuth 2.0 authorization via Google Cloud API</span>
-              </div>
             </div>
-          </div>
+          </>
         )}
 
       </main>
+
+      {/* Edit Review Draft Modal */}
+      {editingActionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-sm">
+                Edit AI Review Response
+              </h3>
+              <button onClick={() => setEditingActionId(null)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <label className="font-bold text-slate-700 block">
+                Response Draft (Injected with Local SEO Keywords):
+              </label>
+              <textarea
+                rows={4}
+                value={editedDraft}
+                onChange={(e) => setEditedDraft(e.target.value)}
+                className="material-input w-full p-3 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-google-blue focus:border-google-blue"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingActionId(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditedDraft}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-google-blue hover:bg-blue-600 shadow-sm"
+              >
+                Save Draft
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

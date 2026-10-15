@@ -16,6 +16,8 @@ import {
   Trophy,
   Swords,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Compass
 } from 'lucide-react';
 
@@ -46,6 +48,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'STRATEGY_CARDS' | 'TABLE'>('STRATEGY_CARDS');
   const [activeStrategyModal, setActiveStrategyModal] = useState<CompetitorComparison | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
   if (!competitors || competitors.length === 0) {
     return (
@@ -77,27 +80,27 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
     let weakness = comp.criticalWeakness;
     let strategy = comp.overtakeStrategy;
     let cta = comp.actionCta;
-    let url = comp.actionUrl || '/dashboard';
+    let url = comp.actionUrl || '/copilot';
 
     if (!moat) {
       if (idx === 0) {
         moat = `Dominates primary search pack with ${comp.reviewVelocityPerWeek}+ new reviews/week and high keyword density.`;
         weakness = 'Zero owner responses in past 30 days. No special hours extension for evening search surges.';
         strategy = 'Deploy evening traffic hours extension (+1h), launch review velocity pacing campaign (+5/wk), and publish weekly specialty posts.';
-        cta = 'Deploy Counter-Strategy';
-        url = '/dashboard';
+        cta = '⚡ Execute Overtake Strategy';
+        url = '/copilot';
       } else if (idx === 1) {
         moat = `Strong photo volume (120+ images) and established map centroid presence.`;
         weakness = 'Lower service ratings on weekend peak hours; missing secondary category attributes.';
         strategy = `Target "${targetKeyword}" keyword pack in Google Posts and capture guest reviews highlighting speed of service.`;
-        cta = 'Target Keyword Pack';
-        url = '/reviews-posts';
+        cta = '⚡ Execute Overtake Strategy';
+        url = '/copilot';
       } else {
         moat = 'Close physical proximity to neighborhood high-density crossroads.';
         weakness = 'Unverified profile attributes, slow response time (>48h) to critical 1★-2★ reviews.';
         strategy = 'Outrank through local landmark citations and LSI keyword injection in AI review responder.';
-        cta = 'Optimize Review LSI';
-        url = '/reviews-posts';
+        cta = '⚡ Execute Overtake Strategy';
+        url = '/copilot';
       }
     }
 
@@ -106,7 +109,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
       winningMoat: moat,
       criticalWeakness: weakness,
       overtakeStrategy: strategy,
-      actionCta: cta,
+      actionCta: '⚡ Execute Overtake Strategy',
       actionUrl: url
     };
   });
@@ -165,13 +168,14 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* VIEW 1: ACTIONABLE TOP 3 OVERTAKE STRATEGY CARDS        */}
+      {/* VIEW 1: COLLAPSIBLE ACCORDION TOP 3 OVERTAKE CARDS       */}
       {/* ======================================================== */}
       {viewMode === 'STRATEGY_CARDS' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4.5">
           {enrichedCompetitors.slice(0, 3).map((comp, idx) => {
             const isFirst = idx === 0;
             const isSecond = idx === 1;
+            const isExpanded = expandedIndex === idx;
 
             return (
               <div 
@@ -214,7 +218,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     </div>
                   </div>
 
-                  {/* Fact 1: Their Winning Moat */}
+                  {/* SUMMARY VIEW: Their Winning Edge & Vulnerability */}
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
                       <Trophy className="w-3.5 h-3.5 text-amber-500" />
@@ -225,7 +229,6 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     </p>
                   </div>
 
-                  {/* Fact 2: Their Critical Weakness */}
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700">
                       <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
@@ -236,29 +239,58 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     </p>
                   </div>
 
-                  {/* Fact 3: AI Overtake Strategy */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800">
-                      <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
-                      <span>AI Overtake Strategy (How to beat them):</span>
+                  {/* Accordion Toggle Button for Deep Breakdown */}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedIndex(isExpanded ? null : idx)}
+                    className="w-full py-1 text-[11px] font-bold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1 border-y border-slate-100 my-1 transition-colors"
+                  >
+                    <span>{isExpanded ? 'Hide Deep Breakdown' : 'Show Deep Breakdown'}</span>
+                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+
+                  {/* EXPANDED VIEW: Deep Breakdown & Exact AI Overtake Strategy */}
+                  {isExpanded && (
+                    <div className="space-y-3 pt-1 animate-in fade-in duration-200">
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/60 text-[11px] space-y-1.5">
+                        <div className="flex items-center justify-between text-slate-600">
+                          <span>Review Velocity:</span>
+                          <span className="font-bold text-google-green">+{comp.reviewVelocityPerWeek} reviews/week</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-600">
+                          <span>Price Level:</span>
+                          <span className="font-bold text-slate-800">{comp.priceLevel}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-600">
+                          <span>Verified Amenities:</span>
+                          <span className="font-semibold text-slate-800 truncate max-w-[140px]">{comp.convenience.join(', ')}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800">
+                          <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
+                          <span>AI Overtake Strategy (Action Plan):</span>
+                        </div>
+                        <p className="text-xs text-emerald-950 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 leading-relaxed font-medium">
+                          {comp.overtakeStrategy}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-emerald-950 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/80 leading-relaxed font-medium">
-                      {comp.overtakeStrategy}
-                    </p>
-                  </div>
+                  )}
                 </div>
 
-                {/* 1-Click Action Button */}
+                {/* 1-Click Action Button: ⚡ Execute Overtake Strategy */}
                 <div className="pt-3.5 mt-3 border-t border-slate-100">
                   <Link
-                    href={comp.actionUrl || '/dashboard'}
-                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                    href={`/copilot?intent=overtake&competitor=${encodeURIComponent(comp.name)}&keyword=${encodeURIComponent(targetKeyword)}`}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer ${
                       isFirst
                         ? 'bg-google-blue hover:bg-blue-600 text-white'
                         : 'bg-white hover:bg-slate-50 border border-google-border text-slate-800'
                     }`}
                   >
-                    <span>{comp.actionCta || 'Deploy Counter-Strategy'}</span>
+                    <span>⚡ Execute Overtake Strategy</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

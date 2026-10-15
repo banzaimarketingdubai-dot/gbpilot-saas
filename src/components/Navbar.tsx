@@ -27,9 +27,9 @@ import { MobileBottomNav } from '@/components/MobileBottomNav';
 interface BusinessProfile {
   id?: string;
   name: string;
-  address: string;
+  address?: string;
   city?: string;
-  autopilotMode: string;
+  autopilotMode?: string;
   role?: string;
   is_admin?: boolean;
   verified?: boolean;
@@ -277,11 +277,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems: { id: string; label: string; href: string; icon: any; badge?: string }[] = [
     { id: 'nav-dashboard', label: '⚡ Cockpit', href: '/dashboard', icon: Zap },
-    { id: 'nav-geo-grid', label: '🧭 Geo-Grid', href: '/geo-grid', icon: MapPin },
-    { id: 'nav-reviews-posts', label: '🤖 Assistant', href: '/reviews-posts', icon: MessageSquare },
-    { id: 'nav-ai-copilot', label: '💬 AI Copilot', href: '/copilot', icon: Bot },
-    { id: 'nav-lead-outreach', label: '🎯 B2B Leads', href: '/outreach', icon: Target },
-    { id: 'nav-b2b', label: '🇦🇪 Dubai Pricing', href: '/b2b', icon: Sparkles },
+    { id: 'nav-radar', label: '🎯 Radar', href: '/geo-grid', icon: Target },
+    { id: 'nav-shield', label: '🛡️ Shield & Reviews', href: '/reviews-posts', icon: ShieldCheck },
+    { id: 'nav-copilot', label: '🤖 Copilot', href: '/copilot', icon: Bot },
+    { id: 'nav-b2b', label: '🇦🇪 Pricing', href: '/b2b', icon: Sparkles },
   ];
 
   const handleModeChange = (mode: 'OFF' | 'MANUAL_APPROVAL' | 'FULL_AUTOPILOT') => {

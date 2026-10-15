@@ -682,10 +682,10 @@ export default function GeoGridPage() {
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-google-blue" />
                     <h2 className="text-sm font-bold text-slate-900">
-                      Target Search Queries (Grounding Hub)
+                      Target Search Queries (Local Keyword Engine)
                     </h2>
                     <span className="text-[10px] font-bold text-google-blue bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                      Grounded on Reviews & Niche
+                      Verified Niche Terms
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
