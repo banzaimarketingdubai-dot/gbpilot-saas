@@ -25,9 +25,11 @@ import {
   Layers,
   Utensils,
   Image as ImageIcon,
-  DollarSign
+  DollarSign,
+  Share2
 } from 'lucide-react';
 import { HealthGauge } from '@/components/HealthGauge';
+import { getSubscription, activateTrial } from '@/lib/subscription';
 
 export interface AuditActionCardItem {
   id: string;
@@ -61,6 +63,13 @@ export function OnboardingInspectionModal({
   // PLG Tier switch: Pro vs Free Trial (Allows instant switching to test paywall & conversion mechanics)
   const [isPro, setIsPro] = useState(false);
   const [isPaywallModalOpen, setIsPaywallModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sub = getSubscription();
+      setIsPro(sub.isPro);
+    }
+  }, []);
 
   // Scanning progress state
   const [scanProgress, setScanProgress] = useState(15);
@@ -107,7 +116,7 @@ export function OnboardingInspectionModal({
       gapTag: 'CONVERSION_BOOSTER',
       problemText: 'Service catalog is completely empty. Voice search (Google Assistant) and AI engines (ChatGPT, Gemini) cannot cite prices or specific dishes.',
       beforeValue: '0 structured catalog items.',
-      afterAiValue: 'Structured Catalog of 10 Signature Items with Local Pricing: Single-Origin Pour-over ($5.50), Handcrafted Syrniki ($9.00), Avocado & Poached Egg Toast ($11.50), Nitro Cold Brew ($6.00), Organic Matcha ($6.50)...',
+      afterAiValue: 'Structured Catalog of 10 Signature Items with Local Pricing: Single-Origin Pour-over (AED 24), Signature Dubai Pistachio Croissant (AED 32), Avocado & Poached Egg Toast (AED 48), Nitro Cold Brew (AED 26), Organic Matcha (AED 28)...',
       impactMetric: 'Enables 1-Click Ordering & AI Grounding',
       applied: false
     },
@@ -117,8 +126,18 @@ export function OnboardingInspectionModal({
       gapTag: 'CRITICAL_FIX',
       problemText: 'Uploaded venue photos lack camera EXIF GPS centroid metadata, missing primary Google Maps spatial authority signals.',
       beforeValue: '0% photos stamped with coordinates.',
-      afterAiValue: 'Camera EXIF Geotag Package: Stamped with exact latitude & longitude coordinates (12.2718° N, 109.2016° E) matching venue centroid for Local 3-Pack rank surges.',
+      afterAiValue: 'Camera EXIF Geotag Package: Stamped with exact latitude & longitude coordinates (25.0805° N, 55.1403° E) matching venue centroid for Local 3-Pack rank surges in Dubai Marina.',
       impactMetric: 'Qualifies for Maps Discovery Carousel',
+      applied: false
+    },
+    {
+      id: 'audit-makani-tower',
+      categoryTitle: 'Dubai Precision Geocoding (10-Digit Makani & Tower Landmark)',
+      gapTag: 'CRITICAL_FIX',
+      problemText: 'Profile lacks a 10-digit Dubai Makani Number and Tower/Cluster landmark. Google Maps and Uber drop pins on the highway instead of the lobby.',
+      beforeValue: '102 Marina Promenade (Ambiguous Street Pin)',
+      afterAiValue: 'Makani #31489 89201 • Cluster P, Dubai Marina Promenade • Centroid (25.0805° N, 55.1403° E). Exact lobby pedestrian entrance geotagged.',
+      impactMetric: 'Eliminates 100% of Delivery & Tourist Dropoff Errors',
       applied: false
     }
   ]);
@@ -407,19 +426,32 @@ export function OnboardingInspectionModal({
 
             </div>
 
-            {/* Gap Summary Alert */}
-            <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs text-amber-900">
+            {/* Gap Summary Alert & WhatsApp Share */}
+            <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  <strong>5 Critical Optimization Gaps Detected:</strong> Review the transparent before/after comparisons below.
+                  <strong>6 Critical Optimization Gaps Detected:</strong> Review the transparent before/after comparisons below.
                 </span>
               </div>
-              {!isPro && (
-                <span className="hidden sm:inline-flex px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px]">
-                  🔒 Pro Unlock Required
-                </span>
-              )}
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `*Google Maps Audit Report for ${businessName}*\nHealth Score: 64/100 (Yellow Alert)\nProjected with AI Fixes: 98/100 (+$1,450/mo revenue)\nView Audit: https://gbpilot.top`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>📲 Share via WhatsApp</span>
+                </a>
+                {!isPro && (
+                  <span className="hidden sm:inline-flex px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px]">
+                    🔒 Pro Unlock Required
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* ==================================================== */}

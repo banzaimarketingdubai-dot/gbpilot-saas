@@ -33,13 +33,28 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { setSubscriptionPlan, PlanId } from '@/lib/subscription';
 
 export default function B2BLandingPage() {
   const router = useRouter();
+
+  // Pricing State
+  const [currency, setCurrency] = useState<'AED' | 'USD'>('AED');
+  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+  const [pricingToast, setPricingToast] = useState<string | null>(null);
+
+  const handleSelectPlan = (planId: PlanId) => {
+    setSubscriptionPlan(planId);
+    setPricingToast(`🎉 ${planId === 'FREE_SCOUT' ? 'Free Scout' : planId === 'STARTER' ? 'Starter Plan' : planId === 'PRO_GROWTH' ? 'Growth / Pro Plan' : 'Agency Plan'} activated! Redirecting to Cockpit...`);
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 1200);
+  };
   
   // FOMO Slider State
   const [fomoIndex, setFomoIndex] = useState(0);
@@ -665,6 +680,330 @@ export default function B2BLandingPage() {
               alt="GBPilot Transformation Comparison Diagram"
               className="w-full h-auto object-cover rounded-xl"
             />
+          </div>
+
+        </div>
+      </section>
+
+      {/* Pricing Toast Banner */}
+      {pricingToast && (
+        <div className="fixed top-16 right-4 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-3 text-xs border border-slate-700 animate-in slide-in-from-top duration-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-medium">{pricingToast}</span>
+          </div>
+          <button onClick={() => setPricingToast(null)} className="p-1 text-slate-400 hover:text-white">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* DUBAI & GLOBAL PRICING PLANS (SECTION 6 & 10 SOT)        */}
+      {/* ======================================================== */}
+      <section id="pricing" className="py-20 bg-white border-b border-google-border">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 space-y-12">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-extrabold text-google-blue bg-blue-50 border border-blue-200 px-3 py-1 rounded-full uppercase tracking-wider">
+              🇦🇪 TRANSPARENT DUBAI &amp; GLOBAL PRICING
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Predictable ROI. Zero Agency Retainers.
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+              Start with diagnostic scout mode, then deploy autonomous 24/7 protection and 1-click Local 3-Pack rank surges.
+            </p>
+
+            {/* Currency & Billing Period Switchers */}
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-4">
+              {/* Currency Toggle */}
+              <div className="bg-slate-100 p-1 rounded-2xl border border-slate-200 flex items-center text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setCurrency('AED')}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    currency === 'AED' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  🇦🇪 AED (Dirhams)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency('USD')}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    currency === 'USD' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  🌐 USD ($)
+                </button>
+              </div>
+
+              {/* Billing Cycle Toggle */}
+              <div className="bg-slate-100 p-1 rounded-2xl border border-slate-200 flex items-center text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle('MONTHLY')}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    billingCycle === 'MONTHLY' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingCycle('ANNUAL')}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                    billingCycle === 'ANNUAL' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>Annual</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${billingCycle === 'ANNUAL' ? 'bg-emerald-700 text-emerald-100' : 'bg-emerald-100 text-emerald-800'}`}>
+                    -20%
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            {/* Tier 1: Free Scout */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-lg transition-all space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Scout &amp; Diagnose</span>
+                  <h3 className="text-xl font-bold text-slate-900">Free Scout</h3>
+                  <p className="text-xs text-slate-500">For business owners testing ranking leaks before committing.</p>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-900">
+                      {currency === 'AED' ? 'AED 0' : '$0'}
+                    </span>
+                    <span className="text-xs text-slate-400">/forever</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400">1 Location (Audit &amp; Diagnostic)</span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>Instant Health Score &amp; 3x3 Geo-Grid Heatmap</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>Free Manual Copy-Paste recommendations</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>1 Free Review Takedown™ legal dossier</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-slate-400">
+                    <XCircle className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" />
+                    <span>No 1-Click Auto-Apply</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSelectPlan('FREE_SCOUT')}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Start Free Scout
+              </button>
+            </div>
+
+            {/* Tier 2: Starter / Solo Spot */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-lg transition-all space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider">Solo Business Spot</span>
+                  <h3 className="text-xl font-bold text-slate-900">Starter</h3>
+                  <p className="text-xs text-slate-500">Full 24/7 autonomous protection and 1-click execution for 1 venue.</p>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-900">
+                      {currency === 'AED'
+                        ? billingCycle === 'ANNUAL' ? 'AED 79' : 'AED 99'
+                        : billingCycle === 'ANNUAL' ? '$23' : '$29'}
+                    </span>
+                    <span className="text-xs text-slate-400">/month</span>
+                  </div>
+                  <span className="text-[11px] text-google-blue font-semibold">1 Location Included</span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span><strong>1-Click Instant Optimization Apply</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>24/7 Digital Insurance &amp; Sentinel Guard</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>AI Review Auto-Drafts (UAE Law 34/2021)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>Dynamic Hours &amp; Peak Traffic Guard</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSelectPlan('STARTER')}
+                className="w-full py-2.5 rounded-xl border border-blue-300 bg-blue-50/70 hover:bg-blue-100 text-google-blue font-bold text-xs transition-colors cursor-pointer"
+              >
+                Choose Starter
+              </button>
+            </div>
+
+            {/* Tier 3: Growth / Pro (Most Popular) */}
+            <div className="bg-gradient-to-b from-slate-900 to-indigo-950 text-white rounded-3xl border-2 border-blue-400 p-6 flex flex-col justify-between shadow-xl relative space-y-6">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-black text-[10px] uppercase tracking-wider rounded-full shadow-md">
+                ⭐ Most Popular in Dubai
+              </div>
+
+              <div className="space-y-4 pt-1">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Multi-Location &amp; Growth</span>
+                  <h3 className="text-xl font-bold text-white">Growth / Pro</h3>
+                  <p className="text-xs text-slate-300">Dominant rank tracking, AI search citations, and unlimited takedowns.</p>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-white">
+                      {currency === 'AED'
+                        ? billingCycle === 'ANNUAL' ? 'AED 199' : 'AED 249'
+                        : billingCycle === 'ANNUAL' ? '$55' : '$69'}
+                    </span>
+                    <span className="text-xs text-slate-400">/month</span>
+                  </div>
+                  <span className="text-[11px] text-blue-300 font-semibold">Up to 3 Locations Included</span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-200 pt-2 border-t border-slate-800">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Everything in Starter for 3 Locations</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Geo-Grid 5x5 Rank Matrix</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>AI LLM Share-of-Voice (ChatGPT / Gemini)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Unlimited Review Takedown™</strong> Dossiers</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>🌙 Ramadan &amp; ☀️ Summer Mode Automations</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSelectPlan('PRO_GROWTH')}
+                className="w-full py-3 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer"
+              >
+                Deploy Growth Pro (14-Day Free)
+              </button>
+            </div>
+
+            {/* Tier 4: Agency / Chain */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-lg transition-all space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">Agencies &amp; Franchises</span>
+                  <h3 className="text-xl font-bold text-slate-900">Agency / Chain</h3>
+                  <p className="text-xs text-slate-500">White-label reports and high-volume multi-account workflows.</p>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-900">
+                      {currency === 'AED'
+                        ? billingCycle === 'ANNUAL' ? 'AED 599' : 'AED 749'
+                        : billingCycle === 'ANNUAL' ? '$159' : '$199'}
+                    </span>
+                    <span className="text-xs text-slate-400">/month</span>
+                  </div>
+                  <span className="text-[11px] text-purple-700 font-semibold">Up to 10 Locations Included</span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span><strong>Up to 10 Locations Connected</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span>White-Label PDF &amp; WhatsApp Audit Reports</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span>Dedicated Dubai Strategist via WhatsApp</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span>Priority Google API Level-2 Queuing</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSelectPlan('AGENCY')}
+                className="w-full py-2.5 rounded-xl border border-purple-300 bg-purple-50/70 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Choose Agency
+              </button>
+            </div>
+
+          </div>
+
+          {/* Seasonal Sleep Mode Downsell Banner (From Bible_SoT Monetization) */}
+          <div className="bg-amber-50/80 border border-amber-200/90 rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <span className="text-base">🌙</span>
+                <h4 className="font-bold text-amber-950 text-sm">
+                  Dubai Seasonal Business or Summer Vacation? Meet Sleep Mode.
+                </h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-200/60 text-amber-900 rounded-full">
+                  {currency === 'AED' ? 'AED 33 / mo' : '$9 / mo'}
+                </span>
+              </div>
+              <p className="text-xs text-amber-800 leading-relaxed max-w-2xl">
+                Don't lose your hard-earned Google Maps rankings during the July–August low season. Sleep Mode freezes your baseline Golden Snapshot, prevents malicious tampering while you are away, and wakes up instantly when season starts.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPricingToast('Sleep Mode activated for seasonal freeze.');
+                setTimeout(() => setPricingToast(null), 3500);
+              }}
+              className="px-4 py-2 bg-white hover:bg-amber-100/60 text-amber-950 font-bold rounded-xl border border-amber-300 text-xs shadow-2xs transition-colors shrink-0 cursor-pointer"
+            >
+              Learn about Sleep Mode ($9/mo)
+            </button>
           </div>
 
         </div>

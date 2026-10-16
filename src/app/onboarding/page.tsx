@@ -209,6 +209,9 @@ export default function OnboardingPage() {
         loggedIn: true
       }));
 
+      // 5. Clear unlinked flag
+      localStorage.removeItem('gbpilot_profile_unlinked');
+
       // Trigger update event
       window.dispatchEvent(new CustomEvent('active_profile_updated'));
       window.dispatchEvent(new CustomEvent('user_session_updated'));

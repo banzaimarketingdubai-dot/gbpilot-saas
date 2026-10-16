@@ -34,6 +34,7 @@ import {
   Lock,
   CreditCard
 } from 'lucide-react';
+import { getSubscription, activateTrial } from '@/lib/subscription';
 
 interface ChatMessage {
   id: string;
@@ -87,28 +88,28 @@ const MEDIA_VAULT: MediaPhoto[] = [
     id: 'photo-1',
     label: 'Artisan Coffee & Breakfast',
     url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80',
-    gps: '12.2718° N, 109.2016° E',
-    authorityScore: 'Local 3-Pack Verified'
+    gps: '25.0805° N, 55.1403° E',
+    authorityScore: 'Dubai Marina Centroid Verified'
   },
   {
     id: 'photo-2',
     label: 'Cozy Interior Ambience',
     url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80',
-    gps: '12.2718° N, 109.2016° E',
+    gps: '25.0805° N, 55.1403° E',
     authorityScore: 'Ambience Centroid Indexed'
   },
   {
     id: 'photo-3',
     label: 'Storefront & Street View',
     url: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=600&q=80',
-    gps: '12.2718° N, 109.2016° E',
+    gps: '25.0805° N, 55.1403° E',
     authorityScore: 'Primary Map Geotagged'
   },
   {
     id: 'photo-4',
     label: 'Chef & Team in Action',
     url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
-    gps: '12.2718° N, 109.2016° E',
+    gps: '25.0805° N, 55.1403° E',
     authorityScore: 'Service Entity Verified'
   }
 ];
@@ -135,6 +136,28 @@ const PRESETS: PostPreset[] = [
     targetKeywords: ['weekend dining', 'best local cafe', 'weekend brunch', 'specialty dishes'],
     photoTaggingAdvice: 'Include geotagged photo with high color saturation (dining table/dishes) to qualify for Google Maps Discovery carousel.',
     preferredPhotoId: 'photo-2'
+  },
+  {
+    id: 'ramadan',
+    label: '🌙 Ramadan Special Hours & Iftar',
+    icon: '🌙',
+    title: 'Holy Month of Ramadan: Iftar & Late Night Suhoor',
+    content: 'Gather with family and friends at our venue throughout Ramadan. Serving specialty coffee, artisan dates, and special Iftar & Suhoor sets until 02:00 AM.',
+    ctaType: 'BOOK',
+    targetKeywords: ['ramadan iftar dubai', 'suhoor dubai marina', 'late night dining', 'specialty coffee'],
+    photoTaggingAdvice: 'Attach evening photo with warm ambient lighting geotagged to Dubai Marina centroid.',
+    preferredPhotoId: 'photo-2'
+  },
+  {
+    id: 'dubai-summer',
+    label: '☀️ Dubai Summer Perk (+45°C AC & Valet)',
+    icon: '☀️',
+    title: 'Beat the Heat: Free Valet & Chilled Specialty Brews',
+    content: 'Escape the midday summer heat! Enjoy ultra-cool indoor seating, high-speed Wi-Fi, cold brew on tap, and complimentary valet parking.',
+    ctaType: 'ORDER',
+    targetKeywords: ['indoor cafe dubai', 'valet parking', 'cold brew dubai', 'wifi cafe dubai'],
+    photoTaggingAdvice: 'Highlight spacious indoor AC seating and cold beverages.',
+    preferredPhotoId: 'photo-1'
   },
   {
     id: 'seasonal',
@@ -220,7 +243,7 @@ export default function CopilotContentStudioPage() {
   const [isProTrialModalOpen, setIsProTrialModalOpen] = useState(false);
   const [isProPlan, setIsProPlan] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('gbpilot_is_pro') === 'true';
+      return getSubscription().isPro;
     }
     return false;
   });
@@ -343,10 +366,8 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
   };
 
   const handleActivateProTrial = () => {
+    activateTrial(14);
     setIsProPlan(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('gbpilot_is_pro', 'true');
-    }
     setIsProTrialModalOpen(false);
     setPostPublishedToast('🎉 14-Day Pro Autopilot Trial Activated ($0.00 today)!');
     setTimeout(() => setPostPublishedToast(null), 4000);
@@ -360,6 +381,14 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
   useEffect(() => {
     let profileName = 'Your Business';
     if (typeof window !== 'undefined') {
+      const sub = getSubscription();
+      setIsProPlan(sub.isPro);
+
+      const handleSubChange = () => {
+        setIsProPlan(getSubscription().isPro);
+      };
+      window.addEventListener('gbpilot_subscription_changed', handleSubChange);
+
       const stored = localStorage.getItem('gbpilot_active_profile');
       if (stored) {
         try {
@@ -375,16 +404,20 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
           console.error(e);
         }
       }
-    }
 
-    setMessages([
-      {
-        id: 'msg-welcome',
-        sender: 'assistant',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: `Hello! I am your 24/7 AI Local SEO Director for **${profileName}**. I monitor your local rankings, track competitor moves, and draft high-converting Google Posts. What would you like to achieve today?`,
-      }
-    ]);
+      setMessages([
+        {
+          id: 'msg-welcome',
+          sender: 'assistant',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: `Hello! I am your 24/7 AI Local SEO Director for **${profileName}** in Dubai. I monitor your local rankings, track competitor moves, and draft high-converting Google Posts. What would you like to achieve today?`,
+        }
+      ]);
+
+      return () => {
+        window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+      };
+    }
   }, []);
 
   const quickPromptChips = [

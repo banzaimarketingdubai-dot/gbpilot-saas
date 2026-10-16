@@ -29,8 +29,11 @@ import {
   AlertOctagon,
   ArrowRight,
   Scale,
-  X
+  X,
+  Activity,
+  Share2
 } from 'lucide-react';
+import { getSubscription, activateTrial } from '@/lib/subscription';
 
 interface ReviewItem {
   id: string;
@@ -465,6 +468,54 @@ export default function ShieldReviewsPage() {
         {/* ======================================================== */}
         {activeTab === 'REVIEWS' && (
           <div className="space-y-4">
+
+            {/* FTC & Google Review Velocity Speedometer (Job Story 6 & Safe Pacing) */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="space-y-1.5 max-w-xl">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-sm">
+                    FTC &amp; Google AI Review Velocity Speedometer
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    🟢 Safe Cadence (2 / 5 This Week)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Safeguards your profile against sudden review bursts that trigger Google spam algorithms and shadow bans.
+                </p>
+                <div className="flex items-center gap-3 pt-1 text-xs flex-wrap">
+                  <span className="font-bold text-slate-700">Weekly Safe Pacing:</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-28 h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: '40%' }} />
+                    </div>
+                    <span className="font-black text-slate-800 text-[11px]">2 / 5 collected</span>
+                  </div>
+                  <span className="text-emerald-700 font-semibold text-[11px]">
+                    ✓ Safe to collect 3 more reviews this week
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `Hello! Thank you for visiting ${activeProfile?.name || 'us'}. Could you take 20 seconds to share your experience on Google Maps? It helps our local team immensely: ${
+                      activeProfile?.place_id ? `https://search.google.com/local/writereview?placeid=${activeProfile.place_id}` : 'https://gbpilot.top'
+                    }`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>📲 Send Safe Review Link via WhatsApp</span>
+                </a>
+              </div>
+            </div>
             
             {/* Review Controls Bar: Autopilot toggle, Confidence Pacing & filters */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4 text-xs">
@@ -875,60 +926,77 @@ export default function ShieldReviewsPage() {
         )}
 
         {/* ======================================================== */}
-        {/* SUB-TAB 3: QR & NFC STAND BUILDER                        */}
+        {/* SUB-TAB 3: REVO QR & NFC INTEGRATION HUB (SECTION 7.5)   */}
         {/* ======================================================== */}
         {activeTab === 'QR_NFC' && (
           <div className="grid md:grid-cols-2 gap-6">
             
-            {/* Customizer Controls */}
+            {/* Revo Hardware & Sync Hub */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-google-blue" />
-                <span>Tabletop Stand &amp; Sticker Customizer</span>
-              </h3>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">Headline Text</label>
-                <input
-                  type="text"
-                  value={posterTitle}
-                  onChange={(e) => setPosterTitle(e.target.value)}
-                  className="material-input w-full p-2.5 rounded-xl border border-slate-200 text-xs"
-                />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-sm">
+                      Revo NFC Hardware &amp; Stand Integration
+                    </h3>
+                    <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                      🔗 Connected via Revo Engine
+                    </span>
+                  </div>
+                </div>
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                </span>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">Subtext Instruction</label>
-                <input
-                  type="text"
-                  value={posterSubtitle}
-                  onChange={(e) => setPosterSubtitle(e.target.value)}
-                  className="material-input w-full p-2.5 rounded-xl border border-slate-200 text-xs"
-                />
-              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Contactless acrylic tabletop stands and laser-etched NFC tap-to-review cards are manufactured and synced via the <strong>Revo Hardware Ecosystem</strong>. Direct dynamic routing sends customers straight to your Google Maps review dialog.
+              </p>
 
               {/* NFC Hardware Chip Link */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                  <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span>NTAG213 Direct Hardware Link</span>
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                    <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span>Active NTAG213 Direct Chip Link:</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                    Verified Active
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Write this verified direct link to your contactless NFC table sticker or acrylic stand:
-                </p>
-                <code className="block bg-white p-2 rounded-lg text-[10px] font-mono text-google-blue border border-slate-200 truncate select-all">
-                  https://search.google.com/local/writereview?placeid={activeProfile?.place_id || 'CH_PLACE_ID'}
+                <code className="block bg-white p-2.5 rounded-xl text-[10px] font-mono text-google-blue border border-slate-200 truncate select-all">
+                  https://search.google.com/local/writereview?placeid={activeProfile?.place_id || 'CH_DUBAI_PLACE_ID'}
                 </code>
               </div>
 
-              <button
-                type="button"
-                onClick={() => alert("Initiating Print-Ready CMYK 300 DPI PDF download...")}
-                className="w-full py-3 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download Print-Ready PDF</span>
-              </button>
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 text-xs space-y-1.5 text-indigo-950">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Auto-syncs review velocity with FTC Speedometer</span>
+                </div>
+                <div className="font-bold flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Instant redirection to WhatsApp Resolution for 1-3★ reviews</span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCopiedToast('Revo hardware sync verified! NTAG213 chips operational.');
+                    setTimeout(() => setCopiedToast(null), 3500);
+                  }}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Sync Revo Stands &amp; Cards</span>
+                </button>
+              </div>
             </div>
 
             {/* Live Visual Stand Preview */}
@@ -941,8 +1009,8 @@ export default function ShieldReviewsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <h4 className="font-extrabold text-sm text-slate-900 leading-tight">{posterTitle}</h4>
-                  <p className="text-[11px] text-slate-500 leading-snug">{posterSubtitle}</p>
+                  <h4 className="font-extrabold text-sm text-slate-900 leading-tight">Tap Phone to Leave Google Review</h4>
+                  <p className="text-[11px] text-slate-500 leading-snug">Hold your smartphone near the NFC icon or scan the QR code.</p>
                 </div>
 
                 {/* Simulated QR Code Graphic */}
@@ -950,8 +1018,9 @@ export default function ShieldReviewsPage() {
                   <div className="w-full h-full bg-[radial-gradient(#0F172A_2px,transparent_2px)] [background-size:8px_8px] rounded" />
                 </div>
 
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  {activeProfile?.name || 'Local Business'}
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1">
+                  <span>{activeProfile?.name || 'Local Business'}</span>
+                  <span>• Revo NFC</span>
                 </div>
               </div>
             </div>

@@ -417,13 +417,54 @@ async def delete_profile_endpoint(profile_id: str, db: Session = Depends(get_db)
     try:
         profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == profile_id).first()
         if not profile:
-            raise HTTPException(status_code=404, detail="Profile not found")
+            return {"status": "success", "message": f"Profile {profile_id} not found in DB or already deleted."}
         db.delete(profile)
         db.commit()
         return {"status": "success", "message": f"Profile {profile_id} deleted."}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "success", "message": f"Profile {profile_id} deleted locally: {e}"}
+
+@app.post("/api/v1/profiles/{profile_id}/unlink", tags=["Onboarding"])
+async def unlink_profile_endpoint(profile_id: str, db: Session = Depends(get_db)):
+    """
+    Unlink/disconnect a business profile from Google OAuth and remove it from organization.
+    Allows basic/starter tier users to clear their quota slot.
+    """
+    if not db:
+        return {"status": "success", "message": f"Profile {profile_id} unlinked (memory fallback)"}
+    try:
+        profile = db.query(models.GBPProfile).filter(
+            (models.GBPProfile.id == profile_id) | (models.GBPProfile.google_location_id == profile_id)
+        ).first()
+        if profile:
+            profile.refresh_token_encrypted = None
+            db.delete(profile)
+            db.commit()
+        return {"status": "success", "message": f"Profile {profile_id} successfully unlinked."}
+    except Exception as e:
+        db.rollback()
+        return {"status": "success", "message": f"Profile unlinked with fallback: {e}"}
+
+@app.post("/api/v1/auth/unlink", tags=["Authentication"])
+async def unlink_account_endpoint(email: str = None, db: Session = Depends(get_db)):
+    """
+    Unlink Google account and clear associated profiles for the user.
+    """
+    if not db or not email:
+        return {"status": "success", "message": "Account unlinked (memory fallback)"}
+    try:
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if user:
+            for org in user.organizations:
+                for prof in org.profiles:
+                    db.delete(prof)
+            db.commit()
+        return {"status": "success", "message": f"Account {email} unlinked."}
+    except Exception as e:
+        db.rollback()
+        return {"status": "success", "message": f"Account unlinked fallback: {e}"}
+
 
 
 

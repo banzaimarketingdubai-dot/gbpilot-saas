@@ -19,10 +19,12 @@ import {
   Plus,
   Sparkles,
   Trash2,
-  Bell
+  Bell,
+  Unlink
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { getSubscription, SubscriptionState } from '@/lib/subscription';
 
 interface BusinessProfile {
   id?: string;
@@ -68,7 +70,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [selectedProfile, setSelectedProfile] = useState<string>(activeProfile.name);
 
   const [availableProfiles, setAvailableProfiles] = useState<BusinessProfile[]>([]);
+  const [subscription, setSubscription] = useState<SubscriptionState>(() => getSubscription());
   const isLandingMode = (pathname === '/' || pathname === '/onboarding') && !currentUser;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleSubChange = () => setSubscription(getSubscription());
+      window.addEventListener('gbpilot_subscription_changed', handleSubChange);
+      return () => window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -267,12 +278,39 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (!profileToDelete) return;
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      await fetch(`${baseUrl}/api/v1/profiles/${profileToDelete}`, { method: 'DELETE' });
+      if (!profileToDelete.startsWith('demo_')) {
+        await fetch(`${baseUrl}/api/v1/profiles/${profileToDelete}`, { method: 'DELETE' });
+      }
     } catch (e) {
       console.error("Failed to delete from DB", e);
     }
-    localStorage.removeItem('gbpilot_active_profile');
-    window.location.href = '/onboarding';
+
+    if (typeof window !== 'undefined') {
+      const storedList = localStorage.getItem('gbpilot_available_profiles');
+      let updatedList: BusinessProfile[] = [];
+      if (storedList) {
+        try {
+          const list = JSON.parse(storedList);
+          updatedList = list.filter((p: any) => p.id !== profileToDelete && p.name !== profileToDelete);
+        } catch (e) {}
+      }
+      localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updatedList));
+      setAvailableProfiles(updatedList);
+
+      if (activeProfile?.id === profileToDelete || activeProfile?.name === profileToDelete) {
+        if (updatedList.length > 0) {
+          localStorage.setItem('gbpilot_active_profile', JSON.stringify(updatedList[0]));
+          setActiveProfile(updatedList[0]);
+        } else {
+          localStorage.removeItem('gbpilot_active_profile');
+          localStorage.setItem('gbpilot_profile_unlinked', 'true');
+          setActiveProfile(defaultProfile);
+        }
+      }
+      setProfileToDelete(null);
+      window.dispatchEvent(new CustomEvent('active_profile_updated'));
+      window.location.reload();
+    }
   };
 
   const navItems: { id: string; label: string; href: string; icon: any; badge?: string }[] = [
@@ -385,15 +423,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!p.id) {
-                            alert("No ID to delete");
-                            return;
-                          }
-                          setProfileToDelete(p.id);
+                          setProfileToDelete(p.id || p.name);
                           setIsLocationOpen(false);
                         }}
-                        className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Delete business"
+                        className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-70 hover:opacity-100 transition-opacity"
+                        title="Отвязать профиль"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -573,9 +607,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 p-1.5 shadow-material-2 z-50 text-xs">
                   <div className="px-3 py-2 border-b border-slate-100">
                     <div className="font-bold text-slate-900 truncate">{currentUser.email}</div>
-                    <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Google Business: Owner
+                    <div className="flex items-center justify-between text-[10px] text-emerald-600 font-bold mt-0.5">
+                      <div className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Google Business: Owner</span>
+                      </div>
+                      <Link
+                        href="/b2b"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="text-google-blue hover:underline bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200"
+                      >
+                        {subscription.plan.name}
+                      </Link>
                     </div>
                   </div>
                   <button
@@ -594,6 +637,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <Sparkles className="w-3.5 h-3.5 text-slate-400" />
                     <span>Switch Google Account</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem('gbpilot_user');
+                        localStorage.removeItem('gbpilot_active_profile');
+                        localStorage.removeItem('gbpilot_available_profiles');
+                        localStorage.setItem('gbpilot_profile_unlinked', 'true');
+                        setCurrentUser(null);
+                        setIsUserMenuOpen(false);
+                        window.dispatchEvent(new CustomEvent('user_session_updated'));
+                        window.dispatchEvent(new CustomEvent('active_profile_updated'));
+                        window.location.href = '/onboarding';
+                      }
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-amber-50 text-amber-700 rounded-lg font-medium flex items-center gap-2"
+                  >
+                    <Unlink className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Отвязать аккаунт и профиль</span>
                   </button>
                   <button
                     onClick={handleLogout}
@@ -659,30 +721,30 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete / Unlink Confirmation Modal */}
       {profileToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-material-3 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
-              <div className="w-12 h-12 bg-google-red-light rounded-full flex items-center justify-center mb-4">
-                <Trash2 className="w-6 h-6 text-google-red" />
+              <div className="w-12 h-12 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mb-4">
+                <Unlink className="w-6 h-6 text-amber-600" />
               </div>
-              <h3 className="text-xl font-bold text-google-text-primary mb-2">Delete Workspace?</h3>
-              <p className="text-sm text-google-text-secondary mb-6">
-                Are you absolutely sure you want to delete this business profile? This action cannot be undone and will permanently erase all AI analysis and geo-grid history.
+              <h3 className="text-xl font-bold text-google-text-primary mb-2">Отвязать профиль?</h3>
+              <p className="text-sm text-google-text-secondary mb-6 leading-relaxed">
+                Вы действительно хотите отвязать этот бизнес-профиль? Это освободит квоту на базовом тарифе (1 локация), и вы сможете подключить другое заведение или переключиться на свой реальный профиль.
               </p>
               <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={() => setProfileToDelete(null)}
                   className="flex-1 px-4 py-2.5 rounded-lg border border-google-border text-sm font-bold text-google-text-primary hover:bg-google-bg transition-colors"
                 >
-                  Cancel
+                  Отмена
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-2.5 rounded-lg bg-google-red hover:bg-google-red-dark text-white text-sm font-bold transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold transition-colors shadow-sm"
                 >
-                  Yes, Delete It
+                  Да, отвязать
                 </button>
               </div>
             </div>

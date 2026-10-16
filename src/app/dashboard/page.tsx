@@ -36,11 +36,14 @@ import {
   Camera,
   Lock,
   Activity,
-  Shield
+  Shield,
+  Unlink,
+  LogOut
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
+import { getSubscription, setSubscriptionPlan, activateTrial, SubscriptionState } from '@/lib/subscription';
 
 const DEFAULT_VENUE_PHOTO = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80';
 
@@ -64,6 +67,7 @@ interface ActiveBusinessProfile {
   address: string;
   city?: string;
   category?: string;
+  phone?: string;
   rating?: number;
   reviews_count?: number;
   role?: string;
@@ -73,17 +77,58 @@ interface ActiveBusinessProfile {
   snapshot_url?: string;
 }
 
+const generateActionItems = (profile: ActiveBusinessProfile | null): ActionItem[] => {
+  const bName = profile?.name || 'Artisan Specialty Cafe & Roastery';
+  const category = profile?.category || 'Specialty Coffee Shop';
+  const city = profile?.city || 'Dubai Marina';
+
+  return [
+    {
+      id: 'action-competitor-overtake',
+      type: 'COMPETITOR',
+      title: `Competitor updated photo menu and overtook #1 rank for '${category}' in ${city}`,
+      subtitle: `Catchment Area: 1.2 km radius around venue • Traffic impact: ~15 calls/wk redirected`,
+      impact: 'Est. Revenue at risk: $450/week',
+      primaryCtaText: 'Deploy Overtake Counter-Strategy',
+      primaryCtaUrl: '/geo-grid',
+      status: 'PENDING',
+    },
+    {
+      id: 'action-review-omar',
+      type: 'REVIEW',
+      title: `New 5-star customer review received for ${bName}`,
+      subtitle: `"Exceptional experience at ${bName}! Staff was super attentive and service was fast. Definitely coming back regularly."`,
+      impact: 'Review velocity: +4/week • LSI keywords injected into draft response',
+      reviewAuthor: 'Omar K.',
+      reviewRating: 5,
+      aiDraft: `Thank you so much, Omar! Our team at ${bName} takes immense pride in providing attentive, fast local service in ${city}. We look forward to welcoming you back regularly!`,
+      primaryCtaText: 'Approve & Publish',
+      status: 'PENDING',
+    }
+  ];
+};
+
 export default function DashboardCockpitPage() {
   const router = useRouter();
   const [isLocationQuotaModalOpen, setIsLocationQuotaModalOpen] = useState(false);
   const [isProTrialModalOpen, setIsProTrialModalOpen] = useState(false);
   const [isProUser, setIsProUser] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionState>({
+    planId: 'FREE_SCOUT',
+    plan: { id: 'FREE_SCOUT', name: 'Free Scout', priceAed: 0, priceUsd: 0, locationLimit: 1, isPro: false, features: [] },
+    isPro: false,
+    isTrial: false,
+    trialDaysLeft: 0,
+    locationLimit: 1
+  });
+  const [dubaiSmartMode, setDubaiSmartMode] = useState<'STANDARD' | 'PEAK_TRAFFIC' | 'RAMADAN' | 'SUMMER'>('STANDARD');
   const [pendingActionToExecute, setPendingActionToExecute] = useState<string | null>(null);
   const [activeProfile, setActiveProfile] = useState<ActiveBusinessProfile | null>(null);
   const [availableProfiles, setAvailableProfiles] = useState<ActiveBusinessProfile[]>([]);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isInspectionModalOpen, setIsInspectionModalOpen] = useState(false);
+  const [profileToUnlinkConfirm, setProfileToUnlinkConfirm] = useState<ActiveBusinessProfile | null>(null);
   
   // Primary Venue Photo URL (from Profile or default fallback)
   const venuePhotoUrl = activeProfile?.cover_url || activeProfile?.photo_url || activeProfile?.snapshot_url || DEFAULT_VENUE_PHOTO;
@@ -102,30 +147,7 @@ export default function DashboardCockpitPage() {
   const [editedDraft, setEditedDraft] = useState('');
 
   // Urgent Action Hub items
-  const [actionItems, setActionItems] = useState<ActionItem[]>([
-    {
-      id: 'action-competitor-overtake',
-      type: 'COMPETITOR',
-      title: 'Competitor updated photo menu and overtook #1 rank at Main Crossroad',
-      subtitle: 'Catchment Area: 1.2 km radius around venue • Traffic impact: ~15 calls/wk redirected',
-      impact: 'Est. Revenue at risk: $450/week',
-      primaryCtaText: 'Deploy Overtake Counter-Strategy',
-      primaryCtaUrl: '/geo-grid',
-      status: 'PENDING',
-    },
-    {
-      id: 'action-review-omar',
-      type: 'REVIEW',
-      title: 'New 5-star review received from Omar',
-      subtitle: '"Exceptional experience! The staff was super attentive and service was fast. Will definitely come back regularly."',
-      impact: 'Review velocity: +4/week • LSI keywords injected into draft response',
-      reviewAuthor: 'Omar K.',
-      reviewRating: 5,
-      aiDraft: 'Thank you so much, Omar! Our team takes immense pride in providing attentive, fast local service. We look forward to welcoming you back regularly!',
-      primaryCtaText: 'Approve & Publish',
-      status: 'PENDING',
-    }
-  ]);
+  const [actionItems, setActionItems] = useState<ActionItem[]>(generateActionItems(null));
 
   // Protected Digital Insurance & Safe Uptime Stats
   const [protectedStats, setProtectedStats] = useState({
@@ -141,6 +163,71 @@ export default function DashboardCockpitPage() {
   // Load active profile and settings on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // 1. Check Google OAuth URL Callback Parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('auth') === 'success') {
+        const email = urlParams.get('email') || '';
+        const name = urlParams.get('name') || '';
+        const b64Profiles = urlParams.get('profiles');
+        const selectLocation = urlParams.get('select_location') === 'true';
+
+        localStorage.setItem('gbpilot_user', JSON.stringify({
+          email,
+          name,
+          loggedIn: true
+        }));
+        localStorage.removeItem('gbpilot_profile_unlinked');
+
+        let incomingList: ActiveBusinessProfile[] = [];
+        if (b64Profiles) {
+          try {
+            const jsonStr = decodeURIComponent(escape(atob(b64Profiles)));
+            const parsed = JSON.parse(jsonStr);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              incomingList = parsed.map((p: any) => ({
+                ...p,
+                cover_url: p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO
+              }));
+              localStorage.setItem('gbpilot_available_profiles', JSON.stringify(incomingList));
+              localStorage.setItem('gbpilot_active_profile', JSON.stringify(incomingList[0]));
+              setAvailableProfiles(incomingList);
+              setActiveProfile(incomingList[0]);
+            }
+          } catch (e) {
+            console.error('Error parsing OAuth profiles:', e);
+          }
+        }
+
+        window.dispatchEvent(new CustomEvent('user_session_updated'));
+        window.dispatchEvent(new CustomEvent('active_profile_updated'));
+        window.history.replaceState({}, '', '/dashboard');
+
+        if (selectLocation && incomingList.length > 1) {
+          setIsLocationDropdownOpen(true);
+          showToast(`Welcome ${name || email}! Please select which business location to manage.`);
+        } else {
+          showToast(`Welcome ${name || email}! Business profile connected successfully.`);
+        }
+      }
+
+      // 2. Load Subscription State
+      const currentSub = getSubscription();
+      setSubscription(currentSub);
+      setIsProUser(currentSub.isPro);
+
+      const handleSubChange = () => {
+        const updated = getSubscription();
+        setSubscription(updated);
+        setIsProUser(updated.isPro);
+      };
+      window.addEventListener('gbpilot_subscription_changed', handleSubChange);
+
+      // 3. Load Dubai Smart Mode
+      const savedDubaiMode = localStorage.getItem('gbpilot_dubai_mode') as any;
+      if (savedDubaiMode) {
+        setDubaiSmartMode(savedDubaiMode);
+      }
+
       const storedActive = localStorage.getItem('gbpilot_active_profile');
       let currentProf: ActiveBusinessProfile | null = null;
       if (storedActive) {
@@ -177,14 +264,16 @@ export default function DashboardCockpitPage() {
         }
       }
 
-      // If still no profile in demo/fresh state, initialize default profile with photo
-      if (!currentProf) {
+      // If still no profile in demo/fresh state, initialize default profile only if not deliberately unlinked
+      const wasExplicitlyUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
+      if (!currentProf && !wasExplicitlyUnlinked && (!storedAvailable || JSON.parse(storedAvailable || '[]').length === 0)) {
         const defaultDemoProfile: ActiveBusinessProfile = {
           id: 'demo_artisan_cafe',
           name: 'Artisan Specialty Cafe & Roastery',
           address: '102 Marina Promenade, Sector B',
-          city: 'Downtown',
+          city: 'Dubai Marina',
           category: 'Specialty Coffee Shop & Roastery',
+          phone: '+971 4 399 1234',
           rating: 4.8,
           reviews_count: 342,
           role: 'Owner',
@@ -193,28 +282,33 @@ export default function DashboardCockpitPage() {
         };
         setActiveProfile(defaultDemoProfile);
         setAvailableProfiles([defaultDemoProfile]);
+        currentProf = defaultDemoProfile;
         localStorage.setItem('gbpilot_active_profile', JSON.stringify(defaultDemoProfile));
         localStorage.setItem('gbpilot_available_profiles', JSON.stringify([defaultDemoProfile]));
       }
 
-      const storedPro = localStorage.getItem('gbpilot_pro_activated');
-      if (storedPro === 'true') {
-        setIsProUser(true);
+      // Generate dynamic actions tailored to current profile
+      const tailoredActions = generateActionItems(currentProf);
+      const handled = localStorage.getItem('gbpilot_handled_actions');
+      if (handled) {
+        try {
+          const handledIds: string[] = JSON.parse(handled);
+          setActionItems(tailoredActions.map(a => handledIds.includes(a.id) ? { ...a, status: 'EXECUTED' } : a));
+        } catch (e) {
+          setActionItems(tailoredActions);
+        }
+      } else {
+        setActionItems(tailoredActions);
       }
+
+      const handleOpenProfileModal = () => setIsProfileModalOpen(true);
+      window.addEventListener('open_user_profile_modal', handleOpenProfileModal);
+
       const storedMode = localStorage.getItem('gbpilot_autopilot_mode');
       if (storedMode === 'FULL_AUTOPILOT') {
         setCopilotMode('AUTONOMOUS');
       } else {
         setCopilotMode('MANUAL_APPROVAL');
-      }
-
-      // Check if user handled actions previously
-      const handled = localStorage.getItem('gbpilot_handled_actions');
-      if (handled) {
-        try {
-          const handledIds: string[] = JSON.parse(handled);
-          setActionItems(prev => prev.map(a => handledIds.includes(a.id) ? { ...a, status: 'EXECUTED' } : a));
-        } catch (e) {}
       }
 
       // Launch inspection modal ONLY if explicitly triggered by newly added location onboarding
@@ -230,6 +324,11 @@ export default function DashboardCockpitPage() {
       if (storedCollapse !== null) {
         setIsValueCardCollapsed(storedCollapse === 'true');
       }
+
+      return () => {
+        window.removeEventListener('open_user_profile_modal', handleOpenProfileModal);
+        window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+      };
     }
   }, []);
 
@@ -265,11 +364,26 @@ export default function DashboardCockpitPage() {
     }
   };
 
-  const handleStartProTrialAndExecute = () => {
-    setIsProUser(true);
+  const handleToggleDubaiSmartMode = (mode: 'STANDARD' | 'PEAK_TRAFFIC' | 'RAMADAN' | 'SUMMER') => {
+    const nextMode = dubaiSmartMode === mode ? 'STANDARD' : mode;
+    setDubaiSmartMode(nextMode);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('gbpilot_pro_activated', 'true');
+      localStorage.setItem('gbpilot_dubai_mode', nextMode);
     }
+    if (nextMode === 'PEAK_TRAFFIC') {
+      showToast('⏰ Peak Traffic Guard Active: Operating hours extended +30m. "Open Now" badge locked!');
+    } else if (nextMode === 'RAMADAN') {
+      showToast('🌙 Ramadan Mode Deployed: Special Iftar (17:30 - 21:00) & Suhoor (23:00 - 02:30) schedule active.');
+    } else if (nextMode === 'SUMMER') {
+      showToast('☀️ Dubai Summer Mode Active: +45°C AC & Indoor Valet attributes prioritized over outdoor patio.');
+    } else {
+      showToast('Switched back to standard operating schedule.');
+    }
+  };
+
+  const handleStartProTrialAndExecute = () => {
+    activateTrial(14);
+    setIsProUser(true);
     setIsProTrialModalOpen(false);
     showToast('🎉 14-Day Pro Autopilot Activated ($0.00 today)!');
     if (pendingActionToExecute) {
@@ -345,6 +459,80 @@ export default function DashboardCockpitPage() {
       window.dispatchEvent(new CustomEvent('active_profile_updated'));
       window.location.reload();
     }
+  };
+
+  const handleUnlinkProfile = async (profileToUnlink: ActiveBusinessProfile) => {
+    // 1. Remove from availableProfiles
+    const updated = availableProfiles.filter(
+      p => p.name !== profileToUnlink.name && (profileToUnlink.id ? p.id !== profileToUnlink.id : true)
+    );
+    setAvailableProfiles(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updated));
+    }
+
+    // 2. If it was the active profile:
+    if (activeProfile?.name === profileToUnlink.name || (profileToUnlink.id && activeProfile?.id === profileToUnlink.id)) {
+      if (updated.length > 0) {
+        setActiveProfile(updated[0]);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gbpilot_active_profile', JSON.stringify(updated[0]));
+        }
+      } else {
+        setActiveProfile(null);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('gbpilot_active_profile');
+          localStorage.setItem('gbpilot_profile_unlinked', 'true');
+        }
+      }
+    }
+
+    // 3. Backend sync if it has an id
+    if (profileToUnlink.id && !profileToUnlink.id.startsWith('demo_')) {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        await fetch(`${baseUrl}/api/v1/profiles/${profileToUnlink.id}/unlink`, { method: 'POST' });
+      } catch (e) {
+        console.warn("Backend unlink failed", e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('active_profile_updated'));
+    }
+    setProfileToUnlinkConfirm(null);
+    setIsProfileModalOpen(false);
+    showToast(`Профиль "${profileToUnlink.name}" успешно отвязан. Квота базового тарифа (1/1) освобождена.`);
+  };
+
+  const handleUnlinkAndConnectNew = () => {
+    if (activeProfile) {
+      handleUnlinkProfile(activeProfile);
+    } else {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('gbpilot_active_profile');
+        localStorage.setItem('gbpilot_available_profiles', '[]');
+        localStorage.setItem('gbpilot_profile_unlinked', 'true');
+        window.dispatchEvent(new CustomEvent('active_profile_updated'));
+      }
+    }
+    setIsLocationQuotaModalOpen(false);
+    router.push('/onboarding');
+  };
+
+  const handleDisconnectGoogleAccount = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('gbpilot_user');
+      localStorage.removeItem('gbpilot_active_profile');
+      localStorage.removeItem('gbpilot_available_profiles');
+      localStorage.setItem('gbpilot_profile_unlinked', 'true');
+      setActiveProfile(null);
+      setAvailableProfiles([]);
+      window.dispatchEvent(new CustomEvent('user_session_updated'));
+      window.dispatchEvent(new CustomEvent('active_profile_updated'));
+    }
+    setIsProfileModalOpen(false);
+    showToast('Google-аккаунт и привязанные профили успешно отключены.');
   };
 
   const pendingActions = actionItems.filter(a => a.status === 'PENDING');
@@ -451,6 +639,18 @@ export default function DashboardCockpitPage() {
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                           Verified GBP
                         </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsProfileModalOpen(true);
+                          }}
+                          className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
+                          title="Управление привязкой аккаунта и профиля"
+                        >
+                          <Unlink className="w-2.5 h-2.5 text-slate-500" />
+                          <span>Отвязать / Настройки</span>
+                        </button>
                       </button>
 
                       {/* Location Switcher Dropdown */}
@@ -469,14 +669,17 @@ export default function DashboardCockpitPage() {
 
                           <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
                             {availableProfiles.map((p, idx) => (
-                              <button
+                              <div
                                 key={idx}
-                                onClick={() => handleSwitchProfile(p)}
-                                className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between transition-colors ${
-                                  activeProfile?.name === p.name ? 'bg-blue-50 text-google-blue font-bold' : 'hover:bg-slate-50 text-slate-700'
+                                className={`w-full px-2 py-1.5 rounded-xl flex items-center justify-between transition-colors ${
+                                  activeProfile?.name === p.name ? 'bg-blue-50/70' : 'hover:bg-slate-50'
                                 }`}
                               >
-                                <div className="flex items-center gap-2.5 truncate pr-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSwitchProfile(p)}
+                                  className="flex-1 flex items-center gap-2.5 truncate pr-2 text-left cursor-pointer"
+                                >
                                   <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                                     <img
                                       src={p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO}
@@ -485,36 +688,76 @@ export default function DashboardCockpitPage() {
                                     />
                                   </div>
                                   <div className="truncate">
-                                    <div className="font-semibold truncate">{p.name}</div>
+                                    <div className={`font-semibold truncate ${activeProfile?.name === p.name ? 'text-google-blue font-bold' : 'text-slate-700'}`}>
+                                      {p.name}
+                                    </div>
                                     <div className="text-[10px] text-slate-400 truncate">{p.address || p.city}</div>
                                   </div>
+                                </button>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {activeProfile?.name === p.name && (
+                                    <Check className="w-3.5 h-3.5 text-google-blue shrink-0 mr-1" />
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProfileToUnlinkConfirm(p);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-amber-700 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer"
+                                    title="Отвязать этот профиль"
+                                  >
+                                    <Unlink className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
-                                {activeProfile?.name === p.name && (
-                                  <Check className="w-4 h-4 text-google-blue shrink-0" />
-                                )}
-                              </button>
+                              </div>
                             ))}
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (availableProfiles.length >= 1 && !isProUser) {
-                                setIsLocationQuotaModalOpen(true);
-                              } else {
-                                router.push('/onboarding');
-                              }
-                            }}
-                            className="w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between text-google-blue hover:bg-blue-50 font-bold border-t border-slate-100 transition-colors cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Building2 className="w-3.5 h-3.5" />
-                              <span>+ Connect New Location</span>
-                            </div>
-                            <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
-                              Quota 1/1
+                          {/* Helper note for Starter Plan */}
+                          <div className="px-3 py-2 bg-amber-50/80 border-t border-b border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-1.5">
+                            <span className="font-bold">💡 Базовый тариф:</span>
+                            <span className="text-amber-800 leading-snug">
+                              Доступно 1 заведение. Чтобы сменить заведение, отвяжите текущий тестовый профиль.
                             </span>
-                          </button>
+                          </div>
+
+                          <div className="pt-1.5 space-y-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsLocationDropdownOpen(false);
+                                setIsProfileModalOpen(true);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-slate-700 hover:bg-slate-100 font-semibold transition-colors cursor-pointer text-xs"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Sliders className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Управление привязкой профилей</span>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (availableProfiles.length >= 1 && !isProUser) {
+                                  setIsLocationQuotaModalOpen(true);
+                                } else {
+                                  router.push('/onboarding');
+                                }
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-google-blue hover:bg-blue-50 font-bold transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-3.5 h-3.5" />
+                                <span>+ Connect New Location</span>
+                              </div>
+                              <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
+                                Quota {availableProfiles.length}/1
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -539,10 +782,27 @@ export default function DashboardCockpitPage() {
                         </span>
                       </div>
 
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Open Now • Closes at 22:00
-                      </span>
+                      {dubaiSmartMode === 'PEAK_TRAFFIC' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-900 font-bold text-[11px] border border-amber-300">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                          Extended Hours Active • Closes at 23:30 (Peak Traffic Protected 🛡️)
+                        </span>
+                      ) : dubaiSmartMode === 'RAMADAN' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-900 font-bold text-[11px] border border-purple-300">
+                          <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                          🌙 Ramadan Mode • Iftar &amp; Suhoor Hours Active (17:30 – 02:00)
+                        </span>
+                      ) : dubaiSmartMode === 'SUMMER' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-50 text-sky-900 font-bold text-[11px] border border-sky-300">
+                          <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+                          ☀️ Summer Mode Active • High AC &amp; Indoor Valet (+45°C Shield)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Open Now • Closes at 22:00
+                        </span>
+                      )}
                     </div>
 
                     {/* Address, Phone & Direct Google Maps Live Link */}
@@ -553,7 +813,7 @@ export default function DashboardCockpitPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>+971 4 399 1234</span>
+                        <span>{activeProfile?.phone || (activeProfile as any)?.formatted_phone_number || '+971 4 399 1234'}</span>
                       </span>
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -633,6 +893,71 @@ export default function DashboardCockpitPage() {
             {/* BLOCK 2: OPERATIONAL MONITOR & ACTION HUB               */}
             {/* ======================================================== */}
             <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-5">
+              
+              {/* 🇦🇪 Dubai Smart Operations Presets (Job Story 4 & Dubai Localization) */}
+              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-4 shadow-sm border border-slate-700/60 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3.5">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🇦🇪</span>
+                    <span className="text-xs font-extrabold tracking-wide text-white uppercase">
+                      Dubai Dynamic Operations &amp; Seasonality Presets
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full border border-blue-400/30">
+                      1-Click Apply
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-snug">
+                    Prevent customer misdirection, lock "Open Now" maps badges, and adapt amenities for UAE climate &amp; holy months.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
+                  {/* Peak Traffic Guard */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleDubaiSmartMode('PEAK_TRAFFIC')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                      dubaiSmartMode === 'PEAK_TRAFFIC'
+                        ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md'
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-amber-300 border-slate-600'
+                    }`}
+                    title="Extends closing hour by +30m to maintain 'Open Now' Google Maps badge"
+                  >
+                    <span>⏰ Peak Traffic Guard (+30m)</span>
+                    {dubaiSmartMode === 'PEAK_TRAFFIC' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                  </button>
+
+                  {/* Ramadan Mode */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleDubaiSmartMode('RAMADAN')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                      dubaiSmartMode === 'RAMADAN'
+                        ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-md'
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-purple-300 border-slate-600'
+                    }`}
+                    title="1-Click deploy special Iftar & Suhoor opening hours"
+                  >
+                    <span>🌙 Ramadan Mode</span>
+                    {dubaiSmartMode === 'RAMADAN' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                  </button>
+
+                  {/* Summer Mode */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleDubaiSmartMode('SUMMER')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                      dubaiSmartMode === 'SUMMER'
+                        ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-md'
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-sky-300 border-slate-600'
+                    }`}
+                    title="Prioritizes Indoor AC & Valet over outdoor patio in +45°C heat"
+                  >
+                    <span>☀️ Summer (+45°C Shield)</span>
+                    {dubaiSmartMode === 'SUMMER' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                  </button>
+                </div>
+              </div>
               
               {/* Traffic Light Status Bar (Светофор статусов) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1327,17 +1652,40 @@ export default function DashboardCockpitPage() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Your current <strong>Starter / Trial plan</strong> includes 1 active Google Business Profile. To connect, monitor, and defend multiple locations or franchise branches, upgrade to the <strong>Pro Multi-Location plan</strong> (up to 5 locations).
+              Your current <strong>Starter / Trial plan</strong> includes 1 active Google Business Profile ($29 / AED 99/mo). To connect, monitor, and defend multiple locations or franchise branches, upgrade to the <strong>Growth / Pro Plan</strong> (up to 3 locations at $69 / AED 249/mo) or <strong>Agency Plan</strong> (up to 10 locations at $199 / AED 749/mo).
             </p>
+
+            {/* Free Unlink Option for Starter Tier Users */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-amber-900">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Хотите подключить другое заведение на базовом тарифе?</span>
+              </div>
+              <p className="text-amber-800 text-[11px] leading-relaxed">
+                На базовом тарифе доступна 1 активная локация. Вы можете <strong>бесплатно отвязать текущий профиль</strong> ({activeProfile?.name || 'текущее заведение'}) и сразу привязать свой реальный бизнес.
+              </p>
+              <button
+                type="button"
+                onClick={handleUnlinkAndConnectNew}
+                className="w-full py-2 px-3 bg-white hover:bg-amber-100/80 text-amber-900 font-bold rounded-xl border border-amber-300 text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              >
+                <Unlink className="w-3.5 h-3.5 text-amber-700" />
+                <span>Отвязать текущий профиль и привязать новый (Бесплатно)</span>
+              </button>
+            </div>
 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
               <div className="font-bold text-slate-800 flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-google-blue" />
-                <span>Manage up to 5 locations in 1 account</span>
+                <span>Growth / Pro: Up to 3 locations simultaneously</span>
               </div>
               <div className="font-bold text-slate-800 flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-google-blue" />
-                <span>Unified Sentinel Guard protection for all branches</span>
+                <span>Agency / Chain: Up to 10 locations with White-Label reports</span>
+              </div>
+              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-google-blue" />
+                <span>Unified 24/7 Sentinel Guard protection for all branches</span>
               </div>
             </div>
 
@@ -1345,9 +1693,9 @@ export default function DashboardCockpitPage() {
               <button
                 type="button"
                 onClick={() => setIsLocationQuotaModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
               >
-                Maybe Later
+                Закрыть
               </button>
               <Link
                 href="/b2b"
@@ -1356,6 +1704,178 @@ export default function DashboardCockpitPage() {
               >
                 <span>Upgrade to Pro →</span>
               </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Profile & Connected Accounts Modal */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl animate-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-blue-50 rounded-xl text-google-blue border border-blue-200">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    Управление профилем и аккаунтом
+                  </h3>
+                  <span className="text-[11px] text-slate-500">
+                    Настройки привязки Google Business Profile и квоты
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setIsProfileModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current Active Profile Overview */}
+            {activeProfile ? (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
+                    <img src={venuePhotoUrl} alt={activeProfile.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-slate-900 text-sm truncate">{activeProfile.name}</div>
+                    <div className="text-xs text-slate-500 truncate">{activeProfile.address || activeProfile.city}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {activeProfile.verified ? 'Google Verified' : 'Demo Profile'}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200">
+                        Тариф: Базовый (Starter)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/70 text-xs text-slate-600 flex items-center justify-between">
+                  <span>Квота локаций:</span>
+                  <span className="font-bold text-slate-800">{availableProfiles.length} / 1 использовано</span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+                Нет активного подключенного профиля.
+              </div>
+            )}
+
+            {/* Actions List */}
+            <div className="space-y-2 text-xs">
+              {activeProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfileToUnlinkConfirm(activeProfile);
+                  }}
+                  className="w-full p-3.5 rounded-2xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/70 text-left transition-colors flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-amber-100 text-amber-700">
+                      <Unlink className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-amber-900">Отвязать текущий профиль</div>
+                      <div className="text-[11px] text-amber-700">
+                        Освобождает квоту (1/1) для подключения другого бизнеса
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleDisconnectGoogleAccount}
+                className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-left transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
+                    <LogOut className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900">Сменить / Отвязать Google-аккаунт</div>
+                    <div className="text-[11px] text-slate-500">
+                      Очистить сессию Google и войти под другой учетной записью
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileModalOpen(false);
+                  if (availableProfiles.length >= 1 && !isProUser) {
+                    setIsLocationQuotaModalOpen(true);
+                  } else {
+                    router.push('/onboarding');
+                  }
+                }}
+                className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-left transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-blue-50 text-google-blue border border-blue-100">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900">Подключить новое заведение</div>
+                    <div className="text-[11px] text-slate-500">
+                      Поиск по Google Maps или привязка через Google OAuth
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setIsProfileModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Unlink Confirmation Dialog */}
+      {profileToUnlinkConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-slate-900 space-y-4">
+            <div className="w-12 h-12 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center text-amber-600">
+              <Unlink className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Отвязать профиль?</h3>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                Вы действительно хотите отвязать <strong>"{profileToUnlinkConfirm.name}"</strong>? Слот локации (1/1 на базовом тарифе) будет освобожден, и вы сможете сразу подключить свой реальный бизнес.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setProfileToUnlinkConfirm(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUnlinkProfile(profileToUnlinkConfirm)}
+                className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
+              >
+                Да, отвязать
+              </button>
             </div>
           </div>
         </div>

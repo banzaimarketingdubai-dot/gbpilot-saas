@@ -27,7 +27,7 @@ import { Footer } from '@/components/Footer';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
 
 const getProfileCoords = (profile: any): { lat: number; lng: number } => {
-  if (!profile) return { lat: 12.2718, lng: 109.2016 };
+  if (!profile) return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina
   
   if (typeof profile.lat === 'number' && typeof profile.lng === 'number') {
     return { lat: profile.lat, lng: profile.lng };
@@ -58,10 +58,10 @@ const getProfileCoords = (profile: any): { lat: number; lng: number } => {
   }
 
   if (name.includes('dubai') || address.includes('dubai') || city.includes('dubai') || address.includes('uae')) {
-    return { lat: 25.1972, lng: 55.2744 }; // Downtown Dubai
+    return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina
   }
 
-  return { lat: 12.2718, lng: 109.2016 };
+  return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina Default
 };
 
 export interface KeywordPill {
