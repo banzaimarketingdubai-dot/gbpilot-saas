@@ -6,7 +6,7 @@ import { MapPin } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer data-testid="global-footer" className="bg-white border-t border-google-border py-8 text-xs text-google-text-secondary mt-auto">
+    <footer data-testid="global-footer" className="hidden sm:block bg-white border-t border-google-border py-8 text-xs text-google-text-secondary mt-auto">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-2">
           <div className="w-6 h-6 rounded-full bg-google-blue flex items-center justify-center">

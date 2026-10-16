@@ -134,45 +134,7 @@ export default function DashboardCockpitPage() {
     avertedDamage: 0
   });
 
-  // 1-2-3 Triad Accordions State (Smart Defaults & Persistent)
-  const [isPulseOpen, setIsPulseOpen] = useState(true);
-  const [isProblemsOpen, setIsProblemsOpen] = useState(false);
-  const [isSolutionsOpen, setIsSolutionsOpen] = useState(true);
 
-  const toggleAccordion = (block: 'pulse' | 'problems' | 'solutions') => {
-    if (block === 'pulse') {
-      setIsPulseOpen(prev => {
-        const next = !prev;
-        if (typeof window !== 'undefined') localStorage.setItem('gbpilot_acc_pulse', String(next));
-        return next;
-      });
-    } else if (block === 'problems') {
-      setIsProblemsOpen(prev => {
-        const next = !prev;
-        if (typeof window !== 'undefined') localStorage.setItem('gbpilot_acc_problems', String(next));
-        return next;
-      });
-    } else if (block === 'solutions') {
-      setIsSolutionsOpen(prev => {
-        const next = !prev;
-        if (typeof window !== 'undefined') localStorage.setItem('gbpilot_acc_solutions', String(next));
-        return next;
-      });
-    }
-  };
-
-  const handleToggleAll = () => {
-    const allOpen = isPulseOpen && isProblemsOpen && isSolutionsOpen;
-    const nextState = !allOpen;
-    setIsPulseOpen(nextState);
-    setIsProblemsOpen(nextState);
-    setIsSolutionsOpen(nextState);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('gbpilot_acc_pulse', String(nextState));
-      localStorage.setItem('gbpilot_acc_problems', String(nextState));
-      localStorage.setItem('gbpilot_acc_solutions', String(nextState));
-    }
-  };
 
   // Load active profile and settings on mount
   useEffect(() => {
@@ -347,15 +309,6 @@ export default function DashboardCockpitPage() {
         setIsValueCardCollapsed(storedCollapse === 'true');
       }
 
-      // Load 1-2-3 Triad Accordion Preferences
-      const savedPulse = localStorage.getItem('gbpilot_acc_pulse');
-      if (savedPulse !== null) setIsPulseOpen(savedPulse === 'true');
-
-      const savedProblems = localStorage.getItem('gbpilot_acc_problems');
-      if (savedProblems !== null) setIsProblemsOpen(savedProblems === 'true');
-
-      const savedSolutions = localStorage.getItem('gbpilot_acc_solutions');
-      if (savedSolutions !== null) setIsSolutionsOpen(savedSolutions === 'true');
 
       return () => {
         window.removeEventListener('open_user_profile_modal', handleOpenProfileModal);
@@ -569,10 +522,7 @@ export default function DashboardCockpitPage() {
 
   const pendingActions = actionItems.filter(a => a.status === 'PENDING');
   const isAllClear = pendingActions.length === 0;
-  const pendingReviewsCount = actionItems.filter(a => a.type === 'REVIEW' && a.status === 'PENDING').length;
-  const competitorShiftsCount = actionItems.filter(a => a.type === 'COMPETITOR' && a.status === 'PENDING').length;
-  const totalProblemsCount = pendingReviewsCount + competitorShiftsCount;
-  const allExpanded = isPulseOpen && isProblemsOpen && isSolutionsOpen;
+
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
@@ -636,1084 +586,579 @@ export default function DashboardCockpitPage() {
         ) : (
           <>
             {/* ======================================================== */}
-            {/* TOP NAVIGATION: 1-2-3 QUICK-ANCHOR STEPPER & TOGGLE BAR */}
+            {/* BLOCK 1: VENUE PASSPORT & LIVE PULSE (ALL-IN-ONE CARD)  */}
             {/* ======================================================== */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 shadow-xs">
-              {/* Left: 1-2-3 Navigation Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                {/* Step 1 Pill */}
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion('pulse')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border ${
-                    isPulseOpen 
-                      ? 'bg-blue-50 text-google-blue border-blue-200 shadow-2xs' 
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                  title="Шаг 1: Пульс бизнеса и Цифровой Двойник"
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black ${
-                    isPulseOpen ? 'bg-google-blue text-white' : 'bg-slate-200 text-slate-600'
-                  }`}>1</span>
-                  <span>Пульс и Двойник</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                </button>
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                
+                {/* Identity Info */}
+                <div className="flex items-start sm:items-center gap-3.5 sm:gap-4.5 w-full lg:w-auto">
+                  {/* Cover Photo */}
+                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-xs shrink-0 bg-slate-100 group">
+                    <img
+                      src={venuePhotoUrl}
+                      alt={activeProfile?.name || 'Venue Photo'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div 
+                      className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-0.5 sm:p-1 border-2 border-white shadow-xs flex items-center justify-center" 
+                      title="Google Verified Business Profile"
+                    >
+                      <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                    </div>
+                  </div>
 
-                {/* Step 2 Pill */}
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion('problems')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border ${
-                    isProblemsOpen 
-                      ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-2xs' 
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                  title="Шаг 2: Радар Проблем и Угроз Sentinel"
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black ${
-                    totalProblemsCount > 0 ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'
-                  }`}>2</span>
-                  <span>Радар Проблем</span>
-                  {totalProblemsCount > 0 ? (
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-200 text-amber-900 font-extrabold animate-pulse">
-                      {totalProblemsCount}
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-full">
-                      0 угроз
-                    </span>
-                  )}
-                </button>
+                  {/* Name, Stars, Category, Location Switcher */}
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+                        className="flex items-center gap-1.5 text-left group cursor-pointer max-w-full"
+                      >
+                        <h1 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-google-blue transition-colors truncate max-w-[220px] sm:max-w-md">
+                          {activeProfile?.name || 'Connect Business Profile'}
+                        </h1>
+                        <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-google-blue transition-colors shrink-0" />
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-google-blue border border-blue-200">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          Verified
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsProfileModalOpen(true);
+                          }}
+                          className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
+                          title="Управление привязкой аккаунта и профиля"
+                        >
+                          <Unlink className="w-2.5 h-2.5 text-slate-500" />
+                          <span>Отвязать</span>
+                        </button>
+                      </button>
 
-                {/* Step 3 Pill */}
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion('solutions')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border ${
-                    isSolutionsOpen 
-                      ? 'bg-indigo-50 text-indigo-900 border-indigo-200 shadow-2xs' 
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                  title="Шаг 3: Решения и 1-Click Автопилот"
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black ${
-                    isSolutionsOpen ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
-                  }`}>3</span>
-                  <span>Решения и Автопилот</span>
-                  {pendingActions.length > 0 ? (
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-200 text-indigo-900 font-extrabold">
-                      {pendingActions.length}
+                      {/* Location Switcher Dropdown */}
+                      {isLocationDropdownOpen && (
+                        <div className="absolute left-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 p-2 shadow-xl z-50 text-xs">
+                          <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
+                            <span>Your Businesses ({availableProfiles.length})</span>
+                            <span className="text-emerald-600 font-semibold">Active Locations</span>
+                          </div>
+                          <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500 font-medium">Location Quota:</span>
+                            <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
+                              {availableProfiles.length} / 1 Location Used (Starter)
+                            </span>
+                          </div>
+
+                          <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
+                            {availableProfiles.map((p, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-full px-2 py-1.5 rounded-xl flex items-center justify-between transition-colors ${
+                                  activeProfile?.name === p.name ? 'bg-blue-50/70' : 'hover:bg-slate-50'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => handleSwitchProfile(p)}
+                                  className="flex-1 flex items-center gap-2.5 truncate pr-2 text-left cursor-pointer"
+                                >
+                                  <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                                    <img
+                                      src={p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO}
+                                      alt={p.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="truncate">
+                                    <div className={`font-semibold truncate ${activeProfile?.name === p.name ? 'text-google-blue font-bold' : 'text-slate-700'}`}>
+                                      {p.name}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 truncate">{p.address || p.city}</div>
+                                  </div>
+                                </button>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {activeProfile?.name === p.name && (
+                                    <Check className="w-3.5 h-3.5 text-google-blue shrink-0 mr-1" />
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProfileToUnlinkConfirm(p);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-amber-700 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer"
+                                    title="Отвязать этот профиль"
+                                  >
+                                    <Unlink className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="px-3 py-2 bg-amber-50/80 border-t border-b border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-1.5">
+                            <span className="font-bold">💡 Базовый тариф:</span>
+                            <span className="text-amber-800 leading-snug">
+                              Доступно 1 заведение. Чтобы сменить заведение, отвяжите текущий профиль.
+                            </span>
+                          </div>
+
+                          <div className="pt-1.5 space-y-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsLocationDropdownOpen(false);
+                                setIsProfileModalOpen(true);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-slate-700 hover:bg-slate-100 font-semibold transition-colors cursor-pointer text-xs"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Sliders className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Управление привязкой профилей</span>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (availableProfiles.length >= 1 && !isProUser) {
+                                  setIsLocationQuotaModalOpen(true);
+                                } else {
+                                  router.push('/onboarding');
+                                }
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-google-blue hover:bg-blue-50 font-bold transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-3.5 h-3.5" />
+                                <span>+ Connect New Location</span>
+                              </div>
+                              <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
+                                Quota {availableProfiles.length}/1
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Category, Stars & Live Open Status */}
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
+                      <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md text-[11px] border border-slate-200/60">
+                        {activeProfile?.category || '—'}
+                      </span>
+                      
+                      <div className="flex items-center gap-1 font-bold text-xs">
+                        {typeof activeProfile?.rating === 'number' && activeProfile.rating > 0 ? (
+                          <>
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-slate-900 font-extrabold">{activeProfile.rating.toFixed(1)} ★</span>
+                            <span className="text-slate-400 font-normal">({activeProfile?.reviews_count ?? 0})</span>
+                          </>
+                        ) : (
+                          <span className="text-slate-400 font-normal">— ★ (— reviews)</span>
+                        )}
+                      </div>
+
+                      {/* Dubai Smart Mode or Live Open badge */}
+                      {dubaiSmartMode === 'PEAK_TRAFFIC' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 font-bold text-[10px] border border-amber-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          ⏰ Peak Traffic (+30m)
+                        </span>
+                      ) : dubaiSmartMode === 'RAMADAN' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-900 font-bold text-[10px] border border-purple-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                          🌙 Ramadan Mode
+                        </span>
+                      ) : dubaiSmartMode === 'SUMMER' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-900 font-bold text-[10px] border border-sky-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                          ☀️ Summer Shield
+                        </span>
+                      ) : activeProfile ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[10px] border border-emerald-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Google Maps Synced
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* Address and Live Link */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                      <span className="flex items-center gap-1 truncate max-w-[200px] sm:max-w-xs">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{activeProfile?.address || '—'}</span>
+                      </span>
+                      {activeProfile?.name && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            (activeProfile?.name || '') + ' ' + (activeProfile?.address || '')
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-google-blue hover:underline inline-flex items-center gap-0.5 cursor-pointer shrink-0"
+                        >
+                          <span>Google Карты</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: 24/7 Sentinel Pill + NAP Audit Button */}
+                <div className="flex items-center gap-2 self-stretch lg:self-auto justify-between lg:justify-end shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsInsuranceModalOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/70 border border-emerald-200 text-emerald-900 text-xs font-bold transition-all shadow-2xs flex items-center gap-2 cursor-pointer"
+                    title="24/7 Sentinel Guard: Golden Snapshot активен"
+                  >
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
                     </span>
-                  ) : (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-full">
-                      Готово
-                    </span>
-                  )}
-                </button>
+                    <div className="text-left">
+                      <div className="text-[11px] font-black text-emerald-950 flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        <span>24/7 Защита: 100%</span>
+                      </div>
+                      <div className="text-[9px] text-emerald-700 font-medium">
+                        0 угроз • Golden Snapshot
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsInspectionModalOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200 text-google-blue text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    title="Запустить повторную проверку NAP-данных и атрибутов"
+                  >
+                    <Sparkles className="w-3 h-3 text-google-blue" />
+                    <span className="text-[11px]">Аудит NAP</span>
+                  </button>
+                </div>
+
               </div>
 
-              {/* Right: Expand / Collapse All */}
-              <button
-                type="button"
-                onClick={handleToggleAll}
-                className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 border border-slate-200"
-              >
-                {allExpanded ? (
-                  <>
-                    <ChevronUp className="w-3.5 h-3.5" />
-                    <span>Свернуть всё</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                    <span>Развернуть всё</span>
-                  </>
-                )}
-              </button>
+              {/* Row of 3 Compact KPI Mini-Tiles */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 border-t border-slate-100 text-center">
+                {/* KPI 1: Local Rank */}
+                <Link
+                  href="/geo-grid"
+                  className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-blue-50/50 border border-slate-200/80 transition-colors block text-left group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Ранг на карте
+                    </span>
+                    <MapPin className="w-3 h-3 text-google-blue" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5">
+                    <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-google-blue transition-colors">—</span>
+                    <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">Радар</span>
+                  </div>
+                  <div className="mt-0.5 text-[9px] sm:text-[10px] font-bold text-google-blue group-hover:underline flex items-center gap-0.5">
+                    <span>Скан сетки</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
+                  </div>
+                </Link>
+
+                {/* KPI 2: Customer Actions 30d */}
+                <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-left">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Действия (30д)
+                    </span>
+                    <MousePointerClick className="w-3 h-3 text-emerald-600" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5">
+                    <span className="text-lg sm:text-2xl font-black text-slate-900">—</span>
+                    <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">Клики</span>
+                  </div>
+                  <div className="mt-0.5 text-[9px] sm:text-[10px] text-slate-400 truncate">
+                    Звонки • Маршруты
+                  </div>
+                </div>
+
+                {/* KPI 3: Profile Health Score */}
+                <button
+                  type="button"
+                  onClick={() => setIsInspectionModalOpen(true)}
+                  className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-amber-50/50 border border-slate-200/80 transition-colors block text-left group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Здоровье NAP
+                    </span>
+                    <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5">
+                    <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-amber-600 transition-colors">
+                      {activeProfile
+                        ? `${Math.min(100, (activeProfile.name ? 20 : 0) + (activeProfile.address ? 20 : 0) + (activeProfile.phone ? 20 : 0) + (activeProfile.category ? 20 : 0) + (activeProfile.rating ? 20 : 0))}%`
+                        : '—'}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-600 truncate">Синхрон</span>
+                  </div>
+                  <div className="mt-0.5 text-[9px] sm:text-[10px] font-bold text-amber-700 group-hover:underline flex items-center gap-0.5">
+                    <span>Проверить</span>
+                    <Sparkles className="w-2.5 h-2.5" />
+                  </div>
+                </button>
+              </div>
             </div>
 
             {/* ======================================================== */}
-            {/* ШАГ 1: [ 1 ] ПУЛЬС БИЗНЕСА И ЦИФРОВОЙ ДВОЙНИК (GOOGLE MAPS)*/}
+            {/* BLOCK 2: ACTION INBOX (FOCUS OF THE DAY / ZERO INBOX)   */}
             {/* ======================================================== */}
-            <div className="bg-white border border-slate-200/90 rounded-3xl shadow-xs overflow-hidden transition-all">
-              {/* Accordion Header */}
-              <button
-                type="button"
-                onClick={() => toggleAccordion('pulse')}
-                className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/60 transition-colors cursor-pointer border-b border-transparent data-[open=true]:border-slate-100"
-                data-open={isPulseOpen}
-              >
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
-                    1
-                  </div>
-                  <div className="truncate">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
-                        ШАГ 1: Пульс бизнеса &amp; Цифровой Двойник (Google Maps Live)
-                      </h2>
-                      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-google-blue border border-blue-200">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                        Verified GBP
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <h2 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                      Повестка дня (Action Inbox)
+                    </h2>
+                    {pendingActions.length > 0 ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
+                        {pendingActions.length} к подтверждению
                       </span>
-                    </div>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      Живой статус профиля, ключевые метрики охвата и доступ к модулям
-                    </p>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        0 задач
+                      </span>
+                    )}
                   </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Приоритетные сигналы и готовые действия ИИ для удержания позиций в Топ-3
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Синхронизировано</span>
-                  </div>
-                  <div className={`p-1.5 rounded-xl bg-slate-100 text-slate-600 transition-transform duration-200 ${isPulseOpen ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </div>
-              </button>
-
-              {/* Accordion Body */}
-              {isPulseOpen && (
-                <div className="p-5 sm:p-6 space-y-6 animate-in fade-in duration-150">
-                  
-                  {/* Digital Twin of the Venue (Knowledge Panel Card) */}
-                  <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                      
-                      {/* Left Column: Real Knowledge Panel Card */}
-                      <div className="flex items-start sm:items-center gap-4 sm:gap-5 w-full lg:w-auto">
-                        {/* Avatar / Cover Photo with Google Verified Badge */}
-                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-xs shrink-0 bg-slate-100 group">
-                          <img
-                            src={venuePhotoUrl}
-                            alt={activeProfile?.name || 'Venue Photo'}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div 
-                            className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 border-2 border-white shadow-xs flex items-center justify-center" 
-                            title="Google Verified Business Profile"
-                          >
-                            <Check className="w-3 h-3 text-white stroke-[3]" />
-                          </div>
-                        </div>
-
-                        {/* Identity & Knowledge Panel Details */}
-                        <div className="space-y-1.5 flex-1 min-w-0">
-                          {/* Business Name with Location Switcher Dropdown */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-                              className="flex items-center gap-2 text-left group cursor-pointer max-w-full"
-                            >
-                              <h1 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-google-blue transition-colors truncate max-w-[260px] sm:max-w-md">
-                                {activeProfile?.name || 'Connect Business Profile'}
-                              </h1>
-                              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-google-blue transition-colors shrink-0" />
-                              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-google-blue border border-blue-200">
-                                <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                Verified GBP
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setIsProfileModalOpen(true);
-                                }}
-                                className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
-                                title="Управление привязкой аккаунта и профиля"
-                              >
-                                <Unlink className="w-2.5 h-2.5 text-slate-500" />
-                                <span>Отвязать / Настройки</span>
-                              </button>
-                            </button>
-
-                            {/* Location Switcher Dropdown */}
-                            {isLocationDropdownOpen && (
-                              <div className="absolute left-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 p-2 shadow-xl z-50 text-xs">
-                                <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
-                                  <span>Your Businesses ({availableProfiles.length})</span>
-                                  <span className="text-emerald-600 font-semibold">Active Locations</span>
-                                </div>
-                                <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px]">
-                                  <span className="text-slate-500 font-medium">Location Quota:</span>
-                                  <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
-                                    {availableProfiles.length} / 1 Location Used (Starter)
-                                  </span>
-                                </div>
-
-                                <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 my-1">
-                                  {availableProfiles.map((p, idx) => (
-                                    <div
-                                      key={idx}
-                                      className={`w-full px-2 py-1.5 rounded-xl flex items-center justify-between transition-colors ${
-                                        activeProfile?.name === p.name ? 'bg-blue-50/70' : 'hover:bg-slate-50'
-                                      }`}
-                                    >
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSwitchProfile(p)}
-                                        className="flex-1 flex items-center gap-2.5 truncate pr-2 text-left cursor-pointer"
-                                      >
-                                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
-                                          <img
-                                            src={p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO}
-                                            alt={p.name}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        </div>
-                                        <div className="truncate">
-                                          <div className={`font-semibold truncate ${activeProfile?.name === p.name ? 'text-google-blue font-bold' : 'text-slate-700'}`}>
-                                            {p.name}
-                                          </div>
-                                          <div className="text-[10px] text-slate-400 truncate">{p.address || p.city}</div>
-                                        </div>
-                                      </button>
-                                      <div className="flex items-center gap-1 shrink-0">
-                                        {activeProfile?.name === p.name && (
-                                          <Check className="w-3.5 h-3.5 text-google-blue shrink-0 mr-1" />
-                                        )}
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setProfileToUnlinkConfirm(p);
-                                          }}
-                                          className="p-1.5 text-slate-400 hover:text-amber-700 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer"
-                                          title="Отвязать этот профиль"
-                                        >
-                                          <Unlink className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Helper note for Starter Plan */}
-                                <div className="px-3 py-2 bg-amber-50/80 border-t border-b border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-1.5">
-                                  <span className="font-bold">💡 Базовый тариф:</span>
-                                  <span className="text-amber-800 leading-snug">
-                                    Доступно 1 заведение. Чтобы сменить заведение, отвяжите текущий тестовый профиль.
-                                  </span>
-                                </div>
-
-                                <div className="pt-1.5 space-y-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setIsLocationDropdownOpen(false);
-                                      setIsProfileModalOpen(true);
-                                    }}
-                                    className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-slate-700 hover:bg-slate-100 font-semibold transition-colors cursor-pointer text-xs"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <Sliders className="w-3.5 h-3.5 text-slate-500" />
-                                      <span>Управление привязкой профилей</span>
-                                    </div>
-                                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (availableProfiles.length >= 1 && !isProUser) {
-                                        setIsLocationQuotaModalOpen(true);
-                                      } else {
-                                        router.push('/onboarding');
-                                      }
-                                    }}
-                                    className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between text-google-blue hover:bg-blue-50 font-bold transition-colors cursor-pointer"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <Building2 className="w-3.5 h-3.5" />
-                                      <span>+ Connect New Location</span>
-                                    </div>
-                                    <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-semibold">
-                                      Quota {availableProfiles.length}/1
-                                    </span>
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Category, Stars & Live Open Status */}
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                            <span className="font-semibold text-slate-700 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
-                              {activeProfile?.category || '—'}
-                            </span>
-                            
-                            <div className="flex items-center gap-1.5 font-bold">
-                              {typeof activeProfile?.rating === 'number' && activeProfile.rating > 0 ? (
-                                <>
-                                  <div className="flex items-center text-amber-400">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star
-                                        key={i}
-                                        className={`w-3.5 h-3.5 ${
-                                          i < Math.round(activeProfile.rating || 0)
-                                            ? 'fill-amber-400 text-amber-400'
-                                            : 'text-slate-200'
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-slate-900 font-extrabold">
-                                    {activeProfile.rating.toFixed(1)} ★
-                                  </span>
-                                  <span className="text-slate-500 font-normal">
-                                    ({activeProfile?.reviews_count ?? 0} reviews)
-                                  </span>
-                                </>
-                              ) : (
-                                <span className="text-slate-400 font-normal">— ★ (— reviews)</span>
-                              )}
-                            </div>
-
-                            {dubaiSmartMode === 'PEAK_TRAFFIC' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-900 font-bold text-[11px] border border-amber-300">
-                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                Extended Hours Active • Closes at 23:30 (Peak Traffic Protected 🛡️)
-                              </span>
-                            ) : dubaiSmartMode === 'RAMADAN' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-900 font-bold text-[11px] border border-purple-300">
-                                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                                🌙 Ramadan Mode • Iftar &amp; Suhoor Hours Active (17:30 – 02:00)
-                              </span>
-                            ) : dubaiSmartMode === 'SUMMER' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-50 text-sky-900 font-bold text-[11px] border border-sky-300">
-                                <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
-                                ☀️ Summer Mode Active • High AC &amp; Indoor Valet (+45°C Shield)
-                              </span>
-                            ) : activeProfile ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                Google Maps Synced
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium text-[11px] border border-slate-200">
-                                Operating Schedule: —
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Address, Phone & Direct Google Maps Live Link */}
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-0.5">
-                            <span className="flex items-center gap-1 truncate max-w-xs">
-                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span className="truncate">{activeProfile?.address || '—'}</span>
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span>{activeProfile?.phone || (activeProfile as any)?.formatted_phone_number || '—'}</span>
-                            </span>
-                            {activeProfile?.name && (
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                  (activeProfile?.name || '') + ' ' + (activeProfile?.address || '')
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-bold text-google-blue hover:text-blue-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                              >
-                                <span>View Live on Google Maps</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            )}
-                          </div>
-
-                        </div>
-                      </div>
-
-                      {/* Right Column: Quick Audit Action Trigger */}
-                      <div className="flex items-center gap-2 self-stretch lg:self-auto justify-end">
-                        <button
-                          type="button"
-                          onClick={() => setIsInspectionModalOpen(true)}
-                          className="px-3.5 py-2 rounded-xl bg-white hover:bg-blue-50 text-google-blue border border-blue-200 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                          title="Проверить полноту профиля и синхронизацию с Google Maps"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-google-blue" />
-                          <span>Инспекция NAP &amp; Атрибутов</span>
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  {/* 3 Vital Growth Metric Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Metric 1: Local Rank Position */}
-                    <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Local Rank Position
-                        </span>
-                        <div className="p-2 rounded-xl bg-blue-50 text-google-blue">
-                          <MapPin className="w-4 h-4" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-black text-slate-900">
-                            —
-                          </span>
-                          <span className="text-xs font-semibold text-slate-400">
-                            Awaiting Geo-Grid Scan
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                          Average rank across neighborhood catchment radius. Run a Geo-Grid Radar scan to benchmark live positions.
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                        <span className="text-slate-500">Target Area:</span>
-                        <Link href="/geo-grid" className="font-bold text-google-blue hover:underline flex items-center gap-1">
-                          <span>Inspect Geo-Grid</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Metric 2: Customer Actions (30d) */}
-                    <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Customer Actions (30d)
-                        </span>
-                        <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
-                          <MousePointerClick className="w-4 h-4" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-black text-slate-900">
-                            —
-                          </span>
-                          <span className="text-xs font-semibold text-slate-400">
-                            Requires Google Insights Sync
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                          Direct phone calls, driving directions, and website bookings synced from Google Business Profile Insights.
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-200/80 grid grid-cols-3 gap-2 text-center text-[11px]">
-                        <div>
-                          <span className="block font-bold text-slate-800">—</span>
-                          <span className="text-slate-400 text-[10px]">Calls</span>
-                        </div>
-                        <div>
-                          <span className="block font-bold text-slate-800">—</span>
-                          <span className="text-slate-400 text-[10px]">Routes</span>
-                        </div>
-                        <div>
-                          <span className="block font-bold text-slate-800">—</span>
-                          <span className="text-slate-400 text-[10px]">Clicks</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Metric 3: Profile Health Score */}
-                    <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            Profile Health Score
-                          </span>
-                          <div className="p-2 rounded-xl bg-amber-50 text-amber-500">
-                            <Star className="w-4 h-4 fill-amber-400" />
-                          </div>
-                        </div>
-
-                        <div className="mt-2">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-black text-slate-900">
-                              {activeProfile
-                                ? `${Math.min(100, (activeProfile.name ? 20 : 0) + (activeProfile.address ? 20 : 0) + (activeProfile.phone ? 20 : 0) + (activeProfile.category ? 20 : 0) + (activeProfile.rating ? 20 : 0))} / 100`
-                                : '— / 100'}
-                            </span>
-                            {activeProfile && typeof activeProfile.rating === 'number' && activeProfile.rating > 0 ? (
-                              <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                                {activeProfile.rating.toFixed(1)} ★ ({activeProfile.reviews_count ?? 0})
-                              </span>
-                            ) : (
-                              <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                                No Rating Synced
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                            {activeProfile
-                              ? 'Profile verified. Core NAP data and Google Business Profile attributes synchronized.'
-                              : 'Connect Google Business Profile to calculate real completeness score.'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                        <span className="text-slate-500 font-medium">Audit Status:</span>
-                        <button
-                          type="button"
-                          onClick={() => setIsInspectionModalOpen(true)}
-                          className="font-bold text-google-blue hover:text-blue-700 flex items-center gap-1.5 cursor-pointer bg-blue-50/80 hover:bg-blue-100/80 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-google-blue" />
-                          <span>⚡ Re-run Inspection / View Gaps</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Hub Navigation Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                    <Link
-                      href="/geo-grid"
-                      className="p-4 bg-slate-50/70 hover:bg-white border border-slate-200 rounded-2xl transition-all flex items-center justify-between group shadow-2xs cursor-pointer hover:shadow-xs"
+                {/* Copilot Mode Pill */}
+                <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="text-[11px] font-medium text-slate-400">Режим:</span>
+                  <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMode('AUTONOMOUS')}
+                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer text-[11px] ${
+                        copilotMode === 'AUTONOMOUS'
+                          ? 'bg-slate-900 text-white shadow-2xs font-bold'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                      title="AI executes verified growth actions automatically"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-google-blue flex items-center justify-center font-bold">
-                          <Target className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-xs group-hover:text-google-blue transition-colors">
-                            Radar &amp; Heatmap
-                          </h4>
-                          <p className="text-[11px] text-slate-400">
-                            Spatial ranks &amp; competitor tactics
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-google-blue transition-colors" />
-                    </Link>
-
-                    <Link
-                      href="/reviews-posts"
-                      className="p-4 bg-slate-50/70 hover:bg-white border border-slate-200 rounded-2xl transition-all flex items-center justify-between group shadow-2xs cursor-pointer hover:shadow-xs"
+                      ⚡ Автономный
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMode('MANUAL_APPROVAL')}
+                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer text-[11px] ${
+                        copilotMode === 'MANUAL_APPROVAL'
+                          ? 'bg-google-blue text-white shadow-2xs font-bold'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                      title="Review each action in 1-click before publishing"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                          <ShieldCheck className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-xs group-hover:text-emerald-600 transition-colors">
-                            Shield &amp; Reputation
-                          </h4>
-                          <p className="text-[11px] text-slate-400">
-                            Review responder &amp; tamper lock
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 transition-colors" />
-                    </Link>
+                      ✍️ В 1 клик
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-                    <Link
-                      href="/copilot"
-                      className="p-4 bg-slate-50/70 hover:bg-white border border-slate-200 rounded-2xl transition-all flex items-center justify-between group shadow-2xs cursor-pointer hover:shadow-xs"
+              {/* Actions List or Zero Inbox Clean State */}
+              {!isAllClear ? (
+                <div className="space-y-3">
+                  {pendingActions.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                          <Bot className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-xs group-hover:text-indigo-600 transition-colors">
-                            Copilot AI Studio
-                          </h4>
-                          <p className="text-[11px] text-slate-400">
-                            Post planner &amp; 24/7 AI chat
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 transition-colors" />
-                    </Link>
-                  </div>
-
-                </div>
-              )}
-            </div>
-
-            {/* ======================================================== */}
-            {/* ШАГ 2: [ 2 ] РАДАР ПРОБЛЕМ И УГРОЗ (SENTINEL GUARD)     */}
-            {/* ======================================================== */}
-            <div className={`bg-white border rounded-3xl shadow-xs overflow-hidden transition-all ${
-              totalProblemsCount > 0 ? 'border-amber-300 ring-2 ring-amber-400/20' : 'border-slate-200/90'
-            }`}>
-              {/* Accordion Header */}
-              <button
-                type="button"
-                onClick={() => toggleAccordion('problems')}
-                className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/60 transition-colors cursor-pointer border-b border-transparent data-[open=true]:border-slate-100"
-                data-open={isProblemsOpen}
-              >
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-xs ${
-                    totalProblemsCount > 0 ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'
-                  }`}>
-                    2
-                  </div>
-                  <div className="truncate">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
-                        ШАГ 2: Радар Проблем и Угроз
-                      </h2>
-                      {totalProblemsCount === 0 ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          🟢 Все системы в норме (0 угроз)
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200 animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                          🔴 {totalProblemsCount} активных угроз
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      24/7 Sentinel мониторинг: несанкционированные правки, сдвиги конкурентов и отзывы
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  {totalProblemsCount === 0 ? (
-                    <span className="hidden md:inline-flex text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
-                      Угрозы отсутствуют
-                    </span>
-                  ) : (
-                    <span className="hidden md:inline-flex text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-200">
-                      Требует внимания
-                    </span>
-                  )}
-                  <div className={`p-1.5 rounded-xl bg-slate-100 text-slate-600 transition-transform duration-200 ${isProblemsOpen ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </div>
-              </button>
-
-              {/* Accordion Body */}
-              {isProblemsOpen && (
-                <div className="p-5 sm:p-6 space-y-4 animate-in fade-in duration-150">
-                  
-                  {/* Sentinel 24/7 Protection Status Banner */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <ShieldCheck className="w-5 h-5" />
-                      </div>
-                      <div>
+                      <div className="space-y-2 max-w-2xl">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-extrabold text-emerald-950 uppercase tracking-wide">
-                            24/7 Sentinel Guard: Golden Snapshot Активен
+                          {item.type === 'COMPETITOR' ? (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-100 text-rose-800 uppercase">
+                              Сдвиг конкурента
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 uppercase">
+                              5★ Отзыв клиента
+                            </span>
+                          )}
+                          <span className="text-xs font-semibold text-slate-400">
+                            {item.impact}
                           </span>
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                         </div>
-                        <p className="text-[11px] text-emerald-850 mt-0.5">
-                          NAP-данные и часы заблокированы от несанкционированных правок третьих лиц. 0 инцидентов за {protectedStats.safeUptimeDays || 12} дней.
-                        </p>
+
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            {item.subtitle}
+                          </p>
+                        </div>
+
+                        {/* Review Draft Preview */}
+                        {item.aiDraft && (
+                          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
+                            <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider block">
+                              ИИ подготовил SEO-ответ:
+                            </span>
+                            <p className="text-slate-800 italic leading-relaxed">
+                              "{item.aiDraft}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyManual(item)}
+                          className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                          title="Скопировать ответ и вставить вручную в Google Карты"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Скопировать</span>
+                        </button>
+
+                        {item.aiDraft && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditDraft(item)}
+                            className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Править</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleActionClick(item.id)}
+                          className="flex-1 md:flex-none px-4 py-2 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                          <span>{isProUser ? item.primaryCtaText : '⚡ Опубликовать (1 клик)'}</span>
+                        </button>
                       </div>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                /* Clean Green Zero-Inbox State */
+                <div className="p-5 sm:p-6 bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-blue-50/40 border border-emerald-200/90 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                        <span>Все системы в норме • 0 угроз</span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      </div>
+                      <p className="text-slate-600 text-xs mt-0.5 leading-relaxed max-w-xl">
+                        24/7 Sentinel Guard блокирует чужие правки. Все отзывы отвечены, NAP-данные в Golden Snapshot зафиксированы.
+                      </p>
+                    </div>
+                  </div>
 
+                  <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0 flex-wrap">
                     <button
                       type="button"
                       onClick={() => setIsInsuranceModalOpen(true)}
-                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer flex items-center gap-1.5"
+                      className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl text-xs transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
                     >
                       <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Страховка и оценка рисков →</span>
+                      <span>Страховка рисков →</span>
                     </button>
-                  </div>
 
-                  {/* Traffic Light Status Bar (Светофор статусов) */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {/* 🟢 Protection Active */}
-                    <button
-                      type="button"
-                      onClick={() => setIsInsuranceModalOpen(true)}
-                      className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 text-left hover:bg-emerald-100/60 transition-colors group cursor-pointer"
+                    <Link
+                      href="/geo-grid"
+                      className="px-3.5 py-2 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition-colors shadow-2xs flex items-center gap-1.5"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-xs font-black text-emerald-900 uppercase tracking-wide">
-                            Protection Active
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
-                          100% Stability
-                        </span>
-                      </div>
-                      <p className="text-xs text-emerald-800 font-semibold mt-1">
-                        0 breaches in {protectedStats.safeUptimeDays} days
-                      </p>
-                      <p className="text-[11px] text-emerald-700/80 mt-0.5 leading-snug">
-                        Golden Snapshot locked 24/7. Zero unauthorized tampering.
-                      </p>
-                    </button>
-
-                    {/* 🟡 Requires Attention */}
-                    <div className={`p-3.5 rounded-2xl border text-left transition-colors ${
-                      pendingActions.filter(a => a.type === 'REVIEW').length > 0 
-                        ? 'bg-amber-50/80 border-amber-200/90 text-amber-900' 
-                        : 'bg-slate-50 border-slate-200 text-slate-700'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2.5 h-2.5 rounded-full ${
-                            pendingActions.filter(a => a.type === 'REVIEW').length > 0 ? 'bg-amber-500 animate-ping' : 'bg-slate-400'
-                          }`} />
-                          <span className="text-xs font-black uppercase tracking-wide">
-                            Requires Attention
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-amber-200 text-amber-800">
-                          {pendingActions.filter(a => a.type === 'REVIEW').length} Pending
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold mt-1">
-                        {pendingActions.filter(a => a.type === 'REVIEW').length > 0 
-                          ? `${pendingActions.filter(a => a.type === 'REVIEW').length} reviews awaiting approval`
-                          : 'All reviews addressed with local keywords'}
-                      </p>
-                      <p className="text-[11px] opacity-80 mt-0.5 leading-snug">
-                        {copilotMode === 'AUTONOMOUS' ? 'Auto-publishing enabled in 3 hrs' : 'Requires 1-click confirmation'}
-                      </p>
-                    </div>
-
-                    {/* 🔴 Competitor Alert */}
-                    <div className={`p-3.5 rounded-2xl border text-left transition-colors ${
-                      pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 
-                        ? 'bg-rose-50/80 border-rose-200/90 text-rose-900' 
-                        : 'bg-slate-50 border-slate-200 text-slate-700'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2.5 h-2.5 rounded-full ${
-                            pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 ? 'bg-rose-500 animate-pulse' : 'bg-slate-400'
-                          }`} />
-                          <span className="text-xs font-black uppercase tracking-wide">
-                            Competitor Alert
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200 text-rose-800">
-                          {pendingActions.filter(a => a.type === 'COMPETITOR').length} Shift
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold mt-1">
-                        {pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 
-                          ? `${pendingActions.filter(a => a.type === 'COMPETITOR').length} competitor rank shift detected`
-                          : 'No competitor rank shifts in 1.5 km'}
-                      </p>
-                      <p className="text-[11px] opacity-80 mt-0.5 leading-snug">
-                        Catchment area: 1.2 km radius around venue
-                      </p>
-                    </div>
+                      <Target className="w-3.5 h-3.5" />
+                      <span>Радар Geo-Grid →</span>
+                    </Link>
                   </div>
-
                 </div>
               )}
             </div>
 
             {/* ======================================================== */}
-            {/* ШАГ 3: [ 3 ] РЕШЕНИЯ И 1-CLICK АВТОПИЛОТ               */}
+            {/* BLOCK 3: DUBAI OPERATIONAL PRESETS (COMPACT 1-TAP CHIPS)*/}
             {/* ======================================================== */}
-            <div className="bg-white border border-slate-200/90 rounded-3xl shadow-xs overflow-hidden transition-all">
-              {/* Accordion Header */}
-              <button
-                type="button"
-                onClick={() => toggleAccordion('solutions')}
-                className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/60 transition-colors cursor-pointer border-b border-transparent data-[open=true]:border-slate-100"
-                data-open={isSolutionsOpen}
-              >
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
-                    3
-                  </div>
-                  <div className="truncate">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
-                        ШАГ 3: Решения &amp; 1-Click Автопилот
-                      </h2>
-                      {pendingActions.length > 0 ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                          <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                          {pendingActions.length} решений к подтверждению
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          <Check className="w-2.5 h-2.5 stroke-[3]" />
-                          Все задачи выполнены
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
-                      Быстрые действия в 1 клик, пресеты Дубая и переключение режима Copilot
-                    </p>
-                  </div>
+            <div className="bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">🇦🇪</span>
+                  <span className="text-xs font-black tracking-wide uppercase text-slate-200">
+                    Оперативные пресеты Дубая (1-Tap Apply)
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.2 bg-blue-500/20 text-blue-300 rounded-full border border-blue-400/30">
+                    Google Maps
+                  </span>
                 </div>
+                <p className="text-[11px] text-slate-400 leading-snug">
+                  Мгновенно продлевает часы работы или меняет климатические атрибуты для удержания бейджа "Открыто сейчас".
+                </p>
+              </div>
 
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <span>Режим:</span>
-                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
-                      copilotMode === 'AUTONOMOUS' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-google-blue'
-                    }`}>
-                      {copilotMode === 'AUTONOMOUS' ? '⚡ Автономный' : '✍️ Ручной'}
-                    </span>
-                  </div>
-                  <div className={`p-1.5 rounded-xl bg-slate-100 text-slate-600 transition-transform duration-200 ${isSolutionsOpen ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </div>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap w-full md:w-auto shrink-0">
+                {/* Peak Traffic */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleDubaiSmartMode('PEAK_TRAFFIC')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                    dubaiSmartMode === 'PEAK_TRAFFIC'
+                      ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md font-extrabold'
+                      : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
+                  }`}
+                  title="Продлевает закрытие на +30м для сохранения бейджа Open Now в вечерних пробках"
+                >
+                  <span>⏰ Пробки (+30м)</span>
+                  {dubaiSmartMode === 'PEAK_TRAFFIC' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
 
-              {/* Accordion Body */}
-              {isSolutionsOpen && (
-                <div className="p-5 sm:p-6 space-y-5 animate-in fade-in duration-150">
-                  
-                  {/* Top Control Bar: Autopilot Mode Switcher */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="text-xs font-bold text-slate-700">Управление Co-Pilot:</span>
-                      <div className="flex bg-white p-1 rounded-xl border border-slate-200 text-xs font-semibold shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleMode('AUTONOMOUS')}
-                          className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                            copilotMode === 'AUTONOMOUS'
-                              ? 'bg-slate-900 text-white shadow-xs font-bold'
-                              : 'text-slate-500 hover:text-slate-900'
-                          }`}
-                          title="AI executes verified growth actions automatically"
-                        >
-                          ⚡ Autonomous
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleMode('MANUAL_APPROVAL')}
-                          className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                            copilotMode === 'MANUAL_APPROVAL'
-                              ? 'bg-google-blue text-white shadow-xs font-bold'
-                              : 'text-slate-500 hover:text-slate-900'
-                          }`}
-                          title="Review each action in 1-click before publishing"
-                        >
-                          ✍️ Manual Approval
-                        </button>
-                      </div>
-                    </div>
+                {/* Ramadan Mode */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleDubaiSmartMode('RAMADAN')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                    dubaiSmartMode === 'RAMADAN'
+                      ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-md font-extrabold'
+                      : 'bg-slate-800 hover:bg-slate-700 text-purple-300 border-slate-700'
+                  }`}
+                  title="Расписание Ифтар и Сухур (17:30 – 02:00)"
+                >
+                  <span>🌙 Рамадан</span>
+                  {dubaiSmartMode === 'RAMADAN' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
 
-                    <div className="text-[11px] text-slate-500 font-medium">
-                      {copilotMode === 'AUTONOMOUS' 
-                        ? '🤖 Автопилот: действия публикуются автоматически через 3 часа' 
-                        : '✋ Ручной контроль: публикация требует 1-клика владельца'}
-                    </div>
-                  </div>
-
-                  {/* 🇦🇪 Dubai Smart Operations Presets */}
-                  <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-4 shadow-sm border border-slate-700/60 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3.5">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">🇦🇪</span>
-                        <span className="text-xs font-extrabold tracking-wide text-white uppercase">
-                          Dubai Dynamic Operations &amp; Seasonality Presets
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full border border-blue-400/30">
-                          1-Click Apply
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-300 leading-snug">
-                        Prevent customer misdirection, lock "Open Now" maps badges, and adapt amenities for UAE climate &amp; holy months.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
-                      {/* Peak Traffic Guard */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleDubaiSmartMode('PEAK_TRAFFIC')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                          dubaiSmartMode === 'PEAK_TRAFFIC'
-                            ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md'
-                            : 'bg-slate-800/80 hover:bg-slate-700 text-amber-300 border-slate-600'
-                        }`}
-                        title="Extends closing hour by +30m to maintain 'Open Now' Google Maps badge"
-                      >
-                        <span>⏰ Peak Traffic Guard (+30m)</span>
-                        {dubaiSmartMode === 'PEAK_TRAFFIC' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </button>
-
-                      {/* Ramadan Mode */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleDubaiSmartMode('RAMADAN')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                          dubaiSmartMode === 'RAMADAN'
-                            ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-md'
-                            : 'bg-slate-800/80 hover:bg-slate-700 text-purple-300 border-slate-600'
-                        }`}
-                        title="1-Click deploy special Iftar & Suhoor opening hours"
-                      >
-                        <span>🌙 Ramadan Mode</span>
-                        {dubaiSmartMode === 'RAMADAN' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </button>
-
-                      {/* Summer Mode */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleDubaiSmartMode('SUMMER')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                          dubaiSmartMode === 'SUMMER'
-                            ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-md'
-                            : 'bg-slate-800/80 hover:bg-slate-700 text-sky-300 border-slate-600'
-                        }`}
-                        title="Prioritizes Indoor AC & Valet over outdoor patio in +45°C heat"
-                      >
-                        <span>☀️ Summer (+45°C Shield)</span>
-                        {dubaiSmartMode === 'SUMMER' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 1-Click Action Feed Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 pt-1">
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span>Urgent Action Hub</span>
-                        {pendingActions.length > 0 && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                            {pendingActions.length} Pending Approval
-                          </span>
-                        )}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Pre-calculated strategic moves requiring 1-click owner confirmation to secure rankings.
-                      </p>
-                    </div>
-
-                    <div className="text-xs text-slate-400 font-medium">
-                      {copilotMode === 'AUTONOMOUS' ? 'Auto-execution active' : 'Owner approval mode'}
-                    </div>
-                  </div>
-
-                  {/* Action Stack */}
-                  {!isAllClear ? (
-                    <div className="space-y-3">
-                      {pendingActions.map((item) => (
-                        <div
-                          key={item.id}
-                          className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                        >
-                          <div className="space-y-2 max-w-2xl">
-                            <div className="flex items-center gap-2">
-                              {item.type === 'COMPETITOR' ? (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-100 text-rose-800 uppercase">
-                                  Competitor Shift
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 uppercase">
-                                  5★ Customer Review
-                                </span>
-                              )}
-                              <span className="text-xs font-semibold text-slate-400">
-                                {item.impact}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h4 className="font-bold text-slate-900 text-sm">
-                                {item.title}
-                              </h4>
-                              <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                                {item.subtitle}
-                              </p>
-                            </div>
-
-                            {/* Review Draft Preview */}
-                            {item.aiDraft && (
-                              <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
-                                <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider block">
-                                  AI Suggested Response Preview:
-                                </span>
-                                <p className="text-slate-800 italic leading-relaxed">
-                                  "{item.aiDraft}"
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* 1-Click Action Buttons */}
-                          <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0 flex-wrap">
-                            {/* Free Manual Copy Button */}
-                            <button
-                              type="button"
-                              onClick={() => handleCopyManual(item)}
-                              className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                              title="Free manual option: copy text and paste directly into Google Maps"
-                            >
-                              <Copy className="w-3.5 h-3.5 text-slate-400" />
-                              <span>Copy Manual</span>
-                            </button>
-
-                            {item.aiDraft && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditDraft(item)}
-                                className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                                <span>Edit</span>
-                              </button>
-                            )}
-
-                            {/* 1-Click Pro Automated Publish */}
-                            <button
-                              type="button"
-                              onClick={() => handleActionClick(item.id)}
-                              className="flex-1 md:flex-none px-4 py-2 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                            >
-                              <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                              <span>{isProUser ? item.primaryCtaText : '⚡ 1-Click Auto-Publish (Pro)'}</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    /* Clean Green State */
-                    <div className="p-6 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs animate-in fade-in">
-                      <div className="flex items-center gap-3.5 text-center sm:text-left">
-                        <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                          <ShieldCheck className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900 text-sm flex items-center gap-2 justify-center sm:justify-start">
-                            <span>All systems optimal. Your AI Co-Pilot is actively monitoring.</span>
-                            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                          </div>
-                          <p className="text-slate-600 text-[11px] mt-0.5">
-                            No competitor threats or pending review replies detected. Next automated security sweep in 28 mins.
-                          </p>
-                        </div>
-                      </div>
-
-                      <Link
-                        href="/geo-grid"
-                        className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl text-xs transition-colors shrink-0 shadow-2xs"
-                      >
-                        View Radar Map →
-                      </Link>
-                    </div>
-                  )}
-
-                </div>
-              )}
+                {/* Summer Shield */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleDubaiSmartMode('SUMMER')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                    dubaiSmartMode === 'SUMMER'
+                      ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-md font-extrabold'
+                      : 'bg-slate-800 hover:bg-slate-700 text-sky-300 border-slate-700'
+                  }`}
+                  title="Атрибуты кондиционера и крытой парковки в жару +45°C"
+                >
+                  <span>☀️ Лето (+45°C)</span>
+                  {dubaiSmartMode === 'SUMMER' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
+              </div>
             </div>
           </>
         )}
