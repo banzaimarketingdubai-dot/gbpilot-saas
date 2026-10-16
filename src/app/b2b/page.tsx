@@ -49,6 +49,24 @@ export default function B2BLandingPage() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [pricingToast, setPricingToast] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('payment') === 'cancelled') {
+        setPricingToast('ℹ️ Оплата отменена. Вы можете вернуться к оформлению в любой момент.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (urlParams.get('payment') === 'success') {
+        const planParam = (urlParams.get('plan') as PlanId) || 'PRO_GROWTH';
+        setSubscriptionPlan(planParam);
+        setPricingToast('🎉 Оплата успешно получена! Перенаправляем в панель управления...');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
+      }
+    }
+  }, [router]);
+
   const handleSelectPlan = async (planId: PlanId) => {
     if (planId === 'FREE_SCOUT') {
       setSubscriptionPlan(planId);
