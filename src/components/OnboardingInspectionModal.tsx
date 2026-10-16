@@ -26,7 +26,8 @@ import {
   Utensils,
   Image as ImageIcon,
   DollarSign,
-  Share2
+  Share2,
+  Edit3
 } from 'lucide-react';
 import { HealthGauge } from '@/components/HealthGauge';
 import { getSubscription, activateTrial } from '@/lib/subscription';
@@ -40,6 +41,7 @@ export interface AuditActionCardItem {
   afterAiValue: string;
   impactMetric: string;
   applied: boolean;
+  isCustomized?: boolean;
 }
 
 interface OnboardingInspectionModalProps {
@@ -77,6 +79,32 @@ export function OnboardingInspectionModal({
 
   // Applying API simulation state
   const [appliedStepIndex, setAppliedStepIndex] = useState(0);
+
+  // Collaborative Human-in-the-Loop Inline Editing state
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>('');
+
+  const handleStartEdit = (card: AuditActionCardItem) => {
+    if (!isPro) {
+      setIsPaywallModalOpen(true);
+      return;
+    }
+    setEditingCardId(card.id);
+    setEditingText(card.afterAiValue);
+  };
+
+  const handleSaveEdit = (id: string) => {
+    setActionCards(prev => prev.map(c => c.id === id ? { ...c, afterAiValue: editingText, isCustomized: true } : c));
+    setEditingCardId(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCardId(null);
+  };
+
+  const handleQuickChipAppend = (chipText: string) => {
+    setEditingText(prev => prev.trim() + ' ' + chipText);
+  };
 
   // Action Cards Data
   const [actionCards, setActionCards] = useState<AuditActionCardItem[]>([
@@ -454,6 +482,24 @@ export function OnboardingInspectionModal({
               </div>
             </div>
 
+            {/* Collaborative Owner Knowledge & Editorial Banner */}
+            <div className="bg-blue-50/80 border border-blue-200/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-900 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-google-blue flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                    <span>Коллаборативный режим (Human-in-the-Loop)</span>
+                    <span className="px-2 py-0.2 bg-blue-100 text-google-blue rounded text-[10px] font-bold">JTBD Standard</span>
+                  </h5>
+                  <p className="text-slate-600 text-[11px] mt-0.5">
+                    Вы знаете свой бизнес лучше любого ИИ. Одобрите готовую редакцию в 1 клик или нажмите <strong>«Отредактировать»</strong>, чтобы дополнить ее реальными фактами и фишками заведения до отправки в Google.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* ==================================================== */}
             {/* ZONE B: AUDIT ACTION CARDS (BEFORE ➔ AFTER COMPARISON) */}
             {/* ==================================================== */}
@@ -477,6 +523,12 @@ export function OnboardingInspectionModal({
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {card.isCustomized && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-google-blue border border-blue-200 flex items-center gap-1">
+                          <Edit3 className="w-2.5 h-2.5" />
+                          <span>Инсайд владельца</span>
+                        </span>
+                      )}
                       {card.applied ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                           <Check className="w-3 h-3 stroke-[3]" />
@@ -515,7 +567,7 @@ export function OnboardingInspectionModal({
                       </p>
                     </div>
 
-                    {/* After (Станет / ИИ-Решение) with PLG Blur Paywall Mechanism */}
+                    {/* After (Станет / ИИ-Решение) with Collaborative Inline Edit & PLG Blur */}
                     <div className="relative p-3 rounded-2xl bg-blue-50/50 border border-blue-200/80 space-y-1 overflow-hidden">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider flex items-center gap-1">
@@ -527,14 +579,74 @@ export function OnboardingInspectionModal({
                         </span>
                       </div>
 
-                      {/* Content block: Crisp if Pro, Blurred & Unselectable if Free */}
-                      <div className={`mt-1 text-slate-800 font-medium leading-relaxed transition-all ${
-                        !isPro && !card.applied 
-                          ? 'blur-xs select-none pointer-events-none' 
-                          : 'select-text'
-                      }`}>
-                        {card.afterAiValue}
-                      </div>
+                      {/* Editing View */}
+                      {editingCardId === card.id ? (
+                        <div className="space-y-2 pt-1 animate-in fade-in duration-150">
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            rows={4}
+                            className="w-full p-2.5 rounded-xl border border-blue-300 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-google-blue font-sans leading-relaxed"
+                            placeholder="Дополните формулировку своими фактами о заведении..."
+                          />
+                          <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                            <span className="text-slate-400 font-semibold">Быстрые инсайды:</span>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickChipAppend('✓ Собственная парковка во дворе для гостей.')}
+                              className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
+                            >
+                              + Парковка
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickChipAppend('✓ Дог-френдли терраса (вода для питомцев).')}
+                              className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
+                            >
+                              + Дог-френдли
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickChipAppend('✓ Фирменное авторское блюдо от шефа.')}
+                              className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
+                            >
+                              + Хит меню
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickChipAppend('✓ По предварительному бронированию.')}
+                              className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
+                            >
+                              + Бронь
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-end gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="px-2.5 py-1 text-slate-500 hover:text-slate-700 text-xs font-semibold cursor-pointer"
+                            >
+                              Отмена
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEdit(card.id)}
+                              className="px-3.5 py-1 bg-google-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all"
+                            >
+                              Сохранить инсайд
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Content block: Crisp if Pro, Blurred & Unselectable if Free */
+                        <div className={`mt-1 text-slate-800 font-medium leading-relaxed transition-all ${
+                          !isPro && !card.applied 
+                            ? 'blur-xs select-none pointer-events-none' 
+                            : 'select-text'
+                        }`}>
+                          {card.afterAiValue}
+                        </div>
+                      )}
 
                       {/* Paywall Overlay Badge when Blurred */}
                       {!isPro && !card.applied && (
@@ -555,33 +667,54 @@ export function OnboardingInspectionModal({
 
                   {/* Card Bottom CTA */}
                   <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      Impact: {card.impactMetric}
-                    </span>
-
-                    {card.applied ? (
-                      <span className="text-emerald-700 font-bold flex items-center gap-1 text-[11px]">
-                        <Check className="w-3.5 h-3.5" /> Ready for Live Deployment
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        Impact: {card.impactMetric}
                       </span>
-                    ) : isPro ? (
-                      <button
-                        type="button"
-                        onClick={() => handleApplySingleCard(card.id)}
-                        className="px-3.5 py-1.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                      >
-                        <Zap className="w-3.5 h-3.5" />
-                        <span>Apply in 1 Click</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsPaywallModalOpen(true)}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
-                      >
-                        <Lock className="w-3 h-3 text-slate-500" />
-                        <span>Available on Pro</span>
-                      </button>
-                    )}
+                      {card.isCustomized && (
+                        <span className="text-[11px] text-google-blue font-bold">
+                          • Учтены ваши данные
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {!card.applied && editingCardId !== card.id && (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(card)}
+                          className="px-2.5 py-1 text-slate-600 hover:text-google-blue hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Отредактировать предложение ИИ с учетом ваших знаний о заведении"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>Отредактировать</span>
+                        </button>
+                      )}
+
+                      {card.applied ? (
+                        <span className="text-emerald-700 font-bold flex items-center gap-1 text-[11px]">
+                          <Check className="w-3.5 h-3.5" /> Ready for Live Deployment
+                        </span>
+                      ) : isPro ? (
+                        <button
+                          type="button"
+                          onClick={() => handleApplySingleCard(card.id)}
+                          className="px-3.5 py-1.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Apply in 1 Click</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsPaywallModalOpen(true)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Lock className="w-3 h-3 text-slate-500" />
+                          <span>Available on Pro</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                 </div>

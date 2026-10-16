@@ -60,17 +60,18 @@ GBPilot Root Layout
 3. **Draft Profile Confirmation Card:**
    - Editable overview card of newly created business entity + `[Generate Launch Package & Geo-Grid Baseline]`.
 
-#### Path B UI (Zero-Friction Flow for Existing Profile):
-1. **Magic Search Scan (No Auth Gateway):**
-   - Single clean input box: `"Enter your business name or address on Google Maps"`.
-   - Results view: Instantly displays a 3x3 Geo-Grid heatmap showing "Red Zones" (lost traffic) and a Profile Completeness Score to trigger FOMO.
-2. **1-Click Google OAuth & Smart Instant Fix:**
-   - Primary sticky CTA: `[Fix these issues in 1-Click (Connect Google)]`.
-   - Post-auth loading screen: "AI is analyzing your competitors and preparing Quick Wins...".
-   - **Smart Instant Fix Modal:** Displays pre-generated missing categories, a draft welcome Google Post, and AI-replies for the last 3 negative reviews. CTA: `[Apply AI Optimization]`.
-3. **1-Click Local Website Builder (Optional Step):**
-   - If the system detects a missing or slow website, it offers to generate an SEO-optimized landing page using GBP data.
-   - Button: `[Publish Local SEO Website (Powered by AI)]`.
+#### Path B UI (Collaborative Flow for Existing Profile):
+1. **Magic Search Scan (No Auth Gateway) or Direct OAuth:**
+   - Input box: `"Enter your business name or address on Google Maps"` or direct Google OAuth button.
+   - Results view: Displays 3x3 Geo-Grid heatmap showing "Red Zones" (lost traffic) and Profile Health Score.
+2. **Smart Owner Ground Truth Briefing (45-Sec Micro-Interview):**
+   - Clean 3-question card capturing insider facts: Flagship product, target vibe/audience, unique amenities (parking, pets, booking policy).
+3. **Collaborative Inspection Modal (Show & Edit Loop):**
+   - Displays transparent Before vs After comparison cards for 6 key dimensions (SEO bio, holiday hours, customer tags, menu catalog, EXIF spatial authority, precision geocoding).
+   - **Inline Edit Mode (`[✏️ Отредактировать]`):** Owner can edit proposed copy directly or click contextual chips (*"Указать парковку"*, *"Добавить коронное блюдо"*, *"Акцент на бронировании"*) before synchronizing.
+   - CTA: `[⚡ Apply All 5 Optimizations via API]` (or individual 1-click execution per card).
+4. **Transition to Continuous Triad Cockpit:**
+   - Locks profile baseline in Sentinel Guard, activates weekly LSI posting in Copilot, and begins 24/7 anti-tamper monitoring.
 
 ---
 

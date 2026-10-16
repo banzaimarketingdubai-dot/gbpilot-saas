@@ -120,18 +120,23 @@ The platform is designed around a Product-Led Growth (PLG) model with **Zero-Fri
 ### SCENARIO B: Business ALREADY HAS an Active Google Business Profile
 *Target:* Established local businesses seeking higher rankings, agency clients, or stores suffering from rank drops.
 
-#### Detailed 4-Step "Zero-Friction" Path:
-1. **Step 1: Magic Search Scan (No Auth Required)**
-   - On the homepage, the user enters their business name or address.
-   - Without registration, the system uses public APIs to instantly generate a 3x3 Geo-Grid heatmap and a Profile Completeness Score, highlighting "red zones" (lost traffic) to trigger FOMO.
-2. **Step 2: 1-Click Google OAuth Sync**
-   - User clicks `[Fix in 1-Click]` and authenticates via Google OAuth.
-   - The system instantly imports all profile details, reviews, and posts without manual data entry.
-3. **Step 3: AI-Autopilot "Smart Instant Fix" (Quick Wins)**
-   - The AI agent instantly generates "Quick Wins": adds missing categories, drafts a welcome Google Post with an offer, and generates LSI-rich responses to the last unreplied reviews.
-   - The user clicks a single `[Apply AI Optimization]` button to execute all fixes.
-4. **Step 4: 1-Click Local Website Builder**
-   - For businesses with poor or missing websites, the system compiles the GBP data into a fully functional, SEO-optimized local landing page with LocalBusiness Schema markup in 2 seconds.
+### SCENARIO B: Business ALREADY HAS an Active Google Business Profile
+*Target:* Established local businesses seeking higher rankings, agency clients, or stores suffering from rank drops.
+
+#### Detailed 5-Step Collaborative Path (The Owner Ground Truth Loop):
+1. **Step 1: Magic Search Scan (No Auth Required) or Direct Google OAuth**
+   - User enters business name or authenticates directly via Google OAuth to claim their listing as verified Owner / Manager.
+   - The system instantly imports all profile details, reviews, photos, and regular/holiday hours into a canonical Google Baseline JSON entity.
+2. **Step 2: Smart Owner Ground Truth Briefing (45-Sec Micro-Interview)**
+   - System captures insider knowledge that only the owner knows and that AI cannot deduce: flagship products, target vibe/demographics, operational constraints, and hidden amenities.
+3. **Step 3: AI-Autopilot Deep Optimization Synthesis**
+   - The AI agent (Gemini Flash) combines raw Google profile data, owner's ground truth, competitor movements, and local LSI spatial entities to produce optimized descriptions, attributes, holiday hours, and initial Google Posts.
+4. **Step 4: Collaborative Show & Edit Inspection Loop**
+   - System presents transparent "Before vs AI Suggestion" comparison cards.
+   - Owner can 1-click approve or enter Inline Customization mode to adjust phrasing or add details before changes are pushed to Google via PATCH API.
+5. **Step 5: Steady-State Autonomous Triad Operation**
+   - One-time setup locked and snapshot preserved for 24/7 Sentinel Guard anti-tamper rollback.
+   - Ongoing localized posts scheduled; 15-minute review responder active; Geo-Grid monitored weekly.
 
 ---
 
