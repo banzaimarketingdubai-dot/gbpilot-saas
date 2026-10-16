@@ -18,7 +18,8 @@ import {
   Menu,
   X,
   Compass,
-  ArrowUpRight
+  ArrowUpRight,
+  Users
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -77,6 +78,12 @@ export default function AdminLayout({
       href: '/admin/sentinel',
       icon: ShieldAlert,
       badge: 'Shield',
+    },
+    {
+      name: 'Team & Roles',
+      href: '/admin/users',
+      icon: Users,
+      badge: 'RBAC',
     },
     {
       name: 'Settings & Keys',

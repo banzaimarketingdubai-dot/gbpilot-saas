@@ -20,11 +20,14 @@ import {
   Sparkles,
   Trash2,
   Bell,
-  Unlink
+  Unlink,
+  Crown,
+  Users
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { getSubscription, SubscriptionState } from '@/lib/subscription';
+import { isSuperAdmin, getUserRole, ROLE_DEFINITIONS } from '@/lib/roles';
 
 interface BusinessProfile {
   id?: string;
@@ -313,12 +316,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const isUserSuperAdmin = currentUser ? isSuperAdmin(currentUser.email) : false;
+
   const navItems: { id: string; label: string; href: string; icon: any; badge?: string }[] = [
     { id: 'nav-dashboard', label: '⚡ Cockpit', href: '/dashboard', icon: Zap },
     { id: 'nav-radar', label: '🎯 Radar', href: '/geo-grid', icon: Target },
     { id: 'nav-shield', label: '🛡️ Shield & Reviews', href: '/reviews-posts', icon: ShieldCheck },
     { id: 'nav-copilot', label: '🤖 Copilot', href: '/copilot', icon: Bot },
     { id: 'nav-b2b', label: '🇦🇪 Pricing', href: '/b2b', icon: Sparkles },
+    ...(isUserSuperAdmin ? [{ id: 'nav-admin', label: '👑 Admin', href: '/admin', icon: Crown, badge: 'ROOT' }] : []),
   ];
 
   const handleModeChange = (mode: 'OFF' | 'MANUAL_APPROVAL' | 'FULL_AUTOPILOT') => {
@@ -591,36 +597,94 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-2 bg-slate-50 hover:bg-white border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs transition-colors shadow-sm"
+                className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-xl text-xs transition-colors shadow-sm ${
+                  isUserSuperAdmin
+                    ? 'bg-amber-50 hover:bg-amber-100/70 border border-amber-300 text-amber-950 font-bold'
+                    : 'bg-slate-50 hover:bg-white border border-slate-200 text-slate-800'
+                }`}
               >
-                <div className="w-5 h-5 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-[10px]">
-                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'G'}
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] text-white ${
+                    isUserSuperAdmin ? 'bg-amber-500' : 'bg-google-blue'
+                  }`}
+                >
+                  {isUserSuperAdmin ? (
+                    <Crown className="w-3 h-3 text-white fill-white" />
+                  ) : currentUser.name ? (
+                    currentUser.name.charAt(0).toUpperCase()
+                  ) : (
+                    'G'
+                  )}
                 </div>
-                <span className="font-semibold text-slate-800 max-w-[110px] truncate hidden sm:inline">
+                <span className="font-semibold max-w-[110px] truncate hidden sm:inline">
                   {currentUser.email.split('@')[0]}
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                {isUserSuperAdmin ? (
+                  <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded uppercase">
+                    ROOT
+                  </span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                )}
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 p-1.5 shadow-material-2 z-50 text-xs">
-                  <div className="px-3 py-2 border-b border-slate-100">
-                    <div className="font-bold text-slate-900 truncate">{currentUser.email}</div>
-                    <div className="flex items-center justify-between text-[10px] text-emerald-600 font-bold mt-0.5">
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-slate-200 p-2 shadow-material-3 z-50 text-xs animate-in zoom-in-95 duration-150">
+                  <div className="px-3 py-2 border-b border-slate-100 space-y-1">
+                    <div className="font-bold text-slate-900 truncate flex items-center justify-between">
+                      <span className="truncate">{currentUser.email}</span>
+                      {isUserSuperAdmin && (
+                        <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase shrink-0">
+                          SUPERADMIN
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-emerald-600 font-bold">
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         <span>Google Business: Owner</span>
                       </div>
-                      <Link
-                        href="/b2b"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="text-google-blue hover:underline bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200"
+                      <span
+                        className={
+                          isUserSuperAdmin
+                            ? 'text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 font-bold'
+                            : 'text-google-blue bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200 font-semibold'
+                        }
                       >
-                        {subscription.plan.name}
-                      </Link>
+                        {isUserSuperAdmin ? '👑 Superadmin Unlimited' : subscription.plan.name}
+                      </span>
                     </div>
                   </div>
+
+                  {/* Superadmin Quick Access Banner */}
+                  {isUserSuperAdmin && (
+                    <div className="p-1 space-y-1 border-b border-slate-100 pb-2">
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="w-full text-left px-3 py-2 rounded-xl font-bold flex items-center justify-between text-xs bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/20 hover:brightness-105 transition-all"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-4 h-4 fill-slate-950" />
+                          <span>Master Admin Panel</span>
+                        </div>
+                        <span className="text-[10px] bg-slate-950 text-amber-400 font-black px-1.5 py-0.5 rounded uppercase">
+                          OPEN
+                        </span>
+                      </Link>
+
+                      <Link
+                        href="/admin/users"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="w-full text-left px-3 py-1.5 hover:bg-amber-50 rounded-lg font-bold text-amber-900 flex items-center gap-2 text-[11px]"
+                      >
+                        <Users className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Назначить роли пользователям</span>
+                      </Link>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);

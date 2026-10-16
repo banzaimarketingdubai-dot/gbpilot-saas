@@ -94,6 +94,29 @@ export function getSubscription(): SubscriptionState {
     };
   }
 
+  // Check if active user is Root Superadmin
+  try {
+    const userStr = localStorage.getItem('gbpilot_user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      if (u?.email && u.email.trim().toLowerCase() === '0451611@gmail.com') {
+        return {
+          planId: 'AGENCY',
+          plan: {
+            ...PLANS.AGENCY,
+            name: '👑 Superadmin Unlimited',
+            locationLimit: 999,
+            isPro: true,
+          },
+          isPro: true,
+          isTrial: false,
+          trialDaysLeft: 0,
+          locationLimit: 999
+        };
+      }
+    }
+  } catch (e) {}
+
   const savedPlanId = (localStorage.getItem('gbpilot_plan') as PlanId) || null;
   const legacyProActivated = localStorage.getItem('gbpilot_pro_activated') === 'true';
   const legacyIsPro = localStorage.getItem('gbpilot_is_pro') === 'true';

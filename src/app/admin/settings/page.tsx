@@ -169,7 +169,15 @@ export default function AdminSettingsPage() {
             <Users className="w-4 h-4 text-indigo-400" />
             <h3 className="font-bold text-base text-white">Role-Based Access Control (RBAC)</h3>
           </div>
-          <span className="text-xs text-slate-400">JTBD Governance Matrix</span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/users"
+              className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Управление ролями и командой →</span>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
