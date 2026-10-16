@@ -43,7 +43,7 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
-import { getSubscription, setSubscriptionPlan, activateTrial, SubscriptionState } from '@/lib/subscription';
+import { getSubscription, setSubscriptionPlan, activateTrial, SubscriptionState, PlanId } from '@/lib/subscription';
 
 const DEFAULT_VENUE_PHOTO = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80';
 
@@ -200,6 +200,14 @@ export default function DashboardCockpitPage() {
       const savedDubaiMode = localStorage.getItem('gbpilot_dubai_mode') as any;
       if (savedDubaiMode) {
         setDubaiSmartMode(savedDubaiMode);
+      }
+
+      // 4. Check for Creem Payment Return
+      if (urlParams.get('payment') === 'success') {
+        const planParam = (urlParams.get('plan') as PlanId) || 'PRO_GROWTH';
+        setSubscriptionPlan(planParam);
+        showToast('🎉 Оплата через Creem.io успешно подтверждена! Тариф активирован.');
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
 
       const storedActive = localStorage.getItem('gbpilot_active_profile');

@@ -46,11 +46,40 @@ export default function B2BLandingPage() {
   // Pricing State
   const [currency, setCurrency] = useState<'AED' | 'USD'>('AED');
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [pricingToast, setPricingToast] = useState<string | null>(null);
 
-  const handleSelectPlan = (planId: PlanId) => {
+  const handleSelectPlan = async (planId: PlanId) => {
+    if (planId === 'FREE_SCOUT') {
+      setSubscriptionPlan(planId);
+      setPricingToast(`🎉 Free Scout activated! Redirecting to Cockpit...`);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
+      return;
+    }
+
+    setIsCheckoutLoading(true);
+    setPricingToast(`⏳ Переход к безопасной оплате Creem.io...`);
+    try {
+      const res = await fetch('/api/v1/checkout/creem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId })
+      });
+      const data = await res.json();
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+    } catch (e) {
+      console.error('Creem checkout redirect failed:', e);
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+
     setSubscriptionPlan(planId);
-    setPricingToast(`🎉 ${planId === 'FREE_SCOUT' ? 'Free Scout' : planId === 'STARTER' ? 'Starter Plan' : planId === 'PRO_GROWTH' ? 'Growth / Pro Plan' : 'Agency Plan'} activated! Redirecting to Cockpit...`);
+    setPricingToast(`🎉 ${planId === 'STARTER' ? 'Starter Plan' : planId === 'PRO_GROWTH' ? 'Growth / Pro Plan' : 'Agency Plan'} activated! Redirecting to Cockpit...`);
     setTimeout(() => {
       router.push('/dashboard');
     }, 1200);
