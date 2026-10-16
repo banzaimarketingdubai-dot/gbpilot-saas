@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (accessToken) {
       try {
         const client = new GoogleBusinessProfileClient(accessToken);
-        locationData = await client.getLocationDetails(locationName || 'locations/loc_artisan_marina');
+        locationData = await client.getLocationDetails(locationName || '');
       } catch (e) {
         console.warn('Using simulated location data for audit:', e);
       }

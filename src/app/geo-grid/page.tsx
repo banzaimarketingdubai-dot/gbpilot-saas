@@ -71,38 +71,7 @@ export interface KeywordPill {
   isCustom?: boolean;
 }
 
-const DEMO_COMPETITORS: CompetitorComparison[] = [
-  {
-    name: 'Top Ranked Local Leader',
-    rating: 4.8,
-    reviewsCount: 184,
-    reviewVelocityPerWeek: 8,
-    priceLevel: '$$',
-    convenience: ['Dine-in', 'Takeout', 'Wheelchair Accessible'],
-    specialtyKeywords: ['specialty coffee', 'breakfast', 'fast service'],
-    diffScore: 'LEADER'
-  },
-  {
-    name: 'Neighborhood Challenger',
-    rating: 4.5,
-    reviewsCount: 112,
-    reviewVelocityPerWeek: 5,
-    priceLevel: '$$',
-    convenience: ['Takeout', 'Curbside Pickup'],
-    specialtyKeywords: ['fresh bakery', 'friendly staff', 'espresso'],
-    diffScore: 'CHALLENGER'
-  },
-  {
-    name: 'District Competitor',
-    rating: 4.2,
-    reviewsCount: 68,
-    reviewVelocityPerWeek: 2,
-    priceLevel: '$',
-    convenience: ['WiFi', 'Pet Friendly'],
-    specialtyKeywords: ['budget lunch', 'cold drinks'],
-    diffScore: 'LAGGING'
-  }
-];
+const DEMO_COMPETITORS: CompetitorComparison[] = [];
 
 const isPlaceholderCategory = (cat?: string): boolean => {
   if (!cat || typeof cat !== 'string') return true;

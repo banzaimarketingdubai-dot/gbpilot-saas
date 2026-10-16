@@ -83,37 +83,7 @@ export default function ShieldReviewsPage() {
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
 
   // Tab 2: Profile Defense Log state
-  const [defenseLogs, setDefenseLogs] = useState<DefenseLogItem[]>([
-    {
-      id: 'threat-1',
-      timestamp: 'Today, 09:14 AM',
-      threatType: 'HOURS_TAMPER',
-      title: 'Malicious hours change detected ("Closed on Friday")',
-      description: 'Competitor suggestion attempted to mark venue closed during peak hours. Intercepted and reverted via Google API.',
-      status: 'REVERTED',
-      revertDuration: 'Reverted in 3 mins'
-    },
-    {
-      id: 'threat-2',
-      timestamp: 'Yesterday, 04:32 PM',
-      threatType: 'PHONE_OVERWRITE',
-      title: 'Competitor phone number overwrite attempt',
-      description: 'Public edit submitted replacement customer service phone number. Sentinel Guard rejected unauthorized edit.',
-      status: 'BLOCKED',
-      revertDuration: 'Blocked in 45 secs'
-    },
-    {
-      id: 'threat-3',
-      timestamp: 'Oct 14, 11:20 AM',
-      threatType: 'SPAM_REVIEW',
-      title: 'Suspicious 1-Star Review Detected (Competitor Pattern)',
-      description: 'Unverified profile with 0 prior local activity posted generic negative rating without transaction details.',
-      status: 'FLAGGED',
-      revertDuration: 'Dossier ready for submission',
-      reviewAuthor: 'Anonymous User',
-      reviewText: 'Terrible place, avoid at all costs.'
-    }
-  ]);
+  const [defenseLogs, setDefenseLogs] = useState<DefenseLogItem[]>([]);
 
   // Review Takedown Modal & Quota state (PLG Monetization)
   const [isTakedownModalOpen, setIsTakedownModalOpen] = useState(false);
@@ -587,9 +557,13 @@ export default function ShieldReviewsPage() {
               {filteredReviews.length === 0 ? (
                 <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-2">
                   <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                  <h3 className="font-bold text-slate-900 text-sm">All Customer Reviews Addressed</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    {realReviews.length === 0 ? 'No Google Maps Reviews Synced Yet' : 'All Customer Reviews Addressed'}
+                  </h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    No unreplied reviews matching your current filter. Your Google Business Profile review response rate is optimal.
+                    {realReviews.length === 0
+                      ? 'Connect your Google Business Profile or click Refresh above to pull the latest reviews directly from Google Maps.'
+                      : 'No unreplied reviews matching your current filter. Your Google Business Profile review response rate is optimal.'}
                   </p>
                 </div>
               ) : (
@@ -880,11 +854,22 @@ export default function ShieldReviewsPage() {
                   <AlertOctagon className="w-4 h-4 text-rose-600" />
                   <span>Intercepted Threats Timeline</span>
                 </h3>
-                <span className="text-xs text-slate-400 font-medium">3 threats blocked this week</span>
+                <span className="text-xs text-slate-400 font-medium">
+                  {defenseLogs.length > 0 ? `${defenseLogs.length} threats recorded` : '0 threats detected'}
+                </span>
               </div>
 
               <div className="divide-y divide-slate-100">
-                {defenseLogs.map((log) => (
+                {defenseLogs.length === 0 ? (
+                  <div className="py-12 text-center space-y-2">
+                    <ShieldCheck className="w-10 h-10 text-emerald-500 mx-auto opacity-80" />
+                    <h4 className="font-bold text-slate-800 text-sm">No Unauthorized Edits or Security Threats Recorded</h4>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Your venue’s Name, Address, Phone, and Operating Schedule are monitored 24/7 by Sentinel Guard. Any unauthorized competitor suggestions or malicious edits intercepted via Google API will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  defenseLogs.map((log) => (
                   <div key={log.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="space-y-1 max-w-2xl">
                       <div className="flex items-center gap-2">
@@ -918,7 +903,7 @@ export default function ShieldReviewsPage() {
                       )}
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
 

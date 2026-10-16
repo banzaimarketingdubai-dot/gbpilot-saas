@@ -18,48 +18,13 @@ import {
 import Link from 'next/link';
 
 export default function OutreachPage() {
-  const [searchLocation, setSearchLocation] = useState('Sector 4, New York');
-  const [category, setCategory] = useState('Bakeries & Cafes');
+  const [searchLocation, setSearchLocation] = useState('');
+  const [category, setCategory] = useState('');
   const [showGifModal, setShowGifModal] = useState(false);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
-
-  const mockLeads = [
-    {
-      id: 'lead-1',
-      name: 'Central District Bakery',
-      address: '102 Central Ave, NY',
-      rating: 4.2,
-      reviews: 34,
-      isUnverified: true,
-      missingPhotos: true,
-      missingWebsite: false,
-      healthScore: 58
-    },
-    {
-      id: 'lead-2',
-      name: 'Downtown Espresso Corner',
-      address: '408 Park Ave, NY',
-      rating: 3.9,
-      reviews: 18,
-      isUnverified: false,
-      missingPhotos: true,
-      missingWebsite: true,
-      healthScore: 44
-    },
-    {
-      id: 'lead-3',
-      name: 'Broadway Pastry Shop',
-      address: '612 Broadway, NY',
-      rating: 4.0,
-      reviews: 52,
-      isUnverified: false,
-      missingPhotos: false,
-      missingWebsite: true,
-      healthScore: 61
-    }
-  ];
+  const [leads, setLeads] = useState<any[]>([]);
 
   const handleGenerateTeaser = (leadId: string) => {
     const url = `${window.location.origin}/audit/${leadId}`;
@@ -136,7 +101,7 @@ export default function OutreachPage() {
         {/* Lead Finder Table */}
         <div className="material-card p-6 bg-white space-y-4">
           <div className="flex items-center justify-between border-b border-google-border-light pb-3">
-            <h3 className="font-bold text-google-text-primary text-sm">Discovered Prospect Leads ({mockLeads.length})</h3>
+            <h3 className="font-bold text-google-text-primary text-sm">Discovered Prospect Leads ({leads.length})</h3>
             <span className="text-xs text-google-text-tertiary">Sorted by Vulnerability Score</span>
           </div>
 
@@ -153,7 +118,16 @@ export default function OutreachPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-google-border-light text-google-text-primary">
-                {mockLeads.map((lead) => (
+                {leads.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      <Building2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                      <div className="font-semibold text-slate-600">No leads discovered yet</div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Enter a location and category above and click "Find Local Leads".</p>
+                    </td>
+                  </tr>
+                ) : (
+                  leads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-google-bg transition-colors">
                     <td className="py-3 px-3">
                       <div>
@@ -212,7 +186,7 @@ export default function OutreachPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>

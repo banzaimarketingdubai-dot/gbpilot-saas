@@ -3,7 +3,7 @@ import { runGEOBenchmark } from '@/lib/geo/sovEngine';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const businessName = searchParams.get('businessName') || 'Artisan Specialty Cafe & Roastery';
+  const businessName = searchParams.get('businessName') || '';
 
   const report = runGEOBenchmark(businessName);
   return NextResponse.json({
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const businessName = body.businessName || 'Artisan Specialty Cafe & Roastery';
+    const businessName = body.businessName || '';
     const report = runGEOBenchmark(businessName);
 
     return NextResponse.json({

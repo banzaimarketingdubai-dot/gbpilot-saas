@@ -19,8 +19,8 @@ export async function GET(request: Request) {
     const tokens = await exchangeCodeForTokens(code);
     const client = new GoogleBusinessProfileClient(tokens.accessToken);
     const accounts = await client.listAccounts();
-    const primaryAccount = accounts[0] || { name: 'accounts/mock_101', accountName: 'Artisan Business' };
-    const locations = await client.listLocations(primaryAccount.name);
+    const primaryAccount = accounts[0];
+    const locations = primaryAccount ? await client.listLocations(primaryAccount.name) : [];
 
     // Return JSON or redirect with secure context
     return NextResponse.json({

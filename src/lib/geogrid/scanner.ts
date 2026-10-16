@@ -36,38 +36,7 @@ export interface GeoGridScanResult {
   }>;
 }
 
-const MOCK_COMPETITORS: CompetitorItem[] = [
-  {
-    name: 'Cafe Luna & Roastery',
-    rank: 1,
-    rating: 4.8,
-    reviewsCount: 412,
-    distanceKm: 0.3,
-    photoUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=120',
-    moat: 'High photo count (180+ photos) and strong local citations.',
-    weakness: 'Slow review reply velocity (> 48 hrs) and zero holiday hour declarations.'
-  },
-  {
-    name: 'Espresso Lab Marina',
-    rank: 2,
-    rating: 4.7,
-    reviewsCount: 289,
-    distanceKm: 0.6,
-    photoUrl: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=120',
-    moat: 'High review velocity (+8/week).',
-    weakness: 'Lacks breakfast menu catalog in Google Knowledge Panel.'
-  },
-  {
-    name: 'The Daily Grind Cafe',
-    rank: 3,
-    rating: 4.6,
-    reviewsCount: 198,
-    distanceKm: 0.9,
-    photoUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=120',
-    moat: 'Close to transit station.',
-    weakness: 'Lower overall rating (4.6) and missing outdoor seating attribute.'
-  }
-];
+const MOCK_COMPETITORS: CompetitorItem[] = [];
 
 /**
  * Runs spatial scan across the grid matrix for a specific ranking keyword.
@@ -104,11 +73,11 @@ export function runGeoGridScan(
     const statusColor: 'GREEN' | 'YELLOW' | 'RED' =
       calculatedRank <= 3 ? 'GREEN' : calculatedRank <= 8 ? 'YELLOW' : 'RED';
 
-    const topComp = calculatedRank === 1 ? 'Your Business (#1)' : MOCK_COMPETITORS[0].name;
+    const topComp = calculatedRank === 1 ? 'Your Business (#1)' : '—';
 
     let overtakeAdvice = 'You hold top Local 3-Pack placement here! Maintain photo & review frequency.';
     if (calculatedRank === 2 || calculatedRank === 3) {
-      overtakeAdvice = `Publish 1 geotagged post targeting "${keyword}" to overtake #1 placement from ${MOCK_COMPETITORS[0].name}.`;
+      overtakeAdvice = `Publish 1 geotagged post targeting "${keyword}" to strengthen Local 3-Pack placement.`;
     } else if (calculatedRank > 3) {
       overtakeAdvice = `Inject area LSI keywords into upcoming review replies to bridge the spatial distance gap.`;
     }
@@ -118,7 +87,7 @@ export function runGeoGridScan(
       rank: calculatedRank,
       statusColor,
       topCompetitor: topComp,
-      topCompetitors: MOCK_COMPETITORS,
+      topCompetitors: [],
       overtakeAdvice
     };
   });
@@ -135,19 +104,6 @@ export function runGeoGridScan(
     averageRank,
     top3PackSharePercent,
     nodes,
-    competitorsAggregated: [
-      {
-        name: 'Cafe Luna & Roastery',
-        nodesDominating: Math.max(1, nodes.length - top3Count),
-        avgRank: 1.8,
-        overtakeStrategy: 'Deploy 2 weekly geotagged posts with exact coordinates and answer pending reviews within 15 mins.'
-      },
-      {
-        name: 'Espresso Lab Marina',
-        nodesDominating: 1,
-        avgRank: 2.5,
-        overtakeStrategy: 'Highlight breakfast menu items and specialty single-origin attributes.'
-      }
-    ]
+    competitorsAggregated: []
   };
 }

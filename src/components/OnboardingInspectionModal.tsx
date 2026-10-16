@@ -53,8 +53,8 @@ interface OnboardingInspectionModalProps {
 export function OnboardingInspectionModal({
   isOpen,
   onClose,
-  businessName = 'Artisan Specialty Cafe & Roastery',
-  businessAddress = '102 Marina Promenade, Dubai, UAE',
+  businessName = '—',
+  businessAddress = '—',
   onComplete
 }: OnboardingInspectionModalProps) {
   // Flow states: 'SCANNING' | 'REPORT' | 'APPLYING' | 'SUCCESS'
@@ -85,8 +85,8 @@ export function OnboardingInspectionModal({
       categoryTitle: 'Primary Category & SEO Description (Profile Bio)',
       gapTag: 'CRITICAL_FIX',
       problemText: 'Current description is short and lacks high-intent local search keywords. Google cannot match your listing to local search intent.',
-      beforeValue: 'Cozy neighborhood cafe serving coffee and food daily.',
-      afterAiValue: 'Specialty coffee roastery and artisan breakfast cafe located 2 mins from beach. Serving handcrafted espresso, fresh organic pastries, single-origin pour-overs, and weekend brunch with outdoor seating.',
+      beforeValue: 'Generic short description lacking high-intent local search keywords.',
+      afterAiValue: `Verified Google Business Profile description for ${businessName !== '—' ? businessName : 'your venue'} optimized with high-intent local keywords, core services, and operating highlights.`,
       impactMetric: '+4 Local Search Keywords Indexed',
       applied: false
     },
@@ -135,8 +135,8 @@ export function OnboardingInspectionModal({
       categoryTitle: 'Dubai Precision Geocoding (10-Digit Makani & Tower Landmark)',
       gapTag: 'CRITICAL_FIX',
       problemText: 'Profile lacks a 10-digit Dubai Makani Number and Tower/Cluster landmark. Google Maps and Uber drop pins on the highway instead of the lobby.',
-      beforeValue: '102 Marina Promenade (Ambiguous Street Pin)',
-      afterAiValue: 'Makani #31489 89201 • Cluster P, Dubai Marina Promenade • Centroid (25.0805° N, 55.1403° E). Exact lobby pedestrian entrance geotagged.',
+      beforeValue: businessAddress !== '—' ? `${businessAddress} (Ambiguous Street Pin)` : 'Ambiguous Street Pin (Missing Makani)',
+      afterAiValue: 'Verified 10-Digit Makani Number & Entrance Centroid Geotagged for Google Maps and direct pedestrian routing.',
       impactMetric: 'Eliminates 100% of Delivery & Tourist Dropoff Errors',
       applied: false
     }

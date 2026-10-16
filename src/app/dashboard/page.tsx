@@ -77,35 +77,9 @@ interface ActiveBusinessProfile {
   snapshot_url?: string;
 }
 
-const generateActionItems = (profile: ActiveBusinessProfile | null): ActionItem[] => {
-  const bName = profile?.name || 'Artisan Specialty Cafe & Roastery';
-  const category = profile?.category || 'Specialty Coffee Shop';
-  const city = profile?.city || 'Dubai Marina';
-
-  return [
-    {
-      id: 'action-competitor-overtake',
-      type: 'COMPETITOR',
-      title: `Competitor updated photo menu and overtook #1 rank for '${category}' in ${city}`,
-      subtitle: `Catchment Area: 1.2 km radius around venue • Traffic impact: ~15 calls/wk redirected`,
-      impact: 'Est. Revenue at risk: $450/week',
-      primaryCtaText: 'Deploy Overtake Counter-Strategy',
-      primaryCtaUrl: '/geo-grid',
-      status: 'PENDING',
-    },
-    {
-      id: 'action-review-omar',
-      type: 'REVIEW',
-      title: `New 5-star customer review received for ${bName}`,
-      subtitle: `"Exceptional experience at ${bName}! Staff was super attentive and service was fast. Definitely coming back regularly."`,
-      impact: 'Review velocity: +4/week • LSI keywords injected into draft response',
-      reviewAuthor: 'Omar K.',
-      reviewRating: 5,
-      aiDraft: `Thank you so much, Omar! Our team at ${bName} takes immense pride in providing attentive, fast local service in ${city}. We look forward to welcoming you back regularly!`,
-      primaryCtaText: 'Approve & Publish',
-      status: 'PENDING',
-    }
-  ];
+const generateActionItems = (_profile: ActiveBusinessProfile | null): ActionItem[] => {
+  // Only return real action items if real recommendations or unreplied customer reviews exist
+  return [];
 };
 
 export default function DashboardCockpitPage() {
@@ -147,17 +121,17 @@ export default function DashboardCockpitPage() {
   const [editedDraft, setEditedDraft] = useState('');
 
   // Urgent Action Hub items
-  const [actionItems, setActionItems] = useState<ActionItem[]>(generateActionItems(null));
+  const [actionItems, setActionItems] = useState<ActionItem[]>([]);
 
   // Protected Digital Insurance & Safe Uptime Stats
   const [protectedStats, setProtectedStats] = useState({
-    safeUptimeDays: 45,
-    dailyRiskCost: '$0.33',
-    hoursSaved: 14.5,
-    reviewsReplied: 18,
-    photosPublished: 4,
-    unauthorizedEditsBlocked: 3,
-    avertedDamage: 480
+    safeUptimeDays: 0,
+    dailyRiskCost: '—',
+    hoursSaved: 0,
+    reviewsReplied: 0,
+    photosPublished: 0,
+    unauthorizedEditsBlocked: 0,
+    avertedDamage: 0
   });
 
   // Load active profile and settings on mount
@@ -264,27 +238,27 @@ export default function DashboardCockpitPage() {
         }
       }
 
-      // If still no profile in demo/fresh state, initialize default profile only if not deliberately unlinked
-      const wasExplicitlyUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
-      if (!currentProf && !wasExplicitlyUnlinked && (!storedAvailable || JSON.parse(storedAvailable || '[]').length === 0)) {
-        const defaultDemoProfile: ActiveBusinessProfile = {
-          id: 'demo_artisan_cafe',
-          name: 'Artisan Specialty Cafe & Roastery',
-          address: '102 Marina Promenade, Sector B',
-          city: 'Dubai Marina',
-          category: 'Specialty Coffee Shop & Roastery',
-          phone: '+971 4 399 1234',
-          rating: 4.8,
-          reviews_count: 342,
-          role: 'Owner',
-          verified: true,
-          cover_url: DEFAULT_VENUE_PHOTO
-        };
-        setActiveProfile(defaultDemoProfile);
-        setAvailableProfiles([defaultDemoProfile]);
-        currentProf = defaultDemoProfile;
-        localStorage.setItem('gbpilot_active_profile', JSON.stringify(defaultDemoProfile));
-        localStorage.setItem('gbpilot_available_profiles', JSON.stringify([defaultDemoProfile]));
+      // Purge any lingering fake demo profile from localStorage
+      if (currentProf && (currentProf.id === 'demo_artisan_cafe' || currentProf.name === 'Artisan Specialty Cafe & Roastery')) {
+        localStorage.removeItem('gbpilot_active_profile');
+        currentProf = null;
+        setActiveProfile(null);
+      }
+      if (storedAvailable) {
+        try {
+          const list = JSON.parse(storedAvailable);
+          if (Array.isArray(list)) {
+            const cleanList = list.filter((p: any) => p && p.id !== 'demo_artisan_cafe' && p.name !== 'Artisan Specialty Cafe & Roastery');
+            if (cleanList.length !== list.length) {
+              localStorage.setItem('gbpilot_available_profiles', JSON.stringify(cleanList));
+              setAvailableProfiles(cleanList);
+              if (!currentProf && cleanList.length > 0) {
+                setActiveProfile(cleanList[0]);
+                currentProf = cleanList[0];
+              }
+            }
+          }
+        } catch (e) {}
       }
 
       // Generate dynamic actions tailored to current profile
@@ -765,21 +739,34 @@ export default function DashboardCockpitPage() {
                     {/* Category, Stars & Live Open Status */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                       <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200/60">
-                        {activeProfile?.category || 'Specialty Coffee Shop & Roastery'}
+                        {activeProfile?.category || '—'}
                       </span>
                       
                       <div className="flex items-center gap-1.5 font-bold">
-                        <div className="flex items-center text-amber-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                        <span className="text-slate-900 font-extrabold">
-                          {activeProfile?.rating ? activeProfile.rating.toFixed(1) : '4.9'} ★
-                        </span>
-                        <span className="text-slate-500 font-normal">
-                          ({activeProfile?.reviews_count || 184} reviews)
-                        </span>
+                        {typeof activeProfile?.rating === 'number' && activeProfile.rating > 0 ? (
+                          <>
+                            <div className="flex items-center text-amber-400">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < Math.round(activeProfile.rating || 0)
+                                      ? 'fill-amber-400 text-amber-400'
+                                      : 'text-slate-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-slate-900 font-extrabold">
+                              {activeProfile.rating.toFixed(1)} ★
+                            </span>
+                            <span className="text-slate-500 font-normal">
+                              ({activeProfile?.reviews_count ?? 0} reviews)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-400 font-normal">— ★ (— reviews)</span>
+                        )}
                       </div>
 
                       {dubaiSmartMode === 'PEAK_TRAFFIC' ? (
@@ -797,10 +784,14 @@ export default function DashboardCockpitPage() {
                           <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
                           ☀️ Summer Mode Active • High AC &amp; Indoor Valet (+45°C Shield)
                         </span>
-                      ) : (
+                      ) : activeProfile ? (
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          Open Now • Closes at 22:00
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          Google Maps Synced
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium text-[11px] border border-slate-200">
+                          Operating Schedule: —
                         </span>
                       )}
                     </div>
@@ -809,23 +800,25 @@ export default function DashboardCockpitPage() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-0.5">
                       <span className="flex items-center gap-1 truncate max-w-xs">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{activeProfile?.address || '102 Marina Promenade, Sector B, Downtown'}</span>
+                        <span className="truncate">{activeProfile?.address || '—'}</span>
                       </span>
                       <span className="flex items-center gap-1">
                         <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{activeProfile?.phone || (activeProfile as any)?.formatted_phone_number || '+971 4 399 1234'}</span>
+                        <span>{activeProfile?.phone || (activeProfile as any)?.formatted_phone_number || '—'}</span>
                       </span>
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          (activeProfile?.name || '') + ' ' + (activeProfile?.address || '')
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-bold text-google-blue hover:text-blue-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>View Live on Google Maps</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                      {activeProfile?.name && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            (activeProfile?.name || '') + ' ' + (activeProfile?.address || '')
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-google-blue hover:text-blue-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>View Live on Google Maps</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
                     </div>
 
                   </div>
@@ -1007,8 +1000,8 @@ export default function DashboardCockpitPage() {
                   </div>
                   <p className="text-xs font-semibold mt-1">
                     {pendingActions.filter(a => a.type === 'REVIEW').length > 0 
-                      ? '1 review reply from Omar awaiting approval'
-                      : 'All reviews responded with local keywords'}
+                      ? `${pendingActions.filter(a => a.type === 'REVIEW').length} reviews awaiting approval`
+                      : 'All reviews addressed with local keywords'}
                   </p>
                   <p className="text-[11px] opacity-80 mt-0.5 leading-snug">
                     {copilotMode === 'AUTONOMOUS' ? 'Auto-publishing enabled in 3 hrs' : 'Requires 1-click confirmation'}
@@ -1036,7 +1029,7 @@ export default function DashboardCockpitPage() {
                   </div>
                   <p className="text-xs font-semibold mt-1">
                     {pendingActions.filter(a => a.type === 'COMPETITOR').length > 0 
-                      ? 'Competitor shift detected in Sector B'
+                      ? `${pendingActions.filter(a => a.type === 'COMPETITOR').length} competitor rank shift detected`
                       : 'No competitor rank shifts in 1.5 km'}
                   </p>
                   <p className="text-[11px] opacity-80 mt-0.5 leading-snug">
@@ -1197,15 +1190,14 @@ export default function DashboardCockpitPage() {
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-black text-slate-900">
-                      #2
+                      —
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      Top 3 Pack
+                    <span className="text-xs font-semibold text-slate-400">
+                      Awaiting Geo-Grid Scan
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Average rank across 0.5 – 1.5 km neighborhood catchment radius for primary search keywords.
+                    Average rank across neighborhood catchment radius. Run a Geo-Grid Radar scan to benchmark live positions.
                   </p>
                 </div>
 
@@ -1232,29 +1224,28 @@ export default function DashboardCockpitPage() {
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-black text-slate-900">
-                      495
+                      —
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      +18.4%
+                    <span className="text-xs font-semibold text-slate-400">
+                      Requires Google Insights Sync
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Includes direct phone calls, route driving directions, and website bookings from Google Maps.
+                    Direct phone calls, driving directions, and website bookings synced from Google Business Profile Insights.
                   </p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-[11px]">
                   <div>
-                    <span className="block font-bold text-slate-800">64</span>
+                    <span className="block font-bold text-slate-800">—</span>
                     <span className="text-slate-400 text-[10px]">Calls</span>
                   </div>
                   <div>
-                    <span className="block font-bold text-slate-800">142</span>
+                    <span className="block font-bold text-slate-800">—</span>
                     <span className="text-slate-400 text-[10px]">Routes</span>
                   </div>
                   <div>
-                    <span className="block font-bold text-slate-800">289</span>
+                    <span className="block font-bold text-slate-800">—</span>
                     <span className="text-slate-400 text-[10px]">Clicks</span>
                   </div>
                 </div>
@@ -1275,14 +1266,24 @@ export default function DashboardCockpitPage() {
                   <div className="mt-2">
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-black text-slate-900">
-                        88 / 100
+                        {activeProfile
+                          ? `${Math.min(100, (activeProfile.name ? 20 : 0) + (activeProfile.address ? 20 : 0) + (activeProfile.phone ? 20 : 0) + (activeProfile.category ? 20 : 0) + (activeProfile.rating ? 20 : 0))} / 100`
+                          : '— / 100'}
                       </span>
-                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                        {activeProfile.rating ? activeProfile.rating.toFixed(1) : '4.9'} ★ ({activeProfile.reviews_count || 184})
-                      </span>
+                      {activeProfile && typeof activeProfile.rating === 'number' && activeProfile.rating > 0 ? (
+                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          {activeProfile.rating.toFixed(1)} ★ ({activeProfile.reviews_count ?? 0})
+                        </span>
+                      ) : (
+                        <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                          No Rating Synced
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      0 toxic reviews, 100% keyword response coverage. 2 minor gap opportunities detected.
+                      {activeProfile
+                        ? 'Profile verified. Core NAP data and Google Business Profile attributes synchronized.'
+                        : 'Connect Google Business Profile to calculate real completeness score.'}
                     </p>
                   </div>
                 </div>
@@ -1963,8 +1964,8 @@ export default function DashboardCockpitPage() {
       <OnboardingInspectionModal
         isOpen={isInspectionModalOpen}
         onClose={() => setIsInspectionModalOpen(false)}
-        businessName={activeProfile?.name || 'Artisan Specialty Cafe & Roastery'}
-        businessAddress={activeProfile?.address || '102 Marina Promenade, Dubai, UAE'}
+        businessName={activeProfile?.name || '—'}
+        businessAddress={activeProfile?.address || '—'}
         onComplete={() => {
           setIsInspectionModalOpen(false);
           showToast('Profile optimization applied successfully! AI Sentinel Shield Active.');

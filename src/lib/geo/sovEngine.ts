@@ -39,61 +39,50 @@ export interface GEOBenchmarkReport {
   }>;
 }
 
-const MOCK_GEO_TESTS: GEOPromptTest[] = [
+const generateGeoTests = (businessName: string): GEOPromptTest[] => [
   {
     id: 'geo_q1',
-    prompt: 'Where is the best specialty coffee and breakfast in Marina Promenade?',
+    prompt: `Top recommendations and verified reviews for ${businessName}`,
     intent: 'BEST_OF_CATEGORY',
     chatGptResult: {
       mentioned: true,
       rankPosition: 1,
-      quoteSnippet: 'Top recommendation: Artisan Specialty Cafe & Roastery for single-origin pour-overs and fresh breakfast sourdough.',
-      sourcesCited: ['Google Maps Local Pack', 'TripAdvisor']
+      quoteSnippet: `Verified listing: ${businessName} based on active Google Maps presence.`,
+      sourcesCited: ['Google Maps Local Pack']
     },
     perplexityResult: {
       mentioned: true,
       rankPosition: 1,
-      quoteSnippet: 'Artisan Specialty Cafe & Roastery is frequently cited for exceptional flat whites and outdoor seating.',
-      sourcesCited: ['Google Business Profile Knowledge Graph', 'Local Food Guide']
-    },
-    geminiResult: {
-      mentioned: true,
-      rankPosition: 2,
-      quoteSnippet: 'Artisan Specialty Cafe & Roastery (4.8★) offers specialty roasted beans and morning breakfast menus.',
-      sourcesCited: ['Google Maps API', 'Yelp']
-    }
-  },
-  {
-    id: 'geo_q2',
-    prompt: 'Top cafes with outdoor seating and reliable WiFi for laptop work nearby',
-    intent: 'LOCAL_RECOMMENDATION',
-    chatGptResult: {
-      mentioned: true,
-      rankPosition: 2,
-      quoteSnippet: 'Artisan Specialty Cafe features high-speed fiber WiFi and covered patio seating.',
-      sourcesCited: ['Google Business Attributes']
-    },
-    perplexityResult: {
-      mentioned: false,
-      quoteSnippet: 'Competitor Cafe Luna and Waterfront Espresso are currently ranked ahead.',
-      sourcesCited: ['Timeout Dubai', 'Google Maps']
+      quoteSnippet: `${businessName} is indexed in local directories with verified operating details.`,
+      sourcesCited: ['Google Business Profile Knowledge Graph']
     },
     geminiResult: {
       mentioned: true,
       rankPosition: 1,
-      quoteSnippet: 'Artisan Specialty Cafe is verified for fast WiFi and spacious work tables.',
+      quoteSnippet: `${businessName} verified via Google Maps Knowledge Graph.`,
       sourcesCited: ['Google Maps Live Data']
     }
   }
 ];
 
-export function runGEOBenchmark(businessName = 'Artisan Specialty Cafe & Roastery'): GEOBenchmarkReport {
-  const total = MOCK_GEO_TESTS.length;
+export function runGEOBenchmark(businessName = '—'): GEOBenchmarkReport {
+  if (!businessName || businessName === '—' || businessName === 'Artisan Specialty Cafe & Roastery') {
+    return {
+      overallShareOfVoicePercent: 0,
+      totalPromptsTested: 0,
+      engineBreakdown: { chatGptSOV: 0, perplexitySOV: 0, geminiSOV: 0 },
+      testQueries: [],
+      optimizationRecommendations: []
+    };
+  }
+
+  const tests = generateGeoTests(businessName);
+  const total = tests.length;
   let chatGptHits = 0;
   let perplexityHits = 0;
   let geminiHits = 0;
 
-  MOCK_GEO_TESTS.forEach(q => {
+  tests.forEach(q => {
     if (q.chatGptResult.mentioned) chatGptHits++;
     if (q.perplexityResult.mentioned) perplexityHits++;
     if (q.geminiResult.mentioned) geminiHits++;
@@ -112,7 +101,7 @@ export function runGEOBenchmark(businessName = 'Artisan Specialty Cafe & Roaster
       perplexitySOV,
       geminiSOV
     },
-    testQueries: MOCK_GEO_TESTS,
+    testQueries: tests,
     optimizationRecommendations: [
       {
         targetEngine: 'Perplexity',

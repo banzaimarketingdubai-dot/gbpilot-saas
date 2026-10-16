@@ -34,68 +34,7 @@ export interface NotificationItem {
   onAction?: () => void;
 }
 
-const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-1',
-    category: 'RANK_ALERT',
-    urgency: 'critical',
-    title: 'Competitor passed you at Main Crossroad',
-    impact: '-$380/wk projected walk-in revenue loss',
-    description: 'Nearest competitor updated photo menu and overtook #1 position for "breakfast cafe" within 300m radius.',
-    timestamp: '12m ago',
-    read: false,
-    actionLabel: 'Inspect Geo-Grid',
-    actionUrl: '/geo-grid'
-  },
-  {
-    id: 'notif-2',
-    category: 'REVIEW_ALERT',
-    urgency: 'high',
-    title: 'New 5★ review awaiting LSI response',
-    impact: '+14% local ranking boost signal',
-    description: 'Guest Omar left a 5★ review with dining photo. Semi-automated response prepared with local area keywords.',
-    timestamp: '35m ago',
-    read: false,
-    actionLabel: 'Review & Copy Reply',
-    actionUrl: '/reviews-posts'
-  },
-  {
-    id: 'notif-3',
-    category: 'SHIELD_ALERT',
-    urgency: 'resolved',
-    title: 'Malicious hours edit intercepted',
-    impact: '$1,800 weekend revenue protected',
-    description: 'Third-party user suggested "Closed on Friday". Defense Shield auto-reverted change in 3 mins and locked profile.',
-    timestamp: '2h ago',
-    read: false,
-    actionLabel: 'View Defense Dossier',
-    actionUrl: '/dashboard'
-  },
-  {
-    id: 'notif-4',
-    category: 'OPPORTUNITY',
-    urgency: 'medium',
-    title: 'Evening search surge approaching',
-    impact: '+45 projected walk-in requests',
-    description: 'Local searches for "Open Now" spike by 3.2x starting at 18:00. Shift Google Maps hours to capture top 3 placement.',
-    timestamp: '4h ago',
-    read: true,
-    actionLabel: 'Review Daily Plan',
-    actionUrl: '/dashboard'
-  },
-  {
-    id: 'notif-5',
-    category: 'PACING_ALERT',
-    urgency: 'low',
-    title: 'Weekly review velocity: 100% Safe',
-    impact: 'Zero Google spam filter risk',
-    description: '3 reviews collected this week against safe cap of 6/week. Pacing velocity is completely organic.',
-    timestamp: '1d ago',
-    read: true,
-    actionLabel: 'View Speedometer',
-    actionUrl: '/reviews-posts'
-  }
-];
+const DEFAULT_NOTIFICATIONS: NotificationItem[] = [];
 
 interface NotificationCenterProps {
   isOpen?: boolean;
@@ -126,16 +65,20 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setNotifications(parsed);
+          if (Array.isArray(parsed)) {
+            const clean = parsed.filter((n: any) => 
+              n && !['notif-1', 'notif-2', 'notif-3', 'notif-4', 'notif-5'].includes(n.id)
+            );
+            setNotifications(clean);
+            localStorage.setItem('gbpilot_notifications', JSON.stringify(clean));
             return;
           }
         } catch (e) {
           console.error('Failed to parse notifications from storage', e);
         }
       }
-      setNotifications(DEFAULT_NOTIFICATIONS);
-      localStorage.setItem('gbpilot_notifications', JSON.stringify(DEFAULT_NOTIFICATIONS));
+      setNotifications([]);
+      localStorage.setItem('gbpilot_notifications', JSON.stringify([]));
     }
   }, []);
 

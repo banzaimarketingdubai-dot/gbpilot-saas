@@ -44,46 +44,7 @@ interface DetectedBusiness {
   verified: boolean;
 }
 
-const DEFAULT_DEMO_BUSINESS: DetectedBusiness = {
-  id: 'demo_venue_1',
-  name: 'Artisan Specialty Cafe & Roastery',
-  address: '102 Marina Promenade, Sector B',
-  city: 'Dubai',
-  category: 'Specialty Coffee Shop & Roastery',
-  rating: 4.8,
-  reviews_count: 184,
-  cover_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
-  phone: '+971 4 399 1234',
-  verified: true
-};
-
-const SUGGESTED_VENUES: DetectedBusiness[] = [
-  DEFAULT_DEMO_BUSINESS,
-  {
-    id: 'demo_venue_2',
-    name: 'Al Safadi Lebanese Restaurant',
-    address: 'Sheikh Zayed Rd, Trade Centre 1',
-    city: 'Dubai',
-    category: 'Lebanese Restaurant & Grill',
-    rating: 4.6,
-    reviews_count: 2420,
-    cover_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
-    phone: '+971 600 500601',
-    verified: true
-  },
-  {
-    id: 'demo_venue_3',
-    name: 'Marina Dental & Aesthetic Clinic',
-    address: 'Marina Plaza, Floor 14',
-    city: 'Dubai',
-    category: 'Dental Clinic & Orthodontics',
-    rating: 4.9,
-    reviews_count: 312,
-    cover_url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80',
-    phone: '+971 4 456 7890',
-    verified: true
-  }
-];
+const SUGGESTED_VENUES: DetectedBusiness[] = [];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -94,7 +55,7 @@ export default function OnboardingPage() {
   // Search input: Business name OR Google Maps link
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [detectedBusiness, setDetectedBusiness] = useState<DetectedBusiness>(DEFAULT_DEMO_BUSINESS);
+  const [detectedBusiness, setDetectedBusiness] = useState<DetectedBusiness | null>(null);
   const [isMapsLinkDetected, setIsMapsLinkDetected] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -114,10 +75,18 @@ export default function OnboardingPage() {
     const q = searchQuery.trim().toLowerCase();
     if (q.includes('maps.google.') || q.includes('goo.gl/maps') || q.includes('/maps/place')) {
       setIsMapsLinkDetected(true);
-      // Extract pseudo-name from URL or set high-confidence venue
+      const rawPart = searchQuery.split('/place/')[1]?.split('/')[0]?.replace(/\+/g, ' ') || 'Connected Google Maps Venue';
       setDetectedBusiness({
-        ...DEFAULT_DEMO_BUSINESS,
-        name: searchQuery.split('/place/')[1]?.split('/')[0]?.replace(/\+/g, ' ') || 'Connected Google Maps Venue'
+        id: `maps_${Date.now()}`,
+        name: decodeURIComponent(rawPart),
+        address: '—',
+        city: 'Dubai',
+        category: '—',
+        rating: 0,
+        reviews_count: 0,
+        cover_url: '',
+        phone: '—',
+        verified: true
       });
     } else {
       setIsMapsLinkDetected(false);
@@ -132,32 +101,25 @@ export default function OnboardingPage() {
     setIsSearching(true);
     setTimeout(() => {
       setIsSearching(false);
-      const match = SUGGESTED_VENUES.find(v => 
-        v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      if (match) {
-        setDetectedBusiness(match);
-      } else {
-        setDetectedBusiness({
-          id: `custom_${Date.now()}`,
-          name: searchQuery.trim(),
-          address: 'Downtown District, Sheikh Mohammed bin Rashid Blvd, Dubai',
-          city: 'Dubai',
-          category: 'Local Business & Retail',
-          rating: 4.7,
-          reviews_count: 88,
-          cover_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
-          phone: '+971 4 123 4567',
-          verified: true
-        });
-      }
+      setDetectedBusiness({
+        id: `custom_${Date.now()}`,
+        name: searchQuery.trim(),
+        address: '—',
+        city: 'Dubai',
+        category: '—',
+        rating: 0,
+        reviews_count: 0,
+        cover_url: '',
+        phone: '—',
+        verified: false
+      });
       setShowSuggestions(false);
     }, 400);
   };
 
   // Step 2 Diagnostic Simulation runner
   const startDiagnostics = () => {
+    if (!detectedBusiness) return;
     setCurrentStep(2);
     setScanProgress(10);
     setDiagnosticStage(0);
@@ -179,7 +141,7 @@ export default function OnboardingPage() {
 
   // Step 3 Completion: Save to Storage and go to Cockpit
   const handleCompleteOnboarding = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && detectedBusiness) {
       // 1. Save active profile
       localStorage.setItem('gbpilot_active_profile', JSON.stringify(detectedBusiness));
       
@@ -344,52 +306,68 @@ export default function OnboardingPage() {
               </form>
 
               {/* Detected Profile Preview Card */}
-              <div className="border border-slate-200 bg-slate-50/80 rounded-2xl p-4 sm:p-5 space-y-4">
-                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                  Target Business Profile Found:
-                </div>
+              {detectedBusiness ? (
+                <div className="border border-slate-200 bg-slate-50/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Target Business Profile Found:
+                  </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-white shadow-sm shrink-0 bg-white">
-                    <img
-                      src={detectedBusiness.cover_url}
-                      alt={detectedBusiness.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 rounded-full p-1 border-2 border-white">
-                      <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-white shadow-sm shrink-0 bg-slate-100 flex items-center justify-center">
+                      {detectedBusiness.cover_url ? (
+                        <img
+                          src={detectedBusiness.cover_url}
+                          alt={detectedBusiness.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Building2 className="w-8 h-8 text-slate-400" />
+                      )}
+                      {detectedBusiness.verified && (
+                        <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 rounded-full p-1 border-2 border-white">
+                          <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <h3 className="font-extrabold text-slate-900 text-base sm:text-lg truncate">
+                        {detectedBusiness.name}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                          {detectedBusiness.category || '—'}
+                        </span>
+                        <span className="font-bold text-amber-500 flex items-center gap-0.5">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          {detectedBusiness.rating > 0 ? `${detectedBusiness.rating} ★ (${detectedBusiness.reviews_count} reviews)` : '— ★ (— reviews)'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate flex items-center gap-1 pt-0.5">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{detectedBusiness.address || '—'}</span>
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <h3 className="font-extrabold text-slate-900 text-base sm:text-lg truncate">
-                      {detectedBusiness.name}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
-                        {detectedBusiness.category}
-                      </span>
-                      <span className="font-bold text-amber-500 flex items-center gap-0.5">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        {detectedBusiness.rating} ({detectedBusiness.reviews_count} reviews)
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 truncate flex items-center gap-1 pt-0.5">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{detectedBusiness.address}</span>
-                    </p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={startDiagnostics}
+                    className="w-full py-3.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Start 15-Sec AI Health Diagnostics →</span>
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={startDiagnostics}
-                  className="w-full py-3.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Start 15-Sec AI Health Diagnostics →</span>
-                </button>
-              </div>
+              ) : (
+                <div className="border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl p-8 text-center space-y-2">
+                  <MapPin className="w-8 h-8 text-slate-400 mx-auto opacity-70" />
+                  <h4 className="font-bold text-slate-800 text-sm">No Location Selected Yet</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Type your business name above or paste a Google Maps link to inspect your live listing data.
+                  </p>
+                </div>
+              )}
 
               {/* Direct Google OAuth Option */}
               <div className="pt-2 text-center border-t border-slate-100">
@@ -425,7 +403,7 @@ export default function OnboardingPage() {
                 {scanProgress < 100 ? 'Scanning your listing & neighborhood rivals...' : 'Diagnostic complete: 3 ranking gaps found'}
               </h2>
               <p className="text-slate-500 text-xs sm:text-sm">
-                Target: <strong>{detectedBusiness.name}</strong> • Catchment: 1.5 km
+                Target: <strong>{detectedBusiness?.name || '—'}</strong> • Catchment: 1.5 km
               </p>
             </div>
 
@@ -559,7 +537,7 @@ export default function OnboardingPage() {
                 Activate your 3 AI Growth Systems
               </h2>
               <p className="text-slate-500 text-xs sm:text-sm">
-                Confirm the protections GB Pilot will run for <strong>{detectedBusiness.name}</strong>:
+                Confirm the protections GB Pilot will run for <strong>{detectedBusiness?.name || 'your business'}</strong>:
               </p>
             </div>
 

@@ -94,7 +94,7 @@ export class GoogleBusinessProfileClient {
    */
   async listAccounts(): Promise<Array<{ name: string; accountName: string; type: string }>> {
     if (this.accessToken.startsWith('ya29.mock_')) {
-      return [{ name: 'accounts/109823485721', accountName: 'Artisan Hospitality Group', type: 'PERSONAL' }];
+      return [];
     }
 
     const res = await fetch(`${GBP_ACCOUNT_URL}/accounts`, {
@@ -114,21 +114,7 @@ export class GoogleBusinessProfileClient {
    */
   async listLocations(accountId: string, readMask = 'name,title,storefrontAddress,categories'): Promise<GBPLocation[]> {
     if (this.accessToken.startsWith('ya29.mock_')) {
-      return [
-        {
-          name: 'locations/loc_artisan_marina',
-          title: 'Artisan Specialty Cafe & Roastery',
-          storefrontAddress: {
-            addressLines: ['102 Marina Promenade, Sector B'],
-            locality: 'Dubai',
-            regionCode: 'AE'
-          },
-          categories: {
-            primaryCategory: { displayName: 'Specialty Coffee Shop & Roastery' }
-          },
-          coverPhotoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80'
-        }
-      ];
+      return [];
     }
 
     const res = await fetch(`${GBP_BASE_URL}/${accountId}/locations?readMask=${encodeURIComponent(readMask)}`, {
@@ -153,39 +139,15 @@ export class GoogleBusinessProfileClient {
     if (this.accessToken.startsWith('ya29.mock_')) {
       return {
         name: locationName,
-        title: 'Artisan Specialty Cafe & Roastery',
+        title: '—',
         storefrontAddress: {
-          addressLines: ['102 Marina Promenade, Sector B'],
-          locality: 'Dubai',
-          regionCode: 'AE'
+          addressLines: ['—'],
+          locality: '—',
+          regionCode: '—'
         },
         categories: {
-          primaryCategory: { displayName: 'Coffee Shop' },
-          additionalCategories: [{ displayName: 'Bakery' }, { displayName: 'Espresso Bar' }]
-        },
-        regularHours: {
-          periods: [
-            { openDay: 'MONDAY', openTime: '07:30', closeDay: 'MONDAY', closeTime: '22:00' },
-            { openDay: 'TUESDAY', openTime: '07:30', closeDay: 'TUESDAY', closeTime: '22:00' },
-            { openDay: 'WEDNESDAY', openTime: '07:30', closeDay: 'WEDNESDAY', closeTime: '22:00' },
-            { openDay: 'THURSDAY', openTime: '07:30', closeDay: 'THURSDAY', closeTime: '22:00' },
-            { openDay: 'FRIDAY', openTime: '07:30', closeDay: 'FRIDAY', closeTime: '23:00' },
-            { openDay: 'SATURDAY', openTime: '08:00', closeDay: 'SATURDAY', closeTime: '23:00' },
-            { openDay: 'SUNDAY', openTime: '08:00', closeDay: 'SUNDAY', closeTime: '22:00' }
-          ]
-        },
-        phoneNumbers: {
-          primaryPhone: '+971 4 555 8921'
-        },
-        websiteUri: 'https://artisancafe-dubai.com',
-        profile: {
-          description: 'Local neighborhood cafe serving coffee and food.'
-        },
-        attributes: [
-          { attributeId: 'has_outdoor_seating', values: [true] },
-          { attributeId: 'has_wifi', values: [true] }
-        ],
-        coverPhotoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80'
+          primaryCategory: { displayName: '—' }
+        }
       };
     }
 
@@ -207,7 +169,7 @@ export class GoogleBusinessProfileClient {
     if (this.accessToken.startsWith('ya29.mock_')) {
       return {
         name: locationName,
-        title: data.title || 'Artisan Specialty Cafe & Roastery',
+        title: data.title || '—',
         ...data
       } as GBPLocation;
     }
@@ -235,22 +197,7 @@ export class GoogleBusinessProfileClient {
    */
   async listReviews(accountLocationPath: string): Promise<GBPReview[]> {
     if (this.accessToken.startsWith('ya29.mock_')) {
-      return [
-        {
-          reviewId: 'rev_omar_1',
-          reviewer: { displayName: 'Omar K.', profilePhotoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
-          starRating: 'FIVE',
-          comment: 'Exceptional specialty coffee and cozy atmosphere! The staff was super attentive.',
-          createTime: new Date(Date.now() - 3600000 * 4).toISOString()
-        },
-        {
-          reviewId: 'rev_sarah_2',
-          reviewer: { displayName: 'Sarah M.', profilePhotoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
-          starRating: 'FOUR',
-          comment: 'Great brunch options and delicious flat white. Parking was a bit tight on Saturday.',
-          createTime: new Date(Date.now() - 3600000 * 24).toISOString()
-        }
-      ];
+      return [];
     }
 
     const res = await fetch(`${GBP_REVIEWS_URL}/${accountLocationPath}/reviews`, {

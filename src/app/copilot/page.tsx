@@ -202,13 +202,13 @@ export default function CopilotContentStudioPage() {
   ]);
 
   const [currentPost, setCurrentPost] = useState<PlannedPost>({
-    title: 'Weekend Chef Special: Handcrafted Syrniki & Artisanal Coffee',
-    content: 'Treat yourself this weekend to our signature Syrniki served with fresh farm berries and our single-origin pour-over coffee. Crafted fresh daily with love.',
-    ctaType: 'ORDER',
-    ctaUrl: 'https://gbpilot.top',
-    targetKeywords: ['specialty coffee', 'weekend brunch', 'fresh syrniki', 'near beach'],
-    photoTaggingAdvice: 'Add 1 high-res interior/dish photo geotagged with your exact latitude and longitude before upload to trigger Local 3-Pack rank signals.',
-    scheduledDate: 'Friday, Oct 18 at 10:00 AM'
+    title: '',
+    content: '',
+    ctaType: 'LEARN_MORE',
+    ctaUrl: '',
+    targetKeywords: [],
+    photoTaggingAdvice: 'Add 1 high-resolution photo geotagged with your exact coordinates before upload to trigger Local Pack rank signals.',
+    scheduledDate: 'Friday at 10:00 AM'
   });
   const [postPublishedToast, setPostPublishedToast] = useState<string | null>(null);
 
@@ -236,7 +236,7 @@ export default function CopilotContentStudioPage() {
   };
 
   // Website AI Sync state
-  const [scrapeUrl, setScrapeUrl] = useState('https://artisancoffeeroasters.com');
+  const [scrapeUrl, setScrapeUrl] = useState('');
   const [isExtractingWebsite, setIsExtractingWebsite] = useState(false);
   const [isSyncingToGoogle, setIsSyncingToGoogle] = useState(false);
   const [copiedClipboard, setCopiedClipboard] = useState(false);
@@ -255,19 +255,7 @@ export default function CopilotContentStudioPage() {
     target_keywords: string[];
     amenities: string[];
     hours: string;
-  }>({
-    business_name: 'Artisan Roast & Bakery',
-    primary_category: 'Coffee Shop & Artisan Roastery',
-    services: [
-      'Single-Origin Pour-Over & Cold Brew',
-      'Handcrafted Sourdough Croissants & Pastries',
-      'Artisanal Espresso & Specialty Matcha',
-      'Event Catering & Private Coffee Bar'
-    ],
-    target_keywords: ['specialty coffee', 'organic sourdough', 'fresh roasts', 'local roastery'],
-    amenities: ['Dog-Friendly Outdoor Patio', 'Free High-Speed Wi-Fi', 'Wheelchair Accessible', 'Vegan Pastries'],
-    hours: 'Mon-Fri: 07:00 AM – 09:00 PM • Sat-Sun: 08:00 AM – 10:00 PM'
-  });
+  } | null>(null);
 
   const handleScrapeWebsite = async () => {
     if (!scrapeUrl.trim()) return;
@@ -312,6 +300,7 @@ export default function CopilotContentStudioPage() {
   };
 
   const handleCopyServicesToClipboard = () => {
+    if (!extractedData) return;
     const textToCopy = `=== GOOGLE BUSINESS PROFILE DATA ===
 Business: ${extractedData.business_name}
 Category: ${extractedData.primary_category}
@@ -338,6 +327,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
   };
 
   const handleSyncToGoogleApi = async () => {
+    if (!extractedData) return;
     if (!isProPlan) {
       setIsProTrialModalOpen(true);
       return;
@@ -1065,151 +1055,163 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
             </div>
           </div>
 
-          {/* Extracted Business Data Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            {/* 1. Core Services / Menu */}
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-google-blue" />
-                    Services &amp; Specialties
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-semibold">{extractedData.services.length} items</span>
-                </div>
-                <div className="mt-2 space-y-1.5">
-                  {extractedData.services.map((item, idx) => (
-                    <div key={idx} className="p-2 rounded-lg bg-white border border-slate-200/80 text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-google-blue shrink-0" />
-                      <span className="truncate">{item}</span>
+          {extractedData ? (
+            <>
+              {/* Extracted Business Data Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* 1. Core Services / Menu */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-google-blue" />
+                        Services &amp; Specialties
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-semibold">{extractedData.services.length} items</span>
                     </div>
-                  ))}
+                    <div className="mt-2 space-y-1.5">
+                      {extractedData.services.map((item, idx) => (
+                        <div key={idx} className="p-2 rounded-lg bg-white border border-slate-200/80 text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-google-blue shrink-0" />
+                          <span className="truncate">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 2. Target Local Keywords */}
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span className="flex items-center gap-1.5">
-                    <TrendingUp className="w-4 h-4 text-emerald-600" />
-                    Target LSI Keywords
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-semibold">{extractedData.target_keywords.length} tags</span>
+                {/* 2. Target Local Keywords */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-600" />
+                        Target LSI Keywords
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-semibold">{extractedData.target_keywords.length} tags</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {extractedData.target_keywords.map((kw, idx) => (
+                        <span key={idx} className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
+                          #{kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
+                    SEO Keywords detected from website H1/H2 tags and meta description.
+                  </p>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {extractedData.target_keywords.map((kw, idx) => (
-                    <span key={idx} className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
-                      #{kw}
+
+                {/* 3. Amenities & Attributes */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        Detected Amenities
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-semibold">{extractedData.amenities.length} tags</span>
+                    </div>
+                    <div className="mt-2 space-y-1.5">
+                      {extractedData.amenities.map((item, idx) => (
+                        <div key={idx} className="p-1.5 rounded-lg bg-white border border-slate-200/80 text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
+                          <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span className="truncate">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Operating Hours & Entity Name */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-purple-600" />
+                        Business Entity &amp; Hours
+                      </span>
+                      <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Verified</span>
+                    </div>
+                    <div className="mt-2 space-y-2 text-xs">
+                      <div className="p-2 rounded-lg bg-white border border-slate-200/80">
+                        <span className="text-[10px] text-slate-400 block font-semibold uppercase">Extracted Entity:</span>
+                        <strong className="text-slate-900 text-xs block">{extractedData.business_name}</strong>
+                        <span className="text-[10px] text-slate-500">{extractedData.primary_category}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white border border-slate-200/80">
+                        <span className="text-[10px] text-slate-400 block font-semibold uppercase">Operating Schedule:</span>
+                        <span className="text-[11px] text-slate-700 font-medium leading-relaxed block">{extractedData.hours}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Action & Monetization Bar */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-slate-600 space-y-0.5">
+                  <strong className="text-slate-900 block flex items-center gap-1.5">
+                    <span>Synchronize with Google Business Profile</span>
+                    {!isProPlan && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                        Starter / Free Tier
+                      </span>
+                    )}
+                  </strong>
+                  <p className="text-[11px] text-slate-500">
+                    {isProPlan 
+                      ? 'Pro Autopilot Active: 1-click publishing directly to Google Maps API is unlocked.'
+                      : 'Free tier allows manual copy-paste. Activate 14-day Pro Autopilot ($0.00 today) for instant 1-click Google API syndication.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                  {/* Free Option: Copy to Clipboard */}
+                  <button
+                    type="button"
+                    onClick={handleCopyServicesToClipboard}
+                    className="flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    {copiedClipboard ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedClipboard ? 'Copied!' : '📋 Copy Manual'}</span>
+                  </button>
+
+                  {/* Pro Option: 1-Click Sync via API */}
+                  <button
+                    type="button"
+                    onClick={handleSyncToGoogleApi}
+                    disabled={isSyncingToGoogle}
+                    className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs ${
+                      isProPlan
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-gradient-to-r from-google-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                    }`}
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${isSyncingToGoogle ? 'animate-spin' : ''}`} />
+                    <span>
+                      {isSyncingToGoogle 
+                        ? 'Syncing to Google...' 
+                        : isProPlan 
+                        ? '⚡ 1-Click Sync to Google Profile' 
+                        : '⚡ 1-Click Sync via API (Pro)'}
                     </span>
-                  ))}
+                  </button>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
-                SEO Keywords detected from website H1/H2 tags and meta description.
+            </>
+          ) : (
+            <div className="p-10 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 text-center space-y-2">
+              <Globe className="w-8 h-8 text-slate-400 mx-auto opacity-70" />
+              <h4 className="font-bold text-slate-800 text-sm">No Website Data Extracted Yet</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Enter your official website URL above and click <strong>⚡ Extract Services &amp; Keywords</strong> to scrape real services, menu items, and operating attributes directly from your website.
               </p>
             </div>
-
-            {/* 3. Amenities & Attributes */}
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span className="flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    Detected Amenities
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-semibold">{extractedData.amenities.length} tags</span>
-                </div>
-                <div className="mt-2 space-y-1.5">
-                  {extractedData.amenities.map((item, idx) => (
-                    <div key={idx} className="p-1.5 rounded-lg bg-white border border-slate-200/80 text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
-                      <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span className="truncate">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 4. Operating Hours & Entity Name */}
-            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/40 space-y-2.5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-purple-600" />
-                    Business Entity &amp; Hours
-                  </span>
-                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Verified</span>
-                </div>
-                <div className="mt-2 space-y-2 text-xs">
-                  <div className="p-2 rounded-lg bg-white border border-slate-200/80">
-                    <span className="text-[10px] text-slate-400 block font-semibold uppercase">Extracted Entity:</span>
-                    <strong className="text-slate-900 text-xs block">{extractedData.business_name}</strong>
-                    <span className="text-[10px] text-slate-500">{extractedData.primary_category}</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-white border border-slate-200/80">
-                    <span className="text-[10px] text-slate-400 block font-semibold uppercase">Operating Schedule:</span>
-                    <span className="text-[11px] text-slate-700 font-medium leading-relaxed block">{extractedData.hours}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Action & Monetization Bar */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs text-slate-600 space-y-0.5">
-              <strong className="text-slate-900 block flex items-center gap-1.5">
-                <span>Synchronize with Google Business Profile</span>
-                {!isProPlan && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                    Starter / Free Tier
-                  </span>
-                )}
-              </strong>
-              <p className="text-[11px] text-slate-500">
-                {isProPlan 
-                  ? 'Pro Autopilot Active: 1-click publishing directly to Google Maps API is unlocked.'
-                  : 'Free tier allows manual copy-paste. Activate 14-day Pro Autopilot ($0.00 today) for instant 1-click Google API syndication.'}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
-              {/* Free Option: Copy to Clipboard */}
-              <button
-                type="button"
-                onClick={handleCopyServicesToClipboard}
-                className="flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                {copiedClipboard ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedClipboard ? 'Copied!' : '📋 Copy Manual'}</span>
-              </button>
-
-              {/* Pro Option: 1-Click Sync via API */}
-              <button
-                type="button"
-                onClick={handleSyncToGoogleApi}
-                disabled={isSyncingToGoogle}
-                className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs ${
-                  isProPlan
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-gradient-to-r from-google-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                }`}
-              >
-                <Sparkles className={`w-3.5 h-3.5 ${isSyncingToGoogle ? 'animate-spin' : ''}`} />
-                <span>
-                  {isSyncingToGoogle 
-                    ? 'Syncing to Google...' 
-                    : isProPlan 
-                    ? '⚡ 1-Click Sync to Google Profile' 
-                    : '⚡ 1-Click Sync via API (Pro)'}
-                </span>
-              </button>
-            </div>
-          </div>
+          )}
 
         </div>
 

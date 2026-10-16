@@ -25,29 +25,17 @@ export interface DefenseLogEntry {
 
 // In-memory persistent state (backed by DB in production deployment)
 let currentGoldenSnapshot: GoldenSnapshot = {
-  locationId: 'loc_artisan_marina',
-  businessName: 'Artisan Specialty Cafe & Roastery',
-  primaryCategory: 'Specialty Coffee Shop & Roastery',
-  phone: '+971 4 555 8921',
-  address: '102 Marina Promenade, Sector B, Dubai',
-  regularHoursSummary: 'Mon-Thu 07:30-22:00, Fri 07:30-23:00, Sat-Sun 08:00-23:00',
+  locationId: '',
+  businessName: '',
+  primaryCategory: '',
+  phone: '',
+  address: '',
+  regularHoursSummary: '',
   isFridayClosed: false,
-  timestamp: new Date(Date.now() - 45 * 86400000).toISOString() // 45 days ago
+  timestamp: new Date().toISOString()
 };
 
-let defenseLogs: DefenseLogEntry[] = [
-  {
-    id: 'def_log_01',
-    timestamp: new Date(Date.now() - 3600000 * 48).toISOString(),
-    fieldTampered: 'HOURS',
-    tamperedValue: 'Friday: Closed (Suggested edit via Google Maps crowd source)',
-    restoredValue: 'Friday: 07:30 - 23:00 (Restored from Golden Snapshot)',
-    revertedInSeconds: 184,
-    avertedLossDollars: 480,
-    status: 'REVERTED_AUTOMATICALLY',
-    details: 'Competitor crowd-sourced edit attempted to mark venue as closed on peak Friday evening. Reverted via GBP API in 3m 04s.'
-  }
-];
+let defenseLogs: DefenseLogEntry[] = [];
 
 export function getGoldenSnapshot(): GoldenSnapshot {
   return currentGoldenSnapshot;

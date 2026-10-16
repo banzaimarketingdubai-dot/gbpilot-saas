@@ -37,7 +37,7 @@ export function runInspectionAudit(
   const isPaywallLocked = tier === 'FREE';
   const recommendations: AuditRecommendation[] = [];
 
-  const businessName = location.title || 'Artisan Specialty Cafe & Roastery';
+  const businessName = location.title || '—';
   const primaryCat = location.categories?.primaryCategory?.displayName || '';
   const desc = location.profile?.description || '';
 
@@ -49,20 +49,16 @@ export function runInspectionAudit(
     severity: isGenericCategory ? 'CRITICAL' : 'WARNING',
     problemText: isGenericCategory
       ? 'Primary category is set to generic placeholder "Local Business", destroying Google Maps 3-Pack discovery.'
-      : 'Missing high-volume secondary categories (Espresso Bar, Artisanal Bakery, Breakfast Restaurant).',
+      : `Missing targeted secondary categories to capture niche local search queries related to ${primaryCat || 'your business'}.`,
     beforeValue: primaryCat || 'Local Business (Unverified Generic Tag)',
-    afterValue: 'Specialty Coffee Shop & Roastery • Secondary: Artisanal Bakery, Breakfast Cafe, Espresso Bar',
+    afterValue: primaryCat ? `${primaryCat} (Verified Primary)` : 'Verified Specific Industry Category',
     impactMetric: '+38% Maps Discovery Impressions',
     locked: isPaywallLocked,
     fieldToUpdate: 'categories',
     patchPayload: {
       categories: {
-        primaryCategory: { displayName: 'Specialty Coffee Shop' },
-        additionalCategories: [
-          { displayName: 'Bakery' },
-          { displayName: 'Breakfast Restaurant' },
-          { displayName: 'Espresso Bar' }
-        ]
+        primaryCategory: { displayName: primaryCat || 'Local Business' },
+        additionalCategories: location.categories?.additionalCategories || []
       }
     }
   });
@@ -76,14 +72,14 @@ export function runInspectionAudit(
     problemText: isDescWeak
       ? 'Short, unoptimized profile description missing high-intent local search keywords.'
       : 'Description lacks neighborhood geographic centroid anchors and signature specialty keywords.',
-    beforeValue: desc || 'Local neighborhood cafe serving coffee and food.',
-    afterValue: `Welcome to ${businessName}, the premier specialty roastery and artisanal breakfast cafe in the neighborhood. We serve handcrafted single-origin pour-overs, artisan sourdough, and fresh breakfast dishes daily. Outdoor seating available.`,
+    beforeValue: desc || 'Short profile description lacking high-intent local search keywords.',
+    afterValue: `Welcome to ${businessName !== '—' ? businessName : 'our venue'}, your trusted local destination. Dedicated to superior quality, exceptional service, and authentic customer care. Open daily with verified local amenities.`,
     impactMetric: 'Ranks for 14 New Local Keywords',
     locked: isPaywallLocked,
     fieldToUpdate: 'profile.description',
     patchPayload: {
       profile: {
-        description: `Welcome to ${businessName}, the premier specialty roastery and artisanal breakfast cafe in the neighborhood. We serve handcrafted single-origin pour-overs, artisan sourdough, and fresh breakfast dishes daily. Outdoor seating available.`
+        description: `Welcome to ${businessName !== '—' ? businessName : 'our venue'}, your trusted local destination. Dedicated to superior quality, exceptional service, and authentic customer care. Open daily with verified local amenities.`
       }
     }
   });
@@ -125,22 +121,16 @@ export function runInspectionAudit(
   // 4. Attributes & Amenities Audit
   recommendations.push({
     id: 'audit-service-attributes',
-    categoryTitle: 'Dining & Service Attributes',
+    categoryTitle: 'Business & Service Attributes',
     severity: 'OPPORTUNITY',
-    problemText: 'Customer filter badges (Outdoor Seating, Free Wi-Fi, Specialty Pour-Over) are unverified in Google Knowledge Panel.',
-    beforeValue: '2 of 18 attributes declared.',
-    afterValue: '16 high-conversion attributes verified: Outdoor seating, Highchairs, Vegan options, Specialty coffee, Wi-Fi.',
-    impactMetric: '+24% Voice Search & Maps Filter Hits',
+    problemText: 'Customer filter badges (accessibility, payment methods, amenities) are unverified in Google Knowledge Panel.',
+    beforeValue: 'Unverified attributes in profile.',
+    afterValue: 'Complete attribute declarations verified in Google Maps Knowledge Graph.',
+    impactMetric: 'Increases Voice Search & Maps Filter Hits',
     locked: isPaywallLocked,
     fieldToUpdate: 'attributes',
     patchPayload: {
-      attributes: [
-        { attributeId: 'has_outdoor_seating', values: [true] },
-        { attributeId: 'has_wifi', values: [true] },
-        { attributeId: 'serves_specialty_coffee', values: [true] },
-        { attributeId: 'serves_breakfast', values: [true] },
-        { attributeId: 'wheelchair_accessible_entrance', values: [true] }
-      ]
+      attributes: location.attributes || []
     }
   });
 
@@ -149,9 +139,9 @@ export function runInspectionAudit(
     id: 'audit-exif-photos',
     categoryTitle: 'Geo-Tagged Photos (EXIF Spatial Authority)',
     severity: 'OPPORTUNITY',
-    problemText: 'Uploaded venue photos lack camera EXIF GPS centroid metadata, missing primary Google Maps spatial authority signals.',
-    beforeValue: '0% photos stamped with coordinates.',
-    afterValue: 'Automated GPS stamping at exact coordinates: 12.2718° N, 109.2016° E on all future media uploads.',
+    problemText: 'Uploaded venue photos lack camera EXIF GPS metadata, missing primary Google Maps spatial authority signals.',
+    beforeValue: '0% photos verified with coordinates.',
+    afterValue: 'Automated GPS stamping at verified location coordinates on media uploads.',
     impactMetric: 'Qualifies for Maps Discovery Carousel',
     locked: isPaywallLocked,
     fieldToUpdate: 'photos',
@@ -164,15 +154,15 @@ export function runInspectionAudit(
   const projectedScore = 96;
 
   return {
-    locationName: location.name || 'locations/loc_artisan_marina',
+    locationName: location.name || '',
     businessName,
     initialScore,
     projectedScore,
-    revenueRecoveryMonthly: 1450,
-    revenueRecoveryFormatted: '+$1,450 / month',
+    revenueRecoveryMonthly: 0,
+    revenueRecoveryFormatted: '—',
     subscriptionTier: tier,
     issuesCount: recommendations.length,
     recommendations,
-    summary: `Identified ${recommendations.length} high-impact optimization gaps across categories, semantic description, and holiday schedules. Resolving these unlocks Top 3 Local Pack authority.`
+    summary: `Identified ${recommendations.length} optimization opportunities across categories, semantic description, and operating schedules.`
   };
 }
