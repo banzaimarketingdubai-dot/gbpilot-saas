@@ -11,9 +11,14 @@ import {
   Zap, 
   Map,
   TrendingUp,
-  XCircle
+  XCircle,
+  DollarSign,
+  Camera,
+  Layers,
+  ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
+import { runInspectionAudit } from '@/lib/inspection/auditEngine';
 
 export default function AuditLandingPage({ params }: { params: { audit_id: string } }) {
   const [profile, setProfile] = React.useState<any>(null);
@@ -33,6 +38,16 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
   const healthScore = profile?.healthScore || 0;
   const businessName = profile?.name || '—';
   const businessAddress = profile?.address || '—';
+
+  const auditReport = React.useMemo(() => {
+    return runInspectionAudit({
+      title: businessName,
+      address: businessAddress,
+      categories: {
+        primaryCategory: { displayName: profile?.category || 'Local Business' }
+      }
+    });
+  }, [businessName, businessAddress, profile?.category]);
 
   return (
     <div className="min-h-screen bg-google-bg flex flex-col font-sans">
@@ -61,7 +76,7 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
         {/* Title Block */}
         <div className="text-center space-y-2">
           <span className="text-[10px] font-extrabold text-google-blue bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-            CONFIDENTIAL LOCAL SEO AUDIT
+            CONFIDENTIAL LOCAL SEO AUDIT • {auditReport.currency} BENCHMARKS
           </span>
           <h1 className="text-3xl sm:text-4xl font-black text-google-text-primary tracking-tight">
             {businessName}
@@ -104,26 +119,40 @@ export default function AuditLandingPage({ params }: { params: { audit_id: strin
             </p>
           </div>
 
-          {/* Potential Gains */}
-          <div className="material-card p-8 bg-google-green-light/30 border-2 border-google-green/30 flex flex-col justify-center shadow-sm">
-            <div className="flex items-center gap-2 mb-6">
-              <TrendingUp className="w-5 h-5 text-google-green" />
-              <h3 className="font-bold text-lg text-google-text-primary">Audited Status & Growth</h3>
-            </div>
-            
-            <p className="text-sm text-google-text-secondary font-medium mb-6">
-              Syncing authentic Google Business Profile data unlocks automated rank protection and 1-Click optimizations:
-            </p>
+          {/* Potential Gains & Google Ads Equivalent Math */}
+          <div className="material-card p-6 bg-emerald-50/40 border-2 border-emerald-200/80 flex flex-col justify-between shadow-sm">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  <h3 className="font-bold text-base text-slate-900">Google Ads Budget Equivalent</h3>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 uppercase">
+                  Organic ROI
+                </span>
+              </div>
+              
+              <p className="text-xs text-slate-600 font-medium mb-4 leading-relaxed">
+                Google Maps leads are high-intent searchers. To purchase this volume of calls and visits via paid Google Ads, your business would spend:
+              </p>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-google-green/20 shadow-sm">
-                <span className="block text-xs text-google-text-secondary font-bold mb-1">Local Pack Share</span>
-                <span className="text-3xl font-black text-google-green">{profile ? 'Live Sync' : '—'}</span>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
+                  <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Saved PPC Value</span>
+                  <span className="text-2xl font-black text-emerald-700">{auditReport.savedAdSpendFormatted}</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">per month (Free leads)</span>
+                </div>
+                <div className="bg-white p-3 rounded-xl border border-blue-200 shadow-2xs">
+                  <span className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Recovery Potential</span>
+                  <span className="text-2xl font-black text-google-blue">+{auditReport.revenueRecoveryFormatted}</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">with Top 3 AI fixes</span>
+                </div>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-google-green/20 shadow-sm">
-                <span className="block text-xs text-google-text-secondary font-bold mb-1">Response Latency</span>
-                <span className="text-3xl font-black text-google-blue">{profile ? '< 15m' : '—'}</span>
-              </div>
+            </div>
+
+            <div className="text-[11px] text-slate-500 bg-white/80 p-2.5 rounded-xl border border-emerald-100 flex items-center justify-between">
+              <span>Industry: <strong>{auditReport.industryBenchmark.categoryGroup}</strong></span>
+              <span>Avg PPC Lead: <strong>{auditReport.industryBenchmark.leadCostFormatted}</strong></span>
             </div>
           </div>
         </div>

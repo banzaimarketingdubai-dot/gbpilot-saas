@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -34,11 +34,14 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  X
+  X,
+  Calculator,
+  Sliders
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { setSubscriptionPlan, PlanId } from '@/lib/subscription';
+import { getIndustryPpcBenchmark, detectCurrencyByLocation } from '@/lib/inspection/auditEngine';
 
 export default function B2BLandingPage() {
   const router = useRouter();
@@ -48,6 +51,40 @@ export default function B2BLandingPage() {
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [pricingToast, setPricingToast] = useState<string | null>(null);
+
+  // Steve Hunsaker PPC Equivalence Calculator State (t=12:42)
+  const [calcVertical, setCalcVertical] = useState<'home_services' | 'dining' | 'healthcare' | 'automotive' | 'professional' | 'retail'>('home_services');
+  const [calcCalls, setCalcCalls] = useState(45);
+  const [calcSiteClicks, setCalcSiteClicks] = useState(120);
+  const [showFormulaDetails, setShowFormulaDetails] = useState(false);
+
+  const currencyConfig = useMemo(() => {
+    return detectCurrencyByLocation(currency === 'AED' ? 'Dubai, UAE' : 'USA');
+  }, [currency]);
+
+  const calcBenchmark = useMemo(() => {
+    return getIndustryPpcBenchmark(calcVertical, currencyConfig);
+  }, [calcVertical, currencyConfig]);
+
+  const calcResults = useMemo(() => {
+    const directCallVal = calcCalls * calcBenchmark.leadCostLocal;
+    const siteCallVal = (calcSiteClicks * calcBenchmark.conversionRate) * calcBenchmark.leadCostLocal;
+    const totalMonthlyValue = Math.round(directCallVal + siteCallVal);
+    const planPrice = currency === 'AED' ? 249 : 69;
+    const roiMultiple = (totalMonthlyValue / planPrice).toFixed(1);
+
+    const formattedTotal = currency === 'AED'
+      ? `AED ${totalMonthlyValue.toLocaleString()}`
+      : `$${totalMonthlyValue.toLocaleString()}`;
+
+    return {
+      directCallVal,
+      siteCallVal,
+      totalMonthlyValue,
+      formattedTotal,
+      roiMultiple
+    };
+  }, [calcCalls, calcSiteClicks, calcBenchmark, currency]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -744,6 +781,193 @@ export default function B2BLandingPage() {
           </button>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* STEVE HUNSAKER PPC EQUIVALENCE CALCULATOR (t=12:42)      */}
+      {/* ======================================================== */}
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white border-b border-google-border">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 space-y-10">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
+              <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+              <span>ФОРМУЛА ЭКВИВАЛЕНТА РЕКЛАМЫ GOOGLE ADS (t=12:42)</span>
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Зачем платить агентствам за каждый клик в Google Ads?
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Органический топ-3 Google Maps забирает тех же самых клиентов с высокой готовностью к покупке абсолютно бесплатно. Рассчитайте, сколько рекламного бюджета GBPilot сохранит вашей компании каждый месяц.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8 space-y-8">
+            
+            {/* Step 1: Industry Vertical Selection */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>1. Выберите нишу вашего бизнеса:</span>
+                <span className="text-slate-400">Стоимость лида в Google Ads: <strong className="text-slate-900">{calcBenchmark.leadCostFormatted}</strong></span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                {[
+                  { id: 'home_services', label: '🔧 Ремонт / HVAC', desc: 'Home Services' },
+                  { id: 'dining', label: '🍽️ Рестораны / Кафе', desc: 'Dining' },
+                  { id: 'healthcare', label: '🏥 Клиники / Стоматологии', desc: 'Healthcare' },
+                  { id: 'automotive', label: '🚗 Автосервисы', desc: 'Automotive' },
+                  { id: 'professional', label: '⚖️ Юристы / Недвижимость', desc: 'Professional' },
+                  { id: 'retail', label: '🛍️ Ритейл / Бутики', desc: 'Retail' },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setCalcVertical(item.id as any)}
+                    className={`p-3 rounded-2xl text-left border transition-all cursor-pointer ${
+                      calcVertical === item.id
+                        ? 'border-google-blue bg-blue-50/50 shadow-xs'
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <span className="block font-bold text-xs text-slate-900">{item.label}</span>
+                    <span className="block text-[10px] text-slate-500 mt-0.5">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Step 2: Sliders & Live Results Grid */}
+            <div className="grid lg:grid-cols-12 gap-8 items-center pt-2">
+              
+              {/* Sliders Column */}
+              <div className="lg:col-span-7 space-y-6">
+                
+                {/* Slider 1: Calls */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <Phone className="w-4 h-4 text-google-blue" />
+                      <span>Входящие звонки из Google Maps в месяц:</span>
+                    </span>
+                    <span className="font-extrabold text-slate-900 text-sm bg-slate-100 px-3 py-1 rounded-xl border border-slate-200">
+                      {calcCalls} звонков
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="200"
+                    step="5"
+                    value={calcCalls}
+                    onChange={(e) => setCalcCalls(parseInt(e.target.value, 10))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-google-blue"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>10 звонков</span>
+                    <span>100 звонков</span>
+                    <span>200 звонков</span>
+                  </div>
+                </div>
+
+                {/* Slider 2: Website Clicks */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-google-blue" />
+                      <span>Переходы на сайт из Google Maps в месяц:</span>
+                    </span>
+                    <span className="font-extrabold text-slate-900 text-sm bg-slate-100 px-3 py-1 rounded-xl border border-slate-200">
+                      {calcSiteClicks} кликов
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="500"
+                    step="10"
+                    value={calcSiteClicks}
+                    onChange={(e) => setCalcSiteClicks(parseInt(e.target.value, 10))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-google-blue"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>20 кликов</span>
+                    <span>250 кликов</span>
+                    <span>500 кликов</span>
+                  </div>
+                </div>
+
+                {/* Explanatory disclosure toggle */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFormulaDetails(!showFormulaDetails)}
+                    className="text-xs font-bold text-google-blue hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                    <span>{showFormulaDetails ? 'Скрыть детали математической модели' : 'Как считается этот рекламный эквивалент?'}</span>
+                  </button>
+
+                  {showFormulaDetails && (
+                    <div className="mt-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5 animate-in fade-in">
+                      <p>
+                        💡 <strong>Методика Steve Hunsaker:</strong> Органический профиль в топ-3 заменяет контекстную рекламу Google Ads. Формула:
+                      </p>
+                      <code className="block bg-white p-2 rounded-xl text-[11px] font-mono text-slate-800 border border-slate-200">
+                        Эквивалент = ({calcCalls} звонков × {calcBenchmark.leadCostFormatted}) + ({calcSiteClicks} переходов × 12% конв. × {calcBenchmark.leadCostFormatted})
+                      </code>
+                      <p className="text-[11px] text-slate-500">
+                        Каждый звонок из карт — это готовый клиент, за которого конкуренты платят ставку CPC аукциона.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Live Calculation Outcome Tile */}
+              <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 border border-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
+                    Чистая экономия бюджета
+                  </span>
+                  <span className="text-xs text-slate-400">Ежемесячно</span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                    {calcResults.formattedTotal}
+                    <span className="text-xs font-medium text-slate-400 ml-1.5">/мес в Google Ads</span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    Эквивалентная ценность органического потока клиентов из Google Maps
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-slate-300 block text-[11px]">Окупаемость сервиса GBPilot:</span>
+                    <strong className="text-emerald-400 font-black text-base">{calcResults.roiMultiple}x ROI</strong>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-300 block text-[11px]">Стоимость тарифа:</span>
+                    <span className="text-white font-bold">{currency === 'AED' ? 'AED 249/мес' : '$69/mo'}</span>
+                  </div>
+                </div>
+
+                <a
+                  href="#pricing"
+                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+                >
+                  <span>Зафиксировать эту прибыль для своего бизнеса →</span>
+                </a>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </section>
 
       {/* ======================================================== */}
       {/* DUBAI & GLOBAL PRICING PLANS (SECTION 6 & 10 SOT)        */}

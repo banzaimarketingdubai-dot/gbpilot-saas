@@ -165,8 +165,19 @@ def get_safe_frontend_url(state: str = None) -> str:
     if state:
         clean_state = state.strip().rstrip("/")
         if clean_state.startswith("http://") or clean_state.startswith("https://"):
+            import urllib.parse
+            parsed = urllib.parse.urlsplit(clean_state)
+            if parsed.scheme and parsed.netloc:
+                return f"{parsed.scheme}://{parsed.netloc}"
+            for suffix in ("/dashboard", "/onboarding", "/b2b"):
+                if clean_state.endswith(suffix):
+                    clean_state = clean_state[:-len(suffix)].rstrip("/")
             return clean_state
-    return os.environ.get("FRONTEND_URL", "https://www.gbpilot.top").rstrip("/")
+    default_url = os.environ.get("FRONTEND_URL", "https://www.gbpilot.top").strip().rstrip("/")
+    for suffix in ("/dashboard", "/onboarding", "/b2b"):
+        if default_url.endswith(suffix):
+            default_url = default_url[:-len(suffix)].rstrip("/")
+    return default_url
 
 @app.get("/api/v1/auth/google/login", tags=["Authentication"])
 async def google_login(redirect_url: str = None, state: str = None, origin: str = None, raw_json: bool = False):
@@ -175,19 +186,24 @@ async def google_login(redirect_url: str = None, state: str = None, origin: str 
     Optionally accepts redirect_url / state / origin so Google redirects back to the caller's origin.
     Redirects (307) directly to Google OAuth consent page (or returns JSON if raw_json=True).
     """
-    target = redirect_url or state or origin or "https://www.gbpilot.top"
+    raw_target = origin or state or redirect_url or "https://www.gbpilot.top"
+    target = get_safe_frontend_url(raw_target)
     url = get_google_auth_url(state=target)
     if raw_json:
         return {"auth_url": url}
     return RedirectResponse(url=url, status_code=307)
 
 @app.get("/api/v1/auth/google/callback", tags=["Authentication"])
-async def google_callback(code: str, state: str = None, db: Session = Depends(get_db)):
+async def google_callback(code: str = None, state: str = None, error: str = None, db: Session = Depends(get_db)):
     """
     OAuth 2.0 callback endpoint handling Google authorization code exchange.
     Redirects back to frontend origin supplied in state, or FRONTEND_URL env var.
     """
     target_frontend = get_safe_frontend_url(state)
+    if error or not code:
+        import urllib.parse
+        err_msg = urllib.parse.quote(error or "Missing authorization code")
+        return RedirectResponse(url=f"{target_frontend}/dashboard?auth=error&detail={err_msg}")
     try:
         tokens = exchange_code_for_tokens(code)
         access_token = tokens.get("access_token")
@@ -195,6 +211,7 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
         
         user_info = get_google_user_info(access_token)
         email = user_info.get("email", "google_user@gbpilot.com")
+        name = user_info.get("name", "")
         
         # Fetch user managed locations from Google Business Profile API
         fetched_profiles = []
@@ -258,7 +275,8 @@ async def google_callback(code: str, state: str = None, db: Session = Depends(ge
             
         import base64
         import json
-        params = f"auth=success&email={email}"
+        import urllib.parse
+        params = f"auth=success&email={urllib.parse.quote(email)}&name={urllib.parse.quote(name)}"
         if fetched_profiles:
             profiles_b64 = base64.b64encode(json.dumps(fetched_profiles).encode('utf-8')).decode('utf-8')
             params += f"&profiles={profiles_b64}&select_location=true"

@@ -1,6 +1,10 @@
 import os
 import requests
 from typing import Dict, Any, Optional, List
+from dotenv import load_dotenv
+
+load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
@@ -238,7 +242,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
         url = 'https://places.googleapis.com/v1/places:searchText'
         headers = {
             'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos,places.reviews,places.googleMapsUri',
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos,places.reviews,places.googleMapsUri,places.regularOpeningHours,places.currentOpeningHours',
             'Content-Type': 'application/json'
         }
         data = {'textQuery': query}
@@ -256,6 +260,10 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
                         photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=600&maxWidthPx=800&key={GOOGLE_PLACES_API_KEY}"
                 
                 cat_name = place.get("primaryTypeDisplayName", {}).get("text") or "Local Business"
+
+                # Extract opening hours
+                open_now = (place.get("currentOpeningHours") or {}).get("openNow")
+                opening_hours = (place.get("regularOpeningHours") or {}).get("weekdayDescriptions", [])
 
                 parsed_reviews = []
                 for r in place.get("reviews", []):
@@ -288,6 +296,8 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
                     "category": cat_name,
                     "primary_category": cat_name,
                     "cover_url": photo_url,
+                    "open_now": open_now,
+                    "opening_hours": opening_hours,
                     "reviews": parsed_reviews
                 }
     except Exception as e:

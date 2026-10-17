@@ -13,9 +13,66 @@ import {
   Copy, 
   Check, 
   AlertTriangle,
-  Building2
+  Building2,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
+
+interface ProspectLead {
+  id: string;
+  name: string;
+  address: string;
+  rating: number;
+  reviews: number;
+  category: string;
+  isUnverified: boolean;
+  missingPhotos: boolean;
+  missingWebsite: boolean;
+  monthlyLossFormatted: string;
+  outreachHook: string;
+}
+
+const DEFAULT_PROSPECT_LEADS: ProspectLead[] = [
+  {
+    id: 'lead_dubai_ac_1',
+    name: 'CoolBreeze AC & Maintenance Dubai',
+    address: 'Al Barsha 1, Dubai, UAE',
+    rating: 3.8,
+    reviews: 14,
+    category: 'Home Services (HVAC)',
+    isUnverified: false,
+    missingPhotos: true,
+    missingWebsite: false,
+    monthlyLossFormatted: 'AED 14,500/mo',
+    outreachHook: 'Теряет 42 звонка/мес из-за отсутствия фото-отзывов с EXIF и незаполненного каталога услуг'
+  },
+  {
+    id: 'lead_downtown_dentist_2',
+    name: 'Downtown Smile Dental Clinic',
+    address: 'Downtown Dubai, Boulevard Plaza Tower 1',
+    rating: 4.1,
+    reviews: 28,
+    category: 'Healthcare & Dentistry',
+    isUnverified: false,
+    missingPhotos: true,
+    missingWebsite: false,
+    monthlyLossFormatted: 'AED 22,000/mo',
+    outreachHook: '1★ отзыв без ответа и отсутствие фото до/после роняют позицию с #2 на #8'
+  },
+  {
+    id: 'lead_austin_plumbing_3',
+    name: 'Apex Plumbing & Leak Detection',
+    address: 'Austin, Texas, USA',
+    rating: 3.9,
+    reviews: 19,
+    category: 'Plumbing Services',
+    isUnverified: false,
+    missingPhotos: true,
+    missingWebsite: false,
+    monthlyLossFormatted: '$4,800/mo',
+    outreachHook: 'Высокая ставка PPC ($95/лид). Конкуренты забирают звонки через 35+ фото-отзывов'
+  }
+];
 
 export default function OutreachPage() {
   const [searchLocation, setSearchLocation] = useState('');
@@ -24,11 +81,23 @@ export default function OutreachPage() {
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [leads, setLeads] = useState<any[]>([]);
+  const [leads, setLeads] = useState<ProspectLead[]>(DEFAULT_PROSPECT_LEADS);
+  const [outreachToast, setOutreachToast] = useState<string | null>(null);
 
   const handleGenerateTeaser = (leadId: string) => {
     const url = `${window.location.origin}/audit/${leadId}`;
     setGeneratedLink(url);
+  };
+
+  const handleCopyPitch = (lead: ProspectLead) => {
+    const url = `${window.location.origin}/audit/${lead.id}`;
+    const pitch = `Здравствуйте! Заметили, что карточка «${lead.name}» в Google Maps теряет около ${lead.monthlyLossFormatted} в виде бесплатных звонков клиентов из-за 2 критических ошибок профиля (${lead.outreachHook}). Ваши прямые конкуренты забирают эти лиды себе. Мы сформировали для вас бесплатный аудит с расчетом эквивалента рекламы: ${url}`;
+    
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(pitch);
+      setOutreachToast(`Питч для «${lead.name}» скопирован в буфер! Готов для отправки в WhatsApp / Email.`);
+      setTimeout(() => setOutreachToast(null), 4000);
+    }
   };
 
   const handleGenerateRankReplayGif = () => {
@@ -98,11 +167,24 @@ export default function OutreachPage() {
 
         </div>
 
+        {/* Toast notification */}
+        {outreachToast && (
+          <div className="fixed top-16 right-4 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-3 text-xs border border-slate-700 animate-in slide-in-from-top duration-200">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-medium">{outreachToast}</span>
+            </div>
+            <button onClick={() => setOutreachToast(null)} className="p-1 text-slate-400 hover:text-white cursor-pointer">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Lead Finder Table */}
         <div className="material-card p-6 bg-white space-y-4">
           <div className="flex items-center justify-between border-b border-google-border-light pb-3">
             <h3 className="font-bold text-google-text-primary text-sm">Discovered Prospect Leads ({leads.length})</h3>
-            <span className="text-xs text-google-text-tertiary">Sorted by Vulnerability Score</span>
+            <span className="text-xs text-google-text-tertiary">Оценка упущенной выгоды по методике Steve Hunsaker</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -111,9 +193,9 @@ export default function OutreachPage() {
                 <tr className="border-b border-google-border text-google-text-tertiary font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-2.5 px-3">Business Name</th>
                   <th className="py-2.5 px-3">GBP Rating</th>
-                  <th className="py-2.5 px-3">Unverified Status</th>
                   <th className="py-2.5 px-3">Missing Photos</th>
-                  <th className="py-2.5 px-3">Missing Website</th>
+                  <th className="py-2.5 px-3">Упущенная выгода (PPC Equiv)</th>
+                  <th className="py-2.5 px-3">Диагностика</th>
                   <th className="py-2.5 px-3">Actions</th>
                 </tr>
               </thead>
@@ -132,7 +214,7 @@ export default function OutreachPage() {
                     <td className="py-3 px-3">
                       <div>
                         <span className="font-bold text-google-text-primary text-xs block">{lead.name}</span>
-                        <span className="text-[10px] text-google-text-tertiary">{lead.address}</span>
+                        <span className="text-[10px] text-google-text-tertiary">{lead.address} • {lead.category}</span>
                       </div>
                     </td>
 
@@ -141,47 +223,48 @@ export default function OutreachPage() {
                     </td>
 
                     <td className="py-3 px-3">
-                      {lead.isUnverified ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-google-red-light text-google-red">
-                          UNCLAIMED
-                        </span>
-                      ) : (
-                        <span className="text-google-text-tertiary text-[11px]">Claimed</span>
-                      )}
-                    </td>
-
-                    <td className="py-3 px-3">
                       {lead.missingPhotos ? (
-                        <span className="text-amber-600 font-semibold text-[11px]">⚠️ &lt; 5 Photos</span>
+                        <span className="text-amber-600 font-semibold text-[11px] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          ⚠️ Нет фото с EXIF
+                        </span>
                       ) : (
                         <span className="text-google-green text-[11px]">Sufficient</span>
                       )}
                     </td>
 
                     <td className="py-3 px-3">
-                      {lead.missingWebsite ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">
-                          NO WEBSITE
-                        </span>
-                      ) : (
-                        <span className="text-google-text-tertiary text-[11px]">Has Site</span>
-                      )}
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+                        -{lead.monthlyLossFormatted}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-3 max-w-xs">
+                      <span className="text-[11px] text-slate-600 line-clamp-2">
+                        {lead.outreachHook}
+                      </span>
                     </td>
 
                     <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleCopyPitch(lead)}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                        >
+                          <Copy className="w-3 h-3" />
+                          <span>📋 Питч</span>
+                        </button>
                         <button
                           onClick={() => handleGenerateTeaser(lead.id)}
                           className="material-button-primary text-[11px] py-1 px-2.5"
                         >
-                          Generate Teaser Audit
+                          Аудит
                         </button>
                         <Link
                           href={`/audit/${lead.id}`}
                           target="_blank"
                           className="material-button-ghost text-[11px] py-1 px-2 text-google-blue"
                         >
-                          View Page <ExternalLink className="w-3 h-3 ml-1" />
+                          <ExternalLink className="w-3 h-3" />
                         </Link>
                       </div>
                     </td>

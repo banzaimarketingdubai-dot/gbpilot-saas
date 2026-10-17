@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { HealthGauge } from '@/components/HealthGauge';
 import { getSubscription, activateTrial } from '@/lib/subscription';
+import { runInspectionAudit } from '@/lib/inspection/auditEngine';
 
 export interface AuditActionCardItem {
   id: string;
@@ -72,6 +73,13 @@ export function OnboardingInspectionModal({
       setIsPro(sub.isPro);
     }
   }, []);
+
+  const auditReport = React.useMemo(() => {
+    return runInspectionAudit({
+      title: businessName,
+      address: businessAddress
+    });
+  }, [businessName, businessAddress]);
 
   // Scanning progress state
   const [scanProgress, setScanProgress] = useState(15);
@@ -448,7 +456,10 @@ export function OnboardingInspectionModal({
                   </span>
                 </div>
                 <span className="text-[11px] text-emerald-800">
-                  Estimated Revenue Recovery: <strong>+$1,450 / month</strong>
+                  Estimated Revenue Recovery: <strong>+{auditReport.revenueRecoveryFormatted}</strong>
+                  <span className="text-[10px] text-slate-500 block">
+                    Saved PPC Budget: {auditReport.savedAdSpendFormatted} ({auditReport.industryBenchmark.categoryGroup})
+                  </span>
                 </span>
               </div>
 
@@ -465,7 +476,7 @@ export function OnboardingInspectionModal({
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(
-                    `*Google Maps Audit Report for ${businessName}*\nHealth Score: 64/100 (Yellow Alert)\nProjected with AI Fixes: 98/100 (+$1,450/mo revenue)\nView Audit: https://gbpilot.top`
+                    `*Google Maps Audit Report for ${businessName}*\nHealth Score: 64/100 (Yellow Alert)\nProjected with AI Fixes: 98/100 (+${auditReport.revenueRecoveryFormatted} in Google Ads equiv)\nView Audit: https://gbpilot.top`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

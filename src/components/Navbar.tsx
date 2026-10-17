@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   Zap, 
   Bot, 
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { LocationQuotaModal } from '@/components/LocationQuotaModal';
 import { getSubscription, SubscriptionState } from '@/lib/subscription';
 import { isSuperAdmin, getUserRole, ROLE_DEFINITIONS } from '@/lib/roles';
 
@@ -58,9 +59,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onAutopilotToggle 
 }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const [autopilotMode, setAutopilotMode] = useState<string>('MANUAL_APPROVAL');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [isLocationQuotaModalOpen, setIsLocationQuotaModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<GoogleUser | null>(null);
@@ -79,8 +82,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const handleSubChange = () => setSubscription(getSubscription());
+      const handleOpenQuota = () => setIsLocationQuotaModalOpen(true);
       window.addEventListener('gbpilot_subscription_changed', handleSubChange);
-      return () => window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+      window.addEventListener('open_location_quota_modal', handleOpenQuota);
+      return () => {
+        window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+        window.removeEventListener('open_location_quota_modal', handleOpenQuota);
+      };
     }
   }, []);
 
@@ -244,12 +252,17 @@ export const Navbar: React.FC<NavbarProps> = ({
         })
         .catch(e => console.error("Could not fetch profiles from backend", e));
 
-      return () => window.removeEventListener('user_session_updated', handleUserUpdate);
+      return () => {
+        window.removeEventListener('user_session_updated', handleUserUpdate);
+      };
     }
   }, []);
 
   const handleGoogleLogin = async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'https://gbpilot-saas-production.up.railway.app';
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
     const loginUrl = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
     try {
@@ -266,6 +279,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
     window.location.href = loginUrl;
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const onRequireLogin = () => handleGoogleLogin();
+      window.addEventListener('require_google_login', onRequireLogin);
+      return () => window.removeEventListener('require_google_login', onRequireLogin);
+    }
+  }, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -317,6 +338,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const isUserSuperAdmin = currentUser ? isSuperAdmin(currentUser.email) : false;
+
+  const handleAddNewVenueClick = () => {
+    setIsLocationOpen(false);
+    if (!currentUser) {
+      window.dispatchEvent(new CustomEvent('require_google_login'));
+      return;
+    }
+    const limit = subscription.locationLimit || 1;
+    const canAdd = isUserSuperAdmin || availableProfiles.length < limit;
+    if (canAdd) {
+      router.push('/onboarding');
+    } else {
+      setIsLocationQuotaModalOpen(true);
+    }
+  };
 
   const navItems: { id: string; label: string; href: string; icon: any; badge?: string }[] = [
     { id: 'nav-dashboard', label: '⚡ Cockpit', href: '/dashboard', icon: Zap },
@@ -399,61 +435,92 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="absolute left-0 mt-2 w-72 bg-white rounded-xl border border-google-border p-1.5 shadow-material-2 z-50 text-xs"
                 >
                   <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-google-text-tertiary border-b border-google-border-light flex items-center justify-between">
-                    <span>Your Businesses ({availableProfiles.length})</span>
-                    <span className="text-emerald-600 font-bold">Google Verified</span>
+                    <span>Locations ({availableProfiles.length})</span>
+                    {isUserSuperAdmin ? (
+                      <span className="text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded font-black text-[9px] flex items-center gap-1">
+                        👑 Unlimited (Superadmin)
+                      </span>
+                    ) : (
+                      <span className="text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-semibold text-[9px]">
+                        Quota: {availableProfiles.length} / {subscription.locationLimit}
+                      </span>
+                    )}
                   </div>
-                  {availableProfiles.map((p, idx) => (
-                    <div key={idx} className="flex items-center justify-between mt-1 rounded-lg hover:bg-google-bg transition-colors group pr-1">
-                      <button
-                        onClick={() => {
-                          setSelectedProfile(p.name);
-                          setActiveProfile(p);
-                          if (typeof window !== 'undefined') {
-                            localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
-                            window.location.reload();
-                          }
-                          setIsLocationOpen(false);
-                        }}
-                        className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
-                          selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
-                        }`}
-                      >
-                        <div className="truncate max-w-[150px]">
-                          <div className="truncate font-semibold">{p.name}</div>
-                          <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
+                  
+                  <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 my-1">
+                    {availableProfiles.map((p, idx) => (
+                      <div key={idx} className="flex items-center justify-between py-0.5 rounded-lg hover:bg-google-bg transition-colors group pr-1">
+                        <button
+                          onClick={() => {
+                            setSelectedProfile(p.name);
+                            setActiveProfile(p);
+                            if (typeof window !== 'undefined') {
+                              localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
+                              window.location.reload();
+                            }
+                            setIsLocationOpen(false);
+                          }}
+                          className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
+                            selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
+                          }`}
+                        >
+                          <div className="truncate max-w-[150px]">
+                            <div className="truncate font-semibold">{p.name}</div>
+                            <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
+                          </div>
+                          <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
+                            {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
+                          </span>
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileToDelete(p.id || p.name);
+                            setIsLocationOpen(false);
+                          }}
+                          className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                          title="Unlink profile"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Prominent CTA: + Add Location */}
+                  <div className="pt-2 mt-1 border-t border-google-border-light space-y-1">
+                    <button
+                      type="button"
+                      onClick={handleAddNewVenueClick}
+                      className="w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between text-white bg-google-blue hover:bg-blue-600 font-bold transition-all shadow-xs cursor-pointer group"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="p-1 rounded-lg bg-white/20 group-hover:bg-white/30 transition-colors">
+                          <Plus className="w-3.5 h-3.5 text-white stroke-[2.5]" />
                         </div>
-                        <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
-                          {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
-                        </span>
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setProfileToDelete(p.id || p.name);
-                          setIsLocationOpen(false);
-                        }}
-                        className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-70 hover:opacity-100 transition-opacity"
-                        title="Отвязать профиль"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsLocationOpen(false);
-                      if (!currentUser) {
-                        window.dispatchEvent(new CustomEvent('require_google_login'));
-                        return;
-                      }
-                      window.dispatchEvent(new CustomEvent('open_user_profile_modal'));
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-lg flex items-center space-x-1.5 text-google-blue hover:bg-google-blue-light font-bold mt-1 border-t border-google-border-light pt-2 transition-colors"
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>🏢 Manage Businesses in Profile</span>
-                  </button>
+                        <span className="text-xs">+ Add Location</span>
+                      </div>
+                      <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded text-white font-semibold">
+                        {isUserSuperAdmin ? '👑 ∞' : `${availableProfiles.length}/${subscription.locationLimit}`}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLocationOpen(false);
+                        if (!currentUser) {
+                          window.dispatchEvent(new CustomEvent('require_google_login'));
+                          return;
+                        }
+                        window.dispatchEvent(new CustomEvent('open_user_profile_modal'));
+                      }}
+                      className="w-full text-left px-3 py-1.5 rounded-lg flex items-center space-x-1.5 text-slate-600 hover:text-google-blue hover:bg-slate-50 font-medium transition-colors cursor-pointer text-xs"
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Manage Locations in Account</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -680,7 +747,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         className="w-full text-left px-3 py-1.5 hover:bg-amber-50 rounded-lg font-bold text-amber-900 flex items-center gap-2 text-[11px]"
                       >
                         <Users className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Назначить роли пользователям</span>
+                        <span>Assign User Roles</span>
                       </Link>
                     </div>
                   )}
@@ -719,7 +786,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full text-left px-3 py-2 hover:bg-amber-50 text-amber-700 rounded-lg font-medium flex items-center gap-2"
                   >
                     <Unlink className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Отвязать аккаунт и профиль</span>
+                    <span>Disconnect Account & Profile</span>
                   </button>
                   <button
                     onClick={handleLogout}
@@ -793,22 +860,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="w-12 h-12 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mb-4">
                 <Unlink className="w-6 h-6 text-amber-600" />
               </div>
-              <h3 className="text-xl font-bold text-google-text-primary mb-2">Отвязать профиль?</h3>
+              <h3 className="text-xl font-bold text-google-text-primary mb-2">Unlink Profile?</h3>
               <p className="text-sm text-google-text-secondary mb-6 leading-relaxed">
-                Вы действительно хотите отвязать этот бизнес-профиль? Это освободит квоту на базовом тарифе (1 локация), и вы сможете подключить другое заведение или переключиться на свой реальный профиль.
+                Are you sure you want to unlink this business profile? This will free up your quota on the base plan (1 location), allowing you to connect a different venue or switch to your real profile.
               </p>
               <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={() => setProfileToDelete(null)}
                   className="flex-1 px-4 py-2.5 rounded-lg border border-google-border text-sm font-bold text-google-text-primary hover:bg-google-bg transition-colors"
                 >
-                  Отмена
+                  Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
                   className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold transition-colors shadow-sm"
                 >
-                  Да, отвязать
+                  Yes, Unlink
                 </button>
               </div>
             </div>
@@ -816,6 +883,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+
+    {/* Location Quota Paywall & Enterprise Contact Modal */}
+    <LocationQuotaModal
+      isOpen={isLocationQuotaModalOpen}
+      onClose={() => setIsLocationQuotaModalOpen(false)}
+      currentLocationsCount={availableProfiles.length}
+      activeProfileName={activeProfile?.name}
+      onUnlinkCurrent={() => {
+        setIsLocationQuotaModalOpen(false);
+        setProfileToDelete(activeProfile?.id || activeProfile?.name || null);
+      }}
+    />
 
     {/* Slide-over Actionable Notification Center Drawer */}
     <NotificationCenter 

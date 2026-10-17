@@ -45,7 +45,7 @@ $$\text{Поиск заведения без паролей} \longrightarrow \te
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                        GBPILOT DUBAI LANDING PAGE STRUCTURE                            │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [1] HERO BLOCK: Оффер + Интерактивный поиск заведений Дубая + Таб "Снос отзыва"        │
+│ [1] HERO BLOCK: Оффер + Единый интерактивный поиск заведений Дубая (Zero-Friction)     │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ [2] LIVE TEASER AUDIT: Мгновенная сетка 3x3 + Калькулятор упущенной выручки в AED     │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
@@ -80,13 +80,11 @@ $$\text{Поиск заведения без паролей} \longrightarrow \te
   *(Превратите красные точки в зеленые в Marina, Downtown и JLT на автопилоте)*
 * **Подзаголовок:**  
   Stop losing high-paying customers to competitors. GBPilot autonomously defends, optimizes, and scales your Google Maps ranking 24/7 without expensive agencies.
-* **Интерактивный Инпут с переключателем (Zero Friction):**
-  * **Таб 1: 🔍 [ Instant 10-Sec Google Audit ]**
-    * Поле ввода: `Enter business name in Dubai (e.g. Svoi Cafe, Al Wasl Clinic)...`
-    * Кнопка: `[ ⚡ Run Free Spatial Scan ]`
-  * **Таб 2: 🛡️ [ Remove a Fake Review (Review Takedown) ]**
-    * Поле ввода: `Paste malicious review text to dispute under UAE Cybercrime Law...`
-    * Кнопка: `[ ⚡ Start Takedown (1 Free Test) ]`
+* **Единый Интерактивный Инпут (Single-Focus Zero Friction):**
+  * **Поле поиска заведения (или прямой ссылки Google Maps):**
+    * Поле ввода: `Enter business name in Dubai or paste Google Maps link (e.g. Svoi Cafe, Al Wasl Clinic)...`
+    * Кнопка: `[ ⚡ Run Free 15-Sec Audit ]`
+  * *Примечание по UX:* Внешние табы (такие как отдельный тест сноса отзыва на первом экране) убраны, чтобы не размывать внимание пользователя и сохранить 100% конверсию в живой аудит профиля.
 * **Микро-социальное доказательство:**  
   `⭐️ Rated 4.9/5 by 140+ businesses across DIFC, Jumeirah, Marina & Business Bay`
 

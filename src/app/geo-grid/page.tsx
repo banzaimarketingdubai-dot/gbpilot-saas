@@ -20,11 +20,18 @@ import {
   Target,
   Tag,
   Map,
-  RotateCcw
+  RotateCcw,
+  Copy,
+  Lock,
+  ExternalLink,
+  DollarSign
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
+import { getSubscription, activateTrial } from '@/lib/subscription';
+import { loadOwnerGroundTruth, OwnerGroundTruth } from '@/lib/groundTruth';
+import { buildDirectoryBlueprints, DirectoryPlatformId } from '@/lib/geo/directoryBuilder';
 
 const getProfileCoords = (profile: any): { lat: number; lng: number } => {
   if (!profile) return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina
@@ -246,12 +253,21 @@ const getDefaultKeywordPills = (profile: any): KeywordPill[] => {
 
 export default function GeoGridPage() {
   const [activeTab, setActiveTab] = useState<'MAPS_GRID' | 'AI_LLM_GEO'>('MAPS_GRID');
-  const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string; city?: string; id?: string; lat?: number; lng?: number; location?: string} | null>(null);
+  const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string; city?: string; id?: string; lat?: number; lng?: number; location?: string; phone?: string; website_url?: string} | null>(null);
   const [selectedKeyword, setSelectedKeyword] = useState('');
   const [gridSize, setGridSize] = useState<'3x3' | '5x5' | '7x7'>('3x3');
   const [selectedNode, setSelectedNode] = useState<{ pos: number; rank: number; competitor: string } | null>(null);
   const [showMapBackdrop, setShowMapBackdrop] = useState(true);
   const mapCoords = getProfileCoords(activeProfile);
+
+  // Multi-Platform Field-by-Field Directory Builder state (Tab 2: AI_LLM_GEO)
+  const [isProPlan, setIsProPlan] = useState<boolean>(false);
+  const [groundTruth, setGroundTruth] = useState<OwnerGroundTruth | null>(null);
+  const [selectedDirectoryPlatform, setSelectedDirectoryPlatform] = useState<DirectoryPlatformId>('APPLE_MAPS');
+  const [copiedBlockId, setCopiedBlockId] = useState<string | null>(null);
+  const [customBlockOverrides, setCustomBlockOverrides] = useState<Record<string, string>>({});
+  const [completedPlatforms, setCompletedPlatforms] = useState<Record<string, boolean>>({});
+  const [geoToast, setGeoToast] = useState<string | null>(null);
 
   // Keyword Grounding state
   const [keywordPills, setKeywordPills] = useState<KeywordPill[]>([]);
@@ -294,6 +310,11 @@ export default function GeoGridPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const sub = getSubscription();
+      setIsProPlan(sub.isPro);
+      const handleSubChange = () => setIsProPlan(getSubscription().isPro);
+      window.addEventListener('gbpilot_subscription_changed', handleSubChange);
+
       const stored = localStorage.getItem('gbpilot_active_profile');
       let parsedProfile: any = null;
       if (stored) {
@@ -303,6 +324,15 @@ export default function GeoGridPage() {
         } catch (e) {
           console.error(e);
         }
+      }
+
+      setGroundTruth(loadOwnerGroundTruth(parsedProfile));
+
+      const savedCompleted = localStorage.getItem('gbpilot_directory_completed');
+      if (savedCompleted) {
+        try {
+          setCompletedPlatforms(JSON.parse(savedCompleted));
+        } catch (e) {}
       }
 
       const profileKey = parsedProfile?.id || parsedProfile?.name || 'default';
@@ -336,8 +366,83 @@ export default function GeoGridPage() {
       } else {
         setSelectedKeyword('Visa Run Nha Trang');
       }
+
+      return () => {
+        window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+      };
     }
   }, []);
+
+  const directoryBlueprints = React.useMemo(() => {
+    return buildDirectoryBlueprints(
+      activeProfile
+        ? {
+            ...activeProfile,
+            lat: mapCoords.lat,
+            lng: mapCoords.lng
+          }
+        : null,
+      groundTruth
+    );
+  }, [activeProfile, mapCoords.lat, mapCoords.lng, groundTruth]);
+
+  const activeDirectoryBlueprint = directoryBlueprints.find(d => d.id === selectedDirectoryPlatform) || directoryBlueprints[0];
+
+  const handleCopyDirectoryBlock = (blockId: string, textValue: string, fieldTitle: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(textValue);
+      setCopiedBlockId(blockId);
+      setGeoToast(`📋 Скопировано: «${fieldTitle}» — готово к вставке в личный кабинет!`);
+      setTimeout(() => {
+        setCopiedBlockId(null);
+        setGeoToast(null);
+      }, 3200);
+    }
+  };
+
+  const handleCopyAllDirectoryBlocks = () => {
+    if (!isProPlan) {
+      handleUnlockProDirectory();
+      return;
+    }
+    const compiled = activeDirectoryBlueprint.blocks
+      .map(b => {
+        const val = customBlockOverrides[b.id] !== undefined ? customBlockOverrides[b.id] : b.value;
+        return `=== ${b.fieldTitle} (${b.exactCabinetPath}) ===\n${val}`;
+      })
+      .join('\n\n');
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(compiled);
+      setCopiedBlockId('ALL_BLOCKS');
+      setGeoToast(`📋 Все ${activeDirectoryBlueprint.blocks.length} блоков для ${activeDirectoryBlueprint.name} скопированы в буфер обмена!`);
+      setTimeout(() => {
+        setCopiedBlockId(null);
+        setGeoToast(null);
+      }, 3500);
+    }
+  };
+
+  const handleTogglePlatformCompleted = (platformId: string) => {
+    const next = { ...completedPlatforms, [platformId]: !completedPlatforms[platformId] };
+    setCompletedPlatforms(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gbpilot_directory_completed', JSON.stringify(next));
+    }
+    setGeoToast(
+      next[platformId]
+        ? '✅ Площадка отмечена как заполненная на 100%! ИИ-индекс видимости обновлен.'
+        : 'Статус заполнения площадки снят.'
+    );
+    setTimeout(() => setGeoToast(null), 3500);
+  };
+
+  const handleUnlockProDirectory = () => {
+    activateTrial(14);
+    setIsProPlan(true);
+    setGeoToast('🎉 14-дневный доступ к пакету Pro активирован ($0 сегодня)! Все блоки полей открыты для копирования.');
+    setTimeout(() => setGeoToast(null), 4500);
+  };
 
   const handleAddCustomKeyword = (e: React.FormEvent) => {
     e.preventDefault();
@@ -998,51 +1103,357 @@ export default function GeoGridPage() {
           </div>
         )}
 
-        {/* TAB 2: AI SEARCH SHARE-OF-VOICE (GEO) */}
+        {/* TAB 2: AI SEARCH SHARE-OF-VOICE (GEO) & FIELD-BY-FIELD DIRECTORY BUILDER */}
         {activeTab === 'AI_LLM_GEO' && (
-          <div className="space-y-6">
-            
+          <div className="space-y-6 animate-in fade-in duration-300">
+
+            {/* Toast Banner */}
+            {geoToast && (
+              <div className="p-3.5 rounded-2xl bg-slate-900 text-white text-xs font-medium flex items-center justify-between gap-3 shadow-lg border border-slate-700 animate-in slide-in-from-top duration-200">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{geoToast}</span>
+                </div>
+                <button onClick={() => setGeoToast(null)} className="text-slate-400 hover:text-white cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             {/* LLM Mentions Metric Overview */}
             <div className="grid md:grid-cols-3 gap-6">
-              
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
-                <span className="text-xs font-semibold text-google-text-secondary block">ChatGPT Brand Mention Rate</span>
-                <span className="text-2xl font-black text-google-blue">68%</span>
-                <p className="text-[11px] text-google-text-tertiary">Indexed across local queries</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-google-text-secondary">ChatGPT &amp; Siri Mention Rate</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200">
+                    Донор: Apple Maps + TripAdvisor
+                  </span>
+                </div>
+                <span className="text-2xl font-black text-google-blue block">
+                  {68 + Object.values(completedPlatforms).filter(Boolean).length * 6}%
+                </span>
+                <p className="text-[11px] text-google-text-tertiary">
+                  Частота рекомендаций заведения в ответах ChatGPT Search и Siri CarPlay
+                </p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
-                <span className="text-xs font-semibold text-google-text-secondary block">Gemini AI Overviews Share</span>
-                <span className="text-2xl font-black text-google-green">84%</span>
-                <p className="text-[11px] text-google-text-tertiary">Top citation in Google AI Overviews</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-google-text-secondary">Gemini AI Overviews Share</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Донор: Google Maps + TimeOut
+                  </span>
+                </div>
+                <span className="text-2xl font-black text-google-green block">
+                  {84 + Object.values(completedPlatforms).filter(Boolean).length * 3}%
+                </span>
+                <p className="text-[11px] text-google-text-tertiary">
+                  Присутствие в ИИ-сводках Google над результатами поиска
+                </p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
-                <span className="text-xs font-semibold text-google-text-secondary block">Perplexity Recommendation Index</span>
-                <span className="text-2xl font-black text-purple-600">72%</span>
-                <p className="text-[11px] text-google-text-tertiary">Direct citation in answer synthesis</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-google-text-secondary">Perplexity &amp; Навигаторы</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                    Донор: 2GIS + TripAdvisor
+                  </span>
+                </div>
+                <span className="text-2xl font-black text-purple-600 block">
+                  {72 + Object.values(completedPlatforms).filter(Boolean).length * 5}%
+                </span>
+                <p className="text-[11px] text-google-text-tertiary">
+                  Индексация прайс-листа, точного входа и отзывов внешними ИИ-агентами
+                </p>
               </div>
-
             </div>
 
-            {/* Target Curated Local Lists Outreach Table */}
-            <div className="material-card p-6 bg-white space-y-4 border border-google-border rounded-2xl shadow-sm">
-              <div className="flex items-center justify-between border-b border-google-border-light pb-4">
-                <div>
-                  <h3 className="font-bold text-google-text-primary text-sm flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-google-blue" />
-                    Expert Curated Lists & Citation Targets
-                  </h3>
-                  <p className="text-xs text-google-text-secondary">High-authority local directories and citations referenced by generative AI models.</p>
+            {/* ======================================================== */}
+            {/* MULTI-PLATFORM 100% EXACT FIELD-BY-FIELD BUILDER (PRO)   */}
+            {/* ======================================================== */}
+            <div className="material-card p-5 sm:p-6 bg-white space-y-6 border border-google-border rounded-2xl shadow-sm">
+              
+              {/* Header & Pro Status */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-google-border-light pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Sparkles className="w-5 h-5 text-google-blue" />
+                    <h3 className="font-black text-slate-900 text-base sm:text-lg">
+                      Полевой Конструктор Внешних Карт и ИИ-Каталогов (100% Точность Полей)
+                    </h3>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                      isProPlan
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                    }`}>
+                      {isProPlan ? '✓ Pro Пакет Активен (Все блоки открыты)' : '🔒 Доступно в платном пакете Pro'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
+                    Нейросети (ChatGPT, Siri, Perplexity) и водители на iPhone ищут ваш бизнес в <strong>Apple Maps, 2GIS, TripAdvisor и подборках СМИ</strong>. Мы разбили данные <strong>{activeProfile?.name || 'вашего бизнеса'}</strong> строго по реальным полям ввода и лимитам символов каждой площадки — просто откройте кабинет и перенесите готовые блоки копипастом за 3 минуты.
+                  </p>
+                </div>
+
+                {!isProPlan && (
+                  <button
+                    type="button"
+                    onClick={handleUnlockProDirectory}
+                    className="px-4 py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer shrink-0 self-start lg:self-center"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Открыть все поля (14 дней Pro за $0)</span>
+                  </button>
+                )}
+              </div>
+
+              {/* 4 Platform Selector Tabs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {directoryBlueprints.map((platform) => {
+                  const isSelected = selectedDirectoryPlatform === platform.id;
+                  const isDone = Boolean(completedPlatforms[platform.id]);
+
+                  return (
+                    <button
+                      key={platform.id}
+                      type="button"
+                      onClick={() => setSelectedDirectoryPlatform(platform.id)}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                        isSelected
+                          ? 'border-google-blue bg-blue-50/40 ring-2 ring-google-blue/20 shadow-xs'
+                          : 'border-slate-200 bg-slate-50/60 hover:bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
+                          {platform.badge}
+                        </span>
+                        {isDone ? (
+                          <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                            100%
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-slate-400">
+                            {platform.blocks.length} блоков
+                          </span>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="font-bold text-xs text-slate-900 leading-snug">
+                          {platform.name}
+                        </div>
+                        <div className="text-[11px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
+                          <DollarSign className="w-3 h-3 shrink-0" />
+                          <span>Потенциал: {platform.estimatedMonthlyValue}</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Platform Summary & Action Bar */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2.5 py-0.5 rounded-full">
+                      {activeDirectoryBlueprint.aiCitationImpact}
+                    </span>
+                    <span className="text-[11px] text-emerald-300 font-bold">
+                      • Время переноса: {activeDirectoryBlueprint.completionTime}
+                    </span>
+                  </div>
+                  <h4 className="font-extrabold text-sm sm:text-base text-white">
+                    {activeDirectoryBlueprint.name}
+                  </h4>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    {activeDirectoryBlueprint.financialWhyText}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <a
+                    href={activeDirectoryBlueprint.portalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/15 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <span>1. Открыть {activeDirectoryBlueprint.portalDomain}</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyAllDirectoryBlocks}
+                    className="px-4 py-2.5 rounded-xl bg-google-blue hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                  >
+                    {copiedBlockId === 'ALL_BLOCKS' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Все блоки скопированы!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>2. Скопировать все {activeDirectoryBlueprint.blocks.length} блоков</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePlatformCompleted(activeDirectoryBlueprint.id)}
+                    className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-colors cursor-pointer ${
+                      completedPlatforms[activeDirectoryBlueprint.id]
+                        ? 'bg-emerald-500 text-white border-emerald-400'
+                        : 'bg-white/5 hover:bg-white/15 text-slate-200 border-white/20'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>
+                      {completedPlatforms[activeDirectoryBlueprint.id] ? 'Заполнено на 100%' : 'Отметить готовым'}
+                    </span>
+                  </button>
                 </div>
               </div>
 
-              <div className="p-8 text-center text-xs text-google-text-secondary space-y-2">
-                <p className="font-semibold text-google-text-primary">Citation Monitoring Active</p>
-                <p className="text-[11px] max-w-md mx-auto">
-                  For "{activeProfile?.name || 'your business'}", local citations are indexed dynamically based on live Geo-Grid search performance.
-                </p>
+              {/* Field-by-Field Blocks List */}
+              <div className="space-y-4">
+                {activeDirectoryBlueprint.blocks.map((block) => {
+                  const isUnlocked = isProPlan || block.isFreePreview;
+                  const currentValue =
+                    customBlockOverrides[block.id] !== undefined ? customBlockOverrides[block.id] : block.value;
+                  const charCount = currentValue.length;
+                  const isOverLimit = block.maxChars ? charCount > block.maxChars : false;
+
+                  return (
+                    <div
+                      key={block.id}
+                      className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                        isUnlocked
+                          ? 'bg-white border-slate-200 shadow-2xs'
+                          : 'bg-slate-50/80 border-slate-200/80 relative overflow-hidden'
+                      }`}
+                    >
+                      {/* Block Top Bar: Title, Cabinet Path & Copy Button */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-google-blue border border-blue-200 text-[10px] font-extrabold">
+                              Поле #{block.blockNumber}
+                            </span>
+                            <h5 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                              {block.fieldTitle}
+                            </h5>
+                            {block.isFreePreview && !isProPlan && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Открыто для теста
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-slate-700">Путь в кабинете:</span>
+                            <code className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-mono text-[10px] border border-slate-200">
+                              {block.exactCabinetPath}
+                            </code>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                          {block.maxChars && (
+                            <span
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${
+                                isOverLimit
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}
+                            >
+                              {charCount} / {block.maxChars} симв. ✓
+                            </span>
+                          )}
+
+                          {isUnlocked ? (
+                            <button
+                              type="button"
+                              onClick={() => handleCopyDirectoryBlock(block.id, currentValue, block.fieldTitle)}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                                copiedBlockId === block.id
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-google-blue hover:bg-blue-600 text-white shadow-2xs'
+                              }`}
+                            >
+                              {copiedBlockId === block.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Скопировано!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span>📋 Скопировать поле</span>
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleUnlockProDirectory}
+                              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                              <span>Открыть в Pro ($0 тест)</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Validation & Moderation Rule Hint */}
+                      <div className="my-2.5 px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-950 flex items-start gap-2">
+                        <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                        <span>
+                          <strong>Требование площадки:</strong> {block.validationRule}
+                        </span>
+                      </div>
+
+                      {/* Field Content (Editable when unlocked, blurred preview when locked on Free Scout) */}
+                      {isUnlocked ? (
+                        <textarea
+                          rows={currentValue.split('\n').length > 2 ? Math.min(6, currentValue.split('\n').length + 1) : 2}
+                          value={currentValue}
+                          onChange={(e) =>
+                            setCustomBlockOverrides((prev) => ({
+                              ...prev,
+                              [block.id]: e.target.value
+                            }))
+                          }
+                          className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-xs text-slate-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue"
+                        />
+                      ) : (
+                        <div className="relative rounded-xl border border-slate-200 bg-slate-100/70 p-3.5 overflow-hidden">
+                          <pre className="text-xs font-mono text-slate-400 select-none blur-[4px] whitespace-pre-wrap line-clamp-3">
+                            {currentValue}
+                          </pre>
+                          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex flex-col sm:flex-row items-center justify-center gap-3 p-3 text-center">
+                            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                              <Lock className="w-4 h-4 text-google-blue shrink-0" />
+                              <span>Готовый блок под лимит {activeDirectoryBlueprint.name} доступен в пакете Pro</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleUnlockProDirectory}
+                              className="px-3.5 py-1.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold shadow-xs cursor-pointer"
+                            >
+                              Разблокировать бесплатно (14 дней) →
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
             </div>
 
           </div>

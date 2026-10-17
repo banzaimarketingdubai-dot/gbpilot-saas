@@ -116,6 +116,9 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
         except Exception as e:
             print(f"[Scraper] OpenStreetMap lookup failed: {e}")
 
+    if not place_details and (lat == 25.2048 and lng == 55.2708 and address == "Central District"):
+        raise ValueError(f"Venue '{business_name}' not found on Google Maps. Please provide a direct Google Maps link or include the city.")
+
     # 3. AI Category & Tailored Optimization Leaks analysis (using Gemini)
     issues = [
         f"Missing Secondary Category: {category} Specialty & Training",
@@ -147,6 +150,8 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
     website = place_details.get("website_url") if (place_details and place_details.get("website_url")) else ""
     cover_photo = place_details.get("cover_url") if place_details else None
     real_reviews = place_details.get("reviews", []) if place_details else []
+    open_now = place_details.get("open_now") if place_details else None
+    opening_hours = place_details.get("opening_hours", []) if place_details else []
 
     return {
         "google_location_id": real_place_id,
@@ -162,6 +167,8 @@ async def scrape_google_business_profile(business_name: str, location: str = Non
         "website_url": website,
         "cover_url": cover_photo,
         "booking_url": None,
+        "open_now": open_now,
+        "opening_hours": opening_hours,
         "health_score": health_score,
         "reviews_count": reviews_count,
         "rating": rating,

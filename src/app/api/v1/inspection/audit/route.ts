@@ -5,16 +5,17 @@ import { GoogleBusinessProfileClient } from '@/lib/gbp/client';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { locationName, accessToken, subscriptionTier = 'FREE' } = body;
+    const { locationName, accessToken, subscriptionTier = 'FREE', locationData: incomingLocationData } = body;
 
-    let locationData = {};
+    let locationData: any = incomingLocationData || {};
 
     if (accessToken) {
       try {
         const client = new GoogleBusinessProfileClient(accessToken);
-        locationData = await client.getLocationDetails(locationName || '');
+        const details = await client.getLocationDetails(locationName || '');
+        locationData = { ...locationData, ...details };
       } catch (e) {
-        console.warn('Using simulated location data for audit:', e);
+        console.warn('Using fallback location data for audit:', e);
       }
     }
 

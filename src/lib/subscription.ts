@@ -1,4 +1,4 @@
-export type PlanId = 'FREE_SCOUT' | 'STARTER' | 'PRO_GROWTH' | 'AGENCY';
+export type PlanId = 'FREE_SCOUT' | 'SLEEP_GUARD' | 'STARTER' | 'PRO_GROWTH' | 'AGENCY';
 
 export interface PlanDetails {
   id: PlanId;
@@ -23,6 +23,20 @@ export const PLANS: Record<PlanId, PlanDetails> = {
       'Free Manual Copy-Paste',
       '1 Free Legal Takedown Dossier',
       'Community Support'
+    ]
+  },
+  SLEEP_GUARD: {
+    id: 'SLEEP_GUARD',
+    name: 'Sleep Guard Mode (24/7 Shield Only)',
+    priceAed: 35,
+    priceUsd: 9,
+    locationLimit: 1,
+    isPro: false,
+    features: [
+      '1 Location Protected 24/7',
+      '5-Min Auto-Revert of Competitor Edits',
+      'Phone (NAP), Hours & Status Lock',
+      'AI Posts & Campaigns Paused'
     ]
   },
   STARTER: {

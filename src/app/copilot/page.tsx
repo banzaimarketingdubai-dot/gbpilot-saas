@@ -35,6 +35,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { getSubscription, activateTrial } from '@/lib/subscription';
+import { loadOwnerGroundTruth, saveOwnerGroundTruth, getGroundTruthPresets, OwnerGroundTruth } from '@/lib/groundTruth';
 
 interface ChatMessage {
   id: string;
@@ -363,6 +364,13 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
     setTimeout(() => setPostPublishedToast(null), 4000);
   };
 
+  // Owner Ground Truth Vault state
+  const [groundTruth, setGroundTruth] = useState<OwnerGroundTruth | null>(null);
+  const [isEditingGroundTruth, setIsEditingGroundTruth] = useState(false);
+  const [gtFlagship, setGtFlagship] = useState('');
+  const [gtPersona, setGtPersona] = useState('');
+  const [gtRules, setGtRules] = useState('');
+
   // Lower Studio: AI Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -370,6 +378,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
 
   useEffect(() => {
     let profileName = 'Your Business';
+    let parsedProfile: any = null;
     if (typeof window !== 'undefined') {
       const sub = getSubscription();
       setIsProPlan(sub.isPro);
@@ -383,6 +392,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
+          parsedProfile = parsed;
           setActiveProfile(parsed);
           if (parsed.name && parsed.name !== 'No Business Connected') {
             profileName = parsed.name;
@@ -394,6 +404,12 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
           console.error(e);
         }
       }
+
+      const loadedGt = loadOwnerGroundTruth(parsedProfile);
+      setGroundTruth(loadedGt);
+      setGtFlagship(loadedGt.flagshipOffering);
+      setGtPersona(loadedGt.guestPersona);
+      setGtRules(loadedGt.venueRulesAndPerks);
 
       setMessages([
         {
@@ -410,6 +426,19 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
     }
   }, []);
 
+  const handleSaveGroundTruthVault = () => {
+    const updated = saveOwnerGroundTruth(activeProfile, {
+      flagshipOffering: gtFlagship,
+      guestPersona: gtPersona,
+      venueRulesAndPerks: gtRules,
+      skipped: false
+    });
+    setGroundTruth(updated);
+    setIsEditingGroundTruth(false);
+    setPostPublishedToast('🧠 Память о заведении (Owner Ground Truth) обновлена! ИИ будет учитывать эти факты во всех постах и ответах.');
+    setTimeout(() => setPostPublishedToast(null), 4000);
+  };
+
   const quickPromptChips = [
     { label: '🔍 Analyze competitor #1', query: 'Analyze the #1 ranked competitor in our neighborhood and detail our overtake counter-moves.' },
     { label: '📝 Write weekend promo post', query: 'Draft a high-engagement Google Business post for our weekend promotional offer with local SEO keywords.' },
@@ -423,7 +452,23 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
       const bName = activeProfile?.name || 'Our Venue';
       const isVisa = bName.toLowerCase().includes('visa') || bName.toLowerCase().includes('виза');
 
-      if (isVisa) {
+      if (groundTruth?.isCompleted && groundTruth.flagshipOffering) {
+        const rulesSnippet = groundTruth.venueRulesAndPerks ? ` ${groundTruth.venueRulesAndPerks}.` : '';
+        const personaSnippet = groundTruth.guestPersona ? ` Tailored for ${groundTruth.guestPersona.toLowerCase()}.` : '';
+        setCurrentPost({
+          title: `Featured at ${bName}: ${groundTruth.flagshipOffering.slice(0, 48)}`,
+          content: `Visit ${bName} for ${groundTruth.flagshipOffering}.${personaSnippet}${rulesSnippet} Reserve or drop in today!`,
+          ctaType: isVisa ? 'BOOK' : 'ORDER',
+          ctaUrl: 'https://gbpilot.top',
+          targetKeywords: [
+            groundTruth.flagshipOffering.split(',')[0].slice(0, 28).toLowerCase(),
+            'top rated local',
+            activeProfile?.city?.toLowerCase() || 'dubai'
+          ],
+          photoTaggingAdvice: 'Attach high-resolution photo geotagged with your exact Google coordinates to boost primary map centroid visibility.',
+          scheduledDate: 'This Friday at 10:00 AM'
+        });
+      } else if (isVisa) {
         setCurrentPost({
           title: 'Express Visa Extension & Border Run Services',
           content: `Need a seamless visa renewal or fast-track border run? ${bName} provides fully verified documentation and VIP transport. Book your consultation today.`,
@@ -579,6 +624,113 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
               <span>Full Context Grounded</span>
             </span>
           </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* OWNER GROUND TRUTH VAULT (ПАМЯТЬ О ЗАВЕДЕНИИ)             */}
+        {/* ======================================================== */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Sparkles className="w-4 h-4 text-google-blue" />
+                <h2 className="font-bold text-slate-900 text-sm sm:text-base">
+                  🧠 Память о заведении (Owner Ground Truth Vault)
+                </h2>
+                {groundTruth?.isCompleted ? (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    ✓ Синхронизировано с ИИ
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
+                    ⚡ Не заполнено (+28% к конверсии при заполнении)
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                Инсайдерские факты от владельца (флагманская услуга, аудитория, парковка и правила), чтобы ИИ продвигал самые прибыльные позиции без галлюцинаций.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsEditingGroundTruth(!isEditingGroundTruth)}
+              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors cursor-pointer self-start sm:self-auto shrink-0"
+            >
+              {isEditingGroundTruth ? 'Свернуть редактор' : groundTruth?.isCompleted ? '✏️ Изменить факты' : '⚡ Заполнить за 30 сек'}
+            </button>
+          </div>
+
+          {!isEditingGroundTruth && groundTruth?.isCompleted && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+              <div className="p-3 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase text-google-blue block">1. Продукт-магнит (Маржа)</span>
+                <p className="font-semibold text-slate-800">{groundTruth.flagshipOffering || '—'}</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-emerald-50/40 border border-emerald-100 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase text-emerald-700 block">2. Идеальный клиент</span>
+                <p className="font-semibold text-slate-800">{groundTruth.guestPersona || '—'}</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-purple-50/40 border border-purple-100 space-y-1">
+                <span className="text-[10px] font-extrabold uppercase text-purple-700 block">3. Парковка и правила</span>
+                <p className="font-semibold text-slate-800">{groundTruth.venueRulesAndPerks || '—'}</p>
+              </div>
+            </div>
+          )}
+
+          {isEditingGroundTruth && (
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs animate-in fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-800 block">1. Ваш продукт-магнит / топ-услуга:</label>
+                  <input
+                    type="text"
+                    value={gtFlagship}
+                    onChange={(e) => setGtFlagship(e.target.value)}
+                    placeholder={getGroundTruthPresets(activeProfile).placeholders.flagship}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-800 block">2. Кто ваш главный клиент:</label>
+                  <input
+                    type="text"
+                    value={gtPersona}
+                    onChange={(e) => setGtPersona(e.target.value)}
+                    placeholder={getGroundTruthPresets(activeProfile).placeholders.persona}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-800 block">3. Парковка, правила и фишки:</label>
+                  <input
+                    type="text"
+                    value={gtRules}
+                    onChange={(e) => setGtRules(e.target.value)}
+                    placeholder={getGroundTruthPresets(activeProfile).placeholders.rules}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingGroundTruth(false)}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold text-xs cursor-pointer"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveGroundTruthVault}
+                  className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Сохранить в память ИИ</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ======================================================== */}
