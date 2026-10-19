@@ -80,6 +80,7 @@ interface ActiveBusinessProfile {
   cover_url?: string;
   photo_url?: string;
   snapshot_url?: string;
+  description?: string;
 }
 
 const generateActionItems = (_profile: ActiveBusinessProfile | null): ActionItem[] => {
@@ -1829,9 +1830,13 @@ export default function DashboardCockpitPage() {
         onClose={() => setIsInspectionModalOpen(false)}
         businessName={activeProfile?.name || '—'}
         businessAddress={activeProfile?.address || '—'}
+        category={activeProfile?.category}
+        city={activeProfile?.city}
+        currentDescription={activeProfile?.description}
+        currentPhone={activeProfile?.phone}
         onComplete={() => {
           setIsInspectionModalOpen(false);
-          showToast('Profile optimization applied successfully! AI Sentinel Shield Active.');
+          showToast('Оптимизация профиля успешно применена! Карточка Google Maps обновлена.');
         }}
       />
 
