@@ -174,15 +174,15 @@ export function detectReviewExtortion(
 
   if (rating <= 2) {
     if (matchedPhrases.length > 0) {
-      signals.push(`Выявлены маркеры вымогательства: "${matchedPhrases.slice(0, 2).join('", "')}" (Review Extortion Scheme)`);
+      signals.push(`Identified extortion markers: "${matchedPhrases.slice(0, 2).join('", "')}" (Review Extortion Scheme)`);
       score += 0.85;
     }
     if (text.includes('telegram') || text.includes('@') || text.includes('whatsapp') || text.includes('t.me')) {
-      signals.push('Попытка перевода в сторонний мессенджер для требования выкупа (Off-platform extortion)');
+      signals.push('Attempted off-platform messenger redirection for ransom demand (Off-platform extortion)');
       score += 0.4;
     }
     if (text.length < 40 && (text.includes('fake') || text.includes('scam') || text.includes('мошенники') || text.includes('ужасно'))) {
-      signals.push('Шаблонная бот-атака без деталей чека или услуги');
+      signals.push('Generic bot attack without purchase or service details');
       score += 0.3;
     }
   }
@@ -197,8 +197,8 @@ export function detectReviewExtortion(
     detectedSignals: signals,
     recommendedAction: isExtortion ? 'EXPEDITED_TAKEDOWN' : isSuspicious ? 'LEGAL_ESCALATION' : 'MONITOR',
     suggestedDossierReason: isExtortion
-      ? 'Нарушение политики Google Maps Prohibited Content: Шантаж, вымогательство и координация ложных отзывов (Section 3.2: Deceptive Content & Extortion).'
-      : 'Подозрение на конкурентную спам-атаку без факта коммерческого взаимодействия.'
+      ? 'Google Maps Prohibited Content Policy Violation: Extortion, blackmail, and coordinated negative reviews (Section 3.2: Deceptive Content & Extortion).'
+      : 'Suspected competitor spam attack without evidence of commercial transaction.'
   };
 }
 
@@ -264,7 +264,8 @@ Escalation Timestamp: ${new Date().toISOString()}`;
 
 export interface ProfileFieldRisk {
   field: 'PHONE' | 'ADDRESS' | 'CATEGORY' | 'HOURS' | 'SERVICES' | 'PRODUCTS' | 'PHOTOS' | 'DESCRIPTION';
-  nameRu: string;
+  name: string;
+  nameRu?: string;
   riskLevel: 'CRITICAL_SUSPENSION_RISK' | 'MODERATE_RISK' | 'ZERO_RISK_SAFE';
   suspensionProbability: number;
   requiresVideoReverification: boolean;
@@ -277,90 +278,98 @@ export interface ProfileFieldRisk {
 export const GBP_FIELD_RISK_MATRIX: Record<string, ProfileFieldRisk> = {
   PHONE: {
     field: 'PHONE',
-    nameRu: 'Номер телефона (NAP Core)',
+    name: 'Primary Phone Number (NAP Core)',
+    nameRu: 'Primary Phone Number (NAP Core)',
     riskLevel: 'CRITICAL_SUSPENSION_RISK',
     suspensionProbability: 0.85,
     requiresVideoReverification: true,
     estimatedDowntimeDays: 14,
     financialLossEstimateUsd: 4200,
     financialLossEstimateAed: 15400,
-    advisoryText: 'Изменение номера на активном профиле вызывает бан (Suspension) в 85% случаев с требованием видеоверификации вывески и помещения. Профиль заморожен на 2–3 недели, потеря всех звонков.'
+    advisoryText: 'Changing the phone number on an active listing triggers an algorithmic suspension in 85% of cases with mandatory video re-verification. Listing downtime lasts 2–3 weeks, resulting in total loss of calls.'
   },
   ADDRESS: {
     field: 'ADDRESS',
-    nameRu: 'Физический адрес (NAP Core)',
+    name: 'Physical Street Address (NAP Core)',
+    nameRu: 'Physical Street Address (NAP Core)',
     riskLevel: 'CRITICAL_SUSPENSION_RISK',
     suspensionProbability: 0.90,
     requiresVideoReverification: true,
     estimatedDowntimeDays: 21,
     financialLossEstimateUsd: 8500,
     financialLossEstimateAed: 31200,
-    advisoryText: 'Критический риск суспенда (90%). Google сбрасывает все накопленные гео-сигналы и требует официальный договор аренды и видеосъемку с улицы до офиса.'
+    advisoryText: 'Critical suspension risk (90%). Google wipes all accumulated geo-rank authority signals and demands lease agreement proof plus continuous video walkthrough from street to storefront.'
   },
   CATEGORY: {
     field: 'CATEGORY',
-    nameRu: 'Основная категория бизнеса',
+    name: 'Primary Business Category',
+    nameRu: 'Primary Business Category',
     riskLevel: 'MODERATE_RISK',
     suspensionProbability: 0.25,
     requiresVideoReverification: false,
     estimatedDowntimeDays: 3,
     financialLossEstimateUsd: 650,
     financialLossEstimateAed: 2400,
-    advisoryText: 'Умеренный риск. Вызывает переиндексацию профиля и временную просадку позиций в локальной выдаче на 3–7 дней.'
+    advisoryText: 'Moderate risk. Triggers listing re-indexing and a temporary ranking volatility dip in local 3-pack for 3–7 days.'
   },
   SERVICES: {
     field: 'SERVICES',
-    nameRu: 'Каталог услуг (Services Catalog)',
+    name: 'Services Catalog',
+    nameRu: 'Services Catalog',
     riskLevel: 'ZERO_RISK_SAFE',
     suspensionProbability: 0.0,
     requiresVideoReverification: false,
     estimatedDowntimeDays: 0,
     financialLossEstimateUsd: 0,
     financialLossEstimateAed: 0,
-    advisoryText: 'Абсолютно безопасно (Риск бана 0%). Прямой буст в релевантности по длинному хвосту поисковых запросов (+18% показов).'
+    advisoryText: '100% Safe (0% Suspension Risk). Directly boosts relevance and impressions across long-tail search queries (+18% visibility).'
   },
   PRODUCTS: {
     field: 'PRODUCTS',
-    nameRu: 'Витрина товаров (Products Showcase)',
+    name: 'Products Showcase',
+    nameRu: 'Products Showcase',
     riskLevel: 'ZERO_RISK_SAFE',
     suspensionProbability: 0.0,
     requiresVideoReverification: false,
     estimatedDowntimeDays: 0,
     financialLossEstimateUsd: 0,
     financialLossEstimateAed: 0,
-    advisoryText: 'Абсолютно безопасно (Риск бана 0%). Товары отображаются прямо в карточке на смартфонах клиентов и повышают CTR.'
+    advisoryText: '100% Safe (0% Suspension Risk). Products display prominently on mobile client devices and lift direct engagement CTR.'
   },
   PHOTOS: {
     field: 'PHOTOS',
-    nameRu: 'Фотографии и гео-снимки',
+    name: 'Photos & Geotagged Media',
+    nameRu: 'Photos & Geotagged Media',
     riskLevel: 'ZERO_RISK_SAFE',
     suspensionProbability: 0.0,
     requiresVideoReverification: false,
     estimatedDowntimeDays: 0,
     financialLossEstimateUsd: 0,
     financialLossEstimateAed: 0,
-    advisoryText: 'Абсолютно безопасно (Риск бана 0%). Регулярная загрузка свежих фото повышает доверие алгоритма.'
+    advisoryText: '100% Safe (0% Suspension Risk). Uploading geotagged customer photos reinforces algorithmic location trust.'
   },
   DESCRIPTION: {
     field: 'DESCRIPTION',
-    nameRu: 'Описание профиля (750 символов)',
+    name: 'Profile Description (750 chars)',
+    nameRu: 'Profile Description (750 chars)',
     riskLevel: 'ZERO_RISK_SAFE',
     suspensionProbability: 0.0,
     requiresVideoReverification: false,
     estimatedDowntimeDays: 0,
     financialLossEstimateUsd: 0,
     financialLossEstimateAed: 0,
-    advisoryText: 'Абсолютно безопасно (Риск бана 0%). Оптимизация LSI-ключевых слов в первых 250 символах.'
+    advisoryText: '100% Safe (0% Suspension Risk). Front-loading LSI keywords in the first 250 characters maximizes local search relevance.'
   },
   HOURS: {
     field: 'HOURS',
-    nameRu: 'Праздничный график / Special Hours',
+    name: 'Special / Holiday Hours',
+    nameRu: 'Special / Holiday Hours',
     riskLevel: 'ZERO_RISK_SAFE',
     suspensionProbability: 0.0,
     requiresVideoReverification: false,
     estimatedDowntimeDays: 0,
     financialLossEstimateUsd: 0,
     financialLossEstimateAed: 0,
-    advisoryText: 'Безопасно. Своевременное указание часов работы защищает от жалоб клиентов.'
+    advisoryText: 'Completely safe. Timely holiday hours prevent customer dissatisfaction and negative reviews.'
   }
 };

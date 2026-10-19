@@ -149,17 +149,17 @@ export function calculateReviewVelocity(
   const weeklyVelocity = 3;
   const weeklySafeCap = 6;
   let pacingStatus: 'OPTIMAL_DRIP' | 'TOO_SLOW' | 'VELOCITY_SPIKE_RISK' = 'OPTIMAL_DRIP';
-  let pacingRecommendation = 'Безопасный темп: 3 из 6 отзывов на этой неделе. Риск спам-фильтра: 0%.';
+  let pacingRecommendation = 'Safe pacing: 3 of 6 reviews collected this week. Spam filter risk: 0%.';
 
   if (weeklyVelocity > weeklySafeCap) {
     pacingStatus = 'VELOCITY_SPIKE_RISK';
-    pacingRecommendation = 'Внимание: темп слишком высок. Google может посчитать резкий всплеск накруткой. Рекомендуется замедлить сбор.';
+    pacingRecommendation = 'Caution: Review velocity is too high. Google algorithms may flag sudden spikes. Recommended to slow collection down.';
   } else if (weeklyVelocity < 1) {
     pacingStatus = 'TOO_SLOW';
-    pacingRecommendation = 'Темп замедлился. Рекомендуется отправить 2-3 запроса клиентам через Revo NFC / WhatsApp.';
+    pacingRecommendation = 'Pacing is slow. Recommended to send 2-3 requests to customers via Revo NFC / WhatsApp.';
   }
 
-  const savedAdSpendVal = currencyCode === 'AED' ? 'AED 2,500/мес' : '$680/mo';
+  const savedAdSpendVal = currencyCode === 'AED' ? 'AED 2,500/mo' : '$680/mo';
 
   return {
     totalReviews: reviews.length,

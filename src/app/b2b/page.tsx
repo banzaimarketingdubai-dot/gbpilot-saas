@@ -90,12 +90,12 @@ export default function B2BLandingPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('payment') === 'cancelled') {
-        setPricingToast('ℹ️ Оплата отменена. Вы можете вернуться к оформлению в любой момент.');
+        setPricingToast('ℹ️ Payment was cancelled. You can complete checkout anytime.');
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (urlParams.get('payment') === 'success') {
         const planParam = (urlParams.get('plan') as PlanId) || 'PRO_GROWTH';
         setSubscriptionPlan(planParam);
-        setPricingToast('🎉 Оплата успешно получена! Перенаправляем в панель управления...');
+        setPricingToast('🎉 Payment successful! Redirecting to Dashboard...');
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => {
           router.push('/dashboard');
@@ -115,7 +115,7 @@ export default function B2BLandingPage() {
     }
 
     setIsCheckoutLoading(true);
-    setPricingToast(`⏳ Переход к безопасной оплате Creem.io...`);
+    setPricingToast(`⏳ Redirecting to secure checkout via Creem.io...`);
     try {
       const res = await fetch('/api/v1/checkout/creem', {
         method: 'POST',
@@ -791,13 +791,13 @@ export default function B2BLandingPage() {
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
               <Calculator className="w-3.5 h-3.5 text-emerald-600" />
-              <span>ФОРМУЛА ЭКВИВАЛЕНТА РЕКЛАМЫ GOOGLE ADS (t=12:42)</span>
+              <span>GOOGLE ADS SPEND EQUIVALENT FORMULA (t=12:42)</span>
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Зачем платить агентствам за каждый клик в Google Ads?
+              Why Pay Agencies for Every Single Click in Google Ads?
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Органический топ-3 Google Maps забирает тех же самых клиентов с высокой готовностью к покупке абсолютно бесплатно. Рассчитайте, сколько рекламного бюджета GBPilot сохранит вашей компании каждый месяц.
+              The organic Google Maps Top 3 captures high-intent local buyers with zero cost per click. Calculate how much advertising budget GBPilot saves your business every month.
             </p>
           </div>
 
@@ -806,18 +806,18 @@ export default function B2BLandingPage() {
             {/* Step 1: Industry Vertical Selection */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                <span>1. Выберите нишу вашего бизнеса:</span>
-                <span className="text-slate-400">Стоимость лида в Google Ads: <strong className="text-slate-900">{calcBenchmark.leadCostFormatted}</strong></span>
+                <span>1. Select your business vertical:</span>
+                <span className="text-slate-400">Google Ads Cost Per Lead: <strong className="text-slate-900">{calcBenchmark.leadCostFormatted}</strong></span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 {[
-                  { id: 'home_services', label: '🔧 Ремонт / HVAC', desc: 'Home Services' },
-                  { id: 'dining', label: '🍽️ Рестораны / Кафе', desc: 'Dining' },
-                  { id: 'healthcare', label: '🏥 Клиники / Стоматологии', desc: 'Healthcare' },
-                  { id: 'automotive', label: '🚗 Автосервисы', desc: 'Automotive' },
-                  { id: 'professional', label: '⚖️ Юристы / Недвижимость', desc: 'Professional' },
-                  { id: 'retail', label: '🛍️ Ритейл / Бутики', desc: 'Retail' },
+                  { id: 'home_services', label: '🔧 Home Services / HVAC', desc: 'Home Services' },
+                  { id: 'dining', label: '🍽️ Restaurants / Cafes', desc: 'Dining & Hospitality' },
+                  { id: 'healthcare', label: '🏥 Clinics / Dental', desc: 'Healthcare' },
+                  { id: 'automotive', label: '🚗 Auto Repair & Care', desc: 'Automotive' },
+                  { id: 'professional', label: '⚖️ Legal & Real Estate', desc: 'Professional Services' },
+                  { id: 'retail', label: '🛍️ Retail & Boutiques', desc: 'Retail' },
                 ].map(item => (
                   <button
                     key={item.id}
@@ -847,10 +847,10 @@ export default function B2BLandingPage() {
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-700 flex items-center gap-1.5">
                       <Phone className="w-4 h-4 text-google-blue" />
-                      <span>Входящие звонки из Google Maps в месяц:</span>
+                      <span>Inbound calls from Google Maps per month:</span>
                     </span>
                     <span className="font-extrabold text-slate-900 text-sm bg-slate-100 px-3 py-1 rounded-xl border border-slate-200">
-                      {calcCalls} звонков
+                      {calcCalls} calls
                     </span>
                   </div>
                   <input
@@ -863,9 +863,9 @@ export default function B2BLandingPage() {
                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-google-blue"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>10 звонков</span>
-                    <span>100 звонков</span>
-                    <span>200 звонков</span>
+                    <span>10 calls</span>
+                    <span>100 calls</span>
+                    <span>200 calls</span>
                   </div>
                 </div>
 
@@ -874,10 +874,10 @@ export default function B2BLandingPage() {
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-700 flex items-center gap-1.5">
                       <Globe className="w-4 h-4 text-google-blue" />
-                      <span>Переходы на сайт из Google Maps в месяц:</span>
+                      <span>Website visits from Google Maps per month:</span>
                     </span>
                     <span className="font-extrabold text-slate-900 text-sm bg-slate-100 px-3 py-1 rounded-xl border border-slate-200">
-                      {calcSiteClicks} кликов
+                      {calcSiteClicks} clicks
                     </span>
                   </div>
                   <input
@@ -890,9 +890,9 @@ export default function B2BLandingPage() {
                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-google-blue"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>20 кликов</span>
-                    <span>250 кликов</span>
-                    <span>500 кликов</span>
+                    <span>20 clicks</span>
+                    <span>250 clicks</span>
+                    <span>500 clicks</span>
                   </div>
                 </div>
 
@@ -904,19 +904,19 @@ export default function B2BLandingPage() {
                     className="text-xs font-bold text-google-blue hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
-                    <span>{showFormulaDetails ? 'Скрыть детали математической модели' : 'Как считается этот рекламный эквивалент?'}</span>
+                    <span>{showFormulaDetails ? 'Hide mathematical breakdown' : 'How is this ad spend equivalence calculated?'}</span>
                   </button>
 
                   {showFormulaDetails && (
                     <div className="mt-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5 animate-in fade-in">
                       <p>
-                        💡 <strong>Методика Steve Hunsaker:</strong> Органический профиль в топ-3 заменяет контекстную рекламу Google Ads. Формула:
+                        💡 <strong>Steve Hunsaker Framework:</strong> Organic Top 3 ranking directly replaces paid Google Ads campaigns. Formula:
                       </p>
                       <code className="block bg-white p-2 rounded-xl text-[11px] font-mono text-slate-800 border border-slate-200">
-                        Эквивалент = ({calcCalls} звонков × {calcBenchmark.leadCostFormatted}) + ({calcSiteClicks} переходов × 12% конв. × {calcBenchmark.leadCostFormatted})
+                        Equivalent Value = ({calcCalls} calls × {calcBenchmark.leadCostFormatted}) + ({calcSiteClicks} clicks × 12% conv. × {calcBenchmark.leadCostFormatted})
                       </code>
                       <p className="text-[11px] text-slate-500">
-                        Каждый звонок из карт — это готовый клиент, за которого конкуренты платят ставку CPC аукциона.
+                        Every direct inbound phone call is an active client that competitors pay high auction CPCs to acquire.
                       </p>
                     </div>
                   )}
@@ -928,29 +928,29 @@ export default function B2BLandingPage() {
               <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 border border-slate-700">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
-                    Чистая экономия бюджета
+                    Net Budget Savings
                   </span>
-                  <span className="text-xs text-slate-400">Ежемесячно</span>
+                  <span className="text-xs text-slate-400">Monthly</span>
                 </div>
 
                 <div className="space-y-1">
                   <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                     {calcResults.formattedTotal}
-                    <span className="text-xs font-medium text-slate-400 ml-1.5">/мес в Google Ads</span>
+                    <span className="text-xs font-medium text-slate-400 ml-1.5">/mo in Google Ads</span>
                   </div>
                   <p className="text-xs text-slate-300">
-                    Эквивалентная ценность органического потока клиентов из Google Maps
+                    Equivalent value of organic client flow from Google Maps
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-slate-300 block text-[11px]">Окупаемость сервиса GBPilot:</span>
+                    <span className="text-slate-300 block text-[11px]">GBPilot Plan ROI:</span>
                     <strong className="text-emerald-400 font-black text-base">{calcResults.roiMultiple}x ROI</strong>
                   </div>
                   <div className="text-right">
-                    <span className="text-slate-300 block text-[11px]">Стоимость тарифа:</span>
-                    <span className="text-white font-bold">{currency === 'AED' ? 'AED 249/мес' : '$69/mo'}</span>
+                    <span className="text-slate-300 block text-[11px]">Plan Investment:</span>
+                    <span className="text-white font-bold">{currency === 'AED' ? 'AED 249/mo' : '$69/mo'}</span>
                   </div>
                 </div>
 
@@ -958,7 +958,7 @@ export default function B2BLandingPage() {
                   href="#pricing"
                   className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
                 >
-                  <span>Зафиксировать эту прибыль для своего бизнеса →</span>
+                  <span>Capture This Value for Your Business →</span>
                 </a>
               </div>
 

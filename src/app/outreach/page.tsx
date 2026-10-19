@@ -44,7 +44,7 @@ const DEFAULT_PROSPECT_LEADS: ProspectLead[] = [
     missingPhotos: true,
     missingWebsite: false,
     monthlyLossFormatted: 'AED 14,500/mo',
-    outreachHook: 'Теряет 42 звонка/мес из-за отсутствия фото-отзывов с EXIF и незаполненного каталога услуг'
+    outreachHook: 'Loses 42 calls/mo due to zero EXIF photo-reviews and empty services catalog'
   },
   {
     id: 'lead_downtown_dentist_2',
@@ -57,7 +57,7 @@ const DEFAULT_PROSPECT_LEADS: ProspectLead[] = [
     missingPhotos: true,
     missingWebsite: false,
     monthlyLossFormatted: 'AED 22,000/mo',
-    outreachHook: '1★ отзыв без ответа и отсутствие фото до/после роняют позицию с #2 на #8'
+    outreachHook: 'Unanswered 1★ review and missing before/after photos dropped rank from #2 to #8'
   },
   {
     id: 'lead_austin_plumbing_3',
@@ -70,7 +70,7 @@ const DEFAULT_PROSPECT_LEADS: ProspectLead[] = [
     missingPhotos: true,
     missingWebsite: false,
     monthlyLossFormatted: '$4,800/mo',
-    outreachHook: 'Высокая ставка PPC ($95/лид). Конкуренты забирают звонки через 35+ фото-отзывов'
+    outreachHook: 'High PPC ad bid ($95/lead). Competitors capture calls with 35+ verified photo-reviews'
   }
 ];
 
@@ -91,11 +91,11 @@ export default function OutreachPage() {
 
   const handleCopyPitch = (lead: ProspectLead) => {
     const url = `${window.location.origin}/audit/${lead.id}`;
-    const pitch = `Здравствуйте! Заметили, что карточка «${lead.name}» в Google Maps теряет около ${lead.monthlyLossFormatted} в виде бесплатных звонков клиентов из-за 2 критических ошибок профиля (${lead.outreachHook}). Ваши прямые конкуренты забирают эти лиды себе. Мы сформировали для вас бесплатный аудит с расчетом эквивалента рекламы: ${url}`;
+    const pitch = `Hello! We noticed that "${lead.name}" on Google Maps is losing approximately ${lead.monthlyLossFormatted} in free client calls due to 2 critical profile vulnerabilities (${lead.outreachHook}). Direct competitors are capturing these leads instead. We generated a complimentary audit with estimated ad spend equivalence: ${url}`;
     
     if (navigator.clipboard) {
       navigator.clipboard.writeText(pitch);
-      setOutreachToast(`Питч для «${lead.name}» скопирован в буфер! Готов для отправки в WhatsApp / Email.`);
+      setOutreachToast(`Pitch for "${lead.name}" copied to clipboard! Ready to send via WhatsApp / Email.`);
       setTimeout(() => setOutreachToast(null), 4000);
     }
   };
@@ -184,7 +184,7 @@ export default function OutreachPage() {
         <div className="material-card p-6 bg-white space-y-4">
           <div className="flex items-center justify-between border-b border-google-border-light pb-3">
             <h3 className="font-bold text-google-text-primary text-sm">Discovered Prospect Leads ({leads.length})</h3>
-            <span className="text-xs text-google-text-tertiary">Оценка упущенной выгоды по методике Steve Hunsaker</span>
+            <span className="text-xs text-google-text-tertiary">Missed Revenue Assessment (Steve Hunsaker Framework)</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -194,8 +194,8 @@ export default function OutreachPage() {
                   <th className="py-2.5 px-3">Business Name</th>
                   <th className="py-2.5 px-3">GBP Rating</th>
                   <th className="py-2.5 px-3">Missing Photos</th>
-                  <th className="py-2.5 px-3">Упущенная выгода (PPC Equiv)</th>
-                  <th className="py-2.5 px-3">Диагностика</th>
+                  <th className="py-2.5 px-3">Missed Revenue (PPC Equiv)</th>
+                  <th className="py-2.5 px-3">Diagnosis</th>
                   <th className="py-2.5 px-3">Actions</th>
                 </tr>
               </thead>
@@ -225,7 +225,7 @@ export default function OutreachPage() {
                     <td className="py-3 px-3">
                       {lead.missingPhotos ? (
                         <span className="text-amber-600 font-semibold text-[11px] bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                          ⚠️ Нет фото с EXIF
+                          ⚠️ Missing EXIF Photos
                         </span>
                       ) : (
                         <span className="text-google-green text-[11px]">Sufficient</span>
@@ -251,13 +251,13 @@ export default function OutreachPage() {
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
                         >
                           <Copy className="w-3 h-3" />
-                          <span>📋 Питч</span>
+                          <span>📋 Copy Pitch</span>
                         </button>
                         <button
                           onClick={() => handleGenerateTeaser(lead.id)}
                           className="material-button-primary text-[11px] py-1 px-2.5"
                         >
-                          Аудит
+                          Audit
                         </button>
                         <Link
                           href={`/audit/${lead.id}`}

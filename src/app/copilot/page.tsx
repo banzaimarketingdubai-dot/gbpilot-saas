@@ -435,7 +435,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
     });
     setGroundTruth(updated);
     setIsEditingGroundTruth(false);
-    setPostPublishedToast('🧠 Память о заведении (Owner Ground Truth) обновлена! ИИ будет учитывать эти факты во всех постах и ответах.');
+    setPostPublishedToast('🧠 Business Memory (Owner Ground Truth) updated! AI will reflect these facts in all posts and review replies.');
     setTimeout(() => setPostPublishedToast(null), 4000);
   };
 
@@ -627,7 +627,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
         </div>
 
         {/* ======================================================== */}
-        {/* OWNER GROUND TRUTH VAULT (ПАМЯТЬ О ЗАВЕДЕНИИ)             */}
+        {/* OWNER GROUND TRUTH VAULT (BUSINESS FACTS MEMORY)        */}
         {/* ======================================================== */}
         <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -635,20 +635,20 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
               <div className="flex items-center gap-2 flex-wrap">
                 <Sparkles className="w-4 h-4 text-google-blue" />
                 <h2 className="font-bold text-slate-900 text-sm sm:text-base">
-                  🧠 Память о заведении (Owner Ground Truth Vault)
+                  🧠 Owner Ground Truth Vault
                 </h2>
                 {groundTruth?.isCompleted ? (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    ✓ Синхронизировано с ИИ
+                    ✓ Synced with AI
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
-                    ⚡ Не заполнено (+28% к конверсии при заполнении)
+                    ⚡ Incomplete (+28% conversion when completed)
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-500">
-                Инсайдерские факты от владельца (флагманская услуга, аудитория, парковка и правила), чтобы ИИ продвигал самые прибыльные позиции без галлюцинаций.
+                Insider business facts directly from the owner (flagship service, audience, parking &amp; rules) so AI promotes your highest-margin items with zero hallucinations.
               </p>
             </div>
 
@@ -657,22 +657,22 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
               onClick={() => setIsEditingGroundTruth(!isEditingGroundTruth)}
               className="px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors cursor-pointer self-start sm:self-auto shrink-0"
             >
-              {isEditingGroundTruth ? 'Свернуть редактор' : groundTruth?.isCompleted ? '✏️ Изменить факты' : '⚡ Заполнить за 30 сек'}
+              {isEditingGroundTruth ? 'Collapse Editor' : groundTruth?.isCompleted ? '✏️ Edit Facts' : '⚡ Complete in 30s'}
             </button>
           </div>
 
           {!isEditingGroundTruth && groundTruth?.isCompleted && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
               <div className="p-3 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase text-google-blue block">1. Продукт-магнит (Маржа)</span>
+                <span className="text-[10px] font-extrabold uppercase text-google-blue block">1. Flagship Product (Margin)</span>
                 <p className="font-semibold text-slate-800">{groundTruth.flagshipOffering || '—'}</p>
               </div>
               <div className="p-3 rounded-2xl bg-emerald-50/40 border border-emerald-100 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase text-emerald-700 block">2. Идеальный клиент</span>
+                <span className="text-[10px] font-extrabold uppercase text-emerald-700 block">2. Target Customer</span>
                 <p className="font-semibold text-slate-800">{groundTruth.guestPersona || '—'}</p>
               </div>
               <div className="p-3 rounded-2xl bg-purple-50/40 border border-purple-100 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase text-purple-700 block">3. Парковка и правила</span>
+                <span className="text-[10px] font-extrabold uppercase text-purple-700 block">3. Parking &amp; Rules</span>
                 <p className="font-semibold text-slate-800">{groundTruth.venueRulesAndPerks || '—'}</p>
               </div>
             </div>
@@ -682,7 +682,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs animate-in fade-in">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-bold text-slate-800 block">1. Ваш продукт-магнит / топ-услуга:</label>
+                  <label className="font-bold text-slate-800 block">1. Your flagship product / top-selling service:</label>
                   <input
                     type="text"
                     value={gtFlagship}
@@ -692,7 +692,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-bold text-slate-800 block">2. Кто ваш главный клиент:</label>
+                  <label className="font-bold text-slate-800 block">2. Who is your target customer:</label>
                   <input
                     type="text"
                     value={gtPersona}
@@ -702,7 +702,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-bold text-slate-800 block">3. Парковка, правила и фишки:</label>
+                  <label className="font-bold text-slate-800 block">3. Parking, amenities &amp; house rules:</label>
                   <input
                     type="text"
                     value={gtRules}
@@ -718,7 +718,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                   onClick={() => setIsEditingGroundTruth(false)}
                   className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold text-xs cursor-pointer"
                 >
-                  Отмена
+                  Cancel
                 </button>
                 <button
                   type="button"
@@ -726,7 +726,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                   className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>Сохранить в память ИИ</span>
+                  <span>Save to AI Memory</span>
                 </button>
               </div>
             </div>

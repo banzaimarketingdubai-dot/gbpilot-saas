@@ -77,10 +77,10 @@ export function buildDirectoryBlueprints(
   const p3 = isAed ? `${sym} 120` : `${sym}39`;
   const p4 = isAed ? `${sym} 190` : `${sym}59`;
 
-  const estAppleVal = isAed ? 'AED 4,800 / мес' : '$1,300 / мес';
-  const est2GisVal = isAed ? 'AED 3,900 / мес' : '$1,050 / мес';
-  const estTripVal = isAed ? 'AED 5,400 / мес' : '$1,480 / мес';
-  const estPrVal = isAed ? 'AED 7,200 / мес' : '$1,950 / мес';
+  const estAppleVal = isAed ? 'AED 4,800 / mo' : '$1,300 / mo';
+  const est2GisVal = isAed ? 'AED 3,900 / mo' : '$1,050 / mo';
+  const estTripVal = isAed ? 'AED 5,400 / mo' : '$1,480 / mo';
+  const estPrVal = isAed ? 'AED 7,200 / mo' : '$1,950 / mo';
 
   // 1. APPLE BUSINESS CONNECT (businessconnect.apple.com)
   const appleAboutRaw = `${bName} is an established ${bCategory.toLowerCase()} located at ${bAddress}. Specializing in ${flagship.toLowerCase()}, the venue serves ${persona.toLowerCase()}. Guests appreciate ${rules.toLowerCase()} with convenient access and verified operating hours.`;
@@ -93,18 +93,18 @@ export function buildDirectoryBlueprints(
     badge: '🍎 70%+ iPhone & Siri',
     portalUrl: 'https://businessconnect.apple.com',
     portalDomain: 'businessconnect.apple.com',
-    aiCitationImpact: '+28% к индексу доверия Siri, Apple Intelligence и ChatGPT Search (iOS)',
-    financialWhyText: 'Более 70% платежеспособных владельцев iPhone строят маршруты через Apple CarPlay и Siri. Если карточка в Apple Business Connect не заполнена на 100%, водители уезжают к конкурентам.',
+    aiCitationImpact: '+28% Trust Index across Siri, Apple Intelligence & ChatGPT Search (iOS)',
+    financialWhyText: 'Over 70% of high-income iPhone drivers navigate using Apple CarPlay and Siri. If your Apple Business Connect profile is incomplete, drivers get routed to your nearest competitors.',
     estimatedMonthlyValue: estAppleVal,
-    completionTime: '3 минуты (Копипаст 7 блоков)',
+    completionTime: '3 min (Copy-paste 7 blocks)',
     blocks: [
       {
         id: 'apple-1-name',
         blockNumber: 1,
-        fieldTitle: 'Блок 1. Display Name (Отображаемое имя карточки)',
+        fieldTitle: 'Block 1. Display Name',
         exactCabinetPath: 'Place Card → Header → Display Name',
         maxChars: 100,
-        validationRule: 'Правило модерации Apple: Только официальное название без рекламных приписок, эмодзи и КАПСЛОКА (иначе уйдет в бан модерации).',
+        validationRule: 'Apple Moderation Rule: Official business name only without keyword stuffing, emojis, or ALL-CAPS (or moderation rejects it).',
         value: clampText(bName, 100),
         isFreePreview: true,
         fieldType: 'TEXT'
@@ -112,9 +112,9 @@ export function buildDirectoryBlueprints(
       {
         id: 'apple-2-categories',
         blockNumber: 2,
-        fieldTitle: 'Блок 2. Primary & Additional Categories (Категории Apple)',
+        fieldTitle: 'Block 2. Primary & Additional Categories',
         exactCabinetPath: 'Place Card → Details → Categories',
-        validationRule: 'Выберите 1 основную категорию и ровно 2 дополнительные из классификатора Apple Maps.',
+        validationRule: 'Select 1 primary category and exactly 2 additional categories from the Apple Maps taxonomy.',
         value: `Primary Category: ${bCategory}\nAdditional Category 1: Local Services & Hospitality\nAdditional Category 2: Customer Care & Consultation`,
         isFreePreview: true,
         fieldType: 'ATTRIBUTES'
@@ -122,10 +122,10 @@ export function buildDirectoryBlueprints(
       {
         id: 'apple-3-about',
         blockNumber: 3,
-        fieldTitle: 'Блок 3. About This Place (Описание «О месте»)',
+        fieldTitle: 'Block 3. About This Place (Profile Bio)',
         exactCabinetPath: 'Place Card → About → Place Description',
         maxChars: 500,
-        validationRule: 'Жесткий лимит Apple: строго до 500 символов. Пишется в 3-м лице («Компания предлагает...»). Запрещены ссылки, номера телефонов и слова «Скидка / Лучший №1».',
+        validationRule: 'Strict Apple limit: up to 500 characters. Written in 3rd person. Links, phone numbers, and promotional superlatives like "Discount / Best #1" are prohibited.',
         value: clampText(appleAboutRaw, 500),
         isFreePreview: false,
         fieldType: 'TEXT'
@@ -133,20 +133,20 @@ export function buildDirectoryBlueprints(
       {
         id: 'apple-4-showcase',
         blockNumber: 4,
-        fieldTitle: 'Блок 4. Apple Showcase (Витрина спецпредложения на 30 дней)',
+        fieldTitle: 'Block 4. Apple Showcase (30-Day Featured Special)',
         exactCabinetPath: 'Place Card → Showcases → Add New Showcase',
         maxChars: 138,
-        validationRule: 'Точный формат полей Apple Showcase: Заголовок (Header) — строго до 38 символов! Текст (Body) — строго до 100 символов! Кнопка (Action CTA) — выбор из списка.',
-        value: `[Поле 1: Showcase Header — ${appleShowcaseHeaderRaw.length}/38 симв.]\n${appleShowcaseHeaderRaw}\n\n[Поле 2: Showcase Body — ${appleShowcaseBodyRaw.length}/100 симв.]\n${appleShowcaseBodyRaw}\n\n[Поле 3: Action Button CTA]\nButton Type: Book / Order Now\nTarget Link: ${bWebsite}`,
+        validationRule: 'Exact Apple Showcase formatting: Header — strictly up to 38 characters! Body — strictly up to 100 characters! Action CTA — select from list.',
+        value: `[Field 1: Showcase Header — ${appleShowcaseHeaderRaw.length}/38 chars]\n${appleShowcaseHeaderRaw}\n\n[Field 2: Showcase Body — ${appleShowcaseBodyRaw.length}/100 chars]\n${appleShowcaseBodyRaw}\n\n[Field 3: Action Button CTA]\nButton Type: Book / Order Now\nTarget Link: ${bWebsite}`,
         isFreePreview: false,
         fieldType: 'TEXT'
       },
       {
         id: 'apple-5-coords',
         blockNumber: 5,
-        fieldTitle: 'Блок 5. Location & CarPlay Arrival Point (Точка входа и высадки авто)',
+        fieldTitle: 'Block 5. Location & CarPlay Arrival Point',
         exactCabinetPath: 'Place Card → Location → Map Pin & Entrance Coordinates',
-        validationRule: 'Apple CarPlay ведет машину не в центр здания, а к точке Arrival Point. Скопируйте координаты главного входа.',
+        validationRule: 'Apple CarPlay navigates vehicles to the Arrival Point instead of the building center. Copy the exact entrance coordinates.',
         value: `Full Street Address: ${bAddress}\nPin Latitude: ${lat}\nPin Longitude: ${lng}\nArrival & Parking Note: ${rules}`,
         isFreePreview: false,
         fieldType: 'COORDINATES'
@@ -154,9 +154,9 @@ export function buildDirectoryBlueprints(
       {
         id: 'apple-6-attributes',
         blockNumber: 6,
-        fieldTitle: 'Блок 6. Good to Know (Чекбоксы атрибутов Apple Maps)',
+        fieldTitle: 'Block 6. Good to Know (Apple Maps Attribute Checkboxes)',
         exactCabinetPath: 'Place Card → Details → Good to Know',
-        validationRule: 'Отметьте эти галочки в кабинете Apple Business Connect — они включают показ в быстрых фильтрах CarPlay.',
+        validationRule: 'Check these boxes in Apple Business Connect — they trigger placement in CarPlay instant filters.',
         value: `☑ Accepts Apple Pay & Contactless Cards\n☑ ${rules}\n☑ Appointment / Walk-ins Welcome\n☑ Free Customer Wi-Fi\n☑ Air-Conditioned Indoor Space\n☑ Wheelchair Accessible Entrance`,
         isFreePreview: false,
         fieldType: 'ATTRIBUTES'
@@ -164,10 +164,10 @@ export function buildDirectoryBlueprints(
       {
         id: 'apple-7-media',
         blockNumber: 7,
-        fieldTitle: 'Блок 7. Cover Photo & Square Logo (Техтребования к фото Apple)',
+        fieldTitle: 'Block 7. Cover Photo & Square Logo (Apple Media Specs)',
         exactCabinetPath: 'Place Card → Photos & Logo → Upload Media',
-        validationRule: 'Apple отклоняет фото с текстом или водяными знаками. Загрузите те же гео-тегированные фото из нашей библиотеки в указанных пропорциях.',
-        value: `1. Cover Photo (Обложка карточки): Разрешение 1600 × 1040 px (формат 16:10), JPEG/PNG, без логотипов поверх фото.\n2. Company Logo (Квадратный логотип): 1024 × 1024 px (1:1), непрозрачный фон.\n3. Photo Caption (Подпись к фото №1): ${bName} — ${flagship} (${bCity}).`,
+        validationRule: 'Apple rejects photos with promotional text or watermarks. Upload high-res photos adhering to the specified aspect ratios.',
+        value: `1. Cover Photo: Resolution 1600 × 1040 px (16:10 aspect ratio), JPEG/PNG, clean without overlays.\n2. Company Logo: 1024 × 1024 px (1:1), solid/non-transparent background.\n3. Photo Caption #1: ${bName} — ${flagship} (${bCity}).`,
         isFreePreview: false,
         fieldType: 'MEDIA_SPEC'
       }
@@ -176,26 +176,26 @@ export function buildDirectoryBlueprints(
 
   // 2. 2GIS BUSINESS (account.2gis.com)
   const twoGisShortRaw = clampText(`${bName} (${bCategory}): ${flagship}. ${rules}.`, 150);
-  const twoGisFullRaw = `${bName} — профессиональный сервис в категории «${bCategory}», расположенный по адресу: ${bAddress}.\n\nКлючевая специализация и флагманские предложения:\n• ${flagship}\n• Внимательный сервис для гостей: ${persona}\n• Преимущества локации: ${rules}\n\nМы работаем ежедневно по актуальному графику. Доступна быстрая запись и консультация через WhatsApp и по телефону ${bPhone}. Постройте точный маршрут до входа в 2ГИС!`;
+  const twoGisFullRaw = `${bName} is a premier ${bCategory.toLowerCase()} located at ${bAddress}.\n\nCore Highlights & Specialties:\n• ${flagship}\n• Dedicated guest experience: ${persona}\n• Venue advantages: ${rules}\n\nOpen daily with verified operating hours. Quick bookings and inquiries available via WhatsApp or by calling ${bPhone}. Direct entrance navigation available on 2GIS!`;
 
   const twoGisBlueprint: DirectoryPlatformBlueprint = {
     id: 'TWOGIS',
-    name: '2GIS Business (Навигация по башням, этажам и моллам)',
-    badge: '🗺️ Точный вход & Прайс',
+    name: '2GIS Business (Mall, Tower & Floor-Level Navigation)',
+    badge: '🗺️ Exact Entrance & Price List',
     portalUrl: 'https://account.2gis.com',
     portalDomain: 'account.2gis.com',
-    aiCitationImpact: '+24% к локальной выдаче по зданиям/кластерам и индексации прайс-листов',
-    financialWhyText: 'Главный справочник для поиска точного входа в бизнес-центры, башни и моллы. Позволяет бесплатно выводить прайс-лист и кнопку WhatsApp прямо в списке поиска.',
+    aiCitationImpact: '+24% local ranking for buildings/clusters & price list indexation',
+    financialWhyText: 'Essential directory for precise entrance navigation across business centers, high-rises, and malls. Enables a direct price list and 1-click WhatsApp chat button right in search results.',
     estimatedMonthlyValue: est2GisVal,
-    completionTime: '4 минуты (Копипаст 6 блоков)',
+    completionTime: '4 min (Copy-paste 6 blocks)',
     blocks: [
       {
         id: '2gis-1-short',
         blockNumber: 1,
-        fieldTitle: 'Блок 1. Название и Короткое описание (Слоган в выдаче)',
-        exactCabinetPath: 'Кабинет 2ГИС → Профиль → Инфо → Короткое описание',
+        fieldTitle: 'Block 1. Listing Name & Short Tagline',
+        exactCabinetPath: '2GIS Dashboard → Profile → Info → Short Description',
         maxChars: 150,
-        validationRule: 'Лимит 2ГИС: строго до 150 символов. Этот текст виден клиенту сразу в общем списке компаний до клика по карточке.',
+        validationRule: '2GIS limit: strictly up to 150 characters. This snippet is visible to customers in search results before clicking.',
         value: twoGisShortRaw,
         isFreePreview: true,
         fieldType: 'TEXT'
@@ -203,20 +203,20 @@ export function buildDirectoryBlueprints(
       {
         id: '2gis-2-rubrics',
         blockNumber: 2,
-        fieldTitle: 'Блок 2. Рубрики справочника 2ГИС и Контакты (WhatsApp)',
-        exactCabinetPath: 'Кабинет 2ГИС → Профиль → Сферы деятельности и Контакты',
-        validationRule: 'Добавьте до 3 смежных рубрик и обязательно вставьте прямую ссылку на WhatsApp для кнопки быстрого чата.',
-        value: `Основная рубрика: ${bCategory}\nДоп. рубрики: Услуги для резидентов и туристов / Консультации и сервис\nТелефон: ${bPhone}\nСайт: ${bWebsite}\nСсылка кнопки WhatsApp: https://wa.me/${bPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Здравствуйте! Пишу вам из карточки 2ГИС (${bName}).`)}`,
+        fieldTitle: 'Block 2. 2GIS Categories & Quick WhatsApp Chat',
+        exactCabinetPath: '2GIS Dashboard → Profile → Business Categories & Contacts',
+        validationRule: 'Add up to 3 relevant categories and attach your WhatsApp direct chat link.',
+        value: `Primary Category: ${bCategory}\nAdditional Categories: Local Services & Hospitality / Customer Consultation\nPhone: ${bPhone}\nWebsite: ${bWebsite}\nWhatsApp Button Link: https://wa.me/${bPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello! Contacting you from your 2GIS listing (${bName}).`)}`,
         isFreePreview: true,
         fieldType: 'ATTRIBUTES'
       },
       {
         id: '2gis-3-fullbio',
         blockNumber: 3,
-        fieldTitle: 'Блок 3. Расширенное описание компании (Вкладка «Инфо»)',
-        exactCabinetPath: 'Кабинет 2ГИС → Профиль → Инфо → Полное описание',
+        fieldTitle: 'Block 3. Extended Business Bio (Info Tab)',
+        exactCabinetPath: '2GIS Dashboard → Profile → Info → Full Description',
         maxChars: 2000,
-        validationRule: 'Лимит 2ГИС: до 2000 символов. Включены LSI-ключи для ранжирования во внутреннем поиске 2ГИС по услугам.',
+        validationRule: '2GIS limit: up to 2000 characters. Includes LSI keywords for internal 2GIS search indexing.',
         value: clampText(twoGisFullRaw, 2000),
         isFreePreview: false,
         fieldType: 'TEXT'
@@ -224,30 +224,30 @@ export function buildDirectoryBlueprints(
       {
         id: '2gis-4-entrance',
         blockNumber: 4,
-        fieldTitle: 'Блок 4. Этаж, Ориентир и блок «Как пройти / Парковка»',
-        exactCabinetPath: 'Кабинет 2ГИС → Адрес и геометрия → Точка входа и Комментарий к адресу',
-        validationRule: 'Уникальное поле 2ГИС: укажите ориентир входа и условия парковки, чтобы клиент или такси не плутали вокруг здания.',
-        value: `Точный адрес: ${bAddress}\nКоординаты входа (Ш/Д): ${lat}, ${lng}\nКомментарий «Как пройти»: Главный вход с фасада здания, следуйте указателям ${bName}.\nПарковка и правила: ${rules}`,
+        fieldTitle: 'Block 4. Floor, Landmark & Entrance / Parking Note',
+        exactCabinetPath: '2GIS Dashboard → Address & Geometry → Entrance Pin & Address Note',
+        validationRule: 'Unique 2GIS feature: specify entrance landmark and parking conditions so clients and taxis arrive seamlessly.',
+        value: `Exact Address: ${bAddress}\nEntrance Coordinates (Lat/Lng): ${lat}, ${lng}\nArrival Guidance: Main entrance facing the street, follow signage for ${bName}.\nParking & Rules: ${rules}`,
         isFreePreview: false,
         fieldType: 'COORDINATES'
       },
       {
         id: '2gis-5-pricelist',
         blockNumber: 5,
-        fieldTitle: 'Блок 5. Товары и услуги (Готовая таблица для вкладки «Цены»)',
-        exactCabinetPath: 'Кабинет 2ГИС → Товары и услуги → Добавить позиции',
-        validationRule: 'Формат прайса 2ГИС: «Категория — Название позиции — Цена — Описание до 100 символов». Профили с ценами получают на 40% больше кликов.',
-        value: `1. [Флагман] ${flagship} — от ${p3} | Главный хит ${bName}, предварительная запись или заказ.\n2. [Стандарт] Базовая услуга / сет (${bCategory}) — ${p1} | Быстрое обслуживание без ожидания.\n3. [Премиум] Расширенный пакет для гостей — ${p4} | Включает индивидуальный сервис и приоритет.\n4. [Спецпредложение] Первый визит / Знакомство — ${p2} | Доступно при обращении из карт.`,
+        fieldTitle: 'Block 5. Products & Services (Ready Table for Price List Tab)',
+        exactCabinetPath: '2GIS Dashboard → Products & Services → Add Items',
+        validationRule: '2GIS price format: "Category — Item Title — Price — Description up to 100 chars". Listings with prices receive 40% more clicks.',
+        value: `1. [Flagship] ${flagship} — From ${p3} | Signature offering of ${bName}, advance reservation recommended.\n2. [Standard] Core Service / Selection (${bCategory}) — ${p1} | Fast service with no wait times.\n3. [Premium] Extended Package — ${p4} | Includes personalized consultation and priority handling.\n4. [Special] First Visit / Introduction — ${p2} | Available for clients discovering us on maps.`,
         isFreePreview: false,
         fieldType: 'CATALOG'
       },
       {
         id: '2gis-6-features',
         blockNumber: 6,
-        fieldTitle: 'Блок 6. Дополнительные параметры и способы оплаты',
-        exactCabinetPath: 'Кабинет 2ГИС → Профиль → Особенности и Оплата',
-        validationRule: 'Отметьте эти пункты галочками в анкете характеристик 2ГИС.',
-        value: `☑ Оплата картой / Наличными / Apple Pay / QR\n☑ ${rules}\n☑ Консультация и бронь в WhatsApp\n☑ Обслуживание на русском и английском языках\n☑ Wi-Fi для гостей`,
+        fieldTitle: 'Block 6. Business Attributes & Payment Methods',
+        exactCabinetPath: '2GIS Dashboard → Profile → Amenities & Payment',
+        validationRule: 'Check these attribute boxes in the 2GIS dashboard.',
+        value: `☑ Credit/Debit Cards / Cash / Apple Pay / QR\n☑ ${rules}\n☑ Consultations & Bookings via WhatsApp\n☑ English & Multilingual Customer Support\n☑ Free Customer Wi-Fi`,
         isFreePreview: false,
         fieldType: 'ATTRIBUTES'
       }
@@ -259,22 +259,22 @@ export function buildDirectoryBlueprints(
 
   const tripBlueprint: DirectoryPlatformBlueprint = {
     id: 'TRIPADVISOR',
-    name: 'TripAdvisor Owners (Главный донор для ChatGPT & Perplexity)',
-    badge: '🦉 №1 для ChatGPT & Туристов',
+    name: 'TripAdvisor Owners (Primary Source for ChatGPT & Perplexity)',
+    badge: '🦉 #1 for ChatGPT & Travelers',
     portalUrl: 'https://www.tripadvisor.com/Owners',
     portalDomain: 'tripadvisor.com/Owners',
-    aiCitationImpact: '+42% к вероятности попадания в ТОП-3 рекомендаций ChatGPT и Perplexity',
-    financialWhyText: 'ChatGPT и Perplexity напрямую парсят базу TripAdvisor при ответах на запросы «Best places / services in city». Заполненный профиль сразу выводит вас в ответы нейросетей.',
+    aiCitationImpact: '+42% probability of inclusion in ChatGPT & Perplexity Top 3',
+    financialWhyText: 'ChatGPT and Perplexity directly query TripAdvisor when answering queries like "Best places / services in city". A 100% completed profile secures direct AI recommendation snippets.',
     estimatedMonthlyValue: estTripVal,
-    completionTime: '3 минуты (Копипаст 5 блоков)',
+    completionTime: '3 min (Copy-paste 5 blocks)',
     blocks: [
       {
         id: 'trip-1-title',
         blockNumber: 1,
-        fieldTitle: 'Блок 1. Official Property Name & Location Cluster',
+        fieldTitle: 'Block 1. Official Property Name & Location Cluster',
         exactCabinetPath: 'Management Center → Business Info → General Information',
         maxChars: 120,
-        validationRule: 'Название должно на 100% совпадать с Google Business Profile (NAP Consistency), чтобы ИИ склеил рейтинги обеих площадок.',
+        validationRule: 'Name must match Google Business Profile exactly (NAP Consistency) for AI models to merge ratings across platforms.',
         value: `Property Name: ${bName}\nAddress: ${bAddress}\nCity / District: ${bCity}\nPhone: ${bPhone}\nWebsite: ${bWebsite}`,
         isFreePreview: true,
         fieldType: 'TEXT'
@@ -282,10 +282,10 @@ export function buildDirectoryBlueprints(
       {
         id: 'trip-2-description',
         blockNumber: 2,
-        fieldTitle: 'Блок 2. Property Description (Англоязычное описание для ИИ и туристов)',
+        fieldTitle: 'Block 2. Property Description (English Bio for AI & Travelers)',
         exactCabinetPath: 'Management Center → Business Info → Description',
         maxChars: 1000,
-        validationRule: 'Лимит TripAdvisor: до 1000 символов. Рекомендуется заполнять на английском языке, так как LLM-модели (ChatGPT/Perplexity) индексируют английский сниппет как глобальный источник.',
+        validationRule: 'TripAdvisor limit: up to 1000 characters. English description is strongly recommended as LLMs index it as the authoritative global snippet.',
         value: clampText(tripDescRaw, 1000),
         isFreePreview: true,
         fieldType: 'TEXT'
@@ -293,9 +293,9 @@ export function buildDirectoryBlueprints(
       {
         id: 'trip-3-features',
         blockNumber: 3,
-        fieldTitle: 'Блок 3. Features, Specialties & Price Range (Теги фильтрации)',
+        fieldTitle: 'Block 3. Features, Specialties & Price Range',
         exactCabinetPath: 'Management Center → Business Info → Cuisines / Services & Features',
-        validationRule: 'Отметьте эти теги в панели владельца TripAdvisor для попадания в подборки «Travelers Choice / Best Nearby».',
+        validationRule: 'Tag these features in TripAdvisor to qualify for "Travelers Choice / Best Nearby" curated recommendations.',
         value: `Price Range: $$ - $$$ (Mid-range / Premium Quality)\nSignature Highlight: ${flagship}\nBest For: ${persona}\nKey Amenities: ${rules}, English Spoken, Digital Payments Accepted`,
         isFreePreview: false,
         fieldType: 'ATTRIBUTES'
@@ -303,9 +303,9 @@ export function buildDirectoryBlueprints(
       {
         id: 'trip-4-highlights',
         blockNumber: 4,
-        fieldTitle: 'Блок 4. Menu / Service Highlights (Топ позиции для карточки)',
+        fieldTitle: 'Block 4. Menu / Service Highlights (Top 3 Offerings)',
         exactCabinetPath: 'Management Center → Menu & Offerings → Featured Items',
-        validationRule: 'Скопируйте и вставьте эти 3 ключевые позиции — нейросети цитируют их дословно, когда пользователь спрашивает «Что заказать / какую услугу выбрать».',
+        validationRule: 'Paste these 3 signature items — AI search engines quote them verbatim when users ask "What should I order / which service to choose".',
         value: `• Featured #1: ${flagship} (From ${p3})\n• Featured #2: Express / Daily Package for ${persona} (${p2})\n• Featured #3: Guest Advantage — ${rules}`,
         isFreePreview: false,
         fieldType: 'CATALOG'
@@ -313,9 +313,9 @@ export function buildDirectoryBlueprints(
       {
         id: 'trip-5-photocaption',
         blockNumber: 5,
-        fieldTitle: 'Блок 5. Primary Photo Captions (SEO-подписи к главным фото)',
+        fieldTitle: 'Block 5. Primary Photo Captions (SEO Alt-Tags)',
         exactCabinetPath: 'Management Center → Photos → Manage Photos → Edit Caption',
-        validationRule: 'Большинство владельцев оставляют подписи к фото пустыми. Заполненный Caption индексируется Google Images и мультимодальным поиском Gemini.',
+        validationRule: 'Most owners leave captions blank. Captions are indexed by Google Images and multimodal Gemini search.',
         value: `Photo 1 (Primary Cover): ${bName} in ${bCity} — ${flagship}\nPhoto 2 (Interior / Process): Welcoming atmosphere for ${persona} at ${bName}\nPhoto 3 (Exterior / Entrance): Easy entrance and ${rules} at ${bAddress}`,
         isFreePreview: false,
         fieldType: 'MEDIA_SPEC'
@@ -328,22 +328,22 @@ export function buildDirectoryBlueprints(
 
   const timeoutBlueprint: DirectoryPlatformBlueprint = {
     id: 'TIMEOUT_PR',
-    name: 'TimeOut / What’s On / Блоги «Топ-10» (Editorial PR-Kit)',
-    badge: '📰 Выход в статьи «Лучшие в городе»',
+    name: 'TimeOut / What’s On / Local "Top 10" Lists (Editorial PR-Kit)',
+    badge: '📰 Feature in "Best in the City" Articles',
     portalUrl: 'https://www.timeoutdubai.com/contact-us',
     portalDomain: 'Editorial Desk / Local Media',
-    aiCitationImpact: '+48% к цитированию в Google AI Overviews (Gemini) по запросам «Лучшие в районе»',
-    financialWhyText: 'Одно упоминание вашего бизнеса в обзорной статье «Топ-10 мест района» навсегда закрепляет вас в ответах Google Gemini и ChatGPT. Мы подготовили готовое письмо и абзац в стиле редакции — просто отправьте его на email местных изданий.',
+    aiCitationImpact: '+48% citation rate in Google AI Overviews (Gemini) for "Best near me" queries',
+    financialWhyText: 'A single press mention in a curated "Top 10" guide cements your listing inside Google Gemini and ChatGPT answers permanently. We prepared a ready-to-publish pitch in editorial style.',
     estimatedMonthlyValue: estPrVal,
-    completionTime: '2 минуты (Скопировать и отправить)',
+    completionTime: '2 min (Copy & Email)',
     blocks: [
       {
         id: 'pr-1-subject',
         blockNumber: 1,
-        fieldTitle: 'Блок 1. Тема письма в редакцию (Email Subject Line)',
-        exactCabinetPath: 'Почта редакции (TimeOut / What’s On / Локальные Telegram-каналы и гиды)',
+        fieldTitle: 'Block 1. Pitch Email Subject Line',
+        exactCabinetPath: 'Editorial Desk (TimeOut / What’s On / Local Curated Guides)',
         maxChars: 90,
-        validationRule: 'Короткая журналистская тема без спама — открываемость редакторами рубрик «New & Trending» выше 65%.',
+        validationRule: 'Concise journalistic subject line without spam words — open rates with "New & Trending" editors exceed 65%.',
         value: clampText(`Editorial Spotlights (${bCity}): ${bName} — ${flagship}`, 90),
         isFreePreview: true,
         fieldType: 'TEXT'
@@ -351,10 +351,10 @@ export function buildDirectoryBlueprints(
       {
         id: 'pr-2-blurb',
         blockNumber: 2,
-        fieldTitle: 'Блок 2. Готовый редакционный абзац (The 50-Word Magazine Blurb)',
-        exactCabinetPath: 'Тело письма → Готовый абзац для вставки журналистом в статью без рерайта',
+        fieldTitle: 'Block 2. 50-Word Editorial Blurb',
+        exactCabinetPath: 'Email Body → Publication-ready paragraph for journalists without rewrites',
         maxChars: 420,
-        validationRule: 'Журналисты охотно включают заведение в подборку, когда за них уже написан лаконичный абзац на 50 слов в редакционном стиле.',
+        validationRule: 'Editors feature businesses readily when provided with a concise, publication-grade 50-word blurb.',
         value: clampText(prBlurbRaw, 420),
         isFreePreview: false,
         fieldType: 'TEXT'
@@ -362,9 +362,9 @@ export function buildDirectoryBlueprints(
       {
         id: 'pr-3-factbox',
         blockNumber: 3,
-        fieldTitle: 'Блок 3. Факт-бокс для публикации (Editorial Fact Sheet)',
-        exactCabinetPath: 'Нижняя часть письма → Справочная карточка заведения',
-        validationRule: 'Стандартная карточка фактов, которую издания ставят внизу каждого обзора.',
+        fieldTitle: 'Block 3. Publication Fact Sheet',
+        exactCabinetPath: 'Email Footer → Business Fact Sheet',
+        validationRule: 'Standard editorial fact box placed at the conclusion of magazine reviews.',
         value: `• Venue Name: ${bName}\n• Category: ${bCategory}\n• Must-Try / Flagship: ${flagship}\n• Average Spend: From ${p2} – ${p3}\n• Insider Perks: ${rules}\n• Exact Location: ${bAddress} (GPS: ${lat}, ${lng})\n• Contact & Booking: ${bPhone} | ${bWebsite}`,
         isFreePreview: false,
         fieldType: 'CATALOG'

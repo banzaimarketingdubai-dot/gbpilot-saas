@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: `Пользователь ${email} является постоянным супер-администратором платформы и не может быть понижен.`,
+          error: `User ${email} is a permanent platform superadmin and cannot be demoted.`,
         },
         { status: 403 }
       );
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Роль ${ROLE_DEFINITIONS[role as UserRole].label} успешно назначена пользователю ${email}`,
+      message: `Role ${ROLE_DEFINITIONS[role as UserRole].label} successfully assigned to ${email}`,
       user: record,
       users: Array.from(serverRoleRecords.values()),
     });
@@ -93,7 +93,7 @@ export async function DELETE(request: Request) {
     const normalized = email.trim().toLowerCase();
     if (PERMANENT_SUPERADMINS.includes(normalized)) {
       return NextResponse.json(
-        { success: false, error: 'Нельзя удалить роль корневого суперадмина платформы' },
+        { success: false, error: 'Cannot delete the platform root superadmin role' },
         { status: 403 }
       );
     }
@@ -102,7 +102,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Роль для ${email} сброшена`,
+      message: `Role for ${email} has been revoked`,
       users: Array.from(serverRoleRecords.values()),
     });
   } catch (error: any) {

@@ -987,7 +987,7 @@ export default function DashboardCockpitPage() {
               auditReport={auditReport}
               onOpenAuditModal={() => setIsInspectionModalOpen(true)}
               onApplyAction={(actionId) => {
-                showToast('🎉 Рекомендация успешно выполнена! Данные синхронизированы с Google Maps.');
+                showToast('🎉 Recommendation applied successfully! Synced with Google Maps.');
               }}
             />
 
@@ -1669,9 +1669,9 @@ export default function DashboardCockpitPage() {
                   <Unlink className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900">Отключить профиль или перевести в «Спящий щит»?</h3>
+                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900">Disconnect Profile or Switch to Sleep Guard?</h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Локация: <strong>{profileToUnlinkConfirm.name}</strong>
+                    Location: <strong>{profileToUnlinkConfirm.name}</strong>
                   </p>
                 </div>
               </div>
@@ -1689,19 +1689,19 @@ export default function DashboardCockpitPage() {
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
-                  Рекомендуем вместо отключения
+                  Recommended over Disconnecting
                 </span>
                 <span className="font-black text-emerald-800 text-sm">
-                  {auditReport?.currency === 'AED' ? 'AED 35 / мес' : '$9 / мес'}
+                  {auditReport?.currency === 'AED' ? 'AED 35 / mo' : '$9 / mo'}
                 </span>
               </div>
 
               <div className="space-y-1">
                 <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm">
-                  🛡️ Режим «Спящий Щит» (Sleep Guard Mode — Охрана 24/7 без постов)
+                  🛡️ Sleep Guard Mode (24/7 Shield without Automated Posts)
                 </h4>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Даже если вы ставите маркетинг на паузу, конкуренты могут подменить ваш номер телефона или поставить статус «Закрыто» в пятницу вечером (средний убыток от одной атаки — <strong>{auditReport?.currency === 'AED' ? 'AED 4,500' : '$1,200'}</strong>). В режиме Спящего Щита ИИ отключает генерацию постов, но <strong>круглосуточно охраняет телефон (NAP), адрес и часы работы с авто-откатом за 5 минут</strong>.
+                  Even if marketing is paused, competitors can alter your phone number or set "Permanently Closed" on a Friday evening (average attack loss: <strong>{auditReport?.currency === 'AED' ? 'AED 4,500' : '$1,200'}</strong>). In Sleep Guard mode, AI pauses post creation but <strong>protects phone (NAP), address, and hours 24/7 with 5-minute automated rollback</strong>.
                 </p>
               </div>
 
@@ -1713,17 +1713,17 @@ export default function DashboardCockpitPage() {
                   setIsProUser(updated.isPro);
                   setProfileToUnlinkConfirm(null);
                   setIsProfileModalOpen(false);
-                  showToast('🛡️ Включен режим «Спящий Щит» (Sleep Guard Mode — $9 / AED 35 в мес). Телефон и часы под охраной 24/7!');
+                  showToast('🛡️ Sleep Guard Mode Activated ($9 / AED 35 per month). Phone & hours under 24/7 protection!');
                 }}
                 className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 shrink-0" />
-                <span>Включить «Спящий Щит» за {auditReport?.currency === 'AED' ? 'AED 35' : '$9'}/мес (Сохранить охрану)</span>
+                <span>Enable Sleep Guard for {auditReport?.currency === 'AED' ? 'AED 35' : '$9'}/mo (Keep 24/7 Shield)</span>
               </button>
             </div>
 
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 leading-relaxed">
-              Если вы полностью отвяжете профиль <strong>«{profileToUnlinkConfirm.name}»</strong>, слот локации освободится для подключения другого бизнеса, но автоматическая защита от правок конкурентов в Google Maps прекратится.
+              If you completely unlink <strong>"{profileToUnlinkConfirm.name}"</strong>, the location slot will be freed to connect another business, but automatic competitor edit protection on Google Maps will stop.
             </div>
 
             <div className="flex items-center gap-3 pt-1">
@@ -1732,14 +1732,14 @@ export default function DashboardCockpitPage() {
                 onClick={() => setProfileToUnlinkConfirm(null)}
                 className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
               >
-                Отмена
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleUnlinkProfile(profileToUnlinkConfirm)}
                 className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
               >
-                Всё равно отвязать профиль
+                Unlink Profile Anyway
               </button>
             </div>
           </div>
@@ -1836,7 +1836,7 @@ export default function DashboardCockpitPage() {
         currentPhone={activeProfile?.phone}
         onComplete={() => {
           setIsInspectionModalOpen(false);
-          showToast('Оптимизация профиля успешно применена! Карточка Google Maps обновлена.');
+          showToast('Profile optimization applied successfully! Google Maps listing updated.');
         }}
       />
 

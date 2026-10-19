@@ -26,7 +26,7 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {
     id: 'SUPER_ADMIN',
     label: 'Superadmin / Platform Owner',
     badge: '👑 Superadmin',
-    description: 'Полный неограниченный доступ ко всем заведениям, биллингу Creem, API-ключам и назначению ролей.',
+    description: 'Full unrestricted access to all locations, Creem billing, API keys, and team role assignments.',
     canAccessAdmin: true,
     canManageRoles: true,
     canManageBilling: true,
@@ -36,7 +36,7 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {
     id: 'OPS_LEAD',
     label: 'Operations & SEO Lead',
     badge: '⚡ Ops Lead',
-    description: 'Управление заведениями клиентов, запуск 3x3 Geo-Grid радара и пакетное одобрение задач ИИ.',
+    description: 'Manage client locations, run 3x3 Geo-Grid radar, and batch-approve AI automation tasks.',
     canAccessAdmin: true,
     canManageRoles: false,
     canManageBilling: false,
@@ -46,7 +46,7 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {
     id: 'SENTINEL_OFFICER',
     label: 'Sentinel Security Officer',
     badge: '🛡️ Sentinel Officer',
-    description: 'Мониторинг журнала перехвата правок, защита от подмены телефонов и откат снимков Google Maps.',
+    description: 'Monitor profile edit interception logs, protect against phone hijacks, and revert malicious GBP updates.',
     canAccessAdmin: true,
     canManageRoles: false,
     canManageBilling: false,
@@ -56,7 +56,7 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {
     id: 'CLIENT_OWNER',
     label: 'Client Business Owner',
     badge: '🏢 Owner',
-    description: 'Владелец заведения/сети: доступ к клиентскому Cockpit, аналитике трафика и инвойсам.',
+    description: 'Location/Chain owner: access to client Cockpit, traffic analytics, and billing invoices.',
     canAccessAdmin: false,
     canManageRoles: false,
     canManageBilling: false,
@@ -66,7 +66,7 @@ export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {
     id: 'LOCATION_MANAGER',
     label: 'Location Store Manager',
     badge: '☕ Manager',
-    description: 'Управляющий точкой: оперативный ответ на отзывы гостей и загрузка фотографий.',
+    description: 'Store manager: immediate replies to customer reviews and photo uploads.',
     canAccessAdmin: false,
     canManageRoles: false,
     canManageBilling: false,
@@ -163,7 +163,7 @@ export function setUserRole(
 
   // Prevent demoting permanent superadmins
   if (isPermanentSuperAdmin(normalized) && role !== 'SUPER_ADMIN') {
-    throw new Error(`Пользователь ${targetEmail} является постоянным супер-администратором платформы и не может быть понижен.`);
+    throw new Error(`User ${targetEmail} is a permanent platform superadmin and cannot be demoted.`);
   }
 
   const current = getAllUserRoles().filter((r) => !r.isPermanent);
@@ -194,7 +194,7 @@ export function removeUserRole(targetEmail: string): UserRoleRecord[] {
   const normalized = targetEmail.trim().toLowerCase();
 
   if (isPermanentSuperAdmin(normalized)) {
-    throw new Error(`Нельзя удалить роль корневого суперадмина ${targetEmail}.`);
+    throw new Error(`Cannot remove root superadmin role for ${targetEmail}.`);
   }
 
   const current = getAllUserRoles().filter((r) => !r.isPermanent && r.email.toLowerCase() !== normalized);

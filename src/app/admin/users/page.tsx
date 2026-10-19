@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
   const handleAssignRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail || !newEmail.includes('@')) {
-      showToast('Введите корректный email адрес', 'error');
+      showToast('Please enter a valid email address', 'error');
       return;
     }
 
@@ -79,11 +79,11 @@ export default function AdminUsersPage() {
         }),
       }).catch(() => {});
 
-      showToast(`Роль «${ROLE_DEFINITIONS[newRole].label}» успешно назначена для ${newEmail}`);
+      showToast(`Role "${ROLE_DEFINITIONS[newRole].label}" successfully assigned to ${newEmail}`);
       setNewEmail('');
       setNewName('');
     } catch (err: any) {
-      showToast(err.message || 'Ошибка назначения роли', 'error');
+      showToast(err.message || 'Failed to assign role', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
 
   const handleDeleteRole = async (email: string) => {
     if (isPermanentSuperAdmin(email)) {
-      showToast('Нельзя удалить постоянного супер-администратора', 'error');
+      showToast('Cannot remove a permanent superadmin', 'error');
       return;
     }
 
@@ -103,9 +103,9 @@ export default function AdminUsersPage() {
         method: 'DELETE',
       }).catch(() => {});
 
-      showToast(`Роль для ${email} удалена`);
+      showToast(`Role for ${email} has been revoked`);
     } catch (err: any) {
-      showToast(err.message || 'Ошибка удаления роли', 'error');
+      showToast(err.message || 'Failed to revoke role', 'error');
     }
   };
 
@@ -150,14 +150,14 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
               <Crown className="w-7 h-7 text-amber-400" />
-              <span>Команда и Управление Ролями</span>
+              <span>Team &amp; Role Governance</span>
             </h1>
             <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
               RBAC Governance
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Назначение ролей сотрудникам, разграничение прав доступа и управление привилегиями платформы.
+            Assign roles to team members, enforce granular access control, and manage platform permissions.
           </p>
         </div>
       </div>
@@ -176,14 +176,14 @@ export default function AdminUsersPage() {
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Ваш аккаунт привязан как несгораемый суперадминистратор с полными правами управления платформой.
+              Your account is configured as a permanent superadmin with full platform administration privileges.
             </p>
           </div>
         </div>
 
         <div className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 flex items-center gap-1.5 self-stretch sm:self-auto justify-center">
           <ShieldCheck className="w-4 h-4" />
-          <span>Все права активны</span>
+          <span>Full Privileges Active</span>
         </div>
       </div>
 
@@ -191,12 +191,12 @@ export default function AdminUsersPage() {
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
           <UserPlus className="w-4 h-4 text-blue-400" />
-          <h3 className="font-bold text-base text-white">Назначить роль новому пользователю</h3>
+          <h3 className="font-bold text-base text-white">Assign Role to New User</h3>
         </div>
 
         <form onSubmit={handleAssignRole} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Email пользователя</label>
+            <label className="text-xs font-semibold text-slate-300">User Email</label>
             <input
               type="email"
               required
@@ -208,10 +208,10 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Имя / Должность (опционально)</label>
+            <label className="text-xs font-semibold text-slate-300">Name / Job Title (optional)</label>
             <input
               type="text"
-              placeholder="Алексей (SEO Lead)"
+              placeholder="Alex (SEO Lead)"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
@@ -219,7 +219,7 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Назначаемая роль</label>
+            <label className="text-xs font-semibold text-slate-300">Assigned Role</label>
             <select
               value={newRole}
               onChange={(e) => setNewRole(e.target.value as UserRole)}
@@ -239,12 +239,12 @@ export default function AdminUsersPage() {
             className="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-600/20 disabled:opacity-50"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>Сохранить роль</span>
+            <span>Save Role Assignment</span>
           </button>
         </form>
 
         <div className="text-[11px] text-slate-400 bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-          <span className="font-bold text-slate-300">Описание выбранной роли: </span>
+          <span className="font-bold text-slate-300">Selected Role Permissions: </span>
           {ROLE_DEFINITIONS[newRole].description}
         </div>
       </div>
@@ -254,20 +254,20 @@ export default function AdminUsersPage() {
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-blue-400" />
-            <h3 className="font-bold text-base text-white">Список пользователей с назначенными ролями</h3>
+            <h3 className="font-bold text-base text-white">Users &amp; Active Role Assignments</h3>
           </div>
-          <span className="text-xs text-slate-500">{users.length} участников</span>
+          <span className="text-xs text-slate-500">{users.length} team members</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
               <tr>
-                <th className="pb-3 font-semibold">Пользователь</th>
-                <th className="pb-3 font-semibold">Назначенная роль</th>
-                <th className="pb-3 font-semibold">Доступ к /admin</th>
-                <th className="pb-3 font-semibold">Назначил</th>
-                <th className="pb-3 font-semibold text-right">Действия</th>
+                <th className="pb-3 font-semibold">User</th>
+                <th className="pb-3 font-semibold">Assigned Role</th>
+                <th className="pb-3 font-semibold">/admin Access</th>
+                <th className="pb-3 font-semibold">Assigned By</th>
+                <th className="pb-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -314,10 +314,10 @@ export default function AdminUsersPage() {
                     <td className="py-3.5">
                       {def.canAccessAdmin ? (
                         <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5" /> Разрешен
+                          <Check className="w-3.5 h-3.5" /> Granted
                         </span>
                       ) : (
-                        <span className="text-slate-500 font-normal">Только клиентский Cockpit</span>
+                        <span className="text-slate-500 font-normal">Client Cockpit Only</span>
                       )}
                     </td>
 
@@ -328,13 +328,13 @@ export default function AdminUsersPage() {
                     <td className="py-3.5 text-right">
                       {isPerm ? (
                         <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                          Неизменяемый
+                          Immutable
                         </span>
                       ) : (
                         <button
                           onClick={() => handleDeleteRole(u.email)}
                           className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors"
-                          title="Отозвать роль"
+                          title="Revoke Role"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

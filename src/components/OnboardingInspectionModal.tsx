@@ -8,45 +8,44 @@ import {
   AlertTriangle, 
   ArrowRight, 
   Zap, 
-  Lock, 
   Check, 
   RefreshCw, 
   X, 
   TrendingUp, 
-  Share2, 
+  SlidersHorizontal, 
   Edit3,
   Copy,
   Gift,
-  HelpCircle,
-  SlidersHorizontal
+  Lock,
+  Share2
 } from 'lucide-react';
 import { HealthGauge } from '@/components/HealthGauge';
 import { getSubscription } from '@/lib/subscription';
 import { runInspectionAudit, InspectionAuditReport } from '@/lib/inspection/auditEngine';
 import { 
-  generateSmartSeoDescription, 
   SeoCopyTone, 
-  extractGeoAnchors,
-  detectBusinessNiche,
-  BusinessNiche,
-  NICHE_LIST,
-  getNicheCatalogItems
+  BusinessNiche, 
+  NICHE_LIST, 
+  detectBusinessNiche, 
+  generateSmartSeoDescription, 
+  getNicheCatalogItems,
+  extractGeoAnchors 
 } from '@/lib/inspection/seoCopyGenerator';
 
 export interface AuditActionCardItem {
   id: string;
   categoryTitle: string;
   gapTag: 'CRITICAL_FIX' | 'HIGH_IMPACT' | 'CONVERSION_BOOSTER';
-  isFree: boolean; // True for starter free issues, false for Pro
+  isFree?: boolean;
   problemText: string;
   beforeValue: string;
+  beforeMeta?: string;
   afterAiValue: string;
+  afterMeta?: string;
+  keywordChips?: string[];
   impactMetric: string;
   applied: boolean;
   isCustomized?: boolean;
-  beforeMeta?: string;
-  afterMeta?: string;
-  keywordChips?: string[];
 }
 
 interface OnboardingInspectionModalProps {
@@ -73,8 +72,8 @@ function generateDefaultActionCards(
   nicheOverride?: BusinessNiche,
   customOwnerNotes?: string
 ): AuditActionCardItem[] {
-  const name = businessName !== '—' && businessName ? businessName : 'вашего заведения';
-  const address = businessAddress !== '—' && businessAddress ? businessAddress : 'в вашем районе';
+  const name = businessName !== '—' && businessName ? businessName : 'your business';
+  const address = businessAddress !== '—' && businessAddress ? businessAddress : 'your neighborhood';
   const geo = extractGeoAnchors(address, city);
   const activeNiche = nicheOverride || detectBusinessNiche(name, category);
 
@@ -93,7 +92,7 @@ function generateDefaultActionCards(
   const hasRealDescription = Boolean(currentDescription && currentDescription.trim().length > 0);
   const existingDescText = hasRealDescription 
     ? currentDescription!.trim() 
-    : 'Описание не заполнено в Google Business Profile (0 / 750 знаков). Карточка не ранжируется по целевым запросам района.';
+    : 'No business description configured in Google Business Profile (0 / 750 characters). Listing does not rank for targeted local search queries in your area.';
   const existingDescLen = hasRealDescription ? currentDescription!.trim().length : 0;
 
   const catalogPreview = getNicheCatalogItems(activeNiche, auditReport.currencySymbol);
@@ -101,90 +100,90 @@ function generateDefaultActionCards(
   return [
     {
       id: 'audit-bio',
-      categoryTitle: 'Основная категория и SEO-описание профиля (Profile Bio)',
+      categoryTitle: 'Primary Category & SEO Description (Profile Bio)',
       gapTag: 'CRITICAL_FIX',
       isFree: true, // 100% FREE STARTER FIX
       problemText: hasRealDescription
-        ? `Текущее описание слишком короткое (${existingDescLen} из 750 знаков) и не содержит ключевых поисковых запросов для ${geo.landmarkOrDistrict}. Google Maps отдает приоритет конкурентам с полным описанием.`
-        : `Описание карточки в Google Maps отсутствует (0 из 750 знаков). Поисковый алгоритм не может связать заведение «${name}» с запросами гостей поблизости.`,
+        ? `Current description is too brief (${existingDescLen} of 750 characters) and lacks high-intent search keywords for ${geo.landmarkOrDistrict}. Google Maps prioritizes competitors with comprehensive profiles.`
+        : `Google Maps listing description is missing (0 of 750 characters). Search algorithms cannot associate "${name}" with high-intent nearby customer queries.`,
       beforeValue: existingDescText,
-      beforeMeta: `${existingDescLen} / 750 знаков • Упущено ${Math.max(0, 750 - existingDescLen)} знаков`,
+      beforeMeta: `${existingDescLen} / 750 characters • Missing ${Math.max(0, 750 - existingDescLen)} characters`,
       afterAiValue: highQualitySeoBio,
-      afterMeta: `${highQualitySeoBio.length} / 750 знаков • Проиндексировано 6 поисковых фраз`,
+      afterMeta: `${highQualitySeoBio.length} / 750 characters • 6 high-intent search phrases indexed`,
       keywordChips: [
-        `Локация: ${geo.landmarkOrDistrict}`,
-        `Удобства и сервисы`,
-        `Поисковые LSI-ключи`,
-        `Призыв к действию (CTA)`
+        `Location: ${geo.landmarkOrDistrict}`,
+        'Amenities & Services',
+        'LSI Search Keywords',
+        'Call to Action (CTA)'
       ],
-      impactMetric: '+4 ключевых поисковых запроса в выдаче',
+      impactMetric: '+4 target search keywords ranked',
       applied: false
     },
     {
       id: 'audit-holiday-hours',
-      categoryTitle: 'График работы в праздничные дни (Защита от потери клиентов)',
+      categoryTitle: 'Holiday & Special Operating Hours (Customer Loss Protection)',
       gapTag: 'HIGH_IMPACT',
       isFree: true, // 100% FREE STARTER FIX
-      problemText: 'Не подтверждены часы работы на ближайшие праздничные дни. Google Maps вывешивает тревожное желтое предупреждение «Часы работы могут отличаться», из-за чего до 40% гостей уходят к конкурентам.',
-      beforeValue: 'Официальные часы на праздники не подтверждены в Google Maps. На карточке выводится плашка: «Часы работы могут отличаться».',
-      beforeMeta: 'Статус: Предупреждение Google активно (риск оттока гостей)',
-      afterAiValue: 'Подтвержден официальный график работы заведения (08:00 – 22:00) на все государственные праздники года. Гарантирует непрерывный статус «Открыто» в выдаче Google Maps без предупреждений.',
-      afterMeta: 'Статус: 100% подтверждено • Предупреждение снято',
-      impactMetric: 'Устраняет ложный флаг «Закрыто»',
+      problemText: 'Upcoming holiday and special operating hours are unconfirmed. Google Maps displays an alarming yellow warning "Hours might differ", causing up to 40% of potential visitors to switch to nearby competitors.',
+      beforeValue: 'Holiday operating hours are unconfirmed in Google Maps. Warning badge displayed: "Hours might differ".',
+      beforeMeta: 'Status: Google Warning Active (High drop-off risk)',
+      afterAiValue: 'Official verified holiday schedule confirmed across all national calendar holidays. Guarantees continuous "Open" status in Google Maps search with zero customer warnings.',
+      afterMeta: 'Status: 100% Verified • Warning Removed',
+      impactMetric: 'Eliminates "Closed" false flags',
       applied: false
     },
     {
       id: 'audit-attributes',
-      categoryTitle: 'Атрибуты и удобства для гостей (Фильтры на Картах)',
+      categoryTitle: 'Guest Amenities & Attributes (Map Search Filters)',
       gapTag: 'HIGH_IMPACT',
       isFree: false, // PRO TIER
-      problemText: 'В карточке не включены популярные теги, по которым пользователи фильтруют заведения на Картах (Wi-Fi, парковка, оплата картой, терраса и др.).',
-      beforeValue: 'Включено только 2 базовых атрибута. Профиль исключается из поисковой выдачи, когда пользователь включает фильтры на Картах.',
-      beforeMeta: 'Активно: 2 из 10 ключевых атрибутов',
-      afterAiValue: '✓ Бесплатный Wi-Fi для гостей  ✓ Оплата картой и QR  ✓ Уютная терраса / Зал  ✓ Дог-френдли  ✓ Парковка для гостей  ✓ Еда навынос  ✓ Доступная среда',
-      afterMeta: 'Активировано: 8 новых фильтров ранжирования',
-      impactMetric: 'Соответствие 8 фильтрам на Картах',
+      problemText: 'Listing lacks high-converting attribute tags that users frequently filter by on Google Maps (Wi-Fi, parking, card payment, outdoor seating, wheelchair accessible).',
+      beforeValue: 'Only 2 basic attributes enabled. Profile is excluded from search results when users apply amenity filters on Google Maps.',
+      beforeMeta: 'Active: 2 of 10 essential attributes',
+      afterAiValue: '✓ Free Guest Wi-Fi  ✓ Credit Card & Mobile Pay  ✓ Outdoor Seating / Lounge  ✓ Pet-Friendly  ✓ Dedicated Customer Parking  ✓ Takeaway  ✓ Wheelchair Accessible',
+      afterMeta: 'Activated: 8 high-intent search filters',
+      impactMetric: 'Matches 8 Google Maps filter presets',
       applied: false
     },
     {
       id: 'audit-services-menu',
-      categoryTitle: 'Каталог меню и услуг (Для Google Поиска и AI Overview)',
+      categoryTitle: 'Menu & Service Catalog (For Google Search & AI Overview)',
       gapTag: 'CONVERSION_BOOSTER',
       isFree: false, // PRO TIER
-      problemText: 'Каталог услуг или меню не заполнен. Ни Google Карты, ни умный поиск (Gemini, AI Overview) не могут показать клиентам ваши цены и популярные позиции.',
-      beforeValue: '0 структурированных позиций в каталоге Google. Карточка не показывается в расширенной поисковой выдаче товаров и услуг.',
-      beforeMeta: '0 позиций • Раздел не заполнен',
+      problemText: 'Service catalog or menu is empty. Neither Google Maps nor conversational AI search (Gemini, AI Overviews) can cite your pricing or flagship offerings to searching customers.',
+      beforeValue: '0 structured items in Google catalog. Listing is ineligible for rich visual product cards and voice search answers.',
+      beforeMeta: '0 items • Section unpopulated',
       afterAiValue: catalogPreview,
-      afterMeta: '10 структурированных позиций с ценами для Google AI',
-      impactMetric: 'Прямой выбор и цитирование в AI Overview',
+      afterMeta: '10 structured items with verified prices for Google AI',
+      impactMetric: 'Direct citation in Google AI Overview',
       applied: false
     },
     {
       id: 'audit-exif-photos',
-      categoryTitle: 'Геолокационная привязка фото (EXIF GPS координаты)',
+      categoryTitle: 'Photo Geotagging & Centroid Tagging (EXIF GPS Boost)',
       gapTag: 'CRITICAL_FIX',
       isFree: false, // PRO TIER
-      problemText: 'Загруженные фотографии не содержат точных GPS-координат точки входа. Алгоритм Google Maps отдает приоритет карточкам с подтвержденным гео-центроидом.',
-      beforeValue: '0% загруженных фотографий имеют GPS-привязку к реальным координатам входа в заведение.',
-      beforeMeta: 'EXIF метаданные: отсутствуют',
-      afterAiValue: `Пакет геопривязки EXIF: внедрение точных географических координат точки входа (${address}) в метаданные фотографий для приоритетного ранжирования в радиусе заведения.`,
-      afterMeta: 'Координатный центроид зафиксирован на Картах',
-      impactMetric: 'Приоритет в карусели фото Google Maps',
+      problemText: 'Uploaded photos lack precise physical GPS entry coordinates. Google Maps local algorithms favor listings with confirmed geographic image centroids.',
+      beforeValue: '0% of uploaded photos have embedded GPS coordinates matching the physical entrance.',
+      beforeMeta: 'EXIF metadata: Missing',
+      afterAiValue: `EXIF Geo-Tagging Suite: Embeds high-precision geographic coordinates of entrance (${address}) directly into photo metadata for prioritized local radius ranking.`,
+      afterMeta: 'Coordinate centroid pinned on Google Maps',
+      impactMetric: 'Priority ranking in photo carousel',
       applied: false
     },
     {
       id: 'audit-sentinel-guard',
-      categoryTitle: 'Защита от несанкционированных правок конкурентов (Sentinel Guard)',
+      categoryTitle: '24/7 AI Sentinel Shield (Competitor Edit Protection)',
       gapTag: 'CRITICAL_FIX',
       isFree: false, // PRO TIER
-      problemText: 'Телефон и адрес не защищены от сторонних правок. Любой пользователь или конкурент может предложить «исправление», что ведет к блокировке карточки или подмене номера.',
+      problemText: 'Phone number and address are unprotected against third-party public edits. Competitors or malicious actors can suggest edits, triggering listing suspension or hijacking calls.',
       beforeValue: currentPhone 
-        ? `Номер телефона (${currentPhone}) и адрес открыты для сторонних правок. Нет автоматического отката чужих изменений.`
-        : 'Контакты и физический адрес уязвимы для чужих правок конкурентов (риск повторной верификации).',
-      beforeMeta: 'Статус: Профиль не защищен от правок',
-      afterAiValue: '«Золотой снимок» данных зафиксирован в Sentinel Guard. Круглосуточный авто-откат любых чужих изменений за 180 секунд без риска повторной видео-верификации.',
-      afterMeta: 'Статус: 24/7 Shield активен • Авто-откат включен',
-      impactMetric: '100% защита от бана и подмены контактов',
+        ? `Phone number (${currentPhone}) and address are vulnerable to crowd-sourced edits with no automatic rollback.`
+        : 'Contact details and physical address are vulnerable to crowd-sourced edits (suspension risk).',
+      beforeMeta: 'Status: Profile unprotected against edits',
+      afterAiValue: 'Golden Snapshot locked in 24/7 Sentinel Guard. Automated rollback of unauthorized third-party edits within 180 seconds with zero re-verification risk.',
+      afterMeta: 'Status: 24/7 Shield Active • Auto-Rollback Enabled',
+      impactMetric: '100% protection against hijack & suspension',
       applied: false
     }
   ];
@@ -299,7 +298,7 @@ export function OnboardingInspectionModal({
     const targetNicheInfo = NICHE_LIST.find(n => n.id === nicheId);
     setTimeout(() => {
       setIsRegeneratingBio(false);
-      setCopiedToast(`✓ Ниша изменена на «${targetNicheInfo?.label || ''}». Рекомендации обновлены!`);
+      setCopiedToast(`✓ Niche updated to "${targetNicheInfo?.label || ''}". Recommendations refreshed!`);
       setTimeout(() => setCopiedToast(null), 3000);
     }, 300);
   };
@@ -309,12 +308,12 @@ export function OnboardingInspectionModal({
     setIsRegeneratingBio(true);
     setTimeout(() => {
       setIsRegeneratingBio(false);
-      setCopiedToast('✓ Ваши данные успешно внедрены в SEO-описание карточки!');
+      setCopiedToast('✓ Owner insights successfully integrated into profile SEO bio!');
       setTimeout(() => setCopiedToast(null), 3000);
     }, 300);
   };
 
-  const handleCopyText = (textToCopy: string, successMessage = 'Текст скопирован в буфер!') => {
+  const handleCopyText = (textToCopy: string, successMessage = 'Text copied to clipboard!') => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(textToCopy);
       setCopiedToast(successMessage);
@@ -332,13 +331,13 @@ export function OnboardingInspectionModal({
     }
 
     setActionCards(prev => prev.map(c => c.id === id ? { ...c, applied: true } : c));
-    setCopiedToast('✓ Изменение успешно сохранено!');
+    setCopiedToast('✓ Change saved successfully!');
     setTimeout(() => setCopiedToast(null), 2000);
   };
 
   const handleApplyFreeStarterCards = () => {
     setActionCards(prev => prev.map(c => c.isFree ? { ...c, applied: true } : c));
-    setCopiedToast('🎉 2 стартовых улучшения успешно применены бесплатно!');
+    setCopiedToast('🎉 2 starter optimizations applied for free!');
     setTimeout(() => setCopiedToast(null), 3000);
   };
 
@@ -369,19 +368,19 @@ export function OnboardingInspectionModal({
   };
 
   const scanStages = [
-    'Анализ категорий, описания профиля и базовых NAP-данных (название, адрес, телефон)...',
-    'Проверка каталога услуг, меню и актуальности цен...',
-    'Проверка метаданных EXIF фото, графика работы и праздничных дней...',
-    'Сравнение факторов ранжирования с топ-3 конкурентами в вашем районе...'
+    'Analyzing categories, profile bio, and core NAP data (Name, Address, Phone)...',
+    'Checking service catalog, menu items, and pricing validity...',
+    'Verifying EXIF photo metadata, operating hours, and holiday schedules...',
+    'Benchmarking local ranking signals against top 3 competitors in your radius...'
   ];
 
   const applyingSteps = [
-    'Авторизация сессии через официальный Google Business Profile API...',
-    'Внесение оптимизированного описания и дополнительных категорий...',
-    'Публикация подтвержденного расписания на праздничные дни...',
-    'Активация 8 конверсионных атрибутов заведения...',
-    'Синхронизация структурированного каталога меню и услуг...',
-    'Внедрение координат EXIF и фиксация эталонного «Золотого снимка»...'
+    'Authorizing session via official Google Business Profile API...',
+    'Deploying optimized bio description and secondary categories...',
+    'Publishing verified holiday and special operating hours...',
+    'Activating 8 high-converting business attributes...',
+    'Syncing structured catalog of menu items and services...',
+    'Embedding EXIF coordinate centroid and locking Golden Snapshot...'
   ];
 
   // Dynamic Scanning Simulator on Mount / Open
@@ -442,7 +441,7 @@ export function OnboardingInspectionModal({
   const currentNicheInfo = NICHE_LIST.find(n => n.id === selectedNiche) || NICHE_LIST[0];
 
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
-    `*Экспресс-аудит Google Maps для ${businessName}*\nГотовность профиля: 64% (Требует оптимизации)\nОбнаружено 6 зон роста с потенциалом возврата +${auditReport.revenueRecoveryFormatted}/мес (эквивалент ${auditReport.savedAdSpendFormatted} рекламы Google Ads)\nПодробнее: https://gbpilot.top`
+    `*Google Maps Express Audit for ${businessName}*\nProfile Readiness: 64% (Action Needed)\n6 optimization gaps detected with +${auditReport.revenueRecoveryFormatted}/mo revenue recovery potential (equivalent to ${auditReport.savedAdSpendFormatted} Google Ads PPC spend)\nDetails: https://gbpilot.top`
   )}`;
 
   return (
@@ -470,14 +469,14 @@ export function OnboardingInspectionModal({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
-                  Экспресс-аудит Google Карточки
+                  Google Listing Express Audit
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-google-blue border border-blue-200 shrink-0">
-                  Первичная диагностика
+                  Initial Diagnostic
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 truncate">
-                Заведение: <strong>{businessName}</strong> {businessAddress !== '—' ? `(${businessAddress})` : ''}
+                Venue: <strong>{businessName}</strong> {businessAddress !== '—' ? `(${businessAddress})` : ''}
               </p>
             </div>
           </div>
@@ -491,9 +490,9 @@ export function OnboardingInspectionModal({
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   !isPro ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
-                title="Тестирование режима Free с бесплатными стартовыми исправлениями"
+                title="Test Free tier mode with 2 free starter fixes"
               >
-                Free (Демо-пейволл)
+                Free (Demo Paywall)
               </button>
               <button
                 type="button"
@@ -501,9 +500,9 @@ export function OnboardingInspectionModal({
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   isPro ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
-                title="Тестирование режима Pro с автозаполнением в 1 клик"
+                title="Test Pro tier mode with 1-click automated API sync"
               >
-                Pro (1-клик API)
+                Pro (1-Click API)
               </button>
             </div>
 
@@ -534,17 +533,17 @@ export function OnboardingInspectionModal({
 
             <div className="space-y-1 max-w-md">
               <h4 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
-                Глубокая проверка карточки заведения...
+                Deep Profile Inspection in Progress...
               </h4>
               <p className="text-xs text-slate-500">
-                Сканируем атрибуты Google Business Profile, видимость в локальном поиске и гео-сигналы для <strong>{businessName}</strong>.
+                Scanning Google Business Profile attributes, local search visibility, and geo-signals for <strong>{businessName}</strong>.
               </p>
             </div>
 
             {/* Dynamic Linear Progress Bar */}
             <div className="w-full max-w-md space-y-2">
               <div className="flex items-center justify-between text-xs font-bold">
-                <span className="text-google-blue">Алгоритм экспресс-аудита</span>
+                <span className="text-google-blue">Express Audit Engine</span>
                 <span className="text-slate-700 font-mono">{scanProgress}%</span>
               </div>
               <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
@@ -582,7 +581,7 @@ export function OnboardingInspectionModal({
 
             <div className="text-[11px] text-slate-400 flex items-center gap-1.5 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Диагностика на основе официальных факторов ранжирования Google Maps API</span>
+              <span>Diagnostics powered by official Google Maps ranking factors</span>
             </div>
 
           </div>
@@ -607,17 +606,17 @@ export function OnboardingInspectionModal({
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
-                      Зона внимания • 6 точек роста
+                      Attention Required • 6 Growth Gaps
                     </span>
                     <span className="text-[11px] text-slate-400 font-medium">
-                      Первичный аудит
+                      Initial Audit
                     </span>
                   </div>
                   <h4 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    Готовность карточки: 64% из 100%
+                    Profile Readiness: 64% of 100%
                   </h4>
                   <p className="text-xs text-rose-600 font-semibold leading-relaxed">
-                    ⚠️ Карточка теряет до 35% клиентов и звонков из-за незаполненных данных, уступая соседним заведениям.
+                    ⚠️ Listing loses up to 35% of local searches and calls due to missing data, trailing nearby rivals.
                   </p>
                 </div>
               </div>
@@ -630,31 +629,31 @@ export function OnboardingInspectionModal({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-900">
                     <TrendingUp className="w-4 h-4 text-emerald-600" />
-                    <span>Потенциал после устранения уязвимостей:</span>
+                    <span>Potential Lift After Optimization:</span>
                   </div>
                   <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
-                    Готовность к Топ-3
+                    TOP 3 READY
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-100">
-                    <span className="text-[10px] text-slate-500 block font-medium">Возврат упущенных клиентов</span>
+                    <span className="text-[10px] text-slate-500 block font-medium">Customer Recovery Potential</span>
                     <span className="text-base sm:text-lg font-black text-emerald-700 block">
-                      +{auditReport.revenueRecoveryFormatted}<span className="text-[11px] font-semibold text-slate-500">/мес</span>
+                      +{auditReport.revenueRecoveryFormatted}<span className="text-[11px] font-semibold text-slate-500">/mo</span>
                     </span>
                   </div>
                   <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-100">
-                    <span className="text-[10px] text-slate-500 block font-medium">Эквивалент платной рекламы</span>
+                    <span className="text-[10px] text-slate-500 block font-medium">PPC Ad Spend Equivalent</span>
                     <span className="text-base sm:text-lg font-black text-slate-900 block">
-                      {auditReport.savedAdSpendFormatted}<span className="text-[11px] font-semibold text-slate-500">/мес</span>
+                      {auditReport.savedAdSpendFormatted}<span className="text-[11px] font-semibold text-slate-500">/mo</span>
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-900 font-medium pt-0.5 border-t border-emerald-200/60">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Все 6 исправлений соответствуют официальным требованиям Google Maps API</span>
+                  <span>All 6 fixes comply with official Google Maps API guidelines</span>
                 </div>
               </div>
 
@@ -672,11 +671,11 @@ export function OnboardingInspectionModal({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ниша заведения:</span>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Business Niche:</span>
                       <span className="text-xs font-black text-slate-900">{currentNicheInfo.label}</span>
                     </div>
                     <p className="text-[11px] text-slate-500">
-                      ИИ подобрал рекомендации по стандартам Google Maps для этой ниши. Вы можете скорректировать нишу или вписать свои слова.
+                      AI tailored recommendations to Google Maps ranking standards for this niche. You can adjust the niche or add custom notes.
                     </p>
                   </div>
                 </div>
@@ -687,7 +686,7 @@ export function OnboardingInspectionModal({
                   className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer transition-colors"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{isNichePickerOpen ? 'Скрыть выбор' : '✏️ Не та ниша? Уточнить'}</span>
+                  <span>{isNichePickerOpen ? 'Hide Selector' : '✏️ Not your niche? Refine'}</span>
                 </button>
               </div>
 
@@ -696,7 +695,7 @@ export function OnboardingInspectionModal({
                 <div className="pt-3 border-t border-slate-100 space-y-3 animate-in fade-in duration-150">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                      Выберите точную специализацию (1 клик):
+                      Select exact business specialization (1 click):
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {NICHE_LIST.map((niche) => (
@@ -720,15 +719,15 @@ export function OnboardingInspectionModal({
                   {/* Owner plain words box */}
                   <div className="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                     <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                      <span>Или опишите бизнес простыми словами:</span>
-                      <span className="text-[10px] font-normal text-slate-400">(ИИ сам упакует ваши факты в правила Google)</span>
+                      <span>Or describe your business strengths in your own words:</span>
+                      <span className="text-[10px] font-normal text-slate-400">(AI will format your facts into Google Maps SEO guidelines)</span>
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         value={customOwnerNotes}
                         onChange={(e) => setCustomOwnerNotes(e.target.value)}
-                        placeholder="Например: делаем визараны в Камбоджу и сдаем байки, или: пицца на дровах, семейные обеды..."
+                        placeholder="e.g. VIP border runs to Cambodia and motorbike rentals, or: wood-fired artisan pizza, weekend family brunch..."
                         className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-google-blue font-sans"
                       />
                       <button
@@ -736,7 +735,7 @@ export function OnboardingInspectionModal({
                         onClick={handleApplyOwnerNotes}
                         className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors shrink-0 cursor-pointer"
                       >
-                        Применить мои слова
+                        Apply My Notes
                       </button>
                     </div>
                   </div>
@@ -752,13 +751,13 @@ export function OnboardingInspectionModal({
                 </div>
                 <div>
                   <div className="font-bold text-slate-900 flex items-center gap-2">
-                    <span>2 стартовых улучшения готовы бесплатно</span>
+                    <span>2 starter optimizations ready for free</span>
                     <span className="px-2 py-0.2 bg-emerald-100 text-emerald-800 rounded font-black text-[10px]">
                       FREE
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 mt-0.5">
-                    ИИ составил качественное SEO-описание и график для устранения предупреждений Google. Еще 4 продвинутых инструмента доступны на тарифе Pro.
+                    AI created a high-quality SEO bio and holiday schedule to eliminate Google warnings. 4 advanced tools available on Pro.
                   </p>
                 </div>
               </div>
@@ -771,7 +770,7 @@ export function OnboardingInspectionModal({
                   className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 >
                   <Share2 className="w-3.5 h-3.5" />
-                  <span>📲 Отчет в WhatsApp</span>
+                  <span>📲 Share via WhatsApp</span>
                 </a>
               </div>
             </div>
@@ -808,26 +807,26 @@ export function OnboardingInspectionModal({
                       {card.isFree ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                           <Gift className="w-2.5 h-2.5" />
-                          <span>Доступно бесплатно</span>
+                          <span>Available for Free</span>
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5" />
-                          <span>Тариф Pro</span>
+                          <span>Pro Tier</span>
                         </span>
                       )}
 
                       {card.isCustomized && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-google-blue border border-blue-200 flex items-center gap-1">
                           <Edit3 className="w-2.5 h-2.5" />
-                          <span>Инсайд владельца</span>
+                          <span>Owner Insight</span>
                         </span>
                       )}
 
                       {card.applied ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                           <Check className="w-3 h-3 stroke-[3]" />
-                          <span>{card.isFree ? 'Применено' : 'Применено через API'}</span>
+                          <span>{card.isFree ? 'Applied' : 'Synced via API'}</span>
                         </span>
                       ) : (
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
@@ -837,7 +836,7 @@ export function OnboardingInspectionModal({
                             ? 'bg-amber-100 text-amber-800 border border-amber-200'
                             : 'bg-blue-100 text-google-blue border border-blue-200'
                         }`}>
-                          {card.gapTag === 'CRITICAL_FIX' ? 'Критично' : card.gapTag === 'HIGH_IMPACT' ? 'Высокий приоритет' : 'Рост конверсии'}
+                          {card.gapTag === 'CRITICAL_FIX' ? 'Critical Fix' : card.gapTag === 'HIGH_IMPACT' ? 'High Impact' : 'Conversion Booster'}
                         </span>
                       )}
                     </div>
@@ -845,19 +844,19 @@ export function OnboardingInspectionModal({
 
                   {/* Problem Statement */}
                   <div className="text-xs text-slate-600 leading-relaxed">
-                    <span className="font-bold text-slate-800">Уязвимость в Google Maps: </span>
+                    <span className="font-bold text-slate-800">Google Maps Vulnerability: </span>
                     {card.problemText}
                   </div>
 
                   {/* Transparent Before vs After Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     
-                    {/* Before (Было в реальной карточке Google) */}
+                    {/* Before (Real Google Profile Current State) */}
                     <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-2">
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Текущее состояние в Google:
+                            Current State in Google:
                           </span>
                         </div>
                         <p className="text-slate-700 italic leading-relaxed pt-1">
@@ -872,13 +871,13 @@ export function OnboardingInspectionModal({
                       )}
                     </div>
 
-                    {/* After (Станет / ИИ-Решение) with Collaborative Inline Edit & PLG Blur */}
+                    {/* After (AI Optimized Solution) with Collaborative Inline Edit & PLG Blur */}
                     <div className="relative p-3.5 rounded-2xl bg-blue-50/50 border border-blue-200/80 flex flex-col justify-between space-y-2 overflow-hidden">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-1.5">
                           <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider flex items-center gap-1">
                             <Sparkles className="w-3 h-3" />
-                            <span>Решение ИИ по стандартам Google:</span>
+                            <span>AI Solution (Google Standards):</span>
                           </span>
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/60 px-1.5 py-0.2 rounded">
                             {card.impactMetric}
@@ -888,7 +887,7 @@ export function OnboardingInspectionModal({
                         {/* Interactive Tone Switcher for Card 1 (SEO Profile Bio) */}
                         {card.id === 'audit-bio' && !editingCardId && (
                           <div className="flex flex-wrap items-center gap-1 pt-0.5">
-                            <span className="text-[10px] text-slate-400 font-semibold">Стиль ИИ:</span>
+                            <span className="text-[10px] text-slate-400 font-semibold">AI Tone:</span>
                             <button
                               type="button"
                               onClick={() => handleToneChange('SEO')}
@@ -897,9 +896,9 @@ export function OnboardingInspectionModal({
                                   ? 'bg-google-blue text-white shadow-2xs'
                                   : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
                               }`}
-                              title="Максимум поисковых ключевых слов для ранжирования"
+                              title="Maximum search keywords for local ranking"
                             >
-                              🎯 Локальное SEO
+                              🎯 Local SEO
                             </button>
                             <button
                               type="button"
@@ -909,9 +908,9 @@ export function OnboardingInspectionModal({
                                   ? 'bg-google-blue text-white shadow-2xs'
                                   : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
                               }`}
-                              title="Премиальная подача, сервис и атмосфера"
+                              title="Premium tone, hospitality and atmosphere"
                             >
-                              💎 Премиум
+                              💎 Premium
                             </button>
                             <button
                               type="button"
@@ -921,9 +920,9 @@ export function OnboardingInspectionModal({
                                   ? 'bg-google-blue text-white shadow-2xs'
                                   : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
                               }`}
-                              title="Лаконичные факты и призыв к действию"
+                              title="Concise facts and direct call to action"
                             >
-                              ⚡ Краткий
+                              ⚡ Concise
                             </button>
                           </div>
                         )}
@@ -936,44 +935,44 @@ export function OnboardingInspectionModal({
                               onChange={(e) => setEditingText(e.target.value)}
                               rows={4}
                               className="w-full p-2.5 rounded-xl border border-blue-300 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-google-blue font-sans leading-relaxed"
-                              placeholder="Дополните формулировку своими фактами о заведении..."
+                              placeholder="Enhance this recommendation with your own business facts..."
                             />
                             <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                              <span className="text-slate-400 font-semibold">Быстрые инсайды:</span>
+                              <span className="text-slate-400 font-semibold">Quick Insights:</span>
                               <button
                                 type="button"
-                                onClick={() => handleQuickChipAppend('✓ Собственная парковка для гостей.')}
+                                onClick={() => handleQuickChipAppend('✓ Dedicated customer parking on site.')}
                                 className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
                               >
-                                + Парковка
+                                + Parking
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleQuickChipAppend('✓ Дог-френдли терраса (миски с водой).')}
+                                onClick={() => handleQuickChipAppend('✓ Pet-friendly outdoor seating (water bowls available).')}
                                 className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
                               >
-                                + Дог-френдли
+                                + Pet-Friendly
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleQuickChipAppend('✓ Фирменное авторское блюдо от шефа.')}
+                                onClick={() => handleQuickChipAppend('✓ Signature chef specialties available daily.')}
                                 className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
                               >
-                                + Хит меню
+                                + Bestseller
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleQuickChipAppend('✓ Доступно предварительное бронирование.')}
+                                onClick={() => handleQuickChipAppend('✓ Online advance reservations available.')}
                                 className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
                               >
-                                + Бронь
+                                + Booking
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleQuickChipAppend('✓ Уютная открытая терраса.')}
+                                onClick={() => handleQuickChipAppend('✓ Cozy open-air terrace.')}
                                 className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
                               >
-                                + Терраса
+                                + Terrace
                               </button>
                             </div>
                             <div className="flex items-center justify-end gap-2 pt-1">
@@ -982,14 +981,14 @@ export function OnboardingInspectionModal({
                                 onClick={handleCancelEdit}
                                 className="px-2.5 py-1 text-slate-500 hover:text-slate-700 text-xs font-semibold cursor-pointer"
                               >
-                                Отмена
+                                Cancel
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleSaveEdit(card.id)}
                                 className="px-3.5 py-1 bg-google-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all"
                               >
-                                Сохранить инсайд
+                                Save Insight
                               </button>
                             </div>
                           </div>
@@ -1003,7 +1002,7 @@ export function OnboardingInspectionModal({
                             {isRegeneratingBio && card.id === 'audit-bio' ? (
                               <div className="flex items-center gap-2 text-google-blue py-2">
                                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                <span>ИИ составляет описание в выбранном стиле...</span>
+                                <span>Generating optimized copy in selected tone...</span>
                               </div>
                             ) : (
                               card.afterAiValue
@@ -1038,7 +1037,7 @@ export function OnboardingInspectionModal({
                             className="px-3 py-1.5 bg-slate-900/90 hover:bg-slate-900 text-white font-bold rounded-xl text-[11px] shadow-md flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105"
                           >
                             <Lock className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Разблокировать в Pro ($49/мес)</span>
+                            <span>Unlock in Pro ($49/mo)</span>
                           </button>
                         </div>
                       )}
@@ -1050,11 +1049,11 @@ export function OnboardingInspectionModal({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] text-slate-400 font-medium">
-                        Эффект: {card.impactMetric}
+                        Impact: {card.impactMetric}
                       </span>
                       {card.isCustomized && (
                         <span className="text-[11px] text-google-blue font-bold">
-                          • Учтены ваши данные
+                          • Customized with your insights
                         </span>
                       )}
                     </div>
@@ -1064,12 +1063,12 @@ export function OnboardingInspectionModal({
                       {(card.isFree || isPro || card.applied) && editingCardId !== card.id && (
                         <button
                           type="button"
-                          onClick={() => handleCopyText(card.afterAiValue, `Текст «${card.categoryTitle}» скопирован!`)}
+                          onClick={() => handleCopyText(card.afterAiValue, `Copied "${card.categoryTitle}" to clipboard!`)}
                           className="px-2.5 py-1 text-slate-600 hover:text-google-blue hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Скопировать готовый текст в буфер обмена для ручной вставки в Google"
+                          title="Copy text to clipboard for manual use in Google Business Profile"
                         >
                           <Copy className="w-3 h-3" />
-                          <span>Скопировать</span>
+                          <span>Copy</span>
                         </button>
                       )}
 
@@ -1078,16 +1077,16 @@ export function OnboardingInspectionModal({
                           type="button"
                           onClick={() => handleStartEdit(card)}
                           className="px-2.5 py-1 text-slate-600 hover:text-google-blue hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Отредактировать предложение ИИ с учетом ваших знаний о заведении"
+                          title="Refine AI proposal with your business specifics"
                         >
                           <Edit3 className="w-3 h-3" />
-                          <span>Отредактировать</span>
+                          <span>Edit</span>
                         </button>
                       )}
 
                       {card.applied ? (
                         <span className="text-emerald-700 font-bold flex items-center gap-1 text-[11px] px-2 py-1 bg-emerald-50 rounded-xl border border-emerald-200">
-                          <Check className="w-3.5 h-3.5" /> {card.isFree ? 'Применено' : 'Синхронизировано в Pro'}
+                          <Check className="w-3.5 h-3.5" /> {card.isFree ? 'Applied' : 'Synced in Pro'}
                         </span>
                       ) : card.isFree ? (
                         /* FREE ITEM: Instant 1-click free application! */
@@ -1097,7 +1096,7 @@ export function OnboardingInspectionModal({
                           className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
                         >
                           <Check className="w-3.5 h-3.5" />
-                          <span>Применить бесплатно</span>
+                          <span>Apply for Free</span>
                         </button>
                       ) : isPro ? (
                         /* PRO ITEM on Pro License */
@@ -1107,7 +1106,7 @@ export function OnboardingInspectionModal({
                           className="px-3.5 py-1.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
                         >
                           <Zap className="w-3.5 h-3.5" />
-                          <span>Применить в 1 клик</span>
+                          <span>Apply in 1-Click</span>
                         </button>
                       ) : (
                         /* PRO ITEM on Free Plan */
@@ -1117,7 +1116,7 @@ export function OnboardingInspectionModal({
                           className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors"
                         >
                           <Lock className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Доступно в Pro</span>
+                          <span>Available in Pro</span>
                         </button>
                       )}
                     </div>
@@ -1141,10 +1140,10 @@ export function OnboardingInspectionModal({
 
             <div className="space-y-1">
               <h4 className="text-lg font-black text-slate-900 tracking-tight">
-                Синхронизация оптимизаций через Google API...
+                Syncing Optimizations via Google API...
               </h4>
               <p className="text-xs text-slate-500 max-w-md">
-                Вносим проверенное описание, праздничные часы, атрибуты, каталог и гео-метки напрямую в ваш Google Business Profile.
+                Publishing optimized bio description, holiday hours, attributes, catalog, and geo-centroid directly to your Google Business Profile.
               </p>
             </div>
 
@@ -1178,29 +1177,29 @@ export function OnboardingInspectionModal({
 
             <div className="space-y-2 max-w-md">
               <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
-                Оптимизация завершена
+                Optimization Complete
               </span>
               <h4 className="text-2xl font-black text-slate-900 tracking-tight">
-                Карточка готова к Топ-3! 🟢 Защита Sentinel активна
+                Listing is Top 3 Ready! 🟢 Sentinel Shield Active
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Все 6 уязвимостей успешно устранены. Профиль переведен в эталонное состояние по официальным стандартам Google Maps и поставлен на круглосуточный мониторинг.
+                All 6 vulnerabilities successfully eliminated. Profile elevated to official Google Maps standards and placed under 24/7 automated guard.
               </p>
             </div>
 
             {/* Before / After Status Tile */}
             <div className="flex items-center justify-between gap-4 bg-slate-50 border border-slate-200 p-4 rounded-2xl max-w-md w-full text-left">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 block uppercase">Было до аудита</span>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Before Audit</span>
                 <span className="text-xs font-semibold text-rose-600 flex items-center gap-1">
-                  <AlertTriangle className="w-3.5 h-3.5" /> 6 зон уязвимости (утечка гостей)
+                  <AlertTriangle className="w-3.5 h-3.5" /> 6 Vulnerability Areas (Customer Leakage)
                 </span>
               </div>
               <ArrowRight className="w-5 h-5 text-emerald-600 shrink-0" />
               <div className="space-y-1 text-right">
-                <span className="text-[10px] font-bold text-emerald-700 block uppercase">Стало сейчас</span>
+                <span className="text-[10px] font-bold text-emerald-700 block uppercase">Now (Optimized)</span>
                 <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 justify-end">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% готовность • Защита 24/7
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% Readiness • 24/7 Protected
                 </span>
               </div>
             </div>
@@ -1210,7 +1209,7 @@ export function OnboardingInspectionModal({
               onClick={handleCompleteAndExit}
               className="px-6 py-3.5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center gap-2"
             >
-              <span>Перейти в панель управления заведением</span>
+              <span>Go to Location Dashboard</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -1226,10 +1225,10 @@ export function OnboardingInspectionModal({
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
                 {isPro ? (
-                  <span><strong>Лицензия Pro активна:</strong> Прямая авторизация и применение всех 6 оптимизаций через Google API.</span>
+                  <span><strong>Pro License Active:</strong> 1-Click Google API authorization enabled for all 6 optimizations.</span>
                 ) : (
                   <span>
-                    <strong>Бесплатный режим:</strong> 2 стартовых улучшения готовы к применению.
+                    <strong>Free Evaluation Mode:</strong> 2 starter optimizations ready to apply.
                   </span>
                 )}
               </span>
@@ -1246,7 +1245,7 @@ export function OnboardingInspectionModal({
                   className="w-full sm:w-auto px-5 py-3 bg-google-blue hover:bg-blue-600 text-white font-extrabold rounded-2xl text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Zap className="w-4 h-4 fill-white" />
-                  <span>⚡ Применить все 6 оптимизаций через API</span>
+                  <span>⚡ Apply All 6 Optimizations via API</span>
                 </button>
               ) : (
                 /* FREE USER: Freemium Application + Upgrade CTA */
@@ -1258,16 +1257,16 @@ export function OnboardingInspectionModal({
                       className="w-full sm:w-auto px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-2xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <Check className="w-3.5 h-3.5" />
-                      <span>Применить 2 бесплатных улучшения</span>
+                      <span>✓ Apply 2 Free Optimizations</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={handleManualGoogleEdit}
                       className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition-colors cursor-pointer text-center"
-                      title="Вручную обновить профиль в Google Business Profile"
+                      title="Update manually in Google Business Profile"
                     >
-                      <span>Обновить вручную в Google ↗</span>
+                      <span>Update Manually in Google ↗</span>
                     </button>
                   )}
 
@@ -1277,7 +1276,7 @@ export function OnboardingInspectionModal({
                     className="w-full sm:w-auto px-5 py-3 bg-google-blue hover:bg-blue-600 text-white font-extrabold rounded-2xl text-xs sm:text-sm shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Zap className="w-4 h-4 fill-white" />
-                    <span>🚀 Разблокировать все 6 в 1 клик — $49/мес</span>
+                    <span>🚀 Unlock All 6 in 1-Click — $49/mo</span>
                   </button>
                 </div>
               )}
@@ -1306,29 +1305,29 @@ export function OnboardingInspectionModal({
                 <Zap className="w-7 h-7 fill-white" />
               </div>
               <h4 className="text-xl font-black text-slate-900 tracking-tight">
-                Автозаполнение в 1 клик и 24/7 Защита
+                1-Click Auto-Fill & 24/7 Guard
               </h4>
               <p className="text-xs text-slate-500">
-                Экономьте от 2+ часов ручной рутины в Google Business Profile и включите автономную защиту карточки от чужих правок.
+                Save 2+ hours of manual Google Business Profile configuration and activate autonomous protection against unauthorized edits.
               </p>
             </div>
 
             <div className="space-y-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
               <div className="flex items-center gap-2 text-slate-800 font-semibold">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Применение всех 6 оптимизаций через официальный API в 1 клик</span>
+                <span>Apply all 6 optimizations via official Google API in 1 click</span>
               </div>
               <div className="flex items-center gap-2 text-slate-800 font-semibold">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Круглосуточная защита от чужих правок и подмены номеров</span>
+                <span>24/7 protection against unauthorized competitor edits and phone hijacking</span>
               </div>
               <div className="flex items-center gap-2 text-slate-800 font-semibold">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>ИИ-автоответчик на отзывы с ключевыми словами для локального SEO</span>
+                <span>AI review responder with target local SEO keywords</span>
               </div>
               <div className="flex items-center gap-2 text-slate-800 font-semibold">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Защита от риска повторной видео-верификации Google</span>
+                <span>Protection against Google video re-verification triggers</span>
               </div>
             </div>
 
@@ -1342,7 +1341,7 @@ export function OnboardingInspectionModal({
                 }}
                 className="w-full py-3.5 bg-google-blue hover:bg-blue-600 text-white font-extrabold rounded-2xl text-xs sm:text-sm shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Подключить Pro (7 дней бесплатно) — $49/мес</span>
+                <span>Activate Pro (7-Day Free Trial) — $49/mo</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -1354,12 +1353,12 @@ export function OnboardingInspectionModal({
                 }}
                 className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition-colors cursor-pointer"
               >
-                Тестовое переключение на тариф Pro (Демо)
+                Simulate Pro Plan Upgrade (Demo Mode)
               </button>
             </div>
 
             <p className="text-[10px] text-slate-400 text-center">
-              Отмена в 1 клик в любое время. Без риска. 30 дней гарантии возврата.
+              Cancel anytime in 1 click. Zero risk. 30-day money-back guarantee.
             </p>
           </div>
         </div>

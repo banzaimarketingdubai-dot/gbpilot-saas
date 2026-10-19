@@ -101,114 +101,114 @@ export function getGroundTruthPresets(profile?: { name?: string; category?: stri
 
   if (text.includes('clinic') || text.includes('dental') || text.includes('med') || text.includes('клиник') || text.includes('стомат') || text.includes('aesthetic')) {
     return {
-      nicheLabel: 'Медицина / Эстетическая клиника',
+      nicheLabel: 'Healthcare / Aesthetic Clinic',
       flagshipChips: [
-        'Голливудские виниры и имплантация за 1 день',
-        'Безоперационный лифтинг и инъекционная косметология',
-        'Лазерная эпиляция и уход HydraFacial',
-        'Бесплатная 3D-диагностика при первом визите'
+        'Same-day dental implants & E-Max veneers',
+        'Non-surgical facial lifting & aesthetics',
+        'Laser hair removal & HydraFacial',
+        'Free 3D digital exam on first visit'
       ],
       personaChips: [
-        'Экспаты и резиденты с высоким чеком',
-        'Семейные пациенты, ценящие лечение без боли',
-        'Русско- и англоговорящие клиенты района',
-        'VIP-пациенты, которым важна конфиденциальность'
+        'High-value residents and expat families',
+        'Patients seeking gentle, painless treatments',
+        'English & multilingual local community',
+        'VIP patients prioritizing privacy & zero wait'
       ],
       rulesChips: [
-        'Бесплатный Valet-паркинг у входа в башню',
-        'Прием строго по записи + срочные окна день в день',
-        'Прямое покрытие страховкой (Direct Billing)',
-        'Рассрочка 0% (Tabby / Tamara / Карты)'
+        'Complimentary valet parking at tower entrance',
+        'Strictly by appointment + same-day urgent slots',
+        'Direct insurance billing supported',
+        '0% installment plans (Tabby / Tamara / Card)'
       ],
       placeholders: {
-        flagship: 'Например: Дентальная имплантация под ключ и виниры E-Max (маржинальность 70%)',
-        persona: 'Например: Резиденты и экспаты 28–55 лет, которым важен сервис без ожидания и врачи с международным опытом',
-        rules: 'Например: Бесплатный Valet-паркинг, 1-й этаж башни, говорим на EN/RU/AR, работаем со страховками'
+        flagship: 'e.g. Turnkey dental implants and porcelain veneers (70% margin)',
+        persona: 'e.g. Working professionals aged 28-55 seeking premium care with zero wait time',
+        rules: 'e.g. Free valet parking, 1st floor entrance, English/Arabic spoken, direct billing'
       }
     };
   }
 
   if (text.includes('visa') || text.includes('виза') || text.includes('legal') || text.includes('setup') || text.includes('real estate') || text.includes('недвиж')) {
     return {
-      nicheLabel: 'Визовый центр / Консалтинг / B2B услуги',
+      nicheLabel: 'Visa Center / Consulting / B2B Services',
       flagshipChips: [
-        'Срочное продление визы и Fast-Track без очередей',
-        'VIP Бордер-ран под ключ на комфортном минивэне',
-        'Открытие компании и резидентской визы (Golden Visa)',
-        'Оформление ВНЖ / TRC и разрешения на работу'
+        'Express visa extensions & Fast-Track processing',
+        'VIP turnkey border runs via luxury minivan',
+        'Company formation & Golden Visa concierge',
+        'Residency TRC & work permit legalization'
       ],
       personaChips: [
-        'Экспаты, фрилансеры и цифровые кочевники',
-        'Предприниматели и релоканты с семьями',
-        'Туристы, которым нужно срочное решение за 24 часа'
+        'Expats, digital nomads, and remote workers',
+        'Relocating founders and international families',
+        'Tourists needing urgent 24h assistance'
       ],
       rulesChips: [
-        '100% гарантия по договору без скрытых доплат',
-        'Личный менеджер в WhatsApp/Telegram 24/7',
-        'Курьер забирает документы из дома/отеля',
-        'Оплата наличными, картой или в AED/USD/USDT'
+        '100% money-back guarantee with zero hidden fees',
+        'Dedicated account manager via WhatsApp 24/7',
+        'Doorstep document courier pickup & drop-off',
+        'Cash, credit card, and crypto payments accepted'
       ],
       placeholders: {
-        flagship: 'Например: Срочное продление виз, VIP бордер-раны и оформление Golden Visa под ключ',
-        persona: 'Например: Экспаты и туристы, которым нужна надежность без риска отказа и бюрократии',
-        rules: 'Например: Офис в центре с удобной парковкой, курьер за документами, поддержка на русском и английском'
+        flagship: 'e.g. Urgent visa renewals, VIP border runs, and turnkey Golden Visas',
+        persona: 'e.g. Expats and travelers seeking reliability without bureaucratic hassles',
+        rules: 'e.g. Central office with easy parking, door-to-door courier, multilingual team'
       }
     };
   }
 
   if (text.includes('salon') || text.includes('barber') || text.includes('spa') || text.includes('beauty') || text.includes('салон') || text.includes('барбер') || text.includes('спа')) {
     return {
-      nicheLabel: 'Салон красоты / Барбершоп / SPA',
+      nicheLabel: 'Beauty Salon / Barbershop / Day Spa',
       flagshipChips: [
-        'Сложное окрашивание Airtouch и восстановление волос',
-        'Маникюр и педикюр в 4 руки за 60 минут',
-        'Королевское бритье и мужские стрижки',
-        'Авторский балийский и лимфодренажный массаж'
+        'Airtouch color correction & hair restoration',
+        '4-hand gel manicure & pedicure in 60 mins',
+        'Royal beard grooming & executive haircuts',
+        'Balinese therapeutic & lymphatic massage'
       ],
       personaChips: [
-        'Жители соседних башен и бизнес-кластера',
-        'Девушки, ценящие стерильность и топ-мастеров',
-        'Деловые клиенты, экономящие время'
+        'Residents of nearby towers and business towers',
+        'Clients prioritizing hospital-grade sterilization',
+        'Busy executives who value fast service'
       ],
       rulesChips: [
-        'Бесплатная парковка для гостей на 2 часа',
-        'Премиум-кофе, матча и игристое бесплатно',
-        'Можно с детьми и небольшими собаками (Pet-friendly)',
-        'Запись через WhatsApp в 1 клик или Walk-in'
+        'Free 2-hour customer parking on site',
+        'Complimentary specialty coffee, matcha & bubbles',
+        'Pet-friendly lounge (small dogs welcome)',
+        '1-click booking via WhatsApp or Walk-ins welcome'
       ],
       placeholders: {
-        flagship: 'Например: Окрашивание Airtouch, уход Tokio Inkarami и маникюр в 4 руки',
-        persona: 'Например: Экспаты и резиденты района, ищущие высокое качество и сервис уровня 5★',
-        rules: 'Например: Бесплатный паркинг в здании, авторский кофе включен, скидка 15% на первый визит'
+        flagship: 'e.g. Airtouch coloring, Tokio Inkarami hair spa, and 4-hand manicure',
+        persona: 'e.g. Area residents seeking 5-star service and top-tier stylists',
+        rules: 'e.g. Free parking in building, specialty coffee included, 15% first-visit discount'
       }
     };
   }
 
   // Default: Cafe / Restaurant / Hospitality / Local Venue
   return {
-    nicheLabel: 'Ресторан / Кафе / Пекарня / Локальный бизнес',
+    nicheLabel: 'Restaurant / Cafe / Bakery / Local Business',
     flagshipChips: [
-      'Авторские завтраки весь день и сырники из фермерского творога',
-      'Спешелти-кофе собственной обжарки и фисташковый круассан',
-      'Стейки сухого вызревания и авторские вечерние сеты',
-      'Бизнес-ланчи за 45 мин и свежая ремесленная выпечка'
+      'Artisanal all-day brunch & sourdough toast',
+      'In-house roasted specialty flat whites & pastries',
+      'Dry-aged signature steaks & dinner tasting sets',
+      '45-minute executive lunch & freshly baked goods'
     ],
     personaChips: [
-      'Удаленщики и предприниматели с ноутбуками (быстрый Wi-Fi)',
-      'Семьи с детьми и компании друзей на бранч',
-      'Туристы и жители соседних ЖК/башен',
-      'Ценители спешелти-кофе и здорового меню без сахара'
+      'Remote workers & laptop founders (blazing Wi-Fi)',
+      'Families and groups of friends for weekend brunch',
+      'Tourists and neighborhood residential community',
+      'Specialty coffee lovers & health-conscious diners'
     ],
     rulesChips: [
-      'Pet-friendly (можно с собаками, миски с водой)',
-      'Бесплатный паркинг / Valet у входа',
-      'Мощный кондиционер в зале + уютная терраса',
-      'Без предварительной брони утром, бронь столов на вечер'
+      'Pet-friendly terrace (water bowls provided)',
+      'Free customer parking / valet at entrance',
+      'Air-conditioned indoor dining + open garden patio',
+      'Walk-ins welcome for breakfast, dinner reservations recommended'
     ],
     placeholders: {
-      flagship: 'Например: Фирменные сырники, круассаны на французском масле и спешелти-кофе собственной обжарки',
-      persona: 'Например: Экспаты, семьи на утренний завтрак и фрилансеры, которым важен быстрый Wi-Fi и розетки',
-      rules: 'Например: Pet-friendly, бесплатная парковка за углом, веганское меню, доставка и навынос за 10 минут'
+      flagship: 'e.g. Signature cottage cheese pancakes, French butter croissants, and single-origin coffee',
+      persona: 'e.g. Expats, families for breakfast, and remote workers needing reliable Wi-Fi and power outlets',
+      rules: 'e.g. Pet-friendly, free parking around the corner, vegan options, 10-minute takeaway'
     }
   };
 }

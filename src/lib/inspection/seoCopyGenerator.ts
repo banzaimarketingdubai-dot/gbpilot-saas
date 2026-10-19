@@ -25,15 +25,15 @@ export interface NicheInfo {
 }
 
 export const NICHE_LIST: NicheInfo[] = [
-  { id: 'VISA_TOURISM_EXPAT', label: 'Визы, туризм и экспат-сервис', icon: '🌴', exampleKeywords: 'визаран, продление виз, трансфер, переводы' },
-  { id: 'COFFEE_FOOD', label: 'Кафе, кофейни и рестораны', icon: '☕', exampleKeywords: 'завтраки, кофе, десерты, терраса, ланч' },
-  { id: 'BEAUTY_SPA', label: 'Салоны красоты, барбершопы и спа', icon: '💅', exampleKeywords: 'маникюр, стрижки, окрашивание, спа-уход' },
-  { id: 'HEALTH_DENTAL', label: 'Клиники и стоматологии', icon: '🩺', exampleKeywords: 'лечение зубов, диагностика, анализы, врачи' },
-  { id: 'AUTO_SERVICE', label: 'Автосервисы, шиномонтаж и мойки', icon: '🚗', exampleKeywords: 'ТО, замена масла, диагностика, ремонт подвески' },
-  { id: 'RETAIL_SHOP', label: 'Магазины, бутики и ритейл', icon: '🛍️', exampleKeywords: 'широкий ассортимент, новинки, примерка, доставка' },
-  { id: 'HOME_SERVICES', label: 'Бытовые услуги и ремонт квартир', icon: '🔧', exampleKeywords: 'выезд мастера, сантехник, электрик, клининг' },
-  { id: 'PROFESSIONAL_SERVICES', label: 'Юристы, бухгалтерия и консалтинг', icon: '💼', exampleKeywords: 'консультации, сопровождение сделок, аудит' },
-  { id: 'GENERAL_LOCAL', label: 'Другой локальный бизнес', icon: '🏢', exampleKeywords: 'услуги для клиентов, удобная локация, сервис' }
+  { id: 'VISA_TOURISM_EXPAT', label: 'Visa, Immigration & Expat Services', icon: '🌴', exampleKeywords: 'visa run, extensions, border run, document translation, expat help' },
+  { id: 'COFFEE_FOOD', label: 'Cafes, Specialty Coffee & Restaurants', icon: '☕', exampleKeywords: 'breakfast, specialty coffee, desserts, outdoor patio, lunch' },
+  { id: 'BEAUTY_SPA', label: 'Beauty Salons, Barbershops & Spa', icon: '💅', exampleKeywords: 'haircut, manicure, nail art, hair coloring, spa treatments' },
+  { id: 'HEALTH_DENTAL', label: 'Medical Clinics & Dental Care', icon: '🩺', exampleKeywords: 'dental care, teeth cleaning, diagnostics, family doctor' },
+  { id: 'AUTO_SERVICE', label: 'Auto Repair, Tire Service & Detailing', icon: '🚗', exampleKeywords: 'oil change, brake repair, computer diagnostics, car detailing' },
+  { id: 'RETAIL_SHOP', label: 'Retail Stores, Boutiques & Markets', icon: '🛍️', exampleKeywords: 'in-store shopping, wide collection, gifts, curbside pickup' },
+  { id: 'HOME_SERVICES', label: 'Home Services, Plumbing & Electric', icon: '🔧', exampleKeywords: 'plumbing, electrician, home repair, cleaning, AC service' },
+  { id: 'PROFESSIONAL_SERVICES', label: 'Legal, Accounting & Business Consulting', icon: '💼', exampleKeywords: 'tax advisory, company setup, contract review, audit' },
+  { id: 'GENERAL_LOCAL', label: 'Other Local Business', icon: '🏢', exampleKeywords: 'customer services, convenient location, professional support' }
 ];
 
 export interface SeoCopyContext {
@@ -47,7 +47,7 @@ export interface SeoCopyContext {
 }
 
 /**
- * Parses address components into human-readable Russian geographic anchors.
+ * Parses address components into natural English geographic anchors.
  */
 export function extractGeoAnchors(address: string, fallbackCity?: string): {
   landmarkOrDistrict: string;
@@ -59,57 +59,45 @@ export function extractGeoAnchors(address: string, fallbackCity?: string): {
   // 1. City Detection
   let city = fallbackCity || '';
   if (!city) {
-    if (addr.includes('nha trang') || addr.includes('нячанг')) city = 'Нячанге';
-    else if (addr.includes('dubai') || addr.includes('дубай')) city = 'Дубае';
-    else if (addr.includes('abu dhabi') || addr.includes('абу-даби')) city = 'Абу-Даби';
-    else if (addr.includes('москва') || addr.includes('moscow')) city = 'Москве';
-    else if (addr.includes('санкт-петербург') || addr.includes('питер') || addr.includes('spb')) city = 'Санкт-Петербурге';
-    else if (addr.includes('алматы') || addr.includes('almaty')) city = 'Алматы';
-    else if (addr.includes('ташкент') || addr.includes('tashkent')) city = 'Ташкенте';
-    else if (addr.includes('бангкок') || addr.includes('bangkok')) city = 'Бангкоке';
-    else if (addr.includes('пхукет') || addr.includes('phuket')) city = 'Пхукете';
-    else if (addr.includes('тбилиси') || addr.includes('tbilisi')) city = 'Тбилиси';
-    else if (addr.includes('ереван') || addr.includes('yerevan')) city = 'Ереване';
-    else if (addr.includes('минск') || addr.includes('minsk')) city = 'Минске';
-    else city = 'вашем городе';
-  } else {
-    // Add prepositional case helper if needed
-    if (!city.startsWith('в ') && !city.startsWith('г.')) {
-      if (city.endsWith('а')) city = city.slice(0, -1) + 'е';
-      else if (!city.endsWith('е') && !city.endsWith('и') && !city.endsWith('ы')) city = city + 'е';
-    }
+    if (addr.includes('nha trang') || addr.includes('нячанг')) city = 'Nha Trang';
+    else if (addr.includes('dubai') || addr.includes('дубай')) city = 'Dubai';
+    else if (addr.includes('abu dhabi') || addr.includes('абу-даби')) city = 'Abu Dhabi';
+    else if (addr.includes('london')) city = 'London';
+    else if (addr.includes('new york') || addr.includes('nyc')) city = 'New York';
+    else if (addr.includes('singapore')) city = 'Singapore';
+    else if (addr.includes('bangkok') || addr.includes('бангкок')) city = 'Bangkok';
+    else if (addr.includes('phuket') || addr.includes('пхукет')) city = 'Phuket';
+    else if (addr.includes('tbilisi') || addr.includes('тбилиси')) city = 'Tbilisi';
+    else if (addr.includes('yerevan') || addr.includes('ереван')) city = 'Yerevan';
+    else if (addr.includes('almaty') || addr.includes('алматы')) city = 'Almaty';
+    else if (addr.includes('tashkent') || addr.includes('ташкент')) city = 'Tashkent';
+    else city = 'your area';
   }
 
   // 2. District / Landmark / Street Detection
   let landmarkOrDistrict = '';
   if (addr.includes('hòn chồng') || addr.includes('hon chong')) {
-    landmarkOrDistrict = 'в районе Hòn Chồng (Хон Чонг)';
+    landmarkOrDistrict = 'in the Hòn Chồng district';
   } else if (addr.includes('dubai marina')) {
-    landmarkOrDistrict = 'в районе Dubai Marina';
+    landmarkOrDistrict = 'in Dubai Marina';
   } else if (addr.includes('downtown')) {
-    landmarkOrDistrict = 'в центре (Downtown)';
+    landmarkOrDistrict = 'in Downtown';
   } else if (addr.includes('jbr') || addr.includes('jumeirah beach')) {
-    landmarkOrDistrict = 'на JBR / Jumeirah Beach';
+    landmarkOrDistrict = 'at JBR / Jumeirah Beach';
   } else if (addr.includes('business bay')) {
-    landmarkOrDistrict = 'в Business Bay';
-  } else if (addr.includes('тверск')) {
-    landmarkOrDistrict = 'на Тверской';
-  } else if (addr.includes('арбат')) {
-    landmarkOrDistrict = 'на Арбате';
-  } else if (addr.includes('невск')) {
-    landmarkOrDistrict = 'на Невском проспекте';
-  } else if (addr.includes('центр') || addr.includes('center')) {
-    landmarkOrDistrict = 'в центральном районе';
+    landmarkOrDistrict = 'in Business Bay';
+  } else if (addr.includes('center') || addr.includes('centre')) {
+    landmarkOrDistrict = 'in the city center';
   } else {
     const parts = address.split(',').map(p => p.trim());
     if (parts.length > 0 && parts[0] && parts[0] !== '—') {
-      landmarkOrDistrict = `на ${parts[0]}`;
+      landmarkOrDistrict = `on ${parts[0]}`;
     } else {
-      landmarkOrDistrict = 'в удобной локации';
+      landmarkOrDistrict = 'conveniently located';
     }
   }
 
-  const formattedLocation = `${landmarkOrDistrict}, в ${city}`;
+  const formattedLocation = `${landmarkOrDistrict}, ${city}`;
 
   return {
     landmarkOrDistrict,
@@ -134,7 +122,8 @@ export function detectBusinessNiche(name: string, category?: string): BusinessNi
     combined.includes('tour') ||
     combined.includes('тур') ||
     combined.includes('travel') ||
-    combined.includes('миграц')
+    combined.includes('миграц') ||
+    combined.includes('relocation')
   ) {
     return 'VISA_TOURISM_EXPAT';
   }
@@ -244,7 +233,7 @@ export function detectBusinessNiche(name: string, category?: string): BusinessNi
     combined.includes('plumb') ||
     combined.includes('электрик') ||
     combined.includes('electric') ||
-    combined.includes('ремонт кварт') ||
+    combined.includes('ремонт') ||
     combined.includes('hvac') ||
     combined.includes('мастер')
   ) {
@@ -276,69 +265,69 @@ export function detectBusinessNiche(name: string, category?: string): BusinessNi
  */
 export function generateSmartSeoDescription(context: SeoCopyContext): string {
   const { businessName, businessAddress, category, city: fallbackCity, tone = 'SEO', explicitNiche, customNotes } = context;
-  const name = businessName !== '—' && businessName ? businessName : 'заведения';
+  const name = businessName !== '—' && businessName ? businessName : 'our business';
   const geo = extractGeoAnchors(businessAddress, fallbackCity);
   const niche = explicitNiche || detectBusinessNiche(name, category);
 
   // If user provided custom plain words about their business, format them gracefully
   const userHighlights = customNotes && customNotes.trim().length > 0 
-    ? ` Ключевые направления и преимущества: ${customNotes.trim()}.` 
+    ? ` Specialties & highlights: ${customNotes.trim()}.` 
     : '';
 
   switch (niche) {
     case 'VISA_TOURISM_EXPAT':
       if (tone === 'PREMIUM') {
-        return `«${name}» — премиальный центр сервисной поддержки экспатов и путешественников в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Мы ценим ваше время и берем на себя все формальности: официальная визовая поддержка, оформление и продление виз, визараны под ключ, юридические консультации и нотариальный перевод документов. Индивидуальный подход, конфиденциальность и гарантия результата. Комфортная зона ожидания с кондиционером и скоростным Wi-Fi. Ждем вас ежедневно — свяжитесь с нами для экспертной консультации.`;
+        return `${name} is the premier service center for expats and international travelers in ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} We handle all formalities with precision: visa extensions, turnkey border & visa runs, legal advisory, certified document translations, and business visa assistance. Enjoy personalized concierge support, zero hidden fees, and complete confidentiality in our comfortable, air-conditioned lounge with high-speed Wi-Fi. Contact us today or visit our office for expert consultation!`;
       }
       if (tone === 'CONCISE') {
-        return `«${name}» в ${geo.city} (${geo.landmarkOrDistrict}): оперативные визовые и сервисные услуги для туристов и экспатов.${userHighlights} Быстрое продление виз, проверенные визараны под ключ, перевод документов и легализация. Прозрачные цены без скрытых комиссий, официальный договор и поддержка 7 дней в неделю. Удобный подъезд, парковка, расчет картой и наличными. Проложите маршрут на Google Maps или свяжитесь с нами прямо сейчас!`;
+        return `${name} in ${geo.city} (${geo.landmarkOrDistrict}): fast, reliable visa & expat support.${userHighlights} Visa extensions, border runs, certified translations, and legal consulting. Transparent flat-rate pricing, dedicated support 7 days a week, easy parking, and card/cash payments accepted. Get directions on Google Maps or message us directly today!`;
       }
       // Default: SEO
-      return `«${name}» — профильный сервисный центр в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Специализируемся на комплексных услугах для туристов и экспатов: визовая поддержка, продление виз во Вьетнаме, визаран под ключ, консультации по легализации, нотариальный перевод и сопровождение. Честные фиксированные цены, быстрая обратная связь и помощь в срочных вопросах. Удобное расположение, комфортная клиентская зона, кондиционер и бесплатный Wi-Fi. Проложите маршрут на Картах или напишите нам для бесплатной первичной консультации!`;
+      return `${name} is a trusted visa, immigration, and expat service hub in ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} We specialize in comprehensive travel and residency support: turnkey visa runs, tourist & business visa renewals, notarized document translations, and expat assistance. Our experienced team ensures quick turnaround, fair pricing, and clear communication. Convenient central location with free parking, AC lounge, and guest Wi-Fi. Get directions on Google Maps or reach out for a consultation!`;
 
     case 'COFFEE_FOOD':
       if (tone === 'PREMIUM') {
-        return `«${name}» — гастрономическое пространство в ${geo.city} (${geo.landmarkOrDistrict}), созданное для ценителей вкуса и эстетики.${userHighlights} Свежеобжаренный спешелти кофе 100% арабика, авторская кухня, воздушная ремесленная выпечка и изысканные сезонные десерты. Идеальное место для романтических встреч, неспешных завтраков и деловых ланчей. Внимательный сервис, открытая терраса и приятная музыка. Забронируйте столик онлайн или проложите маршрут на Картах!`;
+        return `${name} is an artisanal dining destination in ${geo.city} (${geo.landmarkOrDistrict}), curated for lovers of culinary craftsmanship and design.${userHighlights} Featuring 100% Arabica specialty coffee, farm-to-table breakfast, fresh Parisian pastries, and exquisite seasonal lunch specialties. Relax in our sunlit indoor dining room or airy garden terrace. Attentive service, laptop-friendly Wi-Fi, and convenient parking. Reserve your table online or navigate via Google Maps!`;
       }
       if (tone === 'CONCISE') {
-        return `«${name}» в ${geo.city} (${geo.landmarkOrDistrict}): спешелти кофе, сытные завтраки весь день, ланчи и свежая выпечка.${userHighlights} Быстрый бесплатный Wi-Fi, розетки для ноутбуков, столики в зале и на террасе. Еда и напитки навынос (takeaway), удобная парковка, оплата картой и по QR. Работаем без выходных. Заходите за любимым кофе!`;
+        return `${name} in ${geo.city} (${geo.landmarkOrDistrict}): specialty coffee, all-day hearty breakfasts, healthy lunch bowls, and fresh baked goods.${userHighlights} High-speed Wi-Fi, power outlets, indoor and terrace seating. Takeaway available, easy guest parking, and card/QR payments accepted. Open daily — drop by for your favorite brew!`;
       }
       // Default: SEO
-      return `«${name}» — уютная кофейня и ресторан в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Подаем авторский кофе свежей обжарки, сытные завтраки с утра до вечера, легкие обеды и домашние десерты. Комфортная атмосфера для отдыха с друзьями и продуктивной работы за ноутбуком с быстрым Wi-Fi. Есть столики на террасе, детские стульчики, парковка для гостей, доступен формат кофе с собой (to go). Постройте маршрут на Google Maps — ждем вас в гости ежедневно!`;
+      return `Welcome to ${name}, your neighborhood specialty cafe and restaurant in ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Serving freshly roasted artisan coffee, all-day breakfasts, delicious lunches, and house-made desserts. A welcoming atmosphere perfect for casual meetups, family brunches, and remote work with blazing-fast Wi-Fi. Pet-friendly outdoor seating, takeaway options, and dedicated parking. Get directions on Google Maps — we look forward to welcoming you!`;
 
     case 'BEAUTY_SPA':
       if (tone === 'PREMIUM') {
-        return `Студия красоты «${name}» в ${geo.city} (${geo.landmarkOrDistrict}) — пространство стиля и гармонии.${userHighlights} Авторский маникюр и педикюр, сложное окрашивание волос, уходовые спа-ритуалы и эстетическая косметология. Сертифицированная премиальная косметика, 100% стерильность инструментов (крафт-пакеты вскрываются при вас). Чашка ароматного кофе каждому гостю. Запишитесь онлайн через Google Карты!`;
+        return `${name} Beauty & Wellness Studio in ${geo.city} (${geo.landmarkOrDistrict}) is your sanctuary for luxury styling and self-care.${userHighlights} Signature haircuts, advanced color correction (Airtouch, Balayage), 4-hand manicure & pedicure, and rejuvenating facial spa rituals. We use certified premium international cosmetics with 100% medical-grade tool sterilization. Enjoy complimentary artisan coffee with every visit. Book your appointment via Google Maps!`;
       }
       if (tone === 'CONCISE') {
-        return `Салон «${name}» (${geo.landmarkOrDistrict}, ${geo.city}): стрижки, окрашивание, маникюр, педикюр и оформление бровей.${userHighlights} Опытные топ-мастера, премиальные материалы, стерильный инструмент и гарантия на покрытие. Удобная онлайн-запись, парковка, Wi-Fi. Выберите удобное время для визита прямо на Картах!`;
+        return `${name} (${geo.landmarkOrDistrict}, ${geo.city}): expert hair styling, coloring, gel manicure, pedicure, and brow architecture.${userHighlights} Senior stylists, premium organic products, strict sterilization standards, and satisfaction guarantee. Easy online booking, on-site parking, and Wi-Fi. Reserve your preferred time slot on Google Maps!`;
       }
       // Default: SEO
-      return `Салон красоты и спа «${name}» в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Полный спектр бьюти-услуг: стильные женские и мужские стрижки, трендовое окрашивание волос (Airtouch, балаяж), аппаратный маникюр и педикюр с покрытием гель-лак, архитектура бровей и спа-уход. Сертифицированные мастера с опытом от 5 лет, трехступенчатая стерилизация по СанПиН. Удобное расположение, парковка для гостей. Запишитесь на визит онлайн прямо сейчас!`;
+      return `${name} is a full-service beauty salon and day spa in ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Offering trendy women's and men's haircuts, creative hair coloring, long-lasting gel manicures, pedicures, lash extensions, and relaxing body treatments. Our certified beauty professionals bring 5+ years of experience in a clean, welcoming environment. Dedicated client parking and easy booking. Call or book your visit on Google Maps today!`;
 
     case 'HEALTH_DENTAL':
       if (tone === 'PREMIUM') {
-        return `Медицинский центр «${name}» в ${geo.city} (${geo.landmarkOrDistrict}) — экспертный подход к здоровью вашей семьи.${userHighlights} Высокоточная аппаратная диагностика, современное европейское оборудование и прием профильных специалистов высшей категории. Безболезненные методики, прозрачные планы лечения без лишних назначений и премиальный уровень комфорта. Доверьте здоровье профессионалам. Запись на консультацию доступна онлайн на Картах.`;
+        return `${name} Healthcare Center in ${geo.city} (${geo.landmarkOrDistrict}) delivers world-class medical and dental care for the entire family.${userHighlights} Equipped with state-of-the-art diagnostic technology and staffed by internationally accredited specialists. Gentle, painless treatments, transparent treatment plans, and direct insurance billing. Experience compassionate care in a modern, private setting. Schedule your consultation online via Google Maps.`;
       }
       if (tone === 'CONCISE') {
-        return `Клиника «${name}» в ${geo.city} (${geo.landmarkOrDistrict}): прием врачей, диагностика, анализы и лечебные процедуры без очередей.${userHighlights} Современное оборудование, внимательный персонал, честные фиксированные цены. Удобный подъезд, доступная среда, работаем без выходных. Запишитесь на прием онлайн в 1 клик!`;
+        return `${name} Clinic in ${geo.city} (${geo.landmarkOrDistrict}): comprehensive dental care, general practice, routine exams, and laboratory diagnostics.${userHighlights} Modern digital equipment, minimal wait times, and upfront honest pricing. Accessible entrance, free parking, open 7 days a week. Book your appointment online in 1 click!`;
       }
       // Default: SEO
-      return `Клиника и стоматология «${name}» в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Профессиональная медицинская помощь: комплексная диагностика, лечение зубов без боли, имплантация, консультации узких специалистов и сдача анализов. Передовое цифровое оборудование, стерильность по международным протоколам и внимательное отношение к каждому пациенту. Доступные цены, рассрочка и гарантия на лечение. Постройте маршрут или запишитесь на прием прямо на Google Maps!`;
+      return `${name} is a leading dental and medical clinic serving ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} We provide expert dental implants, routine cleanings, teeth whitening, emergency dental care, and preventive health screenings. Featuring modern digital equipment, hospital-grade sterilization protocols, and a patient-first approach. Flexible financing options and insurance support. Get directions or schedule your visit on Google Maps today!`;
 
     case 'AUTO_SERVICE':
       if (tone === 'CONCISE') {
-        return `Автосервис «${name}» в ${geo.city} (${geo.landmarkOrDistrict}): ремонт подвески, двигателя, сход-развал, ТО и замена масла.${userHighlights} Компьютерная диагностика за 30 минут, честная смета до начала работ, оригинальные запчасти в наличии. Гарантия на работы до 12 месяцев. Заезжайте без очереди — проложите маршрут на Картах!`;
+        return `${name} in ${geo.city} (${geo.landmarkOrDistrict}): professional auto repair, suspension, engine diagnostics, scheduled maintenance, and oil change.${userHighlights} 30-minute computer inspection, upfront written estimates, OEM parts in stock, and up to 12-month service warranty. Drive in without delay — navigate via Google Maps!`;
       }
       // Default: SEO
-      return `Автосервис и детейлинг-центр «${name}» в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Полный комплекс услуг по ремонту и обслуживанию автомобилей всех марок: компьютерная диагностика, плановое ТО, замена тормозных колодок и технических жидкостей, ремонт ходовой части и электрики. Прозрачная смета без скрытых наценок, запчасти в наличии с гарантией. Комфортная зона ожидания с Wi-Fi и кофе. Проложите маршрут на Google Maps — оперативно примем ваш автомобиль!`;
+      return `${name} is your complete auto repair and car care center in ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} We specialize in complete maintenance for all makes and models: advanced computer diagnostics, brake repairs, transmission service, tire alignment, AC recharge, and auto detailing. Transparent pricing with no hidden charges and manufacturer-warrantied parts. Comfortable customer lounge with Wi-Fi and coffee. Get directions on Google Maps today!`;
 
     default:
       if (tone === 'CONCISE') {
-        return `«${name}» в ${geo.city} (${geo.landmarkOrDistrict}): качественные профессиональные услуги с гарантией результата.${userHighlights} Быстрое решение ваших задач, опытные специалисты, прозрачное ценообразование без переплат. Удобное расположение, парковка, оплата картой. Свяжитесь с нами или проложите маршрут на Картах!`;
+        return `${name} in ${geo.city} (${geo.landmarkOrDistrict}): dependable professional services backed by proven expertise.${userHighlights} Prompt project execution, seasoned specialists, and straightforward pricing with zero hidden fees. Conveniently accessible location, parking, and card payments accepted. Contact our team or navigate on Google Maps!`;
       }
       // Default: SEO
-      return `Добро пожаловать в «${name}» — ваш надежный профильный центр в ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} Мы специализируемся на оказании качественных услуг с акцентом на персональный подход, оперативность и высокие стандарты обслуживания. Удобный заезд, парковка для посетителей, комфортная зона ожидания и современные способы оплаты. Работаем по актуальному графику без задержек. Проложите маршрут на Google Maps или свяжитесь с нами онлайн для получения подробной консультации!`;
+      return `Welcome to ${name}, your trusted local destination in ${geo.city} (${geo.landmarkOrDistrict}).${userHighlights} We are dedicated to delivering premier quality services with a strong focus on personalized customer care, rapid response times, and exceptional standards. Convenient access, dedicated customer parking, and modern payment options. Operating on an updated, reliable schedule. Get directions on Google Maps or contact us today for details!`;
   }
 }
 
@@ -348,16 +337,16 @@ export function generateSmartSeoDescription(context: SeoCopyContext): string {
 export function getNicheCatalogItems(niche: BusinessNiche, currencySymbol: string): string {
   switch (niche) {
     case 'VISA_TOURISM_EXPAT':
-      return `Каталог из 8 визовых услуг с ценами: Визаран под ключ в Камбоджу (${currencySymbol} 85), Продление туристической визы 30 дней (${currencySymbol} 45), Нотариальный перевод документов (${currencySymbol} 15), Индивидуальный трансфер на границу (${currencySymbol} 60), Оформление бизнес-визы (${currencySymbol} 140)...`;
+      return `Catalog of 8 structured services: Turnkey Border / Visa Run (${currencySymbol} 85), 30-Day Tourist Visa Extension (${currencySymbol} 45), Notarized Document Translation (${currencySymbol} 15), Private Border VIP Van Transfer (${currencySymbol} 60), Business Visa & Work Permit (${currencySymbol} 140)...`;
     case 'COFFEE_FOOD':
-      return `Каталог из 10 популярных блюд и напитков: Свежеобжаренный капучино (${currencySymbol} 4.5), Завтрак с авокадо и яйцом пашот (${currencySymbol} 12), Круассан с миндалем (${currencySymbol} 5), Холодный Колд Брю (${currencySymbol} 5.5), Фирменный сырник (${currencySymbol} 9)...`;
+      return `Catalog of 10 popular dishes & drinks: Specialty Flat White (${currencySymbol} 4.5), Sourdough Avocado Toast & Poached Egg (${currencySymbol} 12), Almond Butter Croissant (${currencySymbol} 5), Cold Brew Signature (${currencySymbol} 5.5), Protein Breakfast Bowl (${currencySymbol} 9)...`;
     case 'BEAUTY_SPA':
-      return `Прайс-лист из 10 бьюти-услуг: Стрижка и укладка (${currencySymbol} 35), Аппаратный маникюр с гель-лаком (${currencySymbol} 28), Сложное окрашивание волос (${currencySymbol} 95), Архитектура бровей (${currencySymbol} 18), Спа-уход за лицом (${currencySymbol} 55)...`;
+      return `Menu of 10 beauty treatments: Signature Haircut & Blowdry (${currencySymbol} 35), Medical Gel Manicure (${currencySymbol} 28), Balayage Color Transformation (${currencySymbol} 95), Brow Lamination & Tinting (${currencySymbol} 18), Hydrating Collagen Facial (${currencySymbol} 55)...`;
     case 'HEALTH_DENTAL':
-      return `Медицинский каталог из 8 услуг: Первичный осмотр и консультация врача (${currencySymbol} 30), Профессиональная гигиена полости рта (${currencySymbol} 50), Лечение кариеса под микроскопом (${currencySymbol} 65), Панорамный снимок зубов (${currencySymbol} 25)...`;
+      return `Healthcare catalog of 8 services: Comprehensive Consultation & Exam (${currencySymbol} 30), Ultrasonic Teeth Cleaning & Polish (${currencySymbol} 50), Microscopic Cavity Restoration (${currencySymbol} 65), Panoramic Dental X-Ray (${currencySymbol} 25)...`;
     case 'AUTO_SERVICE':
-      return `Каталог ТО и ремонта: Компьютерная диагностика авто (${currencySymbol} 30), Замена моторного масла и фильтров (${currencySymbol} 45), Регулировка сход-развала (${currencySymbol} 40), Комплексная диагностика подвески (${currencySymbol} 25)...`;
+      return `Service menu of 8 repairs: Full Computer Diagnostics (${currencySymbol} 30), Synthetic Oil & Filter Service (${currencySymbol} 45), 4-Wheel Laser Alignment (${currencySymbol} 40), Comprehensive Brake Inspection (${currencySymbol} 25)...`;
     default:
-      return `Каталог из 10 структурированных услуг с подробным описанием, фотографиями и актуальными ценами для прямого отображения в Google Maps и голосовом поиске.`;
+      return `Catalog of 10 structured services with detailed descriptions, photos, and verified prices optimized for Google Maps direct booking and AI Overview search.`;
   }
 }

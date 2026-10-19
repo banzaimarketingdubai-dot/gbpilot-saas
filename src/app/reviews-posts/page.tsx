@@ -105,32 +105,32 @@ interface DefenseLogItem {
 const INITIAL_DEFENSE_LOGS: DefenseLogItem[] = [
   {
     id: 'threat_extortion_1',
-    timestamp: 'Вчера, 18:42',
+    timestamp: 'Yesterday, 18:42',
     threatType: 'SPAM_REVIEW',
-    title: '🚨 Попытка вымогательства: 1★ отзыв с требованием связи в Telegram',
-    description: 'Бот-аккаунт Local Guide 7 уровня оставил 1★ отзыв с требованием связаться с @reputation_fix_bot для удаления. Досье сформировано по политике Review Extortion.',
+    title: '🚨 Extortion Attempt: 1★ review demanding contact on Telegram',
+    description: 'A Level 7 Local Guide bot account left a 1★ review demanding contact with @reputation_fix_bot for removal. Dossier prepared under Google Review Extortion policy.',
     status: 'FLAGGED',
-    revertDuration: 'Готово юридическое досье',
+    revertDuration: 'Legal dossier ready',
     reviewAuthor: 'Anonymous Local Guide',
     reviewText: 'Terrible experience, fraudulent service! To delete this negative review and protect your profile reputation, contact our team on Telegram: @reputation_fix_bot'
   },
   {
     id: 'threat_phone_1',
-    timestamp: '3 дня назад',
+    timestamp: '3 days ago',
     threatType: 'PHONE_OVERWRITE',
-    title: 'Попытка подмены номера телефона конкурентом',
-    description: 'Внешнее предложение изменить основной номер на +971 50 123 4567 заблокировано Sentinel Lock. Риск суспенда предотвращен.',
+    title: 'Competitor Phone Number Hijack Attempt',
+    description: 'External suggestion to overwrite primary phone to +971 50 123 4567 was blocked by Sentinel Lock. Suspension risk averted.',
     status: 'BLOCKED',
-    revertDuration: 'Заблокировано за 0.4 сек'
+    revertDuration: 'Blocked in 0.4s'
   },
   {
     id: 'threat_hours_1',
-    timestamp: '6 дней назад',
+    timestamp: '6 days ago',
     threatType: 'HOURS_TAMPER',
-    title: 'Попытка закрыть заведение в пятницу («Закрыто»)',
-    description: 'Сторонняя правка расписания автоматически отменена через Google Business Profile API. Часы работы восстановлены.',
+    title: 'Attempted Friday Business Closure ("Permanently Closed")',
+    description: 'Third-party schedule edit was automatically reverted via Google Business Profile API. Regular operating hours restored.',
     status: 'REVERTED',
-    revertDuration: 'Восстановлено за 180 сек'
+    revertDuration: 'Restored in 180s'
   }
 ];
 
@@ -452,8 +452,8 @@ export default function ShieldReviewsPage() {
       timestamp: rev.date,
       threatType: 'SPAM_REVIEW',
       title: extortion.isExtortionThreat
-        ? `🚨 Шантаж отзывом (Review Extortion) от ${rev.customer}`
-        : `Подозрительный ${rev.rating}-Star отзыв от ${rev.customer}`,
+        ? `🚨 Review Extortion Threat from ${rev.customer}`
+        : `Suspicious ${rev.rating}-Star review from ${rev.customer}`,
       description: rev.text,
       status: 'FLAGGED',
       revertDuration: extortion.isExtortionThreat ? 'Expedited Takedown Dossier ready' : 'Legal takedown dossier ready',
@@ -578,16 +578,16 @@ export default function ShieldReviewsPage() {
                         <Camera className="w-4 h-4" />
                       </div>
                       <h3 className="font-extrabold text-slate-900 text-sm">
-                        Фото-отзывы &amp; Траст EXIF (t=391s)
+                        Photo Reviews &amp; EXIF Trust (t=391s)
                       </h3>
                     </div>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-800 border border-sky-200">
-                      Вес алгоритма: x3.8
+                      Algorithm Weight: x3.8
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    8 из 10 отзывов в топ-1 Google Maps содержат фото. Смартфон сохраняет GPS-координаты в снимок, доказывая Google подлинность визита клиента.
+                    8 out of 10 reviews ranking #1 on Google Maps contain photos. Smartphones embed GPS coordinates into the file, proving verified customer visits to Google's ranking engine.
                   </p>
 
                   {/* Progress & metrics */}
@@ -596,7 +596,7 @@ export default function ShieldReviewsPage() {
                       <span className="font-bold text-slate-700">Photo Review Ratio:</span>
                       <span className="font-extrabold text-slate-900">
                         {Math.round(velocityStats.photoReviewRatio * 100)}% 
-                        <span className="text-slate-400 font-normal ml-1">(Цель: 35%+)</span>
+                        <span className="text-slate-400 font-normal ml-1">(Target: 35%+)</span>
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -610,10 +610,10 @@ export default function ShieldReviewsPage() {
                     <div className="flex items-center justify-between text-[11px] text-slate-600 pt-0.5 flex-wrap gap-1">
                       <span className="flex items-center gap-1">
                         <Award className="w-3.5 h-3.5 text-amber-500" />
-                        <strong className="text-slate-800">{velocityStats.localGuidesCount}</strong> от Local Guides
+                        <strong className="text-slate-800">{velocityStats.localGuidesCount}</strong> from Local Guides
                       </span>
                       <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                        Эквивалент рекламы: +{velocityStats.savedAdSpendValue}
+                        Ad Spend Equiv: +{velocityStats.savedAdSpendValue}
                       </span>
                     </div>
                   </div>
@@ -627,13 +627,13 @@ export default function ShieldReviewsPage() {
                     className="text-[11px] font-bold text-sky-700 hover:text-sky-800 flex items-center gap-1 cursor-pointer"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
-                    <span>{showPhotoAuthorityInfo ? 'Скрыть справку по алгоритму' : 'Справка: почему фото выводят в топ без бюджета'}</span>
+                    <span>{showPhotoAuthorityInfo ? 'Hide algorithm breakdown' : 'Why photo reviews drive #1 rank without ad spend'}</span>
                   </button>
 
                   {showPhotoAuthorityInfo && (
                     <div className="mt-2.5 p-3 rounded-xl bg-sky-50/70 border border-sky-100 text-xs text-sky-950 space-y-1.5 animate-in fade-in duration-150">
                       <p className="font-semibold text-[11px] leading-snug">
-                        💡 <strong>Инсайт Steve Hunsaker (6:31):</strong> Google Maps сортирует отзывы по фильтру «Most Relevant». Алгоритм сканирует метаданные EXIF в файлах фото (камера, геокоординаты, время). Отзыв с фото получает наивысший траст и удерживает профиль в топ-3 выдачи.
+                        💡 <strong>Steve Hunsaker Framework (6:31):</strong> Google Maps sorts reviews using the "Most Relevant" filter. The algorithm reads EXIF metadata in photos (camera model, GPS coordinates, timestamp). Reviews with photos receive maximum trust authority and lock the business into the local Top 3.
                       </p>
                     </div>
                   )}
@@ -649,7 +649,7 @@ export default function ShieldReviewsPage() {
                         <Activity className="w-4 h-4" />
                       </div>
                       <h3 className="font-extrabold text-slate-900 text-sm">
-                        Drip Velocity &amp; Защита от спайков (t=3:00)
+                        Drip Velocity &amp; Spike Shield (t=3:00)
                       </h3>
                     </div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
@@ -659,20 +659,20 @@ export default function ShieldReviewsPage() {
                         ? 'bg-rose-50 text-rose-800 border-rose-200'
                         : 'bg-amber-50 text-amber-800 border-amber-200'
                     }`}>
-                      {velocityStats.pacingStatus === 'OPTIMAL_DRIP' ? '🟢 Оптимальный Drip' : velocityStats.pacingStatus === 'VELOCITY_SPIKE_RISK' ? '🔴 Риск спайка' : '🟡 Медленный темп'}
+                      {velocityStats.pacingStatus === 'OPTIMAL_DRIP' ? '🟢 Optimal Drip' : velocityStats.pacingStatus === 'VELOCITY_SPIKE_RISK' ? '🔴 Spike Risk' : '🟡 Slow Cadence'}
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Google наказывает за внезапные всплески (25 отзывов за день). Равномерный капельный темп (2–4 отзыва в неделю) обеспечивает пожизненный иммунитет от фильтров.
+                    Google penalizes unnatural review spikes (e.g. 25 reviews in one day). A steady drip cadence (2–4 reviews per week) provides algorithmic immunity against spam filters.
                   </p>
 
                   {/* Progress & metrics */}
                   <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-700">Темп этой недели:</span>
+                      <span className="font-bold text-slate-700">Weekly Cadence:</span>
                       <span className="font-extrabold text-slate-900">
-                        {velocityStats.weeklyVelocity} / {velocityStats.weeklySafeCap} собрано
+                        {velocityStats.weeklyVelocity} / {velocityStats.weeklySafeCap} collected
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
@@ -683,9 +683,9 @@ export default function ShieldReviewsPage() {
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-600 pt-0.5 flex-wrap gap-1">
                       <span className="text-emerald-700 font-semibold">
-                        ✓ Безопасно собрать еще {Math.max(0, velocityStats.weeklySafeCap - velocityStats.weeklyVelocity)} на этой неделе
+                        ✓ Safe to collect {Math.max(0, velocityStats.weeklySafeCap - velocityStats.weeklyVelocity)} more this week
                       </span>
-                      <span className="text-slate-400 font-medium">Каденция: 0% риск бана</span>
+                      <span className="text-slate-400 font-medium">Cadence: 0% Suspension Risk</span>
                     </div>
                   </div>
                 </div>
@@ -694,7 +694,7 @@ export default function ShieldReviewsPage() {
                 <div className="flex items-center gap-2">
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(
-                      `Здравствуйте! Спасибо, что выбрали ${activeProfile?.name || 'нас'}. Будем признательны, если сделаете фото и оставите пару слов в Google картах — это помогает нашей команде: ${
+                      `Hello! Thank you for choosing ${activeProfile?.name || 'us'}. We would truly appreciate if you took a quick photo and shared your feedback on Google Maps — it means a lot to our team: ${
                         activeProfile?.place_id ? `https://search.google.com/local/writereview?placeid=${activeProfile.place_id}` : 'https://gbpilot.top'
                       }`
                     )}`}
@@ -703,7 +703,7 @@ export default function ShieldReviewsPage() {
                     className="w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    <span>📲 Запросить безопасный фото-отзыв через WhatsApp</span>
+                    <span>📲 Request Verified Photo Review via WhatsApp</span>
                   </a>
                 </div>
               </div>
@@ -832,7 +832,7 @@ export default function ShieldReviewsPage() {
                               {rev.isLocalGuide && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
                                   <Award className="w-3 h-3 text-amber-500" />
-                                  <span>🎖️ Local Guide • Ур. {rev.localGuideLevel || 5}</span>
+                                  <span>🎖️ Local Guide • Lvl {rev.localGuideLevel || 5}</span>
                                 </span>
                               )}
 
@@ -845,7 +845,7 @@ export default function ShieldReviewsPage() {
 
                               {rev.reviewWeight === 'MAX_LOCAL_GUIDE' && (
                                 <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-bold border border-indigo-200">
-                                  ⚡ Вес алгоритма: x3.8
+                                  ⚡ Algorithm Weight: x3.8
                                 </span>
                               )}
                             </div>
@@ -903,7 +903,7 @@ export default function ShieldReviewsPage() {
                           <div className="flex items-center justify-between text-[11px] flex-wrap gap-1">
                             <span className="font-bold text-slate-700 flex items-center gap-1.5">
                               <Camera className="w-3.5 h-3.5 text-sky-600" />
-                              <span>Прикрепленные фото клиента (GPS-координаты подтверждены):</span>
+                              <span>Attached Customer Photos (GPS-Coordinates Verified):</span>
                             </span>
                             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
                               ✓ EXIF Spatial Trust Verified
@@ -923,8 +923,8 @@ export default function ShieldReviewsPage() {
                               </div>
                             ))}
                             <div className="text-[11px] text-slate-500 pl-1 shrink-0">
-                              <span className="font-bold text-sky-700">+{rev.photosCount || rev.photoUrls.length} фото клиента</span>
-                              <p className="text-[10px] text-slate-400">Привязаны к геопозиции заведения</p>
+                              <span className="font-bold text-sky-700">+{rev.photosCount || rev.photoUrls.length} customer photos</span>
+                              <p className="text-[10px] text-slate-400">Linked to business geofence</p>
                             </div>
                           </div>
                         </div>
@@ -941,11 +941,11 @@ export default function ShieldReviewsPage() {
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-black text-rose-900 uppercase tracking-tight">🚨 Обнаружен шантаж отзывом (Review Extortion)</span>
+                                  <span className="font-black text-rose-900 uppercase tracking-tight">🚨 Review Extortion Detected</span>
                                   <span className="px-2 py-0.2 bg-rose-200 text-rose-900 rounded font-bold text-[10px]">Google Policy Violation</span>
                                 </div>
                                 <p className="text-rose-700 text-[11px] mt-0.5">
-                                  Выявлено требование связаться через Telegram/WhatsApp для удаления отзыва. Прямое нарушение правил Google — доступно ускоренное удаление.
+                                  Identified demand to contact via Telegram/WhatsApp to remove review. Direct violation of Google Prohibited Content policy — eligible for expedited removal.
                                 </p>
                               </div>
                             </div>
@@ -955,7 +955,7 @@ export default function ShieldReviewsPage() {
                               className="px-3.5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl font-bold text-xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                             >
                               <Scale className="w-3.5 h-3.5" />
-                              <span>⚡ Ускоренное удаление (Expedited Dossier)</span>
+                              <span>⚡ Expedited Takedown Dossier</span>
                             </button>
                           </div>
                         ) : (
@@ -1139,7 +1139,7 @@ export default function ShieldReviewsPage() {
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   </div>
                   <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                    Защита от шантажа отзывами, блокировка подмены номера/адреса конкурентами и авто-отмена правок за 0.4 сек.
+                    Protection against review extortion, competitor phone/address hijack attempts, and 0.4s auto-revert of unauthorized edits.
                   </p>
                 </div>
               </div>
@@ -1164,14 +1164,14 @@ export default function ShieldReviewsPage() {
                       <Lock className="w-4 h-4" />
                     </div>
                     <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                      Защита критических полей профиля (Sentinel NAP Lock)
+                      Critical Profile Fields Protection (Sentinel NAP Lock)
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      🟢 Защищено от блокировки Google
+                      🟢 Protected against Google Suspension
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
-                    <strong>Инсайт Steve Hunsaker (13:15):</strong> Изменение номера телефона или физического адреса на подтвержденном профиле в 85% случаев триггерит алгоритмический бан (Suspension) с требованием видеоверификации. Мы заморозили эти поля для предотвращения случайного бана сотрудниками.
+                    <strong>Steve Hunsaker Framework (13:15):</strong> Changing the phone number or physical address on a verified profile triggers an algorithmic suspension in 85% of cases with mandatory video re-verification. We locked these core fields to prevent accidental team changes.
                   </p>
                 </div>
 
@@ -1184,7 +1184,7 @@ export default function ShieldReviewsPage() {
                   className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
                 >
                   <Unlock className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Снять блокировку для правки</span>
+                  <span>Unlock Field for Editing</span>
                 </button>
               </div>
 
@@ -1195,17 +1195,17 @@ export default function ShieldReviewsPage() {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-700 flex items-center gap-1.5">
                       <Phone className="w-3.5 h-3.5 text-google-blue" />
-                      <span>Основной номер телефона:</span>
+                      <span>Primary Phone Number:</span>
                     </span>
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
-                      <Lock className="w-2.5 h-2.5" /> Заблокировано
+                      <Lock className="w-2.5 h-2.5" /> Locked
                     </span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-800">
                     +971 4 382 7100
                   </div>
                   <p className="text-[11px] text-slate-500">
-                    Риск бана при изменении: <span className="text-rose-600 font-bold">85% (видеоверификация)</span>
+                    Suspension risk if changed: <span className="text-rose-600 font-bold">85% (Video re-verification required)</span>
                   </p>
                 </div>
 
@@ -1214,17 +1214,17 @@ export default function ShieldReviewsPage() {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-700 flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-google-blue" />
-                      <span>Физический адрес заведения:</span>
+                      <span>Physical Business Address:</span>
                     </span>
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
-                      <Lock className="w-2.5 h-2.5" /> Заблокировано
+                      <Lock className="w-2.5 h-2.5" /> Locked
                     </span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200 text-slate-800 font-medium truncate">
                     {activeProfile?.address || 'Downtown Dubai, Sheikh Mohammed bin Rashid Blvd, UAE'}
                   </div>
                   <p className="text-[11px] text-slate-500">
-                    Риск бана при изменении: <span className="text-rose-600 font-bold">90% (потеря позиций)</span>
+                    Suspension risk if changed: <span className="text-rose-600 font-bold">90% (Rank &amp; signal reset)</span>
                   </p>
                 </div>
               </div>
@@ -1239,10 +1239,10 @@ export default function ShieldReviewsPage() {
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-slate-900">
-                      Карта рисков Google: Что можно и что нельзя менять в профиле
+                      Google Risk Matrix: Allowed vs Prohibited Profile Edits
                     </h4>
                     <p className="text-xs text-slate-500">
-                      Как безопасно расти в локальной выдаче без риска блокировки алгоритмами Google
+                      How to safely grow in local search without triggering Google algorithmic suspensions
                     </p>
                   </div>
                 </div>
@@ -1252,17 +1252,17 @@ export default function ShieldReviewsPage() {
                 {/* Critical Risk Column */}
                 <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-rose-900 text-xs">🔴 Критическая зона (Бан 85-90%)</span>
-                    <span className="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-extrabold">НЕ ТРОГАТЬ</span>
+                    <span className="font-bold text-rose-900 text-xs">🔴 Critical Zone (85-90% Ban Risk)</span>
+                    <span className="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-extrabold">DO NOT TOUCH</span>
                   </div>
                   <div className="space-y-2 text-rose-950">
                     <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-2xs">
-                      <strong>Номер телефона</strong>
-                      <p className="text-[11px] text-rose-700 mt-0.5">85% риск суспенда. 14 дней простоя, потеря всех входящих звонков.</p>
+                      <strong>Phone Number</strong>
+                      <p className="text-[11px] text-rose-700 mt-0.5">85% suspension risk. 14-day downtime, loss of all incoming client calls.</p>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-2xs">
-                      <strong>Физический адрес</strong>
-                      <p className="text-[11px] text-rose-700 mt-0.5">90% риск суспенда. Сброс гео-сигналов, вызов видеоверификации здания.</p>
+                      <strong>Physical Address</strong>
+                      <p className="text-[11px] text-rose-700 mt-0.5">90% suspension risk. Clears all geo-signals, triggers mandatory building video audit.</p>
                     </div>
                   </div>
                 </div>
@@ -1270,17 +1270,17 @@ export default function ShieldReviewsPage() {
                 {/* Moderate Risk Column */}
                 <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-amber-900 text-xs">🟡 Умеренная зона (Риск 25%)</span>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-extrabold">С ОСТОРОЖНОСТЬЮ</span>
+                    <span className="font-bold text-amber-900 text-xs">🟡 Moderate Zone (25% Risk)</span>
+                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-extrabold">PROCEED WITH CAUTION</span>
                   </div>
                   <div className="space-y-2 text-amber-950">
                     <div className="bg-white p-2 rounded-xl border border-amber-100 shadow-2xs">
-                      <strong>Основная категория</strong>
-                      <p className="text-[11px] text-amber-700 mt-0.5">Вызывает переиндексацию профиля и временную просадку на 3–7 дней.</p>
+                      <strong>Primary Category</strong>
+                      <p className="text-[11px] text-amber-700 mt-0.5">Triggers profile re-indexing and a temporary ranking dip for 3–7 days.</p>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-amber-100 shadow-2xs">
-                      <strong>Название компании</strong>
-                      <p className="text-[11px] text-amber-700 mt-0.5">Должно строго совпадать с вывеской. Добавление ключей грозит ручным баном.</p>
+                      <strong>Business Name</strong>
+                      <p className="text-[11px] text-amber-700 mt-0.5">Must strictly match the physical storefront sign. Keyword stuffing leads to manual suspensions.</p>
                     </div>
                   </div>
                 </div>
@@ -1288,17 +1288,17 @@ export default function ShieldReviewsPage() {
                 {/* Zero Risk Safe Column */}
                 <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-900 text-xs">🟢 Зона роста (Риск бана 0%)</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-extrabold">БЕЗОПАСНЫЙ РОСТ</span>
+                    <span className="font-bold text-emerald-900 text-xs">🟢 Growth Zone (0% Risk)</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-extrabold">SAFE GROWTH</span>
                   </div>
                   <div className="space-y-2 text-emerald-950">
                     <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
-                      <strong>Каталог услуг &amp; Товары</strong>
-                      <p className="text-[11px] text-emerald-700 mt-0.5">+18% показов по long-tail запросам. Полная безопасность.</p>
+                      <strong>Services Catalog &amp; Products</strong>
+                      <p className="text-[11px] text-emerald-700 mt-0.5">+18% impressions across long-tail local queries. Completely safe.</p>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
-                      <strong>Фотографии &amp; Описание</strong>
-                      <p className="text-[11px] text-emerald-700 mt-0.5">Регулярные гео-фото поднимают авторитет карточки в радиусе 15 км.</p>
+                      <strong>Photos &amp; Business Description</strong>
+                      <p className="text-[11px] text-emerald-700 mt-0.5">Fresh geo-tagged photos expand listing ranking radius up to 15 km.</p>
                     </div>
                   </div>
                 </div>
@@ -1310,10 +1310,10 @@ export default function ShieldReviewsPage() {
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                   <AlertOctagon className="w-4 h-4 text-rose-600" />
-                  <span>Журнал отраженных угроз и атак (Intercepted Threats Timeline)</span>
+                  <span>Intercepted Threats Timeline</span>
                 </h3>
                 <span className="text-xs text-slate-400 font-medium">
-                  {defenseLogs.length > 0 ? `${defenseLogs.length} угроз зарегистрировано` : '0 угроз обнаружено'}
+                  {defenseLogs.length > 0 ? `${defenseLogs.length} threats logged` : '0 threats detected'}
                 </span>
               </div>
 
@@ -1321,9 +1321,9 @@ export default function ShieldReviewsPage() {
                 {defenseLogs.length === 0 ? (
                   <div className="py-12 text-center space-y-2">
                     <ShieldCheck className="w-10 h-10 text-emerald-500 mx-auto opacity-80" />
-                    <h4 className="font-bold text-slate-800 text-sm">Угроз профилю не зафиксировано</h4>
+                    <h4 className="font-bold text-slate-800 text-sm">No profile threats detected</h4>
                     <p className="text-xs text-slate-500 max-w-md mx-auto">
-                      Название, адрес, телефон и график работы защищены Sentinel Guard 24/7.
+                      Business name, address, phone number, and hours are safeguarded 24/7 by Sentinel Guard.
                     </p>
                   </div>
                 ) : (
@@ -1351,12 +1351,12 @@ export default function ShieldReviewsPage() {
                             className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                           >
                             <Scale className="w-3.5 h-3.5" />
-                            <span>⚡ Экстренное досье для Google</span>
+                            <span>⚡ Expedited Google Dossier</span>
                           </button>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
                             <Check className="w-3.5 h-3.5" />
-                            <span>Защищено автоматически</span>
+                            <span>Auto-Protected</span>
                           </span>
                         )}
                       </div>
@@ -1383,14 +1383,14 @@ export default function ShieldReviewsPage() {
                     <Camera className="w-4 h-4" />
                   </div>
                   <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                    Режим «Фото + Отзыв» (Photo-First NFC &amp; QR Stand)
+                    Photo + Review Mode (Photo-First NFC &amp; QR Stand)
                   </h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-50 text-sky-800 border border-sky-200">
-                    Конверсия в фото: 42% (vs 8% без режима)
+                    Photo Conversion: 42% (vs 8% standard)
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  При сканировании стенда смартфон клиента сразу открывает Google Maps в режиме съемки фото с камеры. В снимок автоматически вшиваются GPS-координаты места (EXIF), что поднимает профиль в топ-3 выдачи Google Maps.
+                  When scanning the counter stand, the customer's phone instantly opens Google Maps directly in camera photo mode. Geographic GPS coordinates (EXIF) are automatically embedded into the photo, accelerating your listing into Google Maps Top 3.
                 </p>
               </div>
 
@@ -1430,7 +1430,7 @@ export default function ShieldReviewsPage() {
                           Revo NFC Hardware &amp; Stand Integration
                         </h3>
                         <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                          🔗 Подключено через Revo Engine
+                          🔗 Connected via Revo Engine
                         </span>
                       </div>
                     </div>
@@ -1441,7 +1441,7 @@ export default function ShieldReviewsPage() {
                   </div>
 
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Бесконтактные акриловые тейбл-тенты и лазерные NFC-карты с чипом <strong>NTAG213</strong> направляют клиента напрямую в диалог отзыва. При включенном Photo-First режиме ссылка активирует загрузку снимка.
+                    Contactless acrylic table-tents and laser-etched NFC smart cards with <strong>NTAG213</strong> chips direct patrons straight into review writing. With Photo-First active, it prompts instant photo capture.
                   </p>
 
                   {/* NFC Hardware Chip Link */}
@@ -1449,7 +1449,7 @@ export default function ShieldReviewsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 font-bold text-slate-800">
                         <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        <span>Динамическая ссылка NTAG213:</span>
+                        <span>Dynamic NTAG213 Link:</span>
                       </div>
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
                         {isPhotoFirstMode ? '📸 Photo-Prompt Ready' : 'Verified Active'}
@@ -1463,11 +1463,11 @@ export default function ShieldReviewsPage() {
                   <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 text-xs space-y-1.5 text-indigo-950">
                     <div className="font-bold flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Авто-балансировка темпа: Drip Velocity Safeguard (2–4 отзыва/нед)</span>
+                      <span>Drip Velocity Safeguard (2–4 reviews/week pacing)</span>
                     </div>
                     <div className="font-bold flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Защита от негатива: 1–3★ отзывы уходят в форму связи WhatsApp</span>
+                      <span>Negative Sentiment Shield: 1–3★ ratings route to private WhatsApp</span>
                     </div>
                   </div>
                 </div>
@@ -1482,7 +1482,7 @@ export default function ShieldReviewsPage() {
                     className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    <span>Синхронизировать Revo стенды и чипы</span>
+                    <span>Sync Revo Stands &amp; Chips</span>
                   </button>
                 </div>
               </div>
@@ -1498,12 +1498,12 @@ export default function ShieldReviewsPage() {
 
                   <div className="space-y-1">
                     <h4 className="font-extrabold text-sm text-slate-900 leading-tight">
-                      {isPhotoFirstMode ? 'Сделайте фото и коснитесь телефоном' : 'Оцените качество обслуживания'}
+                      {isPhotoFirstMode ? 'Snap a Photo & Tap with Phone' : 'Rate Your Experience'}
                     </h4>
                     <p className="text-[11px] text-slate-500 leading-snug">
                       {isPhotoFirstMode
-                        ? 'Ваше фото на Google Maps поможет жителям города выбрать лучшее качество.'
-                        : 'Поднесите смартфон к NFC-метке или отсканируйте QR-код.'}
+                        ? 'Your photo on Google Maps helps neighborhood customers discover top quality.'
+                        : 'Hold your smartphone near the NFC chip or scan the QR code.'}
                     </p>
                   </div>
 
@@ -1543,15 +1543,15 @@ export default function ShieldReviewsPage() {
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-slate-900">
-                      Скрипты сбора фото-отзывов на объекте (Field Technician &amp; Staff Framework)
+                      On-Site Photo Review Scripts (Field Technician &amp; Staff Framework)
                     </h4>
                     <p className="text-xs text-slate-500">
-                      Как просить клиента сделать фото без навязчивости — методика Steve Hunsaker
+                      How to request customer photo reviews naturally — Steve Hunsaker methodology
                     </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                  +340% к согласию клиентов
+                  +340% Customer Agreement Rate
                 </span>
               </div>
 
@@ -1561,24 +1561,24 @@ export default function ShieldReviewsPage() {
                   <div className="space-y-1.5">
                     <div className="font-bold text-slate-900 flex items-center gap-1.5">
                       <span>🔧</span>
-                      <span>Выездные мастера (Ремонт, HVAC, Клининг)</span>
+                      <span>Field Technicians (Repair, HVAC, Cleaning)</span>
                     </div>
                     <p className="text-slate-600 leading-relaxed italic bg-white p-2.5 rounded-xl border border-slate-100">
-                      «Мы только что закончили монтаж! Не могли бы вы сделать одно фото результата через наш NFC-стикер? Это идет в мой личный бонус за качество от руководства!»
+                      "We just completed the work! Would you mind taking one quick photo of the result using our smart NFC card? It directly boosts my personal quality bonus from leadership!"
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
                       if (navigator.clipboard) {
-                        navigator.clipboard.writeText("Мы только что закончили монтаж! Не могли бы вы сделать одно фото результата через наш NFC-стикер? Это идет в мой личный бонус за качество от руководства!");
-                        setCopiedToast("Скрипт скопирован для отправки мастерам!");
+                        navigator.clipboard.writeText("We just completed the work! Would you mind taking one quick photo of the result using our smart NFC card? It directly boosts my personal quality bonus from leadership!");
+                        setCopiedToast("Script copied to clipboard!");
                         setTimeout(() => setCopiedToast(null), 3000);
                       }
                     }}
                     className="w-full py-1.5 text-center bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 transition-colors cursor-pointer"
                   >
-                    📋 Скопировать скрипт
+                    📋 Copy Script
                   </button>
                 </div>
 
@@ -1587,24 +1587,24 @@ export default function ShieldReviewsPage() {
                   <div className="space-y-1.5">
                     <div className="font-bold text-slate-900 flex items-center gap-1.5">
                       <span>🍽️</span>
-                      <span>Рестораны, Кофейни, Бары</span>
+                      <span>Restaurants, Cafes &amp; Bars</span>
                     </div>
                     <p className="text-slate-600 leading-relaxed italic bg-white p-2.5 rounded-xl border border-slate-100">
-                      «Понравилась подача? Сделайте снимок через подставку на столе — шеф-повар лично просматривает фото гостей и за лучший снимок дарит десерт!»
+                      "Enjoying the presentation? Tap your phone on the table stand to snap a photo — our executive chef reviews guest photos weekly and rewards top shots with a signature dessert!"
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
                       if (navigator.clipboard) {
-                        navigator.clipboard.writeText("Понравилась подача? Сделайте снимок через подставку на столе — шеф-повар лично просматривает фото гостей и за лучший снимок дарит десерт!");
-                        setCopiedToast("Скрипт скопирован для официантов!");
+                        navigator.clipboard.writeText("Enjoying the presentation? Tap your phone on the table stand to snap a photo — our executive chef reviews guest photos weekly and rewards top shots with a signature dessert!");
+                        setCopiedToast("Script copied to clipboard!");
                         setTimeout(() => setCopiedToast(null), 3000);
                       }
                     }}
                     className="w-full py-1.5 text-center bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 transition-colors cursor-pointer"
                   >
-                    📋 Скопировать скрипт
+                    📋 Copy Script
                   </button>
                 </div>
 
@@ -1613,24 +1613,24 @@ export default function ShieldReviewsPage() {
                   <div className="space-y-1.5">
                     <div className="font-bold text-slate-900 flex items-center gap-1.5">
                       <span>🏥</span>
-                      <span>Клиники, Салоны красоты, СПА</span>
+                      <span>Clinics, Salons &amp; Spa</span>
                     </div>
                     <p className="text-slate-600 leading-relaxed italic bg-white p-2.5 rounded-xl border border-slate-100">
-                      «Сделайте фото в нашей фотозоне через QR на ресепшене — Google отметит ваш отзыв статусом "Проверенный визит" и покажет первым в районе!»
+                      "Take a quick photo in our styling photo corner via the front desk QR — Google tags your review with 'Verified Visit' status and highlights it across the neighborhood!"
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
                       if (navigator.clipboard) {
-                        navigator.clipboard.writeText("Сделайте фото в нашей фотозоне через QR на ресепшене — Google отметит ваш отзыв статусом 'Проверенный визит' и покажет первым в районе!");
-                        setCopiedToast("Скрипт скопирован для администраторов!");
+                        navigator.clipboard.writeText("Take a quick photo in our styling photo corner via the front desk QR — Google tags your review with 'Verified Visit' status and highlights it across the neighborhood!");
+                        setCopiedToast("Script copied to clipboard!");
                         setTimeout(() => setCopiedToast(null), 3000);
                       }
                     }}
                     className="w-full py-1.5 text-center bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 transition-colors cursor-pointer"
                   >
-                    📋 Скопировать скрипт
+                    📋 Copy Script
                   </button>
                 </div>
               </div>
@@ -1786,10 +1786,10 @@ export default function ShieldReviewsPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-900">
-                    Предупреждение: 85% риск бана (Suspension)
+                    Warning: 85% Suspension Risk
                   </h3>
                   <span className="text-[11px] text-rose-700 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                    Критическая зона Google Maps
+                    Google Maps Critical Zone
                   </span>
                 </div>
               </div>
@@ -1803,28 +1803,28 @@ export default function ShieldReviewsPage() {
 
             <div className="space-y-3 text-xs leading-relaxed text-slate-600">
               <p>
-                Вы пытаетесь разблокировать редактирование <strong>номера телефона или адреса</strong>. Согласно методологии Steve Hunsaker и алгоритмам безопасности Google:
+                You are attempting to unlock direct editing of your <strong>phone number or physical address</strong>. Under Steve Hunsaker's methodology and Google security safeguards:
               </p>
 
               <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 space-y-2">
                 <div className="font-bold flex items-center gap-1.5 text-rose-900">
                   <AlertOctagon className="w-4 h-4 text-rose-600 shrink-0" />
-                  <span>Что произойдет при изменении:</span>
+                  <span>Consequences of direct NAP alteration:</span>
                 </div>
                 <ul className="list-disc pl-5 space-y-1 text-[11px] text-rose-900">
-                  <li>Карточка с вероятностью <strong>85% будет немедленно скрыта из поиска</strong>.</li>
-                  <li>Google потребует пройти повторную видеоверификацию помещения/вывески (простой 14–21 день).</li>
-                  <li>Расчетные прямые потери: <strong className="text-rose-700">{currencyInfo.symbol}{currencyInfo.code === 'AED' ? '15,400' : '4,200'}</strong> от отсутствия звонков клиентов.</li>
+                  <li>Listing has an <strong>85% probability of immediate search suspension</strong>.</li>
+                  <li>Google triggers mandatory video re-verification of storefront and signage (14–21 day downtime).</li>
+                  <li>Estimated direct financial loss: <strong className="text-rose-700">{currencyInfo.symbol}{currencyInfo.code === 'AED' ? '15,400' : '4,200'}</strong> in missed customer inquiries.</li>
                 </ul>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1.5">
                 <div className="font-bold flex items-center gap-1.5 text-emerald-900">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>100% безопасная альтернатива (Zero Risk):</span>
+                  <span>100% Zero-Risk Alternative:</span>
                 </div>
                 <p className="text-[11px] text-emerald-800">
-                  Редактируйте <strong>Каталог услуг, Товары, Фотографии и Описание</strong>. Это дает прямой прирост в поиске (+18% показов) при нулевом риске блокировки.
+                  Optimize <strong>Services Catalog, Product Cards, Photos, and SEO Bio</strong>. This yields immediate search visibility gains (+18% impressions) with zero suspension risk.
                 </p>
               </div>
             </div>
@@ -1835,19 +1835,19 @@ export default function ShieldReviewsPage() {
                 onClick={() => setIsSuspensionWarningOpen(false)}
                 className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer"
               >
-                🟢 Сохранить защиту Sentinel (Рекомендуется)
+                🟢 Maintain Sentinel Shield (Recommended)
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setIsNapLocked(false);
                   setIsSuspensionWarningOpen(false);
-                  setCopiedToast('Блокировка NAP снята под вашу ответственность. Будьте предельно осторожны при смене номера!');
+                  setCopiedToast('NAP lock disabled at your own discretion. Exercise extreme caution when editing phone numbers!');
                   setTimeout(() => setCopiedToast(null), 5000);
                 }}
                 className="px-4 py-3 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors cursor-pointer"
               >
-                Я понимаю риск, разблокировать
+                I understand the risk, unlock
               </button>
             </div>
           </div>

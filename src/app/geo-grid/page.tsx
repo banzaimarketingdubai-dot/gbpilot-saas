@@ -392,7 +392,7 @@ export default function GeoGridPage() {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(textValue);
       setCopiedBlockId(blockId);
-      setGeoToast(`📋 Скопировано: «${fieldTitle}» — готово к вставке в личный кабинет!`);
+      setGeoToast(`📋 Copied: "${fieldTitle}" — ready to paste into dashboard!`);
       setTimeout(() => {
         setCopiedBlockId(null);
         setGeoToast(null);
@@ -415,7 +415,7 @@ export default function GeoGridPage() {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(compiled);
       setCopiedBlockId('ALL_BLOCKS');
-      setGeoToast(`📋 Все ${activeDirectoryBlueprint.blocks.length} блоков для ${activeDirectoryBlueprint.name} скопированы в буфер обмена!`);
+      setGeoToast(`📋 All ${activeDirectoryBlueprint.blocks.length} blocks for ${activeDirectoryBlueprint.name} copied to clipboard!`);
       setTimeout(() => {
         setCopiedBlockId(null);
         setGeoToast(null);
@@ -431,8 +431,8 @@ export default function GeoGridPage() {
     }
     setGeoToast(
       next[platformId]
-        ? '✅ Площадка отмечена как заполненная на 100%! ИИ-индекс видимости обновлен.'
-        : 'Статус заполнения площадки снят.'
+        ? '✅ Platform marked as 100% completed! AI visibility index updated.'
+        : 'Platform completion status reset.'
     );
     setTimeout(() => setGeoToast(null), 3500);
   };
@@ -440,7 +440,7 @@ export default function GeoGridPage() {
   const handleUnlockProDirectory = () => {
     activateTrial(14);
     setIsProPlan(true);
-    setGeoToast('🎉 14-дневный доступ к пакету Pro активирован ($0 сегодня)! Все блоки полей открыты для копирования.');
+    setGeoToast('🎉 14-day Pro access activated ($0 today)! All directory blocks unlocked.');
     setTimeout(() => setGeoToast(null), 4500);
   };
 
@@ -1126,14 +1126,14 @@ export default function GeoGridPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-google-text-secondary">ChatGPT &amp; Siri Mention Rate</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200">
-                    Донор: Apple Maps + TripAdvisor
+                    Source: Apple Maps + TripAdvisor
                   </span>
                 </div>
                 <span className="text-2xl font-black text-google-blue block">
                   {68 + Object.values(completedPlatforms).filter(Boolean).length * 6}%
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Частота рекомендаций заведения в ответах ChatGPT Search и Siri CarPlay
+                  Inclusion frequency in ChatGPT Search &amp; Siri CarPlay recommendations
                 </p>
               </div>
 
@@ -1141,29 +1141,29 @@ export default function GeoGridPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-google-text-secondary">Gemini AI Overviews Share</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Донор: Google Maps + TimeOut
+                    Source: Google Maps + TimeOut
                   </span>
                 </div>
                 <span className="text-2xl font-black text-google-green block">
                   {84 + Object.values(completedPlatforms).filter(Boolean).length * 3}%
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Присутствие в ИИ-сводках Google над результатами поиска
+                  Visibility rate in Google AI Overviews above organic search results
                 </p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-google-text-secondary">Perplexity &amp; Навигаторы</span>
+                  <span className="text-xs font-semibold text-google-text-secondary">Perplexity &amp; Navigators</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                    Донор: 2GIS + TripAdvisor
+                    Source: 2GIS + TripAdvisor
                   </span>
                 </div>
                 <span className="text-2xl font-black text-purple-600 block">
                   {72 + Object.values(completedPlatforms).filter(Boolean).length * 5}%
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Индексация прайс-листа, точного входа и отзывов внешними ИИ-агентами
+                  Indexation of price lists, precise entrance pins &amp; review sentiment by AI search agents
                 </p>
               </div>
             </div>
@@ -1179,18 +1179,18 @@ export default function GeoGridPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Sparkles className="w-5 h-5 text-google-blue" />
                     <h3 className="font-black text-slate-900 text-base sm:text-lg">
-                      Полевой Конструктор Внешних Карт и ИИ-Каталогов (100% Точность Полей)
+                      Multi-Platform External Maps & AI Directory Builder (100% Exact Field Specs)
                     </h3>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                       isProPlan
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : 'bg-amber-50 text-amber-800 border-amber-200'
                     }`}>
-                      {isProPlan ? '✓ Pro Пакет Активен (Все блоки открыты)' : '🔒 Доступно в платном пакете Pro'}
+                      {isProPlan ? '✓ Pro Plan Active (All fields unlocked)' : '🔒 Available on Pro Plan'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
-                    Нейросети (ChatGPT, Siri, Perplexity) и водители на iPhone ищут ваш бизнес в <strong>Apple Maps, 2GIS, TripAdvisor и подборках СМИ</strong>. Мы разбили данные <strong>{activeProfile?.name || 'вашего бизнеса'}</strong> строго по реальным полям ввода и лимитам символов каждой площадки — просто откройте кабинет и перенесите готовые блоки копипастом за 3 минуты.
+                    AI search engines (ChatGPT, Siri, Perplexity) and iPhone drivers search for your business across <strong>Apple Maps, 2GIS, TripAdvisor, and media directories</strong>. We formatted verified profile data for <strong>{activeProfile?.name || 'your business'}</strong> strictly matching each platform's exact input fields and character limits — open each portal and copy-paste ready blocks in under 3 minutes.
                   </p>
                 </div>
 
@@ -1201,7 +1201,7 @@ export default function GeoGridPage() {
                     className="px-4 py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer shrink-0 self-start lg:self-center"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    <span>Открыть все поля (14 дней Pro за $0)</span>
+                    <span>Unlock All Fields (14-Day Pro for $0)</span>
                   </button>
                 )}
               </div>
@@ -1234,7 +1234,7 @@ export default function GeoGridPage() {
                           </span>
                         ) : (
                           <span className="text-[10px] font-semibold text-slate-400">
-                            {platform.blocks.length} блоков
+                            {platform.blocks.length} fields
                           </span>
                         )}
                       </div>
@@ -1245,7 +1245,7 @@ export default function GeoGridPage() {
                         </div>
                         <div className="text-[11px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
                           <DollarSign className="w-3 h-3 shrink-0" />
-                          <span>Потенциал: {platform.estimatedMonthlyValue}</span>
+                          <span>Potential: {platform.estimatedMonthlyValue}</span>
                         </div>
                       </div>
                     </button>
@@ -1261,7 +1261,7 @@ export default function GeoGridPage() {
                       {activeDirectoryBlueprint.aiCitationImpact}
                     </span>
                     <span className="text-[11px] text-emerald-300 font-bold">
-                      • Время переноса: {activeDirectoryBlueprint.completionTime}
+                      • Setup time: {activeDirectoryBlueprint.completionTime}
                     </span>
                   </div>
                   <h4 className="font-extrabold text-sm sm:text-base text-white">
@@ -1279,7 +1279,7 @@ export default function GeoGridPage() {
                     rel="noopener noreferrer"
                     className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/15 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <span>1. Открыть {activeDirectoryBlueprint.portalDomain}</span>
+                    <span>1. Open {activeDirectoryBlueprint.portalDomain}</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
 
@@ -1291,12 +1291,12 @@ export default function GeoGridPage() {
                     {copiedBlockId === 'ALL_BLOCKS' ? (
                       <>
                         <Check className="w-3.5 h-3.5" />
-                        <span>Все блоки скопированы!</span>
+                        <span>All fields copied!</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>2. Скопировать все {activeDirectoryBlueprint.blocks.length} блоков</span>
+                        <span>2. Copy all {activeDirectoryBlueprint.blocks.length} fields</span>
                       </>
                     )}
                   </button>
@@ -1312,7 +1312,7 @@ export default function GeoGridPage() {
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>
-                      {completedPlatforms[activeDirectoryBlueprint.id] ? 'Заполнено на 100%' : 'Отметить готовым'}
+                      {completedPlatforms[activeDirectoryBlueprint.id] ? '100% Completed' : 'Mark as Complete'}
                     </span>
                   </button>
                 </div>
@@ -1341,19 +1341,19 @@ export default function GeoGridPage() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="px-2 py-0.5 rounded-md bg-blue-50 text-google-blue border border-blue-200 text-[10px] font-extrabold">
-                              Поле #{block.blockNumber}
+                              Field #{block.blockNumber}
                             </span>
                             <h5 className="font-extrabold text-xs sm:text-sm text-slate-900">
                               {block.fieldTitle}
                             </h5>
                             {block.isFreePreview && !isProPlan && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                Открыто для теста
+                                Free Preview
                               </span>
                             )}
                           </div>
                           <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
-                            <span className="font-semibold text-slate-700">Путь в кабинете:</span>
+                            <span className="font-semibold text-slate-700">Dashboard Path:</span>
                             <code className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-mono text-[10px] border border-slate-200">
                               {block.exactCabinetPath}
                             </code>
@@ -1369,7 +1369,7 @@ export default function GeoGridPage() {
                                   : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               }`}
                             >
-                              {charCount} / {block.maxChars} симв. ✓
+                              {charCount} / {block.maxChars} chars ✓
                             </span>
                           )}
 
@@ -1386,12 +1386,12 @@ export default function GeoGridPage() {
                               {copiedBlockId === block.id ? (
                                 <>
                                   <Check className="w-3.5 h-3.5" />
-                                  <span>Скопировано!</span>
+                                  <span>Copied!</span>
                                 </>
                               ) : (
                                 <>
                                   <Copy className="w-3.5 h-3.5" />
-                                  <span>📋 Скопировать поле</span>
+                                  <span>📋 Copy Field</span>
                                 </>
                               )}
                             </button>
@@ -1402,7 +1402,7 @@ export default function GeoGridPage() {
                               className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                             >
                               <Lock className="w-3.5 h-3.5" />
-                              <span>Открыть в Pro ($0 тест)</span>
+                              <span>Unlock on Pro ($0 Trial)</span>
                             </button>
                           )}
                         </div>
@@ -1412,7 +1412,7 @@ export default function GeoGridPage() {
                       <div className="my-2.5 px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-200/70 text-[11px] text-amber-950 flex items-start gap-2">
                         <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                         <span>
-                          <strong>Требование площадки:</strong> {block.validationRule}
+                          <strong>Platform Requirement:</strong> {block.validationRule}
                         </span>
                       </div>
 
@@ -1437,14 +1437,14 @@ export default function GeoGridPage() {
                           <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex flex-col sm:flex-row items-center justify-center gap-3 p-3 text-center">
                             <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                               <Lock className="w-4 h-4 text-google-blue shrink-0" />
-                              <span>Готовый блок под лимит {activeDirectoryBlueprint.name} доступен в пакете Pro</span>
+                              <span>Verified block tailored for {activeDirectoryBlueprint.name} limit is available on the Pro plan</span>
                             </span>
                             <button
                               type="button"
                               onClick={handleUnlockProDirectory}
                               className="px-3.5 py-1.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold shadow-xs cursor-pointer"
                             >
-                              Разблокировать бесплатно (14 дней) →
+                              Unlock Free (14-Day Trial) →
                             </button>
                           </div>
                         </div>

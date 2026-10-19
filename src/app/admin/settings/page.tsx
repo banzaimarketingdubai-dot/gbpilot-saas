@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
               className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
             >
               <Users className="w-3.5 h-3.5" />
-              <span>Управление ролями и командой →</span>
+              <span>Manage Roles &amp; Team →</span>
             </Link>
           </div>
         </div>

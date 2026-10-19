@@ -252,7 +252,7 @@ export default function OnboardingPage() {
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
             <span className={currentStep >= 1 ? 'text-google-blue' : ''}>1. Google Maps Search</span>
             <span className={currentStep >= 2 ? 'text-google-blue' : ''}>2. Live Data Audit</span>
-            <span className={currentStep >= 3 ? 'text-google-blue' : ''}>3. Микро-брифинг (Опция)</span>
+            <span className={currentStep >= 3 ? 'text-google-blue' : ''}>3. Micro-Briefing (Optional)</span>
           </div>
           <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
             <div 
@@ -792,7 +792,7 @@ export default function OnboardingPage() {
                       className="sm:col-span-8 py-4 px-5 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 shrink-0" />
-                      <span>Далее: 30-сек Микро-брифинг владельца (+35% к точности ИИ) →</span>
+                      <span>Next: 30-sec Owner Micro-Briefing (+35% AI accuracy) →</span>
                     </button>
 
                     <button
@@ -800,7 +800,7 @@ export default function OnboardingPage() {
                       onClick={() => handleCompleteOnboarding(true)}
                       className="sm:col-span-4 py-4 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 border border-slate-200 transition-all cursor-pointer"
                     >
-                      <span>Пропустить в Кокпит →</span>
+                      <span>Skip to Cockpit →</span>
                     </button>
                   </div>
                 </div>
@@ -822,17 +822,17 @@ export default function OnboardingPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[10px] font-extrabold text-google-blue uppercase tracking-wider bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                    Шаг 3 из 3 • Необязательный брифинг (45 сек)
+                    Step 3 of 3 • Optional Briefing (45 sec)
                   </span>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                     🧠 Owner Ground Truth
                   </span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Расскажите ИИ «правду на земле» о {detectedBusiness.name}
+                  Share "Ground Truth" about {detectedBusiness.name}
                 </h2>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  ИИ знает алгоритмы Google, но только вы знаете, на чём зарабатываете больше всего. Нажмите на готовые теги ниже или впишите свои — так ИИ никогда не напишет «отсебятину».
+                  AI understands Google algorithms, but only you know what drives your highest profit margins. Click ready chips below or type your specifics — so AI never invents inaccurate details.
                 </p>
               </div>
 
@@ -841,7 +841,7 @@ export default function OnboardingPage() {
                 onClick={() => handleCompleteOnboarding(true)}
                 className="px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-xs font-bold shrink-0 self-start sm:self-center transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <span>Пропустить шаг →</span>
+                <span>Skip Step →</span>
               </button>
             </div>
 
@@ -852,7 +852,7 @@ export default function OnboardingPage() {
               <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-950 flex items-start gap-3">
                 <DollarSign className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
-                  <strong>Зачем это нужно в деньгах:</strong> Если ИИ знает вашу самую маржинальную услугу и условия парковки/записи, он вплетает их в каждый ответ на отзыв, пост и каталог Apple Maps / 2GIS — увеличивая конверсию из просмотра карточки в звонок или визит на <strong>+28%</strong>.
+                  <strong>Why this matters financially:</strong> When AI knows your highest-margin service, parking perks, and booking terms, it weaves them into every review response, post, and directory profile — lifting visitor-to-call conversion by <strong>+28%</strong>.
                 </div>
               </div>
 
@@ -861,7 +861,7 @@ export default function OnboardingPage() {
                 <div className="flex items-center justify-between gap-2">
                   <label className="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-google-blue text-white text-[11px] flex items-center justify-center font-bold shrink-0">1</span>
-                    <span>Ваш продукт-магнит / самая маржинальная услуга или блюдо:</span>
+                    <span>Your Flagship Offering / Highest-Margin Service or Dish:</span>
                   </label>
                   <span className="text-[10px] font-semibold text-slate-400 shrink-0">{groundTruthPresets.nicheLabel}</span>
                 </div>
@@ -893,7 +893,7 @@ export default function OnboardingPage() {
               <div className="space-y-2.5 pt-2 border-t border-slate-100">
                 <label className="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-google-blue text-white text-[11px] flex items-center justify-center font-bold shrink-0">2</span>
-                  <span>Кто ваш идеальный клиент и почему выбирают именно вас?</span>
+                  <span>Who is your ideal customer and why do they choose you?</span>
                 </label>
 
                 <div className="flex flex-wrap gap-1.5">
@@ -922,7 +922,7 @@ export default function OnboardingPage() {
               <div className="space-y-2.5 pt-2 border-t border-slate-100">
                 <label className="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-google-blue text-white text-[11px] flex items-center justify-center font-bold shrink-0">3</span>
-                  <span>Скрытые козыри, парковка и правила (то, чего нет на картах):</span>
+                  <span>Hidden Perks, Parking & Venue Rules (Things not on maps):</span>
                 </label>
 
                 <div className="flex flex-wrap gap-1.5">
@@ -954,7 +954,7 @@ export default function OnboardingPage() {
                   onClick={() => handleCompleteOnboarding(true)}
                   className="w-full sm:w-auto px-5 py-3.5 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer"
                 >
-                  Пропустить — заполню позже в Студии
+                  Skip — I'll configure later in Studio
                 </button>
 
                 <button
@@ -963,7 +963,7 @@ export default function OnboardingPage() {
                   className="w-full sm:flex-1 py-3.5 px-6 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Сохранить в память ИИ и войти в Кокпит →</span>
+                  <span>Save to AI Memory & Enter Cockpit →</span>
                 </button>
               </div>
 
