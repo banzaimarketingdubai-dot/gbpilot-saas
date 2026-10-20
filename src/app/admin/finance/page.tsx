@@ -203,14 +203,33 @@ export default function AdminFinancePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm text-white">Starter Plan</span>
-                  <span className="bg-slate-800 text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-700">
-                    {data?.meta?.products?.starter ? 'CONFIGURED' : 'LOCAL FALLBACK'}
+                  <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    ACTIVE IN CREEM
                   </span>
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Product ID: <code className="text-slate-300 font-mono text-[11px]">{data?.meta?.products?.starter || 'prod_starter_fallback'}</code>
+                  Product ID: <code className="text-slate-300 font-mono text-[11px]">{data?.meta?.products?.starter || 'prod_5ByHVBJDCL2gyknzv1VqU4'}</code>
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">$29.00 / month • Single Location diagnostic</div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => copyToClipboard('prod_5ByHVBJDCL2gyknzv1VqU4', 'starter_id')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-1"
+                >
+                  {copiedKey === 'starter_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>Copy ID</span>
+                </button>
+                <a
+                  href="https://www.creem.io/payment/prod_5ByHVBJDCL2gyknzv1VqU4"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white flex items-center gap-1 shadow-sm"
+                >
+                  <span>Hosted Checkout</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
 
@@ -219,14 +238,33 @@ export default function AdminFinancePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm text-white">Agency / Multi-Venue Plan</span>
-                  <span className="bg-slate-800 text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-700">
-                    {data?.meta?.products?.agency ? 'CONFIGURED' : 'LOCAL FALLBACK'}
+                  <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    ACTIVE IN CREEM
                   </span>
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Product ID: <code className="text-slate-300 font-mono text-[11px]">{data?.meta?.products?.agency || 'prod_agency_fallback'}</code>
+                  Product ID: <code className="text-slate-300 font-mono text-[11px]">{data?.meta?.products?.agency || 'prod_1CtCL59SfGfm79Mgvtxlf4'}</code>
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">$199.00 / month • Multi-location Dubai Fleet</div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => copyToClipboard('prod_1CtCL59SfGfm79Mgvtxlf4', 'agency_id')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-1"
+                >
+                  {copiedKey === 'agency_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>Copy ID</span>
+                </button>
+                <a
+                  href="https://www.creem.io/payment/prod_1CtCL59SfGfm79Mgvtxlf4"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white flex items-center gap-1 shadow-sm"
+                >
+                  <span>Hosted Checkout</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
           </div>

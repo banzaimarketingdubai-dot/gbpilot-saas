@@ -73,12 +73,33 @@ export default function AdminSettingsPage() {
               </span>
             </div>
 
+            {/* Creem Product Starter */}
+            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white">Starter Plan Product ID</span>
+                  <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-1.5 py-0.2 rounded border border-blue-500/20">
+                    ACTIVE
+                  </span>
+                </div>
+                <code className="text-slate-400 font-mono text-[11px] mt-1 block">
+                  prod_5ByHVBJDCL2gyknzv1VqU4
+                </code>
+              </div>
+              <button
+                onClick={() => copyToClipboard('prod_5ByHVBJDCL2gyknzv1VqU4', 'starter_id')}
+                className="p-1.5 text-slate-400 hover:text-white"
+              >
+                {copiedKey === 'starter_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
             {/* Creem Product Pro */}
             <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-white">Growth / Pro Plan Product ID</span>
-                  <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-1.5 py-0.2 rounded border border-blue-500/20">
+                  <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-1.5 py-0.2 rounded border border-emerald-500/20">
                     ACTIVE
                   </span>
                 </div>
@@ -91,6 +112,27 @@ export default function AdminSettingsPage() {
                 className="p-1.5 text-slate-400 hover:text-white"
               >
                 {copiedKey === 'pro_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {/* Creem Product Agency */}
+            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white">Agency Plan Product ID</span>
+                  <span className="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-1.5 py-0.2 rounded border border-amber-500/20">
+                    ACTIVE
+                  </span>
+                </div>
+                <code className="text-slate-400 font-mono text-[11px] mt-1 block">
+                  prod_1CtCL59SfGfm79Mgvtxlf4
+                </code>
+              </div>
+              <button
+                onClick={() => copyToClipboard('prod_1CtCL59SfGfm79Mgvtxlf4', 'agency_id')}
+                className="p-1.5 text-slate-400 hover:text-white"
+              >
+                {copiedKey === 'agency_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
 

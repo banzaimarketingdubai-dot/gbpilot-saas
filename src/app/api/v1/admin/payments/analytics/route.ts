@@ -35,9 +35,9 @@ export async function GET(request: Request) {
       subscriptions: subscriptions.items,
       meta: {
         products: {
-          starter: process.env.NEXT_PUBLIC_CREEM_PRODUCT_STARTER || null,
+          starter: process.env.NEXT_PUBLIC_CREEM_PRODUCT_STARTER || 'prod_5ByHVBJDCL2gyknzv1VqU4',
           pro: process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4',
-          agency: process.env.NEXT_PUBLIC_CREEM_PRODUCT_AGENCY || null,
+          agency: process.env.NEXT_PUBLIC_CREEM_PRODUCT_AGENCY || 'prod_1CtCL59SfGfm79Mgvtxlf4',
         },
         timestamp: new Date().toISOString(),
       }
