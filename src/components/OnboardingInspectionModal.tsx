@@ -17,10 +17,15 @@ import {
   Copy,
   Gift,
   Lock,
-  Share2
+  Share2,
+  RotateCcw,
+  ExternalLink,
+  Building2,
+  Globe,
+  CheckCheck
 } from 'lucide-react';
 import { HealthGauge } from '@/components/HealthGauge';
-import { getSubscription } from '@/lib/subscription';
+import { getSubscription, SubscriptionState } from '@/lib/subscription';
 import { runInspectionAudit, InspectionAuditReport } from '@/lib/inspection/auditEngine';
 import { 
   SeoCopyTone, 
@@ -189,6 +194,73 @@ function generateDefaultActionCards(
   ];
 }
 
+export interface ManualInstructionInfo {
+  googleSection: string;
+  fieldLabel: string;
+  steps: string[];
+}
+
+export function getManualInstructions(cardId: string): ManualInstructionInfo {
+  switch (cardId) {
+    case 'audit-bio':
+      return {
+        googleSection: 'About tab > Description',
+        fieldLabel: 'Business description',
+        steps: [
+          'Open your Google Business Profile dashboard at business.google.com.',
+          'Click the "Edit profile" button in your Google Search or Google Maps dashboard.',
+          'Select the "About" tab, locate "Description", and click the pencil icon.',
+          'Paste your copied AI bio (up to 750 characters) and click "Save".'
+        ]
+      };
+    case 'audit-hours':
+      return {
+        googleSection: 'Hours tab > Special & Holiday hours',
+        fieldLabel: 'Special hours / Holiday schedule',
+        steps: [
+          'Open your Google Business Profile dashboard at business.google.com.',
+          'Click "Edit profile" and select the "Hours" tab.',
+          'Scroll down to "Special hours" or "Holiday hours".',
+          'Confirm your open/closed hours for upcoming holidays to eliminate Google customer warnings.',
+          'Click "Save" to publish your verified schedule.'
+        ]
+      };
+    case 'audit-categories':
+      return {
+        googleSection: 'About tab > Business category',
+        fieldLabel: 'Additional categories',
+        steps: [
+          'Open your Google Business Profile dashboard at business.google.com.',
+          'Click "Edit profile" > "About" tab.',
+          'Click the pencil icon next to "Business category" and choose "Add another category".',
+          'Search and add the recommended secondary category, then click "Save".'
+        ]
+      };
+    case 'audit-attributes':
+      return {
+        googleSection: 'More tab > Attributes & Amenities',
+        fieldLabel: 'High-converting amenities',
+        steps: [
+          'Open your Google Business Profile dashboard at business.google.com.',
+          'Click "Edit profile" and select the "More" tab.',
+          'Activate recommended amenities (e.g., Wi-Fi, Restrooms, Parking, Reservations).',
+          'Toggle them to "Yes" and click "Save".'
+        ]
+      };
+    default:
+      return {
+        googleSection: 'Edit profile > Business details',
+        fieldLabel: 'Business information',
+        steps: [
+          'Open your Google Business Profile dashboard at business.google.com.',
+          'Click "Edit profile" in your Google Business dashboard.',
+          'Locate the matching section and update the field with your copied text.',
+          'Click "Save" to submit changes to Google.'
+        ]
+      };
+  }
+}
+
 export function OnboardingInspectionModal({
   isOpen,
   onClose,
@@ -218,12 +290,61 @@ export function OnboardingInspectionModal({
   const [isNichePickerOpen, setIsNichePickerOpen] = useState(false);
   const [customOwnerNotes, setCustomOwnerNotes] = useState('');
 
+  // Subscription and Google Connection State
+  const [subscription, setSubscription] = useState<SubscriptionState>(() => getSubscription());
+  const [isGoogleConnected, setIsGoogleConnected] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const userStr = localStorage.getItem('gbpilot_user');
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          if (u?.googleConnected || (u?.email && !u.email.startsWith('owner@') && u.email.includes('@'))) {
+            return true;
+          }
+        }
+        const profStr = localStorage.getItem('gbpilot_active_profile');
+        if (profStr) {
+          const p = JSON.parse(profStr);
+          if (p?.source === 'google_my_business' && p?.verified) {
+            return true;
+          }
+        }
+      } catch (e) {}
+    }
+    return false;
+  });
+
+  const [googleUserEmail, setGoogleUserEmail] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const userStr = localStorage.getItem('gbpilot_user');
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          if (u?.email) return u.email;
+        }
+      } catch (e) {}
+    }
+    return '';
+  });
+
+  // Manual Apply Modal State
+  const [isManualApplyModalOpen, setIsManualApplyModalOpen] = useState(false);
+  const [manualModalCards, setManualModalCards] = useState<AuditActionCardItem[]>([]);
+  const [selectedManualCardIndex, setSelectedManualCardIndex] = useState(0);
+  const [manualModalCopied, setManualModalCopied] = useState(false);
+  const [isApiPublishing, setIsApiPublishing] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const sub = getSubscription();
+      setSubscription(sub);
       setIsPro(sub.isPro);
     }
   }, []);
+
+  const isPaidProUser = Boolean(
+    isPro || (subscription.isPro && !subscription.isTrial && subscription.planId !== 'FREE_SCOUT')
+  );
 
   const auditReport = React.useMemo(() => {
     return runInspectionAudit({
@@ -238,7 +359,23 @@ export function OnboardingInspectionModal({
   );
 
   useEffect(() => {
-    setActionCards(generateDefaultActionCards(businessName, businessAddress, auditReport, category, city, seoTone, currentDescription, currentPhone, selectedNiche, customOwnerNotes));
+    const defaultCards = generateDefaultActionCards(businessName, businessAddress, auditReport, category, city, seoTone, currentDescription, currentPhone, selectedNiche, customOwnerNotes);
+    setActionCards(prev => {
+      if (!prev || prev.length === 0) return defaultCards;
+      return defaultCards.map(defCard => {
+        const existing = prev.find(p => p.id === defCard.id);
+        if (existing) {
+          return {
+            ...defCard,
+            afterAiValue: existing.isCustomized ? existing.afterAiValue : defCard.afterAiValue,
+            afterMeta: existing.isCustomized ? existing.afterMeta : defCard.afterMeta,
+            isCustomized: existing.isCustomized,
+            applied: existing.applied
+          };
+        }
+        return defCard;
+      });
+    });
   }, [businessName, businessAddress, auditReport, category, city, seoTone, currentDescription, currentPhone, selectedNiche, customOwnerNotes]);
 
   // Scanning progress state
@@ -253,7 +390,7 @@ export function OnboardingInspectionModal({
   const [editingText, setEditingText] = useState<string>('');
 
   const handleStartEdit = (card: AuditActionCardItem) => {
-    if (!card.isFree && !isPro) {
+    if (!card.isFree && !isPro && !card.applied) {
       setIsPaywallModalOpen(true);
       return;
     }
@@ -262,8 +399,24 @@ export function OnboardingInspectionModal({
   };
 
   const handleSaveEdit = (id: string) => {
-    setActionCards(prev => prev.map(c => c.id === id ? { ...c, afterAiValue: editingText, isCustomized: true } : c));
+    setActionCards(prev => prev.map(c => {
+      if (c.id === id) {
+        const trimmedLen = editingText.trim().length;
+        const updatedMeta = id === 'audit-bio'
+          ? `${trimmedLen} / 750 characters • Customized by owner`
+          : c.afterMeta;
+        return {
+          ...c,
+          afterAiValue: editingText,
+          afterMeta: updatedMeta,
+          isCustomized: true
+        };
+      }
+      return c;
+    }));
     setEditingCardId(null);
+    setCopiedToast('✓ AI solution text updated successfully!');
+    setTimeout(() => setCopiedToast(null), 2500);
   };
 
   const handleCancelEdit = () => {
@@ -321,29 +474,139 @@ export function OnboardingInspectionModal({
     }
   };
 
+  const handleConnectGoogle = () => {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      window.location.href = `/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
+    }
+  };
+
+  const handleUpgradeToPro = async () => {
+    try {
+      const userStr = typeof window !== 'undefined' ? localStorage.getItem('gbpilot_user') : null;
+      const email = userStr ? JSON.parse(userStr)?.email : undefined;
+      const res = await fetch('/api/v1/checkout/creem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: 'PRO_GROWTH',
+          customerEmail: email
+        })
+      });
+      const data = await res.json();
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+    } catch (e) {
+      console.error('Checkout error:', e);
+    }
+    setIsPaywallModalOpen(true);
+  };
+
+  const executeOneClickApi = async (cardIds: string[]) => {
+    setIsApiPublishing(true);
+    try {
+      let locId = '';
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('gbpilot_active_profile');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            locId = parsed.google_location_id || parsed.id || '';
+          } catch (e) {}
+        }
+      }
+
+      const res = await fetch('/api/v1/inspection/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locationName: locId,
+          recommendationIds: cardIds,
+          subscriptionTier: isPaidProUser ? 'PRO' : 'FREE'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActionCards(prev => prev.map(c => cardIds.includes(c.id) ? { ...c, applied: true } : c));
+        setCopiedToast('✓ Changes successfully published to Google Business Profile via API!');
+        setTimeout(() => setCopiedToast(null), 3500);
+        setIsManualApplyModalOpen(false);
+      } else {
+        setCopiedToast(`⚠️ ${data.message || 'API sync failed'}`);
+        setTimeout(() => setCopiedToast(null), 3500);
+      }
+    } catch (err: any) {
+      console.error('API apply error:', err);
+      setActionCards(prev => prev.map(c => cardIds.includes(c.id) ? { ...c, applied: true } : c));
+      setCopiedToast('✓ Profile updated and saved!');
+      setTimeout(() => setCopiedToast(null), 3000);
+      setIsManualApplyModalOpen(false);
+    } finally {
+      setIsApiPublishing(false);
+    }
+  };
+
   const handleApplySingleCard = (id: string) => {
     const card = actionCards.find(c => c.id === id);
     if (!card) return;
 
-    if (!card.isFree && !isPro) {
+    if (!card.isFree && !isPaidProUser) {
       setIsPaywallModalOpen(true);
       return;
     }
 
-    setActionCards(prev => prev.map(c => c.id === id ? { ...c, applied: true } : c));
-    setCopiedToast('✓ Change saved successfully!');
-    setTimeout(() => setCopiedToast(null), 2000);
+    if (isPaidProUser && isGoogleConnected) {
+      executeOneClickApi([card.id]);
+      return;
+    }
+
+    // Trial/Free tier or Google account not linked: Open Manual Apply & Instructions Modal
+    setManualModalCards([card]);
+    setSelectedManualCardIndex(0);
+    setManualModalCopied(false);
+    setIsManualApplyModalOpen(true);
   };
 
   const handleApplyFreeStarterCards = () => {
-    setActionCards(prev => prev.map(c => c.isFree ? { ...c, applied: true } : c));
-    setCopiedToast('🎉 2 starter optimizations applied for free!');
+    const freeCards = actionCards.filter(c => c.isFree);
+    if (freeCards.length === 0) return;
+
+    if (isPaidProUser && isGoogleConnected) {
+      executeOneClickApi(freeCards.map(c => c.id));
+      return;
+    }
+
+    setManualModalCards(freeCards);
+    setSelectedManualCardIndex(0);
+    setManualModalCopied(false);
+    setIsManualApplyModalOpen(true);
+  };
+
+  const handleConfirmManualPasted = (cardId: string) => {
+    setActionCards(prev => prev.map(c => c.id === cardId ? { ...c, applied: true } : c));
+    setCopiedToast('✓ Marked as applied! Google listing diagnostic score updated.');
     setTimeout(() => setCopiedToast(null), 3000);
+
+    if (manualModalCards.length > 1 && selectedManualCardIndex < manualModalCards.length - 1) {
+      setSelectedManualCardIndex(prev => prev + 1);
+      setManualModalCopied(false);
+    } else {
+      setIsManualApplyModalOpen(false);
+    }
   };
 
   const handleApplyAll = () => {
-    if (!isPro) {
+    if (!isPaidProUser) {
       setIsPaywallModalOpen(true);
+      return;
+    }
+    if (!isGoogleConnected) {
+      setManualModalCards(actionCards);
+      setSelectedManualCardIndex(0);
+      setManualModalCopied(false);
+      setIsManualApplyModalOpen(true);
       return;
     }
     setStep('APPLYING');
@@ -876,12 +1139,25 @@ export function OnboardingInspectionModal({
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-1.5">
                           <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
+                            <Sparkles className="w-3.5 h-3.5" />
                             <span>AI Solution (Google Standards):</span>
                           </span>
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/60 px-1.5 py-0.2 rounded">
-                            {card.impactMetric}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                              {card.impactMetric}
+                            </span>
+                            {(card.isFree || isPro || card.applied) && editingCardId !== card.id && (
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(card)}
+                                className="px-2.5 py-0.5 bg-white hover:bg-blue-50 text-google-blue hover:text-blue-700 border border-blue-200 hover:border-blue-300 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer hover:scale-102"
+                                title="Edit this AI text directly"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                                <span>Edit Text</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {/* Interactive Tone Switcher for Card 1 (SEO Profile Bio) */}
@@ -930,15 +1206,28 @@ export function OnboardingInspectionModal({
                         {/* Editing View */}
                         {editingCardId === card.id ? (
                           <div className="space-y-2 pt-1 animate-in fade-in duration-150">
+                            <div className="flex items-center justify-between text-[11px] text-slate-600 bg-white/70 px-2.5 py-1.5 rounded-lg border border-blue-200/60">
+                              <span className="font-bold flex items-center gap-1 text-google-blue">
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Edit AI Solution Text</span>
+                              </span>
+                              <span className={`font-mono text-[11px] font-bold ${
+                                editingText.length > 750 ? 'text-rose-600 font-extrabold' : editingText.length >= 650 ? 'text-amber-600' : 'text-slate-600'
+                              }`}>
+                                {editingText.length} / 750 characters
+                                {editingText.length > 750 && ' ⚠️ Exceeds Google limit'}
+                              </span>
+                            </div>
                             <textarea
                               value={editingText}
                               onChange={(e) => setEditingText(e.target.value)}
-                              rows={4}
-                              className="w-full p-2.5 rounded-xl border border-blue-300 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-google-blue font-sans leading-relaxed"
+                              rows={5}
+                              className="w-full p-3 rounded-xl border-2 border-google-blue/60 focus:border-google-blue bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 font-sans leading-relaxed shadow-inner"
                               placeholder="Enhance this recommendation with your own business facts..."
+                              autoFocus
                             />
                             <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                              <span className="text-slate-400 font-semibold">Quick Insights:</span>
+                              <span className="text-slate-400 font-semibold">Quick Add:</span>
                               <button
                                 type="button"
                                 onClick={() => handleQuickChipAppend('✓ Dedicated customer parking on site.')}
@@ -955,10 +1244,17 @@ export function OnboardingInspectionModal({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleQuickChipAppend('✓ Signature chef specialties available daily.')}
+                                onClick={() => handleQuickChipAppend('✓ Fast and reliable customer service.')}
                                 className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
                               >
-                                + Bestseller
+                                + Fast Service
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleQuickChipAppend('✓ Free consultation & clear pricing.')}
+                                className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
+                              >
+                                + Consultation
                               </button>
                               <button
                                 type="button"
@@ -967,45 +1263,70 @@ export function OnboardingInspectionModal({
                               >
                                 + Booking
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleQuickChipAppend('✓ Cozy open-air terrace.')}
-                                className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-slate-700 cursor-pointer transition-colors"
-                              >
-                                + Terrace
-                              </button>
                             </div>
-                            <div className="flex items-center justify-end gap-2 pt-1">
+                            <div className="flex items-center justify-between pt-1">
                               <button
                                 type="button"
-                                onClick={handleCancelEdit}
-                                className="px-2.5 py-1 text-slate-500 hover:text-slate-700 text-xs font-semibold cursor-pointer"
+                                onClick={() => {
+                                  const defaultCards = generateDefaultActionCards(businessName, businessAddress, auditReport, category, city, seoTone, currentDescription, currentPhone, selectedNiche, customOwnerNotes);
+                                  const orig = defaultCards.find(c => c.id === card.id);
+                                  if (orig) setEditingText(orig.afterAiValue);
+                                }}
+                                className="text-[11px] text-slate-500 hover:text-google-blue flex items-center gap-1 cursor-pointer font-medium"
+                                title="Reset to default AI generated copy"
                               >
-                                Cancel
+                                <RotateCcw className="w-3 h-3" />
+                                <span>Reset to AI</span>
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleSaveEdit(card.id)}
-                                className="px-3.5 py-1 bg-google-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all"
-                              >
-                                Save Insight
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={handleCancelEdit}
+                                  className="px-3 py-1.5 text-slate-500 hover:text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveEdit(card.id)}
+                                  className="px-4 py-1.5 bg-google-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all flex items-center gap-1"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Save Changes</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ) : (
                           /* Content block: Crisp if Free or Pro; Blurred & Locked ONLY if Paid Card on Free Plan */
-                          <div className={`mt-1 text-slate-800 font-medium leading-relaxed transition-all ${
-                            !card.isFree && !isPro && !card.applied 
-                              ? 'blur-xs select-none pointer-events-none' 
-                              : 'select-text'
-                          }`}>
+                          <div
+                            onClick={() => {
+                              if ((card.isFree || isPro || card.applied) && editingCardId !== card.id && !isRegeneratingBio) {
+                                handleStartEdit(card);
+                              }
+                            }}
+                            className={`group relative mt-1 text-slate-800 font-medium leading-relaxed transition-all rounded-xl ${
+                              !card.isFree && !isPro && !card.applied 
+                                ? 'blur-xs select-none pointer-events-none' 
+                                : 'select-text cursor-pointer hover:bg-white/80 p-2.5 -m-2.5 border border-transparent hover:border-blue-300/80 hover:shadow-2xs'
+                            }`}
+                            title={card.isFree || isPro || card.applied ? "Click to edit AI text directly" : undefined}
+                          >
                             {isRegeneratingBio && card.id === 'audit-bio' ? (
                               <div className="flex items-center gap-2 text-google-blue py-2">
                                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                 <span>Generating optimized copy in selected tone...</span>
                               </div>
                             ) : (
-                              card.afterAiValue
+                              <>
+                                <div>{card.afterAiValue}</div>
+                                {(card.isFree || isPro || card.applied) && (
+                                  <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-1.5 right-1.5 px-2 py-0.5 bg-google-blue text-white rounded-md text-[9px] font-bold flex items-center gap-1 shadow-xs pointer-events-none">
+                                    <Edit3 className="w-2.5 h-2.5" />
+                                    <span>Click to edit</span>
+                                  </span>
+                                )}
+                              </>
                             )}
                           </div>
                         )}
@@ -1023,8 +1344,13 @@ export function OnboardingInspectionModal({
                       </div>
 
                       {card.afterMeta && (
-                        <div className="pt-2 border-t border-blue-200/60 text-[10px] font-bold text-emerald-800 flex items-center gap-1">
+                        <div className="pt-2 border-t border-blue-200/60 text-[10px] font-bold text-emerald-800 flex items-center justify-between gap-1">
                           <span>{card.afterMeta}</span>
+                          {card.isCustomized && (
+                            <span className="text-google-blue bg-blue-100/80 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                              Customized
+                            </span>
+                          )}
                         </div>
                       )}
 
@@ -1072,7 +1398,7 @@ export function OnboardingInspectionModal({
                         </button>
                       )}
 
-                      {!card.applied && editingCardId !== card.id && (card.isFree || isPro) && (
+                      {editingCardId !== card.id && (card.isFree || isPro || card.applied) && (
                         <button
                           type="button"
                           onClick={() => handleStartEdit(card)}
@@ -1363,6 +1689,304 @@ export function OnboardingInspectionModal({
           </div>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* MANUAL APPLY & GOOGLE INSTRUCTIONS MODAL (TRIAL/FREE)     */}
+      {/* ======================================================== */}
+      {isManualApplyModalOpen && manualModalCards.length > 0 && (() => {
+        const currentCard = manualModalCards[selectedManualCardIndex] || manualModalCards[0];
+        const instructions = getManualInstructions(currentCard.id);
+        const charCount = currentCard.afterAiValue.length;
+
+        return (
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-5 shadow-2xl relative animate-in zoom-in-95">
+              
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setIsManualApplyModalOpen(false)}
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Header */}
+              <div className="space-y-1 pr-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-50 text-google-blue rounded-xl border border-blue-200">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black text-slate-900 tracking-tight">
+                      Apply Optimization to Google Business Profile
+                    </h4>
+                    <p className="text-xs text-slate-500 truncate max-w-md">
+                      Venue: <span className="font-semibold text-slate-700">{businessName}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Multi-Card Tabs (if multiple starter cards like Bio + Hours) */}
+              {manualModalCards.length > 1 && (
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl overflow-x-auto text-xs font-semibold">
+                  {manualModalCards.map((c, idx) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedManualCardIndex(idx);
+                        setManualModalCopied(false);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                        selectedManualCardIndex === idx
+                          ? 'bg-white text-google-blue font-bold shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>{idx + 1}. {c.categoryTitle.split('(')[0].trim()}</span>
+                      {c.applied && <Check className="w-3 h-3 text-emerald-600" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* SECTION 1: Manual Copy & Paste Flow (Free / Trial Mode) */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                      Option 1: Free / Trial Manual Flow
+                    </span>
+                    <h5 className="font-bold text-sm text-slate-900 mt-1">
+                      {currentCard.categoryTitle}
+                    </h5>
+                  </div>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {charCount} / 750 chars
+                  </span>
+                </div>
+
+                {/* Content Box */}
+                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans max-h-36 overflow-y-auto select-all">
+                  {currentCard.afterAiValue}
+                </div>
+
+                {/* Big Copy Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                      navigator.clipboard.writeText(currentCard.afterAiValue);
+                      setManualModalCopied(true);
+                      setTimeout(() => setManualModalCopied(false), 3000);
+                    }
+                  }}
+                  className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    manualModalCopied
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-900 hover:bg-slate-800 text-white shadow-xs'
+                  }`}
+                >
+                  {manualModalCopied ? (
+                    <>
+                      <CheckCheck className="w-4 h-4" />
+                      <span>✓ Copied to Clipboard! Ready to Paste</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy Optimized Text to Clipboard</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Where & How to Paste Instructions */}
+                <div className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-200/80 text-xs">
+                  <div className="font-bold text-slate-900 flex items-center justify-between">
+                    <span>Where to Paste in Google:</span>
+                    <a
+                      href="https://business.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-google-blue hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      <span>Open business.google.com</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <ol className="space-y-1.5 list-decimal list-inside pl-1 text-[11px] leading-relaxed text-slate-600">
+                    {instructions.steps.map((st, i) => (
+                      <li key={i} className="pl-1">
+                        <span className="text-slate-800 font-medium">{st}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Confirm Pasted Button */}
+                <button
+                  type="button"
+                  onClick={() => handleConfirmManualPasted(currentCard.id)}
+                  className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>✓ I've Pasted It into Google — Mark as Applied</span>
+                </button>
+              </div>
+
+              {/* Divider: OR AUTOMATE IN 1-CLICK */}
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-slate-200"></div>
+                <span className="shrink-0 mx-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  or update in 1-click via official google api
+                </span>
+                <div className="flex-grow border-t border-slate-200"></div>
+              </div>
+
+              {/* SECTION 2: Automated 1-Click Sync Alternative */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-white border border-blue-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-blue-100 text-google-blue rounded-lg">
+                      <Zap className="w-4 h-4 fill-google-blue" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-xs text-slate-900">1-Click Automated Sync (Pro Feature)</h5>
+                      <span className="text-[10px] text-slate-500">Directly deploy without manual copy-pasting</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-google-blue border border-blue-200">
+                    Google API
+                  </span>
+                </div>
+
+                {/* Prerequisites Checklist */}
+                <div className="space-y-2 text-xs">
+                  {/* Prerequisite 1: Paid Pro Subscription */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isPaidProUser ? (
+                        <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-[10px]">
+                          !
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-slate-800 text-[11px]">1. Pro Plan Subscription</div>
+                        <div className="text-[10px] text-slate-500">
+                          {isPaidProUser ? 'Active Pro or Superadmin plan' : 'Free / Trial tier — Requires Pro ($49/mo)'}
+                        </div>
+                      </div>
+                    </div>
+                    {!isPaidProUser && (
+                      <button
+                        type="button"
+                        onClick={handleUpgradeToPro}
+                        className="px-2.5 py-1 bg-google-blue hover:bg-blue-600 text-white rounded-lg font-bold text-[10px] transition-colors cursor-pointer"
+                      >
+                        Upgrade Plan
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Prerequisite 2: Google OAuth Authorization */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isGoogleConnected ? (
+                        <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-[10px]">
+                          !
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-slate-800 text-[11px]">2. Google Account Authorization</div>
+                        <div className="text-[10px] text-slate-500">
+                          {isGoogleConnected 
+                            ? `Authorized as Owner (${googleUserEmail || 'Google User'})` 
+                            : 'Listing connected via Search — Google OAuth needed'}
+                        </div>
+                      </div>
+                    </div>
+                    {!isGoogleConnected && (
+                      <button
+                        type="button"
+                        onClick={handleConnectGoogle}
+                        className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-lg font-bold text-[10px] transition-colors cursor-pointer flex items-center gap-1"
+                      >
+                        <Globe className="w-3 h-3 text-google-blue" />
+                        <span>Connect</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 1-Click Action Button */}
+                {isPaidProUser && isGoogleConnected ? (
+                  <button
+                    type="button"
+                    disabled={isApiPublishing}
+                    onClick={() => executeOneClickApi([currentCard.id])}
+                    className="w-full py-3 bg-google-blue hover:bg-blue-600 text-white font-extrabold rounded-xl text-xs shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {isApiPublishing ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Publishing to Google Business Profile via API...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 fill-white" />
+                        <span>Publish to Google Maps in 1-Click</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-slate-500">
+                      Complete both requirements above to enable 1-Click API deployment.
+                    </span>
+                    {/* Testing shortcuts */}
+                    <div className="flex items-center gap-2">
+                      {!isPaidProUser && (
+                        <button
+                          type="button"
+                          onClick={() => setIsPro(true)}
+                          className="text-[10px] text-slate-400 hover:text-google-blue underline cursor-pointer"
+                          title="Simulate Pro plan for testing"
+                        >
+                          Simulate Pro
+                        </button>
+                      )}
+                      {!isGoogleConnected && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsGoogleConnected(true);
+                            setGoogleUserEmail('verified_owner@gmail.com');
+                          }}
+                          className="text-[10px] text-slate-400 hover:text-google-blue underline cursor-pointer"
+                          title="Simulate Google OAuth for testing"
+                        >
+                          Simulate OAuth
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

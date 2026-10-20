@@ -22,7 +22,8 @@ import {
   Bell,
   Unlink,
   Crown,
-  Users
+  Users,
+  CheckSquare
 } from 'lucide-react';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -358,6 +359,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'nav-dashboard', label: '⚡ Cockpit', href: '/dashboard', icon: Zap },
     { id: 'nav-radar', label: '🎯 Radar', href: '/geo-grid', icon: Target },
     { id: 'nav-shield', label: '🛡️ Shield & Reviews', href: '/reviews-posts', icon: ShieldCheck },
+    { id: 'nav-attributes', label: '📋 Attributes', href: '/attributes', icon: CheckSquare },
     { id: 'nav-copilot', label: '🤖 Copilot', href: '/copilot', icon: Bot },
     { id: 'nav-b2b', label: '🇦🇪 Pricing', href: '/b2b', icon: Sparkles },
     ...(isUserSuperAdmin ? [{ id: 'nav-admin', label: '👑 Admin', href: '/admin', icon: Crown, badge: 'ROOT' }] : []),

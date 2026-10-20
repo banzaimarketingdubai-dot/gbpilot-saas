@@ -38,6 +38,7 @@ import {
   Activity,
   Shield,
   Unlink,
+  CheckSquare,
   LogOut,
   Plus
 } from 'lucide-react';
@@ -898,6 +899,15 @@ export default function DashboardCockpitPage() {
                     <Sparkles className="w-3 h-3 text-google-blue" />
                     <span className="text-[11px]">Audit NAP</span>
                   </button>
+
+                  <Link
+                    href="/attributes"
+                    className="px-3 py-1.5 rounded-xl bg-purple-50/80 hover:bg-purple-100/70 border border-purple-200 text-purple-900 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    title="Manage all 150+ Google Business Profile attributes"
+                  >
+                    <CheckSquare className="w-3 h-3 text-purple-600" />
+                    <span className="text-[11px]">150+ Attributes</span>
+                  </Link>
                 </div>
 
               </div>
