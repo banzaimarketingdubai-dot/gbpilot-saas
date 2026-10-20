@@ -217,3 +217,20 @@ flowchart TD
 2. **Алерт взлома от Гарда (Loss Aversion):** Страх потерять пятничную выручку из-за смены графика конкурентом — сильнейший триггер апгрейда с $29 на $69.
 3. **Усталость от ручного аппрува Ассистента:** Через 2 недели кликов на тарифе $29 владелец с радостью переходит на автопилот $69.
 4. **Sleep Mode ($9/мес) против оттока:** При попытке отмены подписки предлагается тариф *«Режим сна / Гард»* за $9/мес: ИИ не пишет посты, но круглосуточно охраняет часы и телефон от правок в Google Maps.
+
+---
+
+## 6. Реестр Live-продуктов в платежном шлюзе Creem.io (BanzAI MoR)
+
+Все 3 тарифных плана созданы и активированы в боевом каталоге Creem.io (Merchant of Record BanzAI):
+
+| Тарифный план | Цена | Период | Creem Product ID | Прямой URL оплаты (Hosted Checkout) |
+| :--- | :---: | :---: | :--- | :--- |
+| **GBPilot Starter** | **$29.00** | Monthly | `prod_5ByHVBJDCL2gyknzv1VqU4` | `https://www.creem.io/payment/prod_5ByHVBJDCL2gyknzv1VqU4` |
+| **GBPilot Growth / Pro** | **$69.00** | Monthly | `prod_279fuhC5FSVX9DR6MLSuU4` | `https://www.creem.io/payment/prod_279fuhC5FSVX9DR6MLSuU4` |
+| **GBPilot Agency** | **$199.00** | Monthly | `prod_1CtCL59SfGfm79Mgvtxlf4` | `https://www.creem.io/payment/prod_1CtCL59SfGfm79Mgvtxlf4` |
+
+* **Return URL (Success Fallback):** `https://www.gbpilot.top/dashboard`
+* **Currency:** USD
+* **Payout Accounts:** TBC Bank Georgia (USD SWIFT `GE72TB...`) & Web3 Crypto Wallet (USDT).
+
