@@ -163,6 +163,10 @@ export function LocationQuotaModal({
                     </li>
                     <li className="flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 text-google-blue shrink-0" />
+                      <span>Competitor Category Spy™ (Top-3 Rivals)</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-google-blue shrink-0" />
                       <span>24/7 Sentinel Guard & Autopilot</span>
                     </li>
                   </ul>
@@ -194,6 +198,10 @@ export function LocationQuotaModal({
                     <li className="flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                       <span>Up to 10 locations in single account</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>Bulk Multi-Location Category Matrix</span>
                     </li>
                     <li className="flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />

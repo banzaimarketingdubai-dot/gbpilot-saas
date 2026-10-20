@@ -18,7 +18,8 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  Compass
+  Compass,
+  Flame
 } from 'lucide-react';
 
 export interface CompetitorComparison {
@@ -35,6 +36,9 @@ export interface CompetitorComparison {
   overtakeStrategy?: string;
   actionCta?: string;
   actionUrl?: string;
+  primaryCategory?: string;
+  secondaryCategories?: string[];
+  missingSecondaryCategories?: string[];
 }
 
 interface CompetitorMatrixProps {
@@ -104,13 +108,43 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
       }
     }
 
+    const primaryCat = comp.primaryCategory || (
+      targetKeyword.toLowerCase().includes('law') || targetKeyword.toLowerCase().includes('attorney') ? 'Personal Injury Attorney' :
+      targetKeyword.toLowerCase().includes('coffee') || targetKeyword.toLowerCase().includes('cafe') ? 'Coffee Shop' :
+      targetKeyword.toLowerCase().includes('clinic') || targetKeyword.toLowerCase().includes('doctor') ? 'Medical Clinic' :
+      'Local Business'
+    );
+
+    const secondaryCats = comp.secondaryCategories || (
+      idx === 0 
+        ? (targetKeyword.toLowerCase().includes('law') || targetKeyword.toLowerCase().includes('attorney')
+            ? ['Trial Attorney', 'Medical Lawyer', 'Insurance Law Firm']
+            : targetKeyword.toLowerCase().includes('coffee') || targetKeyword.toLowerCase().includes('cafe')
+            ? ['Artisan Espresso Bar', 'Breakfast Restaurant', 'Specialty Roastery']
+            : ['Specialty Services', 'Consulting & Training', 'Express Service'])
+        : idx === 1
+        ? (targetKeyword.toLowerCase().includes('law') || targetKeyword.toLowerCase().includes('attorney')
+            ? ['Civil Litigation Attorney', 'Law Firm']
+            : ['Cafe', 'Pastry Shop'])
+        : (targetKeyword.toLowerCase().includes('law') || targetKeyword.toLowerCase().includes('attorney')
+            ? ['Legal Services']
+            : ['Takeout Restaurant'])
+    );
+
+    const missingCats = comp.missingSecondaryCategories || (
+      idx === 0 ? secondaryCats.slice(0, 2) : secondaryCats.slice(0, 1)
+    );
+
     return {
       ...comp,
       winningMoat: moat,
       criticalWeakness: weakness,
       overtakeStrategy: strategy,
       actionCta: '⚡ Execute Overtake Strategy',
-      actionUrl: url
+      actionUrl: url,
+      primaryCategory: primaryCat,
+      secondaryCategories: secondaryCats,
+      missingSecondaryCategories: missingCats
     };
   });
 
@@ -216,6 +250,57 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                         {comp.reviewsCount} reviews
                       </span>
                     </div>
+                  </div>
+
+                  {/* CATEGORY ESPIONAGE: GMB Spy Engine & Category Gap */}
+                  <div className="p-3 bg-gradient-to-br from-indigo-50/80 to-blue-50/50 rounded-xl border border-indigo-100/90 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-extrabold text-indigo-950 flex items-center gap-1.5">
+                        <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                        <span>Competitor Category Spy™</span>
+                      </span>
+                      <span className="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded-full font-bold">
+                        GMB Spy Active
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] space-y-1">
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span className="text-slate-400 text-[10px]">Public Primary:</span>
+                        <span className="font-semibold text-slate-800">{comp.primaryCategory}</span>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-slate-400">Secret Secondary (Hidden by Google):</span>
+                          <span className="text-emerald-700 font-bold">Ranking Multiplier</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {comp.secondaryCategories?.map((cat, cIdx) => (
+                            <span 
+                              key={cIdx} 
+                              className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-white text-indigo-900 border border-indigo-200/90 shadow-2xs flex items-center gap-1"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {comp.missingSecondaryCategories && comp.missingSecondaryCategories.length > 0 && (
+                      <div className="pt-1.5 border-t border-indigo-100 flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-amber-900 font-bold">
+                          ⚠️ {comp.missingSecondaryCategories.length} categories missing from your GBP
+                        </span>
+                        <Link
+                          href={`/copilot?intent=steal_categories&categories=${encodeURIComponent(comp.missingSecondaryCategories.join(','))}&competitor=${encodeURIComponent(comp.name)}`}
+                          className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-bold shadow-2xs transition-colors"
+                        >
+                          ⚡ Steal Category
+                        </Link>
+                      </div>
+                    )}
                   </div>
 
                   {/* SUMMARY VIEW: Their Winning Edge & Vulnerability */}

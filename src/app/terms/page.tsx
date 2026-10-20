@@ -98,21 +98,45 @@ export default function TermsOfServicePage() {
           </ul>
         </section>
 
-        {/* 4. Prohibited Uses */}
+        {/* 4. Acceptable Use & Strict Prohibition of Adult/NSFW Content */}
         <section className="material-card p-6 sm:p-8 bg-white rounded-2xl border border-google-border shadow-sm space-y-4">
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-amber-600" />
-            <span>4. Acceptable Use &amp; Restrictions</span>
+            <ShieldAlert className="w-5 h-5 text-rose-600" />
+            <span>4. Acceptable Use &amp; Strict Prohibition of Sexual, Adult, and NSFW Content</span>
           </h2>
           <p className="text-sm leading-relaxed text-slate-600">
-            You agree NOT to use GBPilot to:
+            GBPilot is designed strictly for legitimate local business discovery and professional reputation management. We enforce zero tolerance for prohibited or abusive content.
           </p>
-          <ul className="list-disc pl-5 text-sm space-y-1.5 text-slate-600">
-            <li>Publish fabricated, incentivized, deceptive, or spam reviews.</li>
-            <li>Create or manage fraudulent, non-existent, or misleading business profiles.</li>
-            <li>Attempt to reverse-engineer, decompile, or bypass rate limits of GBPilot or integrated Google APIs.</li>
-            <li>Violate consumer protection, privacy, or anti-spam regulations in any applicable jurisdiction.</li>
-          </ul>
+          
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-xl space-y-2 text-xs text-rose-950">
+            <h3 className="font-extrabold text-sm text-rose-900 uppercase tracking-wide">
+              Strict Prohibition of Sexual and NSFW Content in AI-Generated Posts &amp; Review Replies
+            </h3>
+            <p className="font-semibold text-rose-900 leading-relaxed">
+              Users are strictly and explicitly prohibited from using GBPilot to generate, request, draft, edit, publish, or distribute any sexual, adult, erotic, or NSFW (Not Safe For Work) content in AI-generated Google Posts, AI review replies, customer communications, or profile updates.
+            </p>
+            <ul className="list-disc pl-4 space-y-1 text-rose-900">
+              <li><strong>Sexual or NSFW Content:</strong> Any sexually explicit, pornographic, suggestive, or adult-themed text or imagery is strictly prohibited in all AI post and review generation tools.</li>
+              <li><strong>Adult &amp; Escort Services:</strong> Promotion of adult entertainment, escort agencies, massage parlors of an illicit nature, or sexually oriented businesses is barred from AI generation features.</li>
+              <li><strong>Automated AI Guardrails:</strong> All AI post generation and AI review-reply workflows are continuously monitored by automated Google Gemini Safety Moderation filters that actively block sexual and NSFW prompts before processing.</li>
+              <li><strong>Zero-Tolerance Enforcement:</strong> Violation will result in immediate termination of account access, revocation of API tokens, and permanent ban with zero refund.</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2 text-xs text-slate-600">
+            <h3 className="font-bold text-slate-900 text-sm">Automated AI Content Moderation &amp; Enforcement</h3>
+            <p className="leading-relaxed">
+              All AI content generation features (including Google Business Posts, owner review replies, and business description optimization) are strictly governed by automated safety filters powered by Google Gemini Content Safety APIs. These filters operate in real-time with threshold settings configured to block:
+            </p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li><strong>Sexually Explicit &amp; Adult Content:</strong> Automatically rejected before generation or transmission.</li>
+              <li><strong>Hate Speech &amp; Harassment:</strong> Evaluated and flagged to prevent abusive customer correspondence.</li>
+              <li><strong>Dangerous &amp; Illicit Content:</strong> Filtered at the API level.</li>
+            </ul>
+            <p className="leading-relaxed">
+              Any attempt to circumvent automated content filters or prompt NSFW/sexual generation will trigger immediate, permanent account termination and forfeiture of active subscription access without refund.
+            </p>
+          </div>
         </section>
 
         {/* 5. User Content & Data Ownership */}

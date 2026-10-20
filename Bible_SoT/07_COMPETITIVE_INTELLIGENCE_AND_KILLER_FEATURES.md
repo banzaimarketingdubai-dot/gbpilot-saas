@@ -108,3 +108,20 @@ This document presents a competitive teardown of the existing market leaders, di
   * Traditional Online Reputation Management (ORM) agencies charge **$300 to $1,000 per removed review**.
   * Offering **1 Free Review Takedown (Снос 1 отзыва бесплатно)** acts as the highest-converting top-of-funnel Trojan hook in the SaaS, converting desperate business owners into loyal Pro subscribers.
 
+---
+
+### Killer Feature 8: Competitor Category Spy™ & Click Stealer (Алгоритмический Перехват Кликов)
+* **The Problem & Algorithmic Reality:**
+  * Primary and Secondary Categories are the **#1 algorithmic ranking factor in Google Maps** (Whitespark & Sterling Sky research).
+  * Google Maps deliberately conceals secondary categories in its standard consumer interface (showing only the primary category). For example, a top-ranking competitor appears simply as *"Personal Injury Attorney"*, while invisibly ranking for hundreds of lucrative high-ticket queries because they secretly configured *"Trial Attorney"*, *"Medical Lawyer"*, and *"Insurance Law"* as secondary categories.
+  * Until now, discovering these required installing third-party Chrome extensions (e.g. GMB Spy), manually parsing raw page source JSON code, and tediously editing Google Business dashboards by hand. 98% of local business owners never do this and permanently lose 50–70% of potential search impressions.
+* **The GBPilot Solution (100% Automated Espionage & 1-Click Mutation):**
+  1. **Built-in GMB Spy Engine:** No Chrome extensions needed. When scanning the local Geo-Grid, GBPilot's backend interrogates Google Places API and Google Maps data blobs to unpack the complete category taxonomy of all Top 3 to Top 10 rival listings in the catchment area.
+  2. **Category Gap Matrix:** Identifies the exact high-value secondary categories that top rivals are using to siphon off local clicks and calls.
+  3. **1-Click Click Stealer™:** Renders an instant action card in the Copilot: *«Competitor #1 Dietrich Law added 'Trial Attorney' and 'Medical Lawyer' (+34% searches). [⚡ Steal Secondary Categories in 1-Click]»*. Clicking the button immediately mutates the user's live profile via Google Business API (`locations.patch` with `updateMask=categories`).
+  4. **Semantic Review Prompt Injection:** Automatically instructs customer review outreach templates and AI review response drafts to incorporate those exact category entities and local LSI terms, triggering Google's algorithmic "Mentions: [category]" justification badges.
+* **Conversion & Positioning Power:**
+  * Positions GBPilot not merely as a passive auditor, but as an aggressive **offensive weapon** (*«How to legally steal your competitor's clicks in 1-click»*).
+  * Converts cold audit prospects at extreme rates by exposing the exact hidden categories responsible for their lost revenue.
+
+

@@ -22,6 +22,7 @@ export const PLANS: Record<PlanId, PlanDetails> = {
       'Diagnostic Health Score',
       'Free Manual Copy-Paste',
       '1 Free Legal Takedown Dossier',
+      'Competitor Hidden Category Teaser (1 Rival)',
       'Community Support'
     ]
   },
@@ -50,6 +51,7 @@ export const PLANS: Record<PlanId, PlanDetails> = {
       '1 Location Connected',
       '24/7 Digital Insurance & Profile Guard',
       '1-Click Optimization Apply',
+      'Competitor Category Spy (Top-1 Rival Gap)',
       'Smart Review Auto-Drafts (UAE Law 34/2021)',
       'Peak Traffic & Dynamic Hours Presets'
     ]
@@ -64,6 +66,7 @@ export const PLANS: Record<PlanId, PlanDetails> = {
     features: [
       'Up to 3 Locations Connected',
       'Everything in Starter',
+      'Competitor Category Spy™ & 1-Click Click Stealer (All Top 3 Rivals)',
       'Geo-Grid 5x5 Rank Tracking',
       'AI LLM Share-of-Voice (ChatGPT / Gemini)',
       'Unlimited Review Takedown™ Dossiers',
@@ -80,6 +83,7 @@ export const PLANS: Record<PlanId, PlanDetails> = {
     features: [
       'Up to 10 Locations Connected',
       'Everything in Growth / Pro',
+      'Bulk Multi-Location Category Espionage Matrix',
       'White-Label PDF & WhatsApp Audit Reports',
       'Multi-Account Fast Switcher',
       'Dedicated Dubai SEO Strategist via WhatsApp'

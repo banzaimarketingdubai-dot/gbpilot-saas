@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
             <MapPin className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-bold text-google-text-primary text-sm">GBPilot</span>
-          <span>© 2026 SHER DIGITAL CORE. All rights reserved.</span>
+          <span>© 2026 SHER DIGITAL CORE. All rights reserved. Support: <a href="mailto:support@gbpilot.top" className="text-google-blue font-semibold hover:underline">support@gbpilot.top</a></span>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">

@@ -168,12 +168,12 @@ export default function B2BLandingPage() {
       statLabel: "Without Active Sentinel Guard"
     },
     {
-      badge: "⚡ Conversion Velocity Opportunity",
+      badge: "⚡ Continuous Visibility Alignment",
       badgeColor: "bg-google-blue-light text-google-blue border-google-blue/20",
-      title: "1-Click AI Autopilot Recovers +34% Maps Views in 7 Days",
+      title: "1-Click AI Alignment Maximizes Google Maps Visibility",
       description: "GBPilot analyzes 3x3 spatial rank heatmaps every 6 hours and delivers exact, pre-formatted Next Best Actions that you execute in a single click.",
-      stat: "+34%",
-      statLabel: "Average Maps View Increase"
+      stat: "24/7",
+      statLabel: "Continuous Rank Surveillance"
     }
   ];
 
@@ -197,6 +197,10 @@ export default function B2BLandingPage() {
   const [openFaq, setOpenFaq] = useState(0 as number | null);
 
   const faqs = [
+    {
+      q: "How does Competitor Category Spy™ work and is it legal?",
+      a: "100% legal and official. Google deliberately conceals secondary categories in its standard Maps interface, but transmits them in the background data payload. GBPilot automatically decodes rival categories across your neighborhood, detects high-volume category gaps, and lets you adopt them via Google's official API in a single click."
+    },
     {
       q: "How does GBPilot increase my Google Maps rank without manual work?",
       a: "GBPilot acts as your 24/7 Autonomous Local SEO Manager. It continuously monitors your 3x3 Geo-Grid spatial heatmaps, tracks competitor category changes, and generates daily 1-Click optimization actions (secondary categories, GEO-targeted Google Posts, and AI review replies)."
@@ -290,7 +294,7 @@ export default function B2BLandingPage() {
                   <span className="font-bold text-google-text-primary">4.9/5 Rating</span>
                 </div>
                 <span>•</span>
-                <span>📍 <strong>12,400+</strong> Business Profiles Managed</span>
+                <span>📍 <strong>Enterprise-Grade</strong> Multi-Location Architecture</span>
                 <span>•</span>
                 <span className="text-google-green font-bold flex items-center gap-1">
                   <Zap className="w-3.5 h-3.5 fill-google-green" /> 1-Click Execution
@@ -330,7 +334,7 @@ export default function B2BLandingPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-google-text-secondary">
-                      Automated 24/7 category optimization increased Maps search views by +34% this week.
+                      Automated 24/7 category optimization actively aligns your profile with peak local search intent.
                     </p>
                   </div>
                 </div>
@@ -490,6 +494,77 @@ export default function B2BLandingPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 3: Competitor Category Spy™ & Click Stealer */}
+            <div className="material-card bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 overflow-hidden relative group border border-slate-800">
+              <div className="absolute top-0 right-0 p-6 opacity-15">
+                <Flame className="w-32 h-32 text-amber-400" />
+              </div>
+              <div className="relative z-10 space-y-4">
+                <div className="p-2 bg-amber-500/20 rounded-xl inline-block backdrop-blur-md border border-amber-400/30">
+                  <Flame className="w-6 h-6 text-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold">Competitor Category Spy™</h3>
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">
+                      Killer Feature
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-200/90 font-semibold">1-Click Algorithmic Click Stealer</p>
+                </div>
+                <p className="text-sm text-slate-300">
+                  Categories are the #1 ranking factor in Google Maps, but Google hides secondary categories from the public view. GBPilot automatically decodes the hidden categories your top 3 rivals use to siphon your calls—and imports them to your profile in 1 click.
+                </p>
+                
+                {/* Visual Category Gap Mockup */}
+                <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/10 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 font-medium">Top Competitor Hidden Categories:</span>
+                    <span className="text-amber-400 font-bold text-[11px]">+38% Search Volume</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="text-[11px] px-2 py-1 bg-white/10 rounded-md text-slate-300 line-through opacity-70">Personal Injury Attorney</span>
+                    <span className="text-[11px] px-2 py-1 bg-amber-500/30 border border-amber-400/40 rounded-md text-amber-200 font-bold">★ Trial Attorney (Secret)</span>
+                    <span className="text-[11px] px-2 py-1 bg-amber-500/30 border border-amber-400/40 rounded-md text-amber-200 font-bold">★ Medical Lawyer (Secret)</span>
+                  </div>
+                  <div className="pt-1 flex items-center justify-between text-[11px]">
+                    <span className="text-emerald-400 font-semibold">Missing from your GBP: 2 categories</span>
+                    <span className="px-2.5 py-1 bg-google-blue text-white font-bold rounded-lg text-[10px] shadow-xs">⚡ 1-Click Steal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 4: 24/7 Profile Sentinel Guard */}
+            <div className="material-card bg-white p-6 sm:p-8 border border-google-border overflow-hidden relative">
+              <div className="relative z-10 space-y-4">
+                <div className="p-2 bg-rose-50 rounded-xl inline-block border border-rose-200">
+                  <ShieldCheck className="w-6 h-6 text-rose-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xl font-bold text-google-text-primary">24/7 Sentinel Guard (Anti-Sabotage)</h3>
+                  <p className="text-xs text-rose-700 font-semibold">5-Minute Cryptographic Auto-Revert</p>
+                </div>
+                <p className="text-sm text-google-text-secondary">
+                  Anyone on Google Maps can click "Suggest an edit" to hijack your phone number or mark you as "Temporarily Closed" on busy weekends. Sentinel Guard takes a cryptographic snapshot and auto-reverts rogue edits within 5 minutes.
+                </p>
+                
+                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-rose-700 flex items-center gap-1.5">
+                      <ShieldAlert className="w-3.5 h-3.5" /> Unauthorized Edit Detected
+                    </span>
+                    <span className="text-[10px] text-slate-400">2 min ago</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">Rival suggested phone change: +971 4 000 0000</p>
+                  <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-[11px] text-emerald-800 font-bold">
+                    <span>✓ Auto-Reverted to Official Number</span>
+                    <span className="text-[10px] bg-emerald-100 px-2 py-0.5 rounded text-emerald-900">Protected</span>
                   </div>
                 </div>
               </div>
@@ -731,7 +806,7 @@ export default function B2BLandingPage() {
                   WITH GBPILOT (IDEAL FUTURE)
                 </span>
                 <span className="text-xs text-google-green font-bold bg-google-green-light px-2.5 py-0.5 rounded">
-                  +34% Traffic Growth
+                  Optimized Maps Presence
                 </span>
               </div>
 
@@ -945,13 +1020,30 @@ export default function B2BLandingPage() {
 
                 <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-slate-300 block text-[11px]">GBPilot Plan ROI:</span>
-                    <strong className="text-emerald-400 font-black text-base">{calcResults.roiMultiple}x ROI</strong>
+                    <span className="text-slate-300 block text-[11px]">PPC Cost-Equivalence Multiple:</span>
+                    <strong className="text-emerald-400 font-black text-base">{calcResults.roiMultiple}x Ad Value Ratio</strong>
                   </div>
                   <div className="text-right">
                     <span className="text-slate-300 block text-[11px]">Plan Investment:</span>
                     <span className="text-white font-bold">{currency === 'AED' ? 'AED 249/mo' : '$69/mo'}</span>
                   </div>
+                </div>
+
+                {/* Calculation Methodology & Legal Disclaimer (Creem Compliance Requirement) */}
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10 text-[10px] text-slate-300 space-y-1.5 leading-relaxed">
+                  <div className="font-bold text-white flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>How This PPC Equivalence Value is Calculated:</span>
+                  </div>
+                  <p>
+                    <strong>Formula:</strong> (Monthly Calls × Industry Cost-Per-Lead) + (Site Clicks × Conversion Rate × Industry Cost-Per-Lead).
+                  </p>
+                  <p>
+                    <strong>Benchmark Source:</strong> Industry average CPC benchmarks derived from published Google Ads local performance data (WordStream/LocaliQ benchmarks).
+                  </p>
+                  <p className="text-slate-400 italic">
+                    * Disclaimer: This calculator models the commercial pay-per-click advertising cost to acquire an equivalent volume of leads through paid Google Ads. It is an illustrative budgeting model, not a guarantee of financial return or business profit. Individual results vary based on local competition, seasonality, and local service demand.
+                  </p>
                 </div>
 
                 <a
@@ -1116,6 +1208,10 @@ export default function B2BLandingPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span><strong>Competitor Category Spy</strong> (Top-1 Rival Gap)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span>24/7 Digital Insurance &amp; Sentinel Guard</span>
                   </li>
                   <li className="flex items-start gap-2">
@@ -1170,6 +1266,14 @@ export default function B2BLandingPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Competitor Category Spy™</strong> (All Top 3 Rivals)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>1-Click Click Stealer™</strong> &amp; Review Keyword Prompts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <span>Geo-Grid 5x5 Rank Matrix</span>
                   </li>
                   <li className="flex items-start gap-2">
@@ -1221,6 +1325,10 @@ export default function B2BLandingPage() {
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
                     <span><strong>Up to 10 Locations Connected</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span><strong>Bulk Multi-Location Category Espionage</strong> Matrix</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
@@ -1281,82 +1389,71 @@ export default function B2BLandingPage() {
       </section>
 
       {/* ======================================================== */}
-      {/* SOCIAL PROOF & CASE STUDIES */}
+      {/* ENTERPRISE ARCHITECTURE & COMPLIANCE (VERIFIED CAPABILITIES) */}
       {/* ======================================================== */}
       <section className="py-16 bg-white border-b border-google-border">
         <div className="max-w-6xl mx-auto px-4 lg:px-8 space-y-12">
           
+          {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-bold text-google-blue bg-google-blue-light px-3 py-1 rounded-full uppercase tracking-wider">
-              PROVEN CASE STUDIES
+              ENTERPRISE-GRADE CAPABILITIES
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-google-text-primary">
-              Trusted by 12,400+ Local Businesses & Agencies
+              Engineered for Scalable Local Growth &amp; Security
             </h2>
+            <p className="text-xs text-google-text-secondary max-w-xl mx-auto leading-relaxed">
+              Built on official Google Business APIs, automated safety moderation, and autonomous spatial Geo-Grid intelligence.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             
-            {/* Testimonial 1 */}
-            <div className="material-card p-6 bg-google-bg border border-google-border space-y-4">
-              <div className="flex text-google-yellow">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-google-yellow text-google-yellow" />
-                ))}
+            {/* Pillar 1: Direct Google API Integration */}
+            <div className="material-card p-6 bg-google-bg border border-google-border space-y-4 rounded-2xl">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 text-google-blue flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-google-blue" />
               </div>
-              <p className="text-xs text-google-text-primary italic leading-relaxed">
-                "GBPilot identified that our top competitor added 'Espresso Bar' as a secondary category. We injected it in 1-Click, and our weekend foot traffic jumped +28% in under 10 days."
-              </p>
-              <div className="pt-2 border-t border-google-border-light flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-google-blue text-white font-bold text-xs flex items-center justify-center">
-                  MS
-                </div>
-                <div>
-                  <strong className="text-xs text-google-text-primary block">Marcus S.</strong>
-                  <span className="text-[11px] text-google-text-secondary">Owner, Manhattan Specialty Cafe</span>
-                </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-google-text-primary">Official Google API Integration</h3>
+                <p className="text-xs text-google-text-secondary leading-relaxed">
+                  All category alignments, Google Posts, and operating hour changes execute directly through Google&apos;s official Business Information API without manual data-entry friction.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-google-border-light text-[11px] text-google-text-tertiary">
+                OAuth 2.0 &amp; Google Cloud Platform Verified
               </div>
             </div>
 
-            {/* Testimonial 2 */}
-            <div className="material-card p-6 bg-google-bg border border-google-border space-y-4">
-              <div className="flex text-google-yellow">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-google-yellow text-google-yellow" />
-                ))}
+            {/* Pillar 2: 24/7 Cryptographic Sentinel Guard */}
+            <div className="material-card p-6 bg-google-bg border border-google-border space-y-4 rounded-2xl">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
               </div>
-              <p className="text-xs text-google-text-primary italic leading-relaxed">
-                "Profile Guard saved our business! A rival suggested an edit changing our listed closing hours to 5 PM on Fridays. Profile Guard flagged it instantly and prevented lost weekend calls."
-              </p>
-              <div className="pt-2 border-t border-google-border-light flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-google-green text-white font-bold text-xs flex items-center justify-center">
-                  EL
-                </div>
-                <div>
-                  <strong className="text-xs text-google-text-primary block">Elena L.</strong>
-                  <span className="text-[11px] text-google-text-secondary">Manager, Sector 4 Dental Clinic</span>
-                </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-google-text-primary">24/7 Sentinel Profile Protection</h3>
+                <p className="text-xs text-google-text-secondary leading-relaxed">
+                  Maintains an authoritative baseline snapshot of verified listing attributes. Automatically detects third-party suggested edits and reverts phone or hours tampering within minutes.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-google-border-light text-[11px] text-google-text-tertiary">
+                Continuous Cryptographic Integrity Monitoring
               </div>
             </div>
 
-            {/* Testimonial 3 */}
-            <div className="material-card p-6 bg-google-bg border border-google-border space-y-4">
-              <div className="flex text-google-yellow">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-google-yellow text-google-yellow" />
-                ))}
+            {/* Pillar 3: Multi-Location Agency Scalability */}
+            <div className="material-card p-6 bg-google-bg border border-google-border space-y-4 rounded-2xl">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                <Layers className="w-5 h-5 text-purple-600" />
               </div>
-              <p className="text-xs text-google-text-primary italic leading-relaxed">
-                "As an agency managing 45 local profiles, GBPilot’s daily Next Best Actions and 1-Click execution saved our account managers 20+ hours every single week."
-              </p>
-              <div className="pt-2 border-t border-google-border-light flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center">
-                  DK
-                </div>
-                <div>
-                  <strong className="text-xs text-google-text-primary block">David K.</strong>
-                  <span className="text-[11px] text-google-text-secondary">Founder, Local Reach Agency</span>
-                </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-sm text-google-text-primary">Multi-Location Control Center</h3>
+                <p className="text-xs text-google-text-secondary leading-relaxed">
+                  Manage independent single-location venues or multi-branch franchise networks with unified spatial Geo-Grid tracking, centralized team permissions, and automated action execution.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-google-border-light text-[11px] text-google-text-tertiary">
+                Scalable from 1 to 10+ Connected Locations
               </div>
             </div>
 
