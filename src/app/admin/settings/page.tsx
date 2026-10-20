@@ -83,11 +83,11 @@ export default function AdminSettingsPage() {
                   </span>
                 </div>
                 <code className="text-slate-400 font-mono text-[11px] mt-1 block">
-                  prod_3bo51T7BdP37akU189a4H8
+                  prod_279fuhC5FSVX9DR6MLSuU4
                 </code>
               </div>
               <button
-                onClick={() => copyToClipboard('prod_3bo51T7BdP37akU189a4H8', 'pro_id')}
+                onClick={() => copyToClipboard('prod_279fuhC5FSVX9DR6MLSuU4', 'pro_id')}
                 className="p-1.5 text-slate-400 hover:text-white"
               >
                 {copiedKey === 'pro_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}

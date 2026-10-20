@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       meta: {
         products: {
           starter: process.env.NEXT_PUBLIC_CREEM_PRODUCT_STARTER || null,
-          pro: process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_3bo51T7BdP37akU189a4H8',
+          pro: process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4',
           agency: process.env.NEXT_PUBLIC_CREEM_PRODUCT_AGENCY || null,
         },
         timestamp: new Date().toISOString(),

@@ -173,21 +173,21 @@ export default function AdminFinancePage() {
                   </span>
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Product ID: <code className="text-slate-300 font-mono text-[11px]">prod_3bo51T7BdP37akU189a4H8</code>
+                  Product ID: <code className="text-slate-300 font-mono text-[11px]">prod_279fuhC5FSVX9DR6MLSuU4</code>
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">$69.00 / month • Full Autopilot & Sentinel Shield</div>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => copyToClipboard('prod_3bo51T7BdP37akU189a4H8', 'pro_id')}
+                  onClick={() => copyToClipboard('prod_279fuhC5FSVX9DR6MLSuU4', 'pro_id')}
                   className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-1"
                 >
                   {copiedKey === 'pro_id' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>Copy ID</span>
                 </button>
                 <a
-                  href="https://www.creem.io/test/payment/prod_3bo51T7BdP37akU189a4H8"
+                  href="https://www.creem.io/payment/prod_279fuhC5FSVX9DR6MLSuU4"
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white flex items-center gap-1 shadow-sm"

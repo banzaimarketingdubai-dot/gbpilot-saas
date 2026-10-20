@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     if (planId === 'STARTER') {
       productId = process.env.NEXT_PUBLIC_CREEM_PRODUCT_STARTER || process.env.CREEM_PRODUCT_STARTER || '';
     } else if (planId === 'PRO_GROWTH') {
-      productId = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || process.env.CREEM_PRODUCT_PRO || 'prod_3bo51T7BdP37akU189a4H8';
+      productId = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || process.env.CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
     } else if (planId === 'AGENCY') {
       productId = process.env.NEXT_PUBLIC_CREEM_PRODUCT_AGENCY || process.env.CREEM_PRODUCT_AGENCY || '';
     }

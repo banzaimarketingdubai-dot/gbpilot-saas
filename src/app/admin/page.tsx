@@ -339,12 +339,12 @@ export default function AdminOverviewPage() {
                   Complete a checkout using the Creem test link or test card to view live transaction events here.
                 </p>
                 <a
-                  href="https://www.creem.io/test/payment/prod_3bo51T7BdP37akU189a4H8"
+                  href="https://www.creem.io/payment/prod_279fuhC5FSVX9DR6MLSuU4"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 pt-1"
                 >
-                  <span>Open Test Checkout</span>
+                  <span>Open Checkout</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
