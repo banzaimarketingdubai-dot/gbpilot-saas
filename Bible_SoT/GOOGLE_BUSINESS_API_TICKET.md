@@ -14,7 +14,7 @@
 | **Имя проекта в Google Cloud** | `GbPilot` |
 | **Подтвержденный бизнес-профиль** | **Кафе СВОИ (Cafe SVOI)** (ID: `15286059258947661772`) |
 | **Физический адрес** | `58 Cao Van Be, Nha Trang 650000, Khanh Hoa, Vietnam` |
-| **Официальный сайт заведения (Новый)** | **`https://www.gbpilot.top/svoi`** *(или `https://svoi.gbpilot.top`)* |
+| **Официальный сайт заведения (Новый)** | **`https://svoi.gbpilot.top`** |
 
 ---
 
@@ -49,7 +49,7 @@
 | **Company / Business Name** | `Кафе СВОИ` *(или `Cafe SVOI`)* |
 | **Business Profile ID** | `15286059258947661772` |
 | **Address** | `58 Cao Van Be, Nha Trang 650000, Vietnam` |
-| **Company Website URL** | `https://www.gbpilot.top/svoi` *(или `https://svoi.gbpilot.top` — в точности как в карточке GBP)* |
+| **Company Website URL** | `https://svoi.gbpilot.top` |
 | **Verified for 60+ days?** | `Yes` |
 | **Active, allowlisted project previously?** | `No` |
 | **How did you hear about this API form?** | `Google for Developers documentation` |

@@ -441,9 +441,9 @@ export default function SvoiCafeLanding() {
             '@type': ['CafeOrCoffeeShop', 'Restaurant'],
             name: 'Кафе СВОИ | Cafe SVOI Nha Trang',
             alternateName: 'SVOI Cafe',
-            image: 'https://www.gbpilot.top/images/svoi/post_tea.png',
+            image: 'https://svoi.gbpilot.top/images/svoi/post_tea.png',
             telephone: '+84 90 000 0000',
-            url: 'https://www.gbpilot.top/svoi',
+            url: 'https://svoi.gbpilot.top',
             address: {
               '@type': 'PostalAddress',
               streetAddress: '58 Cao Văn Bé',
@@ -498,7 +498,7 @@ export default function SvoiCafeLanding() {
       <header className="sticky top-0 z-40 bg-[#FBF9F5]/90 backdrop-blur-md border-b border-[#ECE3D8] transition-all">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/svoi" className="group flex items-center gap-3">
+          <Link href="/" className="group flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-[#EFE8DC] border border-[#DDD3C4] flex items-center justify-center text-[#2C221E] shadow-sm group-hover:bg-[#EAE1D3] transition-colors">
               <span className="font-serif font-black text-lg tracking-wider">СВ</span>
             </div>
