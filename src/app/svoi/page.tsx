@@ -24,7 +24,8 @@ import {
   Compass,
   ArrowUpRight,
   X,
-  Share2
+  Share2,
+  ShoppingBag
 } from 'lucide-react';
 
 type Language = 'ru' | 'en';
@@ -110,7 +111,13 @@ export default function SvoiCafeLanding() {
       footerNote: 'Официальный сайт Кафе «СВОИ» (Cafe SVOI Nha Trang). Подтвержденный профиль Google Карты.',
       rights: 'Все права защищены.',
       openInMaps: 'Открыть в приложении Google Карты',
-      closeModal: 'Закрыть'
+      closeModal: 'Закрыть',
+      orderFood: 'Заказать еду',
+      orderOnline: 'Заказ онлайн',
+      orderDelivery: 'Доставка еды',
+      orderBannerTitle: 'Доставка любимых блюд прямо к вам',
+      orderBannerSubtitle: 'Фермерские сырники, сочные пельмени ручной лепки, домашний борщ, свежая выпечка и кофе с быстрой доставкой по Нячангу через REVOO.',
+      orderBannerCta: 'Заказать онлайн в REVOO',
     },
     en: {
       navAbout: 'About Us',
@@ -175,7 +182,13 @@ export default function SvoiCafeLanding() {
       footerNote: 'Official website of SVOI Cafe (Cafe SVOI Nha Trang). Verified Google Business Profile listing.',
       rights: 'All rights reserved.',
       openInMaps: 'Open in Google Maps App',
-      closeModal: 'Close'
+      closeModal: 'Close',
+      orderFood: 'Order Food',
+      orderOnline: 'Order Online',
+      orderDelivery: 'Food Delivery',
+      orderBannerTitle: 'Get Your Favorite Dishes Delivered',
+      orderBannerSubtitle: 'Farm cottage cheese syrniki, juicy handmade dumplings, homemade soups, fresh pastries and specialty coffee delivered fast in Nha Trang via REVOO.',
+      orderBannerCta: 'Order Online via REVOO',
     }
   };
 
@@ -551,12 +564,23 @@ export default function SvoiCafeLanding() {
               </button>
             </div>
 
+            {/* Order Food CTA Button */}
+            <a
+              href="https://revoo.win/?v=deCg3Rq1oTawHoOImnoj&source=google_maps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full bg-[#B8684A] text-white text-xs font-semibold hover:bg-[#A3593D] transition-all shadow-sm hover:shadow"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>{current.orderOnline}</span>
+            </a>
+
             {/* Directions Button */}
             <a
               href="https://maps.google.com/?q=58+Cao+Van+Be,+Nha+Trang,+Vietnam"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#2C221E] text-[#FBF9F5] text-xs font-semibold hover:bg-[#43342D] transition-colors shadow-sm"
+              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#2C221E] text-[#FBF9F5] text-xs font-semibold hover:bg-[#43342D] transition-colors shadow-sm"
             >
               <Compass className="w-3.5 h-3.5" />
               <span>{current.navRoute}</span>
@@ -604,21 +628,31 @@ export default function SvoiCafeLanding() {
               </div>
 
               {/* CTAs */}
-              <div className="flex flex-wrap items-center gap-4 pt-3">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-3">
                 <a
-                  href="https://maps.google.com/?q=58+Cao+Van+Be,+Nha+Trang,+Vietnam"
+                  href="https://revoo.win/?v=deCg3Rq1oTawHoOImnoj&source=google_maps"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#2C221E] text-white text-sm font-medium hover:bg-[#43342D] transition-all shadow-md hover:shadow-lg"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#B8684A] text-white text-sm font-semibold hover:bg-[#A3593D] transition-all shadow-md hover:shadow-lg"
                 >
-                  <MapPin className="w-4 h-4 text-[#EAE1D3]" />
-                  <span>{current.ctaDirections}</span>
+                  <ShoppingBag className="w-4 h-4 text-[#FBF9F5]" />
+                  <span>{current.orderFood}</span>
                   <ArrowUpRight className="w-4 h-4 opacity-80" />
                 </a>
 
                 <a
+                  href="https://maps.google.com/?q=58+Cao+Van+Be,+Nha+Trang,+Vietnam"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#2C221E] text-white text-sm font-medium hover:bg-[#43342D] transition-all shadow-md hover:shadow-lg"
+                >
+                  <MapPin className="w-4 h-4 text-[#EAE1D3]" />
+                  <span>{current.ctaDirections}</span>
+                </a>
+
+                <a
                   href="#menu"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white border border-[#DCD1C2] text-[#2C221E] text-sm font-medium hover:bg-[#F5EFEB] transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-full bg-white border border-[#DCD1C2] text-[#2C221E] text-sm font-medium hover:bg-[#F5EFEB] transition-colors"
                 >
                   <Utensils className="w-4 h-4 text-[#B8684A]" />
                   <span>{current.ctaMenu}</span>
@@ -836,6 +870,32 @@ export default function SvoiCafeLanding() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Online Delivery CTA Banner */}
+          <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-[#F5EFEB] border border-[#E3DACD] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
+            <div className="space-y-1.5 text-center md:text-left">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#B8684A]">
+                <ShoppingBag className="w-4 h-4" />
+                <span>{lang === 'ru' ? 'Онлайн-заказ & Доставка' : 'Online Order & Delivery'}</span>
+              </div>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2C221E]">
+                {current.orderBannerTitle}
+              </h3>
+              <p className="text-xs sm:text-sm text-[#5F554E] max-w-xl leading-relaxed">
+                {current.orderBannerSubtitle}
+              </p>
+            </div>
+            <a
+              href="https://revoo.win/?v=deCg3Rq1oTawHoOImnoj&source=google_maps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 sm:px-7 py-3.5 rounded-full bg-[#B8684A] text-white text-xs sm:text-sm font-bold hover:bg-[#A3593D] transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>{current.orderBannerCta}</span>
+              <ArrowUpRight className="w-4 h-4 opacity-80" />
+            </a>
           </div>
 
           {/* Menu footer hint */}
@@ -1252,6 +1312,18 @@ export default function SvoiCafeLanding() {
                     @svoi_nhatrang
                   </a>
                 </p>
+                <p className="flex items-center gap-2 pt-1">
+                  <ShoppingBag className="w-3.5 h-3.5 text-[#B8684A]" />
+                  <a
+                    href="https://revoo.win/?v=deCg3Rq1oTawHoOImnoj&source=google_maps"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#EAE1D3] font-semibold hover:text-white underline underline-offset-2 transition-colors flex items-center gap-1"
+                  >
+                    <span>{current.orderFood} (REVOO)</span>
+                    <ArrowUpRight className="w-3 h-3" />
+                  </a>
+                </p>
               </div>
             </div>
           </div>
@@ -1263,6 +1335,20 @@ export default function SvoiCafeLanding() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Quick Order Pill */}
+      <div className="fixed bottom-5 right-5 z-40 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <a
+          href="https://revoo.win/?v=deCg3Rq1oTawHoOImnoj&source=google_maps"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full bg-[#B8684A] text-white shadow-xl hover:shadow-2xl hover:bg-[#A3593D] transition-all transform hover:-translate-y-0.5 border border-[#C97B5D]"
+        >
+          <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
+          <span className="text-xs sm:text-sm font-bold tracking-wide">{current.orderFood}</span>
+          <ArrowUpRight className="w-3.5 h-3.5 opacity-80" />
+        </a>
+      </div>
     </div>
   );
 }
