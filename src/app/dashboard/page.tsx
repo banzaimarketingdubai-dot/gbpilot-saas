@@ -1107,9 +1107,13 @@ export default function DashboardCockpitPage() {
             {/* ======================================================== */}
             <div id="social-sync-hub">
               <SocialSyncHub
-                venueName={activeProfile?.name || 'Cafe Svoi'}
-                category={activeProfile?.category || 'Coffee Shop & Bakery'}
-                city={activeProfile?.city || 'Dubai'}
+                key={String(activeProfile?.id || 'none')}
+                profileId={String(activeProfile?.id || '')}
+                venueName={activeProfile?.name || 'Your Business'}
+                category={activeProfile?.category || 'Local Business'}
+                city={activeProfile?.city || ''}
+                website={activeProfile?.website || activeProfile?.website_url || ''}
+                phone={activeProfile?.phone || ''}
                 isPro={isProUser}
                 planId={subscription?.planId || 'FREE_SCOUT'}
                 onUpgradeClick={() => {

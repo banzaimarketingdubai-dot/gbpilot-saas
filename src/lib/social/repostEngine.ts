@@ -140,7 +140,7 @@ export function adaptSocialPostForGbp(
   // 2. Determine Local SEO Geo Anchor
   const locationTag = context.neighborhood
     ? `${context.neighborhood}, ${context.city}`
-    : context.city || 'Dubai';
+    : context.city || '';
 
   geoKeywords.push(context.businessName);
   geoKeywords.push(locationTag);
@@ -151,11 +151,11 @@ export function adaptSocialPostForGbp(
   // 3. Synthesize Google Maps Local Post Copy
   let summary = cleaned;
   if (!summary || summary.length < 20) {
-    summary = `Welcome to ${context.businessName}! Visit our location in ${locationTag} for fresh handcrafted selections, warm hospitality, and unforgettable experiences.`;
+    summary = `Welcome to ${context.businessName}! Visit us${locationTag ? ` in ${locationTag}` : ''} for fresh handcrafted selections, warm hospitality, and unforgettable experiences.`;
     modifications.push('Expanded short caption with local discovery anchor');
   } else {
     // Add local grounding header or footer if missing
-    if (!summary.toLowerCase().includes(context.city.toLowerCase())) {
+    if (locationTag && !summary.toLowerCase().includes(context.city.toLowerCase())) {
       summary = `${summary}\n\n📍 Visit us at ${context.businessName} (${locationTag}).`;
       modifications.push(`Injected local geographical anchor: "${locationTag}"`);
     }
