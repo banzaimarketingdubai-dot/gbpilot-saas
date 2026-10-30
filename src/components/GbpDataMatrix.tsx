@@ -58,13 +58,13 @@ interface GbpDataMatrixProps {
 }
 
 export function GbpDataMatrix({
-  venueName = 'Your Business Location',
-  category = 'Local Business',
-  address = 'Verified Storefront Address',
-  phone = '+84 •••••••••',
-  website = 'https://••••••••',
-  rating = 5.0,
-  reviewsCount = 28,
+  venueName = '—',
+  category = '—',
+  address = '—',
+  phone = '',
+  website = '',
+  rating = 0,
+  reviewsCount = 0,
   isPro = false,
   live = null,
   onUpgradeClick
@@ -73,255 +73,218 @@ export function GbpDataMatrix({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
-  const baseParameters: DataParameterItem[] = useMemo(() => [
-    // 1. Identity & Shield
-    {
-      id: 'gov-status',
-      categoryGroup: 'Identity & Shield',
-      paramName: 'Business Status & Operational Flag',
-      apiField: 'openInfo.status',
-      currentValue: 'OPEN (Active)',
-      platformAction: '24/7 monitoring against rogue "Permanently Closed" edits by competitors.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'gov-pending-edits',
-      categoryGroup: 'Identity & Shield',
-      paramName: 'Competitor Rogue Edits Interceptor',
-      apiField: 'metadata.hasPendingEdits',
-      currentValue: isPro ? '0 Pending Threats (Shield Active)' : '2 Unreviewed Google community edits detected',
-      platformAction: 'Instant rollback of unauthorized phone, hours, and name changes before Google publishes them.',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: '24/7 Sentinel Auto-Rollback'
-    },
-    {
-      id: 'gov-vom',
-      categoryGroup: 'Identity & Shield',
-      paramName: 'Voice of Merchant Verification Authority',
-      apiField: 'metadata.hasVoiceOfMerchant',
-      currentValue: 'Verified Primary Owner (Authority Active)',
-      platformAction: 'Guarantees highest weight for edits without manual Google video re-verification.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'gov-review-link',
-      categoryGroup: 'Identity & Shield',
-      paramName: '5-Star Review Generation Gateway',
-      apiField: 'metadata.newReviewUri',
-      currentValue: 'Active Direct 5-Star Intent Link',
-      platformAction: 'Generates tabletop QR codes & WhatsApp review pacing triggers for happy customers.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
+  const baseParameters: DataParameterItem[] = useMemo(() => {
+    const cleanCat = category && category.toLowerCase() !== 'local business' ? category : '—';
+    return [
+      // 1. Identity & Shield
+      {
+        id: 'gov-status',
+        categoryGroup: 'Identity & Shield',
+        paramName: 'Business Status & Operational Flag',
+        apiField: 'openInfo.status',
+        currentValue: '—',
+        platformAction: 'Мониторинг статуса работы в Google Business Profile API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'gov-pending-edits',
+        categoryGroup: 'Identity & Shield',
+        paramName: 'Pending Google Community Edits',
+        apiField: 'metadata.hasPendingEdits',
+        currentValue: '—',
+        platformAction: 'Проверка наличия внешних правок карточки в Google API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'gov-vom',
+        categoryGroup: 'Identity & Shield',
+        paramName: 'Voice of Merchant Verification Authority',
+        apiField: 'metadata.hasVoiceOfMerchant',
+        currentValue: '—',
+        platformAction: 'Статус подтвержденного владельца в Google Business Profile.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'gov-review-link',
+        categoryGroup: 'Identity & Shield',
+        paramName: 'Direct Review Generation URI',
+        apiField: 'metadata.newReviewUri',
+        currentValue: '—',
+        platformAction: 'Прямая ссылка Google для оставления отзыва клиентом.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 2. NAP & Contact
-    {
-      id: 'nap-name',
-      categoryGroup: 'NAP & Contact',
-      paramName: 'Official Business Title (White-Hat NAP)',
-      apiField: 'title',
-      currentValue: venueName,
-      platformAction: 'Monitors keyword density in title to prevent algorithmic Google shadowbans.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'nap-address',
-      categoryGroup: 'NAP & Contact',
-      paramName: 'Storefront Address & Geocoordinates',
-      apiField: 'storefrontAddress & latlng',
-      currentValue: address,
-      platformAction: 'Syncs NAP across 40+ local business directories to fortify Local 3-Pack authority.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'nap-phone',
-      categoryGroup: 'NAP & Contact',
-      paramName: 'Primary & Secondary Phone Numbers',
-      apiField: 'phoneNumbers.primaryPhone',
-      currentValue: phone || 'Unassigned / Needs Lock',
-      platformAction: 'Locks phone number in Google vault to stop competitor diversion forwarding.',
-      status: phone ? 'OPTIMIZED' : 'ACTION_NEEDED',
-      isProOnly: false
-    },
-    {
-      id: 'nap-website',
-      categoryGroup: 'NAP & Contact',
-      paramName: 'Website URI & UTM Tracking Tags',
-      apiField: 'websiteUri',
-      currentValue: website || 'No direct URL connected',
-      platformAction: 'Appends granular UTM campaign parameters to attribute Google Maps calls & bookings.',
-      status: website ? 'OPTIMIZED' : 'ACTION_NEEDED',
-      isProOnly: false
-    },
-    {
-      id: 'nap-description',
-      categoryGroup: 'NAP & Contact',
-      paramName: 'SEO Description & LSI Keyword Anchors',
-      apiField: 'profile.description',
-      currentValue: isPro ? '742/750 chars with 14 local LSI keywords' : 'Short description (Missing neighborhood centroid keywords)',
-      platformAction: 'Gemini AI crafts rich 750-character descriptions anchored to city districts and specialties.',
-      status: isPro ? 'OPTIMIZED' : 'ACTION_NEEDED',
-      isProOnly: true,
-      proFeatureLabel: 'Gemini LSI Copy Generator'
-    },
+      // 2. NAP & Contact
+      {
+        id: 'nap-name',
+        categoryGroup: 'NAP & Contact',
+        paramName: 'Official Business Title',
+        apiField: 'title',
+        currentValue: venueName || '—',
+        platformAction: 'Официальное название компании в Google Maps.',
+        status: venueName && venueName !== '—' ? 'OPTIMIZED' : 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'nap-address',
+        categoryGroup: 'NAP & Contact',
+        paramName: 'Storefront Address & Geocoordinates',
+        apiField: 'storefrontAddress & latlng',
+        currentValue: address || '—',
+        platformAction: 'Физический адрес и координаты точки в Google Maps.',
+        status: address && address !== '—' ? 'OPTIMIZED' : 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'nap-phone',
+        categoryGroup: 'NAP & Contact',
+        paramName: 'Primary Phone Number',
+        apiField: 'phoneNumbers.primaryPhone',
+        currentValue: phone || '—',
+        platformAction: 'Основной контактный телефон в карточке Google Maps.',
+        status: phone ? 'OPTIMIZED' : 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'nap-website',
+        categoryGroup: 'NAP & Contact',
+        paramName: 'Website URI',
+        apiField: 'websiteUri',
+        currentValue: website || '—',
+        platformAction: 'Официальный сайт или ссылка в карточке Google.',
+        status: website ? 'OPTIMIZED' : 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'nap-description',
+        categoryGroup: 'NAP & Contact',
+        paramName: 'Profile Description',
+        apiField: 'profile.description',
+        currentValue: '—',
+        platformAction: 'Описание компании в Google Business Profile (до 750 символов).',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 3. SEO & Categories
-    {
-      id: 'cat-primary',
-      categoryGroup: 'SEO & Categories',
-      paramName: 'Primary Google Category (Rank Multiplier #1)',
-      apiField: 'categories.primaryCategory',
-      currentValue: category,
-      platformAction: 'Audits primary category relevance against top-ranking neighborhood competitors.',
-      status: category.toLowerCase().includes('local business') ? 'CRITICAL_LEAK' : 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'cat-secondary',
-      categoryGroup: 'SEO & Categories',
-      paramName: 'Secondary Niche Sub-Categories (Up to 9)',
-      apiField: 'categories.additionalCategories',
-      currentValue: isPro ? '4 Active High-Intent Sub-Categories' : 'Hidden / Unconfigured (Lost Search Impression Leaks)',
-      platformAction: 'Unlocks competitor secret secondary categories to capture niche intent searches.',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: 'Competitor Category Stealer'
-    },
+      // 3. SEO & Categories
+      {
+        id: 'cat-primary',
+        categoryGroup: 'SEO & Categories',
+        paramName: 'Primary Google Category',
+        apiField: 'categories.primaryCategory',
+        currentValue: cleanCat,
+        platformAction: 'Основная категория бизнеса в Google Maps.',
+        status: cleanCat !== '—' ? 'OPTIMIZED' : 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'cat-secondary',
+        categoryGroup: 'SEO & Categories',
+        paramName: 'Additional Categories',
+        apiField: 'categories.additionalCategories',
+        currentValue: '—',
+        platformAction: 'Дополнительные категории профиля в Google Business Profile API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 4. Hours & Shifts
-    {
-      id: 'hrs-regular',
-      categoryGroup: 'Hours & Shifts',
-      paramName: 'Standard Operating Hours & Shifts',
-      apiField: 'regularHours.periods',
-      currentValue: 'Regular Weekly Periods Configured',
-      platformAction: 'Maintains open/close sync for Google Maps "Open Now" ranking algorithm boost.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'hrs-special',
-      categoryGroup: 'Hours & Shifts',
-      paramName: 'Special & Holiday Hours Autopilot',
-      apiField: 'specialHours.specialHourPeriods',
-      currentValue: isPro ? 'Synced for upcoming holidays (Auto-Confirmed)' : 'Unset: Google shows "Hours may differ" warning banner',
-      platformAction: 'Proactive 1-click scheduling of holiday hours 72h before national/religious events.',
-      status: isPro ? 'OPTIMIZED' : 'ACTION_NEEDED',
-      isProOnly: true,
-      proFeatureLabel: 'Holiday Shield Autopilot'
-    },
+      // 4. Hours & Shifts
+      {
+        id: 'hrs-regular',
+        categoryGroup: 'Hours & Shifts',
+        paramName: 'Standard Operating Hours',
+        apiField: 'regularHours.periods',
+        currentValue: '—',
+        platformAction: 'График работы по дням недели из Google Business Profile API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'hrs-special',
+        categoryGroup: 'Hours & Shifts',
+        paramName: 'Special & Holiday Hours',
+        apiField: 'specialHours.specialHourPeriods',
+        currentValue: '—',
+        platformAction: 'Специальные часы работы в праздничные дни.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 5. 150+ Attributes
-    {
-      id: 'attr-amenities',
-      categoryGroup: '150+ Attributes',
-      paramName: 'Amenities (Wi-Fi, Air-Con, Pet-Friendly)',
-      apiField: 'attributes.amenities',
-      currentValue: isPro ? '18/18 Amenities Confirmed & Synced' : '8 unverified amenity tags found',
-      platformAction: 'Activates high-value filters (Fast Wi-Fi, Dog-friendly, AC) used by expats and tourists.',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: '150+ Attribute Engine'
-    },
-    {
-      id: 'attr-payments',
-      categoryGroup: '150+ Attributes',
-      paramName: 'Payment Gateways (NFC, Cards, Crypto)',
-      apiField: 'attributes.payments',
-      currentValue: isPro ? 'Credit Cards, Contactless NFC, Cash Verified' : 'Unchecked payment options',
-      platformAction: 'Removes purchasing friction for tourists by signaling card and mobile payment readiness.',
-      status: isPro ? 'OPTIMIZED' : 'ACTION_NEEDED',
-      isProOnly: false
-    },
-    {
-      id: 'attr-dining',
-      categoryGroup: '150+ Attributes',
-      paramName: 'Service Options (Delivery, Takeout, Dine-in)',
-      apiField: 'attributes.service_options',
-      currentValue: 'Dine-in, Takeout, Delivery Configured',
-      platformAction: 'Links delivery buttons directly to REVOO / ordering platforms.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
+      // 5. 150+ Attributes
+      {
+        id: 'attr-amenities',
+        categoryGroup: '150+ Attributes',
+        paramName: 'Configured Profile Attributes',
+        apiField: 'attributes',
+        currentValue: '—',
+        platformAction: 'Количество заполненных атрибутов карточки в Google API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 6. Reviews & AI
-    {
-      id: 'rev-velocity',
-      categoryGroup: 'Reviews & AI',
-      paramName: 'Review Velocity & Star Health Score',
-      apiField: 'reviews.starRating & reviews.count',
-      currentValue: `${rating.toFixed(1)} ★ (${reviewsCount} verified reviews)`,
-      platformAction: 'Monitors incoming velocity (reviews/week) vs top 3 competitors in local grid.',
-      status: 'OPTIMIZED',
-      isProOnly: false
-    },
-    {
-      id: 'rev-auto-reply',
-      categoryGroup: 'Reviews & AI',
-      paramName: 'AI Contextual Review Auto-Reply Engine',
-      apiField: 'reviews.reviewReply.comment',
-      currentValue: isPro ? 'Autonomous (Responses within 120s with SEO keywords)' : 'Manual responses required',
-      platformAction: 'Publishes polite, keyword-rich replies in seconds to maximize Google Merchant Trust.',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: 'Autonomous AI Copilot'
-    },
+      // 6. Reviews & AI
+      {
+        id: 'rev-velocity',
+        categoryGroup: 'Reviews & AI',
+        paramName: 'Rating & Reviews Count',
+        apiField: 'reviews.starRating & reviews.count',
+        currentValue: rating > 0 ? `${rating.toFixed(1)} ★ (${reviewsCount} отзывов)` : '—',
+        platformAction: 'Фактический рейтинг и количество отзывов из Google API.',
+        status: rating > 0 ? 'OPTIMIZED' : 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 7. Posts & Promos
-    {
-      id: 'post-cadence',
-      categoryGroup: 'Posts & Promos',
-      paramName: 'Weekly Google What\'s New Posts Cadence',
-      apiField: 'localPosts.topicType (STANDARD/OFFER)',
-      currentValue: isPro ? 'Weekly AI Schedule Active (with Order CTA)' : 'No active posts in last 7 days (Stale signal)',
-      platformAction: 'Publishes weekly news and promo offers directly to the Google Maps feed.',
-      status: isPro ? 'OPTIMIZED' : 'ACTION_NEEDED',
-      isProOnly: true,
-      proFeatureLabel: 'Weekly Post Copilot'
-    },
+      // 7. Posts & Promos
+      {
+        id: 'post-cadence',
+        categoryGroup: 'Posts & Promos',
+        paramName: 'Published Local Posts',
+        apiField: 'localPosts',
+        currentValue: '—',
+        platformAction: 'Опубликованные посты в ленте Google Maps.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 8. Menu & Catalog
-    {
-      id: 'menu-catalog',
-      categoryGroup: 'Menu & Catalog',
-      paramName: 'Structured Food Menu & Service Catalog',
-      apiField: 'foodMenus & services',
-      currentValue: isPro ? 'Complete Digital Menu with Prices & Photos' : 'Prices not linked in Google search card',
-      platformAction: 'Renders dishes, services, and prices directly in Google search snippets.',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: 'Digital Menu Builder'
-    },
+      // 8. Menu & Catalog
+      {
+        id: 'menu-catalog',
+        categoryGroup: 'Menu & Catalog',
+        paramName: 'Service Items & Catalog',
+        apiField: 'serviceItems',
+        currentValue: '—',
+        platformAction: 'Позиции услуг и меню в Google Business Profile.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
 
-    // 9. Search Insights
-    {
-      id: 'ins-keywords',
-      categoryGroup: 'Search Insights',
-      paramName: 'Exact Secret Google Search Queries',
-      apiField: 'insights.searchKeywords',
-      currentValue: isPro ? '142 search queries tracked (Top: "cafe near me", "visa extension")' : '•••••••••••• •••••• ••• (34 high-intent keywords hidden)',
-      platformAction: 'Reveals exact terms customers typed before clicking your Google Maps profile.',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: 'Secret Keyword Discovery'
-    },
-    {
-      id: 'ins-traffic',
-      categoryGroup: 'Search Insights',
-      paramName: 'Search vs Maps Impressions & Direction Requests',
-      apiField: 'insights.interactions (Calls, Directions)',
-      currentValue: isPro ? 'Full telemetry: 68 calls, 142 route requests this month' : '•••••••• impressions & customer action metrics',
-      platformAction: 'Calculates Steve Hunsaker PPC equivalence value ($4,365/mo saved in Google Ads).',
-      status: isPro ? 'OPTIMIZED' : 'LOCKED_PRO',
-      isProOnly: true,
-      proFeatureLabel: 'PPC Equivalence Analytics'
-    }
-  ], [venueName, category, address, phone, website, rating, reviewsCount, isPro]);
+      // 9. Search Insights
+      {
+        id: 'ins-keywords',
+        categoryGroup: 'Search Insights',
+        paramName: 'Monthly Search Keywords (GBP Performance API)',
+        apiField: 'searchkeywords.impressions.monthly',
+        currentValue: '—',
+        platformAction: 'Поисковые запросы из Business Profile Performance API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      },
+      {
+        id: 'ins-traffic',
+        categoryGroup: 'Search Insights',
+        paramName: '30-Day Interactions (Calls, Website, Directions)',
+        apiField: 'fetchMultiDailyMetricsTimeSeries',
+        currentValue: '—',
+        platformAction: 'Клики по звонкам, сайту и маршрутам за 30 дней из Performance API.',
+        status: 'ACTION_NEEDED',
+        isProOnly: false
+      }
+    ];
+  }, [venueName, category, address, phone, website, rating, reviewsCount]);
 
   // Override template rows with REAL Google values whenever the live sync provided them.
   const parameters: DataParameterItem[] = useMemo(() => {
@@ -329,47 +292,65 @@ export function GbpDataMatrix({
     if (!f) return baseParameters;
     const ok = (s: boolean): DataParameterItem['status'] => (s ? 'OPTIMIZED' : 'ACTION_NEEDED');
     const over: Record<string, Partial<DataParameterItem>> = {};
+    if (f.title) over['nap-name'] = { currentValue: String(f.title), status: 'OPTIMIZED' };
+    if (f.address) over['nap-address'] = { currentValue: String(f.address), status: 'OPTIMIZED' };
+    if (f.phone) over['nap-phone'] = { currentValue: String(f.phone), status: 'OPTIMIZED' };
+    if (f.website) over['nap-website'] = { currentValue: String(f.website), status: 'OPTIMIZED' };
+    if (f.primary_category) over['cat-primary'] = { currentValue: String(f.primary_category), status: 'OPTIMIZED' };
     if (f.open_status) over['gov-status'] = { currentValue: String(f.open_status), status: ok(f.open_status === 'OPEN') };
+    if (f.has_pending_edits !== undefined) over['gov-pending-edits'] = {
+      currentValue: f.has_pending_edits ? 'Есть внешние правки' : '0 внешних правок',
+      status: ok(!f.has_pending_edits),
+    };
     if (f.has_voice_of_merchant !== undefined) over['gov-vom'] = {
-      currentValue: f.has_voice_of_merchant ? 'Verified: Voice of Merchant active' : 'Not verified: Google restricts edits',
+      currentValue: f.has_voice_of_merchant ? 'Подтверждено (Voice of Merchant)' : 'Не подтверждено',
       status: ok(!!f.has_voice_of_merchant),
     };
     if (f.new_review_uri !== undefined) over['gov-review-link'] = {
-      currentValue: f.new_review_uri ? 'Direct review link available' : 'No review link returned', status: ok(!!f.new_review_uri),
+      currentValue: f.new_review_uri ? String(f.new_review_uri) : '—',
+      status: ok(!!f.new_review_uri),
     };
-    if (f.description !== undefined || f.title) over['nap-description'] = {
-      currentValue: f.description ? `${f.description.length}/750 chars` : 'Empty: no description set',
-      status: ok(!!f.description && f.description.length >= 250), isProOnly: false,
+    if (f.description !== undefined) over['nap-description'] = {
+      currentValue: f.description ? `${f.description.length}/750 симв.` : '— (Пусто)',
+      status: ok(!!f.description),
     };
-    if (f.additional_categories) over['cat-secondary'] = {
-      currentValue: f.additional_categories.length ? f.additional_categories.join(', ') : 'None configured',
-      status: ok(f.additional_categories.length >= 3), isProOnly: false,
+    if (f.additional_categories !== undefined) over['cat-secondary'] = {
+      currentValue: f.additional_categories?.length ? f.additional_categories.join(', ') : '— (Не заданы)',
+      status: ok(Boolean(f.additional_categories?.length)),
     };
-    if (f.regular_hours) over['hrs-regular'] = {
-      currentValue: f.regular_hours.length ? `${f.regular_hours.length} periods set` : 'Not set', status: ok(f.regular_hours.length > 0),
+    if (f.regular_hours !== undefined) over['hrs-regular'] = {
+      currentValue: f.regular_hours?.length ? `${f.regular_hours.length} дн. задано` : '— (Не заданы)',
+      status: ok(Boolean(f.regular_hours?.length)),
     };
     if (f.special_hours_count !== undefined) over['hrs-special'] = {
-      currentValue: f.special_hours_count ? `${f.special_hours_count} special day(s) set` : 'No holiday hours set',
-      status: ok(f.special_hours_count > 0), isProOnly: false,
+      currentValue: f.special_hours_count ? `${f.special_hours_count} спец. дн.` : '—',
+      status: ok(f.special_hours_count > 0),
     };
     if (f.attributes_count !== undefined) over['attr-amenities'] = {
-      currentValue: `${f.attributes_count} attributes set`, status: ok(f.attributes_count >= 10), isProOnly: false,
+      currentValue: f.attributes_count > 0 ? `${f.attributes_count} атрибутов` : '— (0 атрибутов)',
+      status: ok(f.attributes_count > 0),
     };
-    if (f.reviews_total !== undefined) over['rev-velocity'] = {
-      currentValue: `${f.reviews_total} reviews, avg ${f.rating ?? 'n/a'}, ${f.reviews_unreplied ?? 0} unanswered`,
-      status: ok((f.reviews_unreplied ?? 0) === 0), isProOnly: false,
+    if (f.reviews_total !== undefined || f.rating !== undefined) over['rev-velocity'] = {
+      currentValue: f.rating ? `${f.rating} ★ (${f.reviews_total ?? 0} отзывов, без ответа: ${f.reviews_unreplied ?? 0})` : '—',
+      status: ok(Boolean(f.rating)),
     };
     if (f.posts_count !== undefined) over['post-cadence'] = {
-      currentValue: f.posts_count ? `${f.posts_count} posts, last ${String(f.last_post_at || '').slice(0, 10)}` : 'No posts yet',
-      status: ok(f.posts_count > 0), isProOnly: false,
+      currentValue: f.posts_count > 0 ? `${f.posts_count} постов` : '— (0 постов)',
+      status: ok(f.posts_count > 0),
     };
     if (f.service_items_count !== undefined) over['menu-catalog'] = {
-      currentValue: f.service_items_count ? `${f.service_items_count} items` : 'No items in catalog',
-      status: ok(f.service_items_count > 0), isProOnly: false,
+      currentValue: f.service_items_count > 0 ? `${f.service_items_count} поз.` : '— (0 поз.)',
+      status: ok(f.service_items_count > 0),
+    };
+    if (f.top_search_keywords !== undefined) over['ins-keywords'] = {
+      currentValue: f.top_search_keywords?.length
+        ? f.top_search_keywords.slice(0, 5).map((k: any) => `${k.keyword} (${k.impressions})`).join(', ')
+        : '—',
+      status: ok(Boolean(f.top_search_keywords?.length)),
     };
     if (f.impressions_30d !== undefined) over['ins-traffic'] = {
-      currentValue: `${f.impressions_30d} impressions, ${f.performance_30d?.CALL_CLICKS ?? 0} calls, ${f.performance_30d?.WEBSITE_CLICKS ?? 0} site clicks (30d)`,
-      status: 'OPTIMIZED', isProOnly: false,
+      currentValue: `${f.impressions_30d} показов • ${f.performance_30d?.CALL_CLICKS ?? 0} звонков • ${f.performance_30d?.WEBSITE_CLICKS ?? 0} кликов (30 дн.)`,
+      status: ok(f.impressions_30d > 0),
     };
     return baseParameters.map(p => (over[p.id] ? { ...p, ...over[p.id] } : p));
   }, [baseParameters, live]);

@@ -143,74 +143,32 @@ export default function AttributesManagerPage() {
         return;
       }
 
-      let prof: ActiveVenueProfile = {
-        name: 'Сэр Визаранус',
-        address: '60 Hòn Chồng, Bắc Nha Trang, Khánh Hòa 650000, Vietnam',
-        category: 'Visa & Immigration Service',
-        phone: '+84 90 512 34 56',
-        rating: 4.9,
-        reviews_count: 42,
-        opening_hours: [
-          'Monday: 8:00 AM – 6:00 PM',
-          'Tuesday: 8:00 AM – 6:00 PM',
-          'Wednesday: 8:00 AM – 6:00 PM',
-          'Thursday: 8:00 AM – 6:00 PM',
-          'Friday: 8:00 AM – 6:00 PM',
-          'Saturday: 9:00 AM – 2:00 PM',
-          'Sunday: Closed'
-        ],
-        open_now: true,
-        website_url: 'https://instagram.com/sir_visarun_nhatrang',
-        google_maps_url: 'https://maps.google.com/?q=60+Hon+Chong+Nha+Trang',
-        latitude: 12.2705,
-        longitude: 109.1967,
-        verified: true
-      };
-
+      let prof: ActiveVenueProfile | null = null;
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           prof = {
-            ...prof,
             ...parsed,
-            name: parsed.business_name || parsed.name || prof.name,
-            address: parsed.address || prof.address,
-            category: parsed.primary_category || parsed.category || prof.category,
-            opening_hours: (parsed.opening_hours && parsed.opening_hours.length > 0) ? parsed.opening_hours : prof.opening_hours,
-            reviews: parsed.reviews || prof.reviews
+            name: parsed.business_name || parsed.name || '',
+            address: parsed.address || '',
+            category: parsed.primary_category || parsed.category || '',
+            opening_hours: Array.isArray(parsed.opening_hours) ? parsed.opening_hours : [],
+            reviews: Array.isArray(parsed.reviews) ? parsed.reviews : []
           };
         } catch (e) {}
       }
       setActiveProfile(prof);
 
-      // Initialize attributes
-      const storedAttrs = localStorage.getItem(`gbpilot_attrs_${prof.name}`);
+      // Initialize attributes strictly from stored or empty
+      const storedAttrs = prof?.name ? localStorage.getItem(`gbpilot_attrs_${prof.name}`) : null;
       let currentMap: Record<string, boolean> = {};
 
       if (storedAttrs) {
         try {
           currentMap = JSON.parse(storedAttrs);
         } catch (e) {}
-      } else {
-        currentMap = {
-          free_wifi: true,
-          air_conditioning: true,
-          restroom: true,
-          free_parking_lot: true,
-          on_site_services: true,
-          languages_spoken_english: true,
-          languages_spoken_multilingual: true,
-          credit_cards: true,
-          debit_cards: true,
-          cash_accepted: true,
-          family_friendly: true,
-          tourists_expats_welcome: true,
-          walk_ins_welcome: true,
-          turnkey_visa_support: true,
-          certified_translations: true,
-          free_document_precheck: true,
-          transparent_fixed_pricing: true
-        };
+      } else if (prof?.attributes && typeof prof.attributes === 'object') {
+        currentMap = prof.attributes;
       }
 
       setAttributeValues(currentMap);

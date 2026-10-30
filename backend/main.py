@@ -717,18 +717,19 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
             logger.warning(f"[GeoGrid] Scan point failed: {e}")
             places = []
 
-        rank = 21
-        top_competitor = "Local Competitor"
+        rank = 0
+        top_competitor = "—"
         top_url = None
         top_rating = None
         top_reviews = None
 
         if places:
             first_place = places[0]
-            top_competitor = first_place.get("name") or "Local Competitor"
+            top_competitor = first_place.get("name") or "—"
             top_url = first_place.get("google_maps_url")
             top_rating = first_place.get("rating")
             top_reviews = first_place.get("reviews_count")
+            rank = 21
             for idx, place in enumerate(places):
                 p_name = (place.get("name") or "").lower()
                 if safe_target and (safe_target in p_name or p_name in safe_target):
@@ -736,18 +737,6 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
                     if idx == 0:
                         top_competitor = "You"
                     break
-        else:
-            # Only use spatial estimation when Google Places API key is completely unconfigured
-            d = node.get("dist", 0)
-            if d < distance * 0.7:
-                rank = 1
-                top_competitor = "You"
-            elif d < distance * 1.5:
-                rank = 3
-            elif d < distance * 2.2:
-                rank = 6
-            else:
-                rank = 11
 
         node_obj = GeoGridNode(
             pos=node["pos"],
@@ -765,9 +754,8 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
     raw_results = await asyncio.gather(*tasks)
     results = [r[0] for r in raw_results]
 
-    # Aggregate real Top Competitors across all grid nodes from real Google Places API payloads
+    # Aggregate real Top Competitors across all grid nodes strictly from Google Places API payloads
     comp_map = {}
-    total_nodes = max(1, len(grid_nodes))
     for node_obj, places in raw_results:
         for idx, p in enumerate(places[:5]):
             p_name = (p.get("name") or "").strip()
@@ -778,21 +766,24 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
             if safe_target and (safe_target in p_lower or p_lower in safe_target):
                 continue
             pid = p.get("place_id") or p_lower
+            raw_prim = p.get("primary_category") or ""
+            if raw_prim == "Local Business":
+                raw_prim = ""
             if pid not in comp_map:
                 comp_map[pid] = {
                     "place_id": p.get("place_id") or pid,
                     "name": p_name,
                     "address": p.get("address") or "",
                     "google_maps_url": p.get("google_maps_url") or f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(p_name)}",
-                    "website_url": p.get("website_url"),
-                    "phone": p.get("phone"),
+                    "website_url": p.get("website_url") or "",
+                    "phone": p.get("phone") or "",
                     "rating": float(p.get("rating") or 0.0),
                     "reviews_count": int(p.get("reviews_count") or 0),
-                    "primary_category": p.get("primary_category") or "Local Business",
+                    "primary_category": raw_prim,
                     "secondary_categories": p.get("secondary_categories") or [],
                     "open_now": p.get("open_now"),
                     "photos_count": int(p.get("photos_count") or 0),
-                    "price_level": p.get("price_level"),
+                    "price_level": p.get("price_level") or "",
                     "ranks": [],
                     "top3_wins": 0
                 }
@@ -808,64 +799,25 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
     competitors_list = []
     for c in sorted_comps:
         avg_r = round(sum(c["ranks"]) / max(1, len(c["ranks"])), 1)
-        wins = c["top3_wins"]
-        rev_cnt = c["reviews_count"]
-        rat = c["rating"]
-        prim_cat = c["primary_category"]
-        sec_cats = c["secondary_categories"]
-        photos_cnt = c["photos_count"]
-
-        # Factual data-driven analysis based strictly on real Google Places API fields
-        moat_parts = [f"Удерживает Топ-3 в {wins} из {total_nodes} точек сетки (средний ранг #{avg_r})"]
-        if rev_cnt > 0:
-            moat_parts.append(f"{rev_cnt} отзывов с рейтингом {rat}★")
-        if prim_cat and prim_cat != "Local Business":
-            moat_parts.append(f"основная категория «{prim_cat}»")
-        if sec_cats:
-            moat_parts.append(f"доп. категории ({', '.join(sec_cats[:3])})")
-        winning_moat = " • ".join(moat_parts) + "."
-
-        weak_parts = []
-        if rev_cnt < 30:
-            weak_parts.append(f"Мало отзывов ({rev_cnt} шт.) — легко обойти за счет прироста свежих отзывов с ключом «{request.keyword}»")
-        elif rat > 0 and rat < 4.6:
-            weak_parts.append(f"Просевший рейтинг ({rat}★) — клиенты охотнее выберут профиль с 4.8★+")
-        if not c["website_url"]:
-            weak_parts.append("Не привязан официальный сайт в карточке Google Maps")
-        if not c["phone"]:
-            weak_parts.append("Не указан контактный телефон")
-        if photos_cnt < 5:
-            weak_parts.append(f"Слабое фото-наполнение в выдаче ({photos_cnt} фото)")
-        if not weak_parts:
-            weak_parts.append(f"Удерживает позиции за счет точного вхождения «{request.keyword}» в категории/описание; уязвим к свежим Google Posts и отзывам с точным гео-ключом")
-        critical_weakness = "; ".join(weak_parts) + "."
-
-        cat_hint = f"Добавить категорию «{prim_cat}»" + (f" и «{sec_cats[0]}»" if sec_cats else "")
-        overtake_strategy = (
-            f"1) {cat_hint} в ваш профиль GBP. "
-            f"2) Опубликовать экспертный Google Update-пост под запрос «{request.keyword}» с кнопкой записи/звонка. "
-            f"3) Собрать 3–5 свежих отзывов с точным упоминанием услуги «{request.keyword}»."
-        )
-
         competitors_list.append(GeoGridCompetitor(
             place_id=c["place_id"],
             name=c["name"],
             address=c["address"],
             google_maps_url=c["google_maps_url"],
-            website_url=c["website_url"],
-            phone=c["phone"],
-            rating=rat,
-            reviews_count=rev_cnt,
-            primary_category=prim_cat,
-            secondary_categories=sec_cats,
-            grid_wins=wins,
+            website_url=c["website_url"] or None,
+            phone=c["phone"] or None,
+            rating=c["rating"],
+            reviews_count=c["reviews_count"],
+            primary_category=c["primary_category"],
+            secondary_categories=c["secondary_categories"],
+            grid_wins=c["top3_wins"],
             avg_rank=avg_r,
             open_now=c["open_now"],
-            photos_count=photos_cnt,
-            price_level=c["price_level"],
-            winning_moat=winning_moat,
-            critical_weakness=critical_weakness,
-            overtake_strategy=overtake_strategy
+            photos_count=c["photos_count"],
+            price_level=c["price_level"] or None,
+            winning_moat="",
+            critical_weakness="",
+            overtake_strategy=""
         ))
 
     return GeoGridScanResponse(

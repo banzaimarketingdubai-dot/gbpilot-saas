@@ -72,23 +72,7 @@ interface ReviewItem {
   reviewWeight?: 'STANDARD' | 'HIGH_EXIF_TRUST' | 'MAX_LOCAL_GUIDE';
 }
 
-const INITIAL_REVIEWS_ADAPTED: ReviewItem[] = INITIAL_MOCK_REVIEWS.map(r => ({
-  id: r.id,
-  customer: r.author,
-  rating: r.rating,
-  date: r.date,
-  text: r.comment,
-  aiSuggestedReply: r.aiDraftReply,
-  selectedTone: 'PROFESSIONAL',
-  status: r.status === 'AUTO_REPLIED' ? 'REPLIED' : 'UNREPLIED',
-  lsi: r.injectedKeywords,
-  hasPhotos: r.hasPhotos,
-  photosCount: r.photosCount,
-  photoUrls: r.photoUrls,
-  isLocalGuide: r.isLocalGuide,
-  localGuideLevel: r.localGuideLevel,
-  reviewWeight: r.reviewWeight,
-}));
+const INITIAL_REVIEWS_ADAPTED: ReviewItem[] = [];
 
 interface DefenseLogItem {
   id: string;
@@ -102,37 +86,7 @@ interface DefenseLogItem {
   reviewText?: string;
 }
 
-const INITIAL_DEFENSE_LOGS: DefenseLogItem[] = [
-  {
-    id: 'threat_extortion_1',
-    timestamp: 'Yesterday, 18:42',
-    threatType: 'SPAM_REVIEW',
-    title: '🚨 Extortion Attempt: 1★ review demanding contact on Telegram',
-    description: 'A Level 7 Local Guide bot account left a 1★ review demanding contact with @reputation_fix_bot for removal. Dossier prepared under Google Review Extortion policy.',
-    status: 'FLAGGED',
-    revertDuration: 'Legal dossier ready',
-    reviewAuthor: 'Anonymous Local Guide',
-    reviewText: 'Terrible experience, fraudulent service! To delete this negative review and protect your profile reputation, contact our team on Telegram: @reputation_fix_bot'
-  },
-  {
-    id: 'threat_phone_1',
-    timestamp: '3 days ago',
-    threatType: 'PHONE_OVERWRITE',
-    title: 'Competitor Phone Number Hijack Attempt',
-    description: 'External suggestion to overwrite primary phone to +971 50 123 4567 was blocked by Sentinel Lock. Suspension risk averted.',
-    status: 'BLOCKED',
-    revertDuration: 'Blocked in 0.4s'
-  },
-  {
-    id: 'threat_hours_1',
-    timestamp: '6 days ago',
-    threatType: 'HOURS_TAMPER',
-    title: 'Attempted Friday Business Closure ("Permanently Closed")',
-    description: 'Third-party schedule edit was automatically reverted via Google Business Profile API. Regular operating hours restored.',
-    status: 'REVERTED',
-    revertDuration: 'Restored in 180s'
-  }
-];
+const INITIAL_DEFENSE_LOGS: DefenseLogItem[] = [];
 
 export default function ShieldReviewsPage() {
   const [activeTab, setActiveTab] = useState<'REVIEWS' | 'DEFENSE_LOG' | 'QR_NFC'>('REVIEWS');
@@ -311,6 +265,8 @@ export default function ShieldReviewsPage() {
                 google_review_url: fallbackUrl
               };
             }));
+          } else {
+            setRealReviews([]);
           }
         }
       } catch (e) {

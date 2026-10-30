@@ -536,34 +536,10 @@ export default function GeoGridPage() {
     setGridRanks(buildGridTemplate(newSize));
   };
 
-  const generateLocalSpatialRanks = (dimension: number, businessName: string, keyword: string) => {
-    const half = Math.floor(dimension / 2);
+  const generateLocalSpatialRanks = (dimension: number, _businessName: string, _keyword: string) => {
     const ranks: { pos: number; rank: number; competitor: string }[] = [];
-    
-    let pos = 1;
-    for (let r = 0; r < dimension; r++) {
-      for (let c = 0; c < dimension; c++) {
-        const distFromCenter = Math.sqrt((r - half) ** 2 + (c - half) ** 2);
-        let rank = 1;
-        let comp = 'You';
-        
-        if (distFromCenter === 0) {
-          rank = 1;
-          comp = 'You';
-        } else if (distFromCenter <= 1.0) {
-          rank = Math.min(3, 1 + Math.floor(distFromCenter * 1.5));
-          comp = rank === 1 ? 'You' : 'Local Competitor';
-        } else if (distFromCenter <= 1.8) {
-          rank = 3 + Math.floor(distFromCenter * 2);
-          comp = 'Local Competitor';
-        } else {
-          rank = 7 + Math.floor(distFromCenter * 3);
-          comp = 'Local Competitor';
-        }
-        
-        ranks.push({ pos, rank, competitor: comp });
-        pos++;
-      }
+    for (let pos = 1; pos <= dimension * dimension; pos++) {
+      ranks.push({ pos, rank: 0, competitor: '—' });
     }
     setGridRanks(ranks);
     setCompetitors([]);
@@ -1142,50 +1118,50 @@ export default function GeoGridPage() {
               </div>
             )}
 
-            {/* LLM Mentions Metric Overview */}
+            {/* Directory Sync Status Overview */}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-google-text-secondary">ChatGPT &amp; Siri Mention Rate</span>
+                  <span className="text-xs font-semibold text-google-text-secondary">Apple Maps &amp; Siri</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200">
-                    Source: Apple Maps + TripAdvisor
+                    Apple Business Connect
                   </span>
                 </div>
                 <span className="text-2xl font-black text-google-blue block">
-                  {68 + Object.values(completedPlatforms).filter(Boolean).length * 6}%
+                  {completedPlatforms['APPLE_MAPS'] ? 'Заполнено' : '—'}
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Inclusion frequency in ChatGPT Search &amp; Siri CarPlay recommendations
+                  Статус размещения карточки в Apple Maps
                 </p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-google-text-secondary">Gemini AI Overviews Share</span>
+                  <span className="text-xs font-semibold text-google-text-secondary">2GIS Directory</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Source: Google Maps + TimeOut
+                    2GIS Business
                   </span>
                 </div>
                 <span className="text-2xl font-black text-google-green block">
-                  {84 + Object.values(completedPlatforms).filter(Boolean).length * 3}%
+                  {completedPlatforms['TWO_GIS'] ? 'Заполнено' : '—'}
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Visibility rate in Google AI Overviews above organic search results
+                  Статус размещения карточки в 2GIS
                 </p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-google-text-secondary">Perplexity &amp; Navigators</span>
+                  <span className="text-xs font-semibold text-google-text-secondary">TripAdvisor &amp; Каталоги</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                    Source: 2GIS + TripAdvisor
+                    Внешние площадки
                   </span>
                 </div>
                 <span className="text-2xl font-black text-purple-600 block">
-                  {72 + Object.values(completedPlatforms).filter(Boolean).length * 5}%
+                  {Object.values(completedPlatforms).filter(Boolean).length} / {directoryBlueprints.length}
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Indexation of price lists, precise entrance pins &amp; review sentiment by AI search agents
+                  Отмечено заполненными пользователем
                 </p>
               </div>
             </div>

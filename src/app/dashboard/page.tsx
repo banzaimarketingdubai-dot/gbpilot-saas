@@ -1015,84 +1015,72 @@ export default function DashboardCockpitPage() {
                   </div>
                 </Link>
 
-                {/* KPI 2: Saved Google Ads Equivalent Budget */}
-                <button
-                  type="button"
-                  onClick={() => setIsInspectionModalOpen(true)}
+                {/* KPI 2: Live Posts & Media from Google API */}
+                <Link
+                  href="/copilot"
                   className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/60 border border-slate-200/80 hover:border-emerald-200 transition-colors block text-left group cursor-pointer"
-                  title="Click to view full Google Ads PPC equivalence breakdown"
                 >
                   <div className="flex items-center justify-between text-slate-400">
                     <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-emerald-800 transition-colors">
-                      Saved Ads (30d)
+                      Google Posts &amp; Media
                     </span>
-                    <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                   </div>
                   <div className="mt-1 flex items-baseline gap-1.5">
                     <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
-                      {auditReport ? auditReport.savedAdSpendFormatted : '—'}
+                      {liveSync?.fields?.posts_count !== undefined ? `${liveSync.fields.posts_count}` : '—'}
                     </span>
                     <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-1 py-0.2 rounded truncate">
-                      PPC Equiv
+                      Постов в API
                     </span>
                   </div>
                   <div className="mt-0.5 text-[9px] sm:text-[10px] text-slate-400 group-hover:text-slate-600 truncate flex items-center justify-between">
-                    <span className="truncate max-w-[110px]">{auditReport ? auditReport.industryBenchmark.categoryGroup : 'Free organic leads'}</span>
-                    <span className="font-bold text-emerald-700 group-hover:underline shrink-0">Audit ROI &gt;</span>
+                    <span className="truncate max-w-[110px]">
+                      {liveSync?.fields?.media_count !== undefined ? `Фото: ${liveSync.fields.media_count}` : 'Нет данных'}
+                    </span>
+                    <span className="font-bold text-emerald-700 group-hover:underline shrink-0">Создать &gt;</span>
                   </div>
-                </button>
+                </Link>
 
-                {/* KPI 3: Profile Health Score */}
-                <button
-                  type="button"
-                  onClick={() => setIsInspectionModalOpen(true)}
+                {/* KPI 3: Live Profile Health Score from Google API */}
+                <a
+                  href="#gbp-data-matrix"
                   className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-amber-50/50 border border-slate-200/80 transition-colors block text-left group cursor-pointer"
                 >
                   <div className="flex items-center justify-between text-slate-400">
                     <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                      NAP Health
+                      Profile Health (API)
                     </span>
                     <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
                   </div>
                   <div className="mt-1 flex items-baseline gap-1.5">
                     <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-amber-600 transition-colors">
-                      {activeProfile
-                        ? `${Math.min(100, (activeProfile.name ? 20 : 0) + (activeProfile.address ? 20 : 0) + (activeProfile.phone ? 20 : 0) + (activeProfile.category ? 20 : 0) + (activeProfile.rating ? 20 : 0))}%`
-                        : '—'}
+                      {liveSync?.health?.score !== undefined ? `${liveSync.health.score}%` : '—'}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-600 truncate">Synced</span>
+                    <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-600 truncate">
+                      {liveSync?.health?.score !== undefined ? 'Live API' : 'Ожидание'}
+                    </span>
                   </div>
                   <div className="mt-0.5 text-[9px] sm:text-[10px] font-bold text-amber-700 group-hover:underline flex items-center gap-0.5">
-                    <span>Verify</span>
+                    <span>Data Matrix</span>
                     <Sparkles className="w-2.5 h-2.5" />
                   </div>
-                </button>
+                </a>
               </div>
             </div>
-
-            {/* ======================================================== */}
-            {/* BLOCK 1.5: NEXT BEST ACTION (FINANCIAL LIFT ACCELERATOR) */}
-            {/* ======================================================== */}
-            <NextBestActionCard
-              auditReport={auditReport}
-              onOpenAuditModal={() => setIsInspectionModalOpen(true)}
-              onApplyAction={(actionId) => {
-                showToast('🎉 Recommendation applied successfully! Synced with Google Maps.');
-              }}
-            />
 
             {/* ======================================================== */}
             {/* BLOCK 1.8: 360° GOOGLE BUSINESS PROFILE DATA PASSPORT   */}
             {/* ======================================================== */}
             <div id="gbp-data-matrix">
               <GbpDataMatrix
-                venueName={activeProfile?.name || 'Your Business Location'}
-                category={activeProfile?.category || 'Local Business'}
-                address={activeProfile?.address || activeProfile?.city || 'Verified Storefront Address'}
+                venueName={activeProfile?.name || '—'}
+                category={activeProfile?.category || '—'}
+                address={activeProfile?.address || activeProfile?.city || '—'}
                 phone={activeProfile?.phone || ''}
                 website={activeProfile?.website || activeProfile?.website_url || ''}
-                rating={activeProfile?.rating || 5.0}
-                reviewsCount={activeProfile?.reviews_count || 28}
+                rating={activeProfile?.rating ?? 0}
+                reviewsCount={activeProfile?.reviews_count ?? 0}
                 isPro={isProUser}
                 live={liveSync}
                 onUpgradeClick={() => {
