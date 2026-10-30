@@ -1184,17 +1184,17 @@ export default function B2BLandingPage() {
             <div className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-lg transition-all space-y-6">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider">Solo Business Spot</span>
+                  <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider">Base Monitor &amp; Radar</span>
                   <h3 className="text-xl font-bold text-slate-900">Starter</h3>
-                  <p className="text-xs text-slate-500">Full 24/7 autonomous protection and 1-click execution for 1 venue.</p>
+                  <p className="text-xs text-slate-500">24/7 rank tracking &amp; instant threat alerts when competitors tamper with your profile.</p>
                 </div>
 
                 <div className="pt-2">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-slate-900">
                       {currency === 'AED'
-                        ? billingCycle === 'ANNUAL' ? 'AED 79' : 'AED 99'
-                        : billingCycle === 'ANNUAL' ? '$23' : '$29'}
+                        ? billingCycle === 'ANNUAL' ? 'AED 31' : 'AED 39'
+                        : billingCycle === 'ANNUAL' ? '$8' : '$11'}
                     </span>
                     <span className="text-xs text-slate-400">/month</span>
                   </div>
@@ -1204,23 +1204,27 @@ export default function B2BLandingPage() {
                 <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong>1-Click Instant Optimization Apply</strong></span>
+                    <span><strong>1 Location Monitored 24/7</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span><strong>Competitor Category Spy</strong> (Top-1 Rival Gap)</span>
+                    <span>Geo-Grid Rank Radar &amp; Health Matrix</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>24/7 Digital Insurance &amp; Sentinel Guard</span>
+                    <span><strong>Threat &amp; Tamper Alerts</strong> (WhatsApp &amp; Email)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>AI Review Auto-Drafts (UAE Law 34/2021)</span>
+                    <span>Competitor Edit Warning (Notice without Auto-Fix)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>Dynamic Hours &amp; Peak Traffic Guard</span>
+                    <span>Review Velocity &amp; Sentiment Tracking</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-slate-400">
+                    <XCircle className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" />
+                    <span>No Social Media Auto-Reposting</span>
                   </li>
                 </ul>
               </div>
@@ -1230,7 +1234,7 @@ export default function B2BLandingPage() {
                 onClick={() => handleSelectPlan('STARTER')}
                 className="w-full py-2.5 rounded-xl border border-blue-300 bg-blue-50/70 hover:bg-blue-100 text-google-blue font-bold text-xs transition-colors cursor-pointer"
               >
-                Choose Starter
+                Choose Starter (39 AED)
               </button>
             </div>
 
@@ -1242,51 +1246,47 @@ export default function B2BLandingPage() {
 
               <div className="space-y-4 pt-1">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Multi-Location &amp; Growth</span>
-                  <h3 className="text-xl font-bold text-white">Growth / Pro</h3>
-                  <p className="text-xs text-slate-300">Dominant rank tracking, AI search citations, and unlimited takedowns.</p>
+                  <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Multi-Spot &amp; Social Sync</span>
+                  <h3 className="text-xl font-bold text-white">Growth &amp; Social</h3>
+                  <p className="text-xs text-slate-300">Automated Google Maps posting + seamless Instagram &amp; TikTok auto-reposting.</p>
                 </div>
 
                 <div className="pt-2">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-white">
                       {currency === 'AED'
-                        ? billingCycle === 'ANNUAL' ? 'AED 199' : 'AED 249'
-                        : billingCycle === 'ANNUAL' ? '$55' : '$69'}
+                        ? billingCycle === 'ANNUAL' ? 'AED 55' : 'AED 69'
+                        : billingCycle === 'ANNUAL' ? '$15' : '$19'}
                     </span>
                     <span className="text-xs text-slate-400">/month</span>
                   </div>
-                  <span className="text-[11px] text-blue-300 font-semibold">Up to 3 Locations Included</span>
+                  <span className="text-[11px] text-blue-300 font-semibold">Up to 2 Locations Included</span>
                 </div>
 
                 <ul className="space-y-2.5 text-xs text-slate-200 pt-2 border-t border-slate-800">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Everything in Starter for 3 Locations</strong></span>
+                    <span><strong>Everything in Starter for 2 Locations</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Competitor Category Spy™</strong> (All Top 3 Rivals)</span>
+                    <span><strong>Instagram &amp; TikTok Auto-Reposting to Google Maps</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>1-Click Click Stealer™</strong> &amp; Review Keyword Prompts</span>
+                    <span>Gemini AI Local SEO Copy Adaptation &amp; CTAs</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Geo-Grid 5x5 Rank Matrix</span>
+                    <span>Weekly Local Updates, Offers &amp; Events</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>AI LLM Share-of-Voice (ChatGPT / Gemini)</span>
+                    <span>Threat Alerts with 1-Click Upgrade to Auto-Fix</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span><strong>Unlimited Review Takedown™</strong> Dossiers</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>🌙 Ramadan &amp; ☀️ Summer Mode Automations</span>
+                    <span>Competitor Category Gap &amp; Click Stealer</span>
                   </li>
                 </ul>
               </div>
@@ -1296,7 +1296,7 @@ export default function B2BLandingPage() {
                 onClick={() => handleSelectPlan('PRO_GROWTH')}
                 className="w-full py-3 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer"
               >
-                Deploy Growth Pro (14-Day Free)
+                Deploy Growth (69 AED)
               </button>
             </div>
 
@@ -1304,43 +1304,47 @@ export default function B2BLandingPage() {
             <div className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-lg transition-all space-y-6">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">Agencies &amp; Franchises</span>
-                  <h3 className="text-xl font-bold text-slate-900">Agency / Chain</h3>
-                  <p className="text-xs text-slate-500">White-label reports and high-volume multi-account workflows.</p>
+                  <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">24/7 Auto-Defense (5 Spots)</span>
+                  <h3 className="text-xl font-bold text-slate-900">Shield Sentinel</h3>
+                  <p className="text-xs text-slate-500">Autonomous 5-min auto-revert of unauthorized competitor edits + up to 5 venues.</p>
                 </div>
 
                 <div className="pt-2">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-slate-900">
                       {currency === 'AED'
-                        ? billingCycle === 'ANNUAL' ? 'AED 599' : 'AED 749'
-                        : billingCycle === 'ANNUAL' ? '$159' : '$199'}
+                        ? billingCycle === 'ANNUAL' ? 'AED 79' : 'AED 99'
+                        : billingCycle === 'ANNUAL' ? '$21' : '$27'}
                     </span>
                     <span className="text-xs text-slate-400">/month</span>
                   </div>
-                  <span className="text-[11px] text-purple-700 font-semibold">Up to 10 Locations Included</span>
+                  <span className="text-[11px] text-purple-700 font-semibold">Up to 5 Locations Included</span>
                 </div>
 
                 <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span><strong>Up to 10 Locations Connected</strong></span>
+                    <span><strong>Up to 5 Locations Connected</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span><strong>Bulk Multi-Location Category Espionage</strong> Matrix</span>
+                    <span><strong>Full 24/7 Sentinel Auto-Rollback Shield</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span>White-Label PDF &amp; WhatsApp Audit Reports</span>
+                    <span>5-Min Auto-Revert of Phone, Hours &amp; Status Tampering</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span>Dedicated Dubai Strategist via WhatsApp</span>
+                    <span>Instagram &amp; TikTok Auto-Sync across all 5 spots</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span>Priority Google API Level-2 Queuing</span>
+                    <span>Autonomous AI Review Replier (UAE Law 34/2021)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                    <span>Priority Google API 300 QPM Sync &amp; WhatsApp Support</span>
                   </li>
                 </ul>
               </div>
@@ -1350,7 +1354,7 @@ export default function B2BLandingPage() {
                 onClick={() => handleSelectPlan('AGENCY')}
                 className="w-full py-2.5 rounded-xl border border-purple-300 bg-purple-50/70 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors cursor-pointer"
               >
-                Choose Agency
+                Choose Shield Sentinel (99 AED)
               </button>
             </div>
 

@@ -18,32 +18,37 @@ GBPilot is an autonomous Google Business Profile (GBP) and local Generative Engi
 └────────────────────────────┴────────────────────────────┴──────────────────────────────┘
 ```
 
-### The Packaging Philosophy: Depth of Automation (Not Binary Feature Locking)
-Rather than hiding core modules behind a hard paywall (which destroys the acquisition funnel), **every tier exposes all 3 modules in the UI Cockpit**. Tiers differentiate by **Data Precision, Frequency, and Autonomy**:
-* **Starter ($29):** Manual / 1-Click Mode (You review, you approve, passive alerts).
-* **Pro ($69 - Flagship):** 100% Autonomous Autopilot & Active Counter-Defense (Auto-revert in 5 mins, hands-off background execution).
-* **Agency ($199):** Fleet Command & White-Label Reseller Engine (Multi-location bulk automation + client portals).
+### The Packaging Philosophy: Dubai GTM & Depth of Automation
+To conquer the competitive Dubai and UAE hospitality/retail market with frictionless adoption, **entry barrier is lowered to 39 AED/mo (~$11/mo)**.
+The product is divided into **3 Global Pillars**:
+1. **Мониторинг (Monitoring & Radar):** 24/7 rank tracking, 360° Data Matrix, competitor category gaps, threat detection.
+2. **Постинг (Posting & Social Sync):** Automated Google Business Profile local updates + **seamless Instagram & TikTok auto-repurposing** via Gemini AI.
+3. **Защита (Defense Shield & Auto-Rollback):** Sentinel 24/7 auto-rollback of competitor edits (phone, hours, status) within 5 minutes.
+
+### Tier Structure:
+* **Base Monitor (39 AED / $11/mo):** 1 Location. Full monitoring + Threat alerts (Notification without auto-fix; prompts upgrade).
+* **Growth & Social Repurposer (69 AED / $19/mo):** Up to 2 Locations. Full monitoring + Active GBP Posting + **Seamless Instagram & TikTok auto-reposting** to Google Maps + Threat alerts with 1-click auto-fix upgrade.
+* **Shield Sentinel / Max Plan (99 AED / $27/mo):** Up to **5 Locations**! Everything in Growth + **Full 24/7 Sentinel Auto-Rollback Shield** + Autonomous AI Review Replier + Priority 300 QPM sync.
 
 ---
 
-## 1. Subscription Tiers & Triad Packaging Matrix
+## 1. Subscription Tiers & Triad Packaging Matrix (Dubai Launch)
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              SUBSCRIPTION TIERS BREAKDOWN                              │
+│                        DUBAI LAUNCH SUBSCRIPTION TIERS BREAKDOWN                       │
 ├────────────────────┬────────────────────┬────────────────────────┬─────────────────────┤
-│     FREE SCOUT     │   STARTER HERO     │   PRO GEO DOMINANCE    │     AGENCY SCALE    │
-│      $0 / mo       │   $29 / mo ($24/y) │    $69 / mo ($55/y) 🔥 │  $199 / mo ($159/y) │
+│     FREE SCOUT     │    BASE MONITOR    │   GROWTH & SOCIAL      │   SHIELD SENTINEL   │
+│      0 AED ($0)    │  39 AED ($11) / mo │   69 AED ($19) / mo 🔥 │  99 AED ($27) / mo  │
 ├────────────────────┼────────────────────┼────────────────────────┼─────────────────────┤
-│ • Диагностический  │ • «Ручной режим /  │ • «100% Автопилот &    │ • «Штаб сети /      │
-│   лид-магнит       │   Сделай сам»      │   Активная оборона»    │   White-Label»      │
-│ • 1 локация        │ • 1 локация        │ • До 3 локаций         │ • 10 локаций        │
-│ • Сетка 3x3 (1 раз)│ • Сетка 3x3 и 5x5  │ • Сетка 7x7 (2x/нед)   │ • Сетки всех типов  │
-│ • Health Score     │ • Радар Топ-1      │ • 🕵️ Category Spy™   │ • Матрица шпионажа  │
-│ • 🔒 Тизер скрытых │ • Шпионаж категорий│   (Все Топ-3 соперника)│   категорий мульти- │
-│   категорий        │   Топ-1 соперника  │ • ⚡ Click Stealer™    │   локаций           │
-│ ❌ Действия закрыты│ • До 30 1-Click/мес│   1-Click перехват     │ • White-Label портал│
-│ • Пассивный Гард   │ • Пассивный Гард   │ • 🛡️ АКТИВНЫЙ ГАРД     │ • $15 за доп. точку │
+│ • Диагностический  │ • «Мониторинг &    │ • «Постинг &           │ • «24/7 Киберщит    │
+│   лид-магнит       │   Уведомления»     │   Инстаграм/ТикТок»    │   Авто-откат правок»│
+│ • 1 локация        │ • 1 локация        │ • До 2 локаций         │ • До 5 локаций!     │
+│ • Сетка 3x3        │ • Сетка 3x3 и 5x5  │ • Сетка 5x5 и 7x7      │ • Полная мульти-сетка│
+│ • Health Score     │ • Радар конкурентов│ • Репостинг IG/TikTok  │ • Репостинг на 5 точ│
+│ • 🔒 Блюр матрицы  │ • Алерты об угрозах│ • ИИ-адаптация постов  │ • 🛡️ АВТО-ОТКАТ 5 МИН│
+│ ❌ Действия закрыты│ ⚠️ Без авто-отката │ ⚠️ Без авто-отката     │ • ИИ-ответы на отзывы│
+│ • Без постинга     │ • Без постинга     │ • Активный постинг     │ • VIP WhatsApp сапп.│
 └────────────────────┴────────────────────┴────────────────────────┴─────────────────────┘
 ```
 

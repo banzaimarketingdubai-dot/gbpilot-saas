@@ -64,11 +64,13 @@ export interface VerificationResult {
 
 /**
  * Compares live GBP profile data with Golden Snapshot.
- * Automatically triggers immediate auto-revert if unauthorized changes are detected.
+ * If autoRevert is true (99 AED Tier), automatically triggers immediate auto-revert.
+ * If autoRevert is false (39 AED / 69 AED Tiers), flags threat for owner notification with 1-click upgrade prompt.
  */
 export function verifyAndAutoRevert(
   liveProfile: Partial<GBPLocation>,
-  simulateAttack = false
+  simulateAttack = false,
+  autoRevert = true
 ): VerificationResult {
   const breachesDetected: string[] = [];
   const newActions: DefenseLogEntry[] = [];
@@ -79,17 +81,18 @@ export function verifyAndAutoRevert(
   if (isFridayTampered) {
     breachesDetected.push('Friday operating hours altered to "Closed" by competitor suggested edit.');
     
-    // Auto-revert action executed
     const entry: DefenseLogEntry = {
       id: `def_log_${Date.now()}`,
       timestamp: new Date().toISOString(),
       fieldTampered: 'HOURS',
       tamperedValue: 'Friday: Closed',
       restoredValue: currentGoldenSnapshot.regularHoursSummary,
-      revertedInSeconds: 192,
+      revertedInSeconds: autoRevert ? 192 : 0,
       avertedLossDollars: 480, // Formula: 15 peak foot-traffic diners * $32 avg ticket
-      status: 'REVERTED_AUTOMATICALLY',
-      details: 'Competitor suggested edit intercepted by GB Pilot Sentinel Shield. Hours locked and restored via Google Business Profile API.'
+      status: autoRevert ? 'REVERTED_AUTOMATICALLY' : 'FLAGGED_FOR_OWNER',
+      details: autoRevert
+        ? 'Competitor suggested edit intercepted by GB Pilot Sentinel Shield. Hours locked and restored via Google Business Profile API.'
+        : '⚠️ Competitor edit detected! Upgrade to Shield Sentinel (99 AED) to enable 5-minute automated rollback.'
     };
 
     defenseLogs.unshift(entry);
@@ -106,10 +109,12 @@ export function verifyAndAutoRevert(
       fieldTampered: 'PHONE',
       tamperedValue: livePhone,
       restoredValue: currentGoldenSnapshot.phone,
-      revertedInSeconds: 140,
+      revertedInSeconds: autoRevert ? 140 : 0,
       avertedLossDollars: 350,
-      status: 'REVERTED_AUTOMATICALLY',
-      details: 'Unauthorized phone number change blocked. Restored primary reservation line.'
+      status: autoRevert ? 'REVERTED_AUTOMATICALLY' : 'FLAGGED_FOR_OWNER',
+      details: autoRevert
+        ? 'Unauthorized phone number change blocked. Restored primary reservation line.'
+        : '⚠️ Competitor changed your phone number! Upgrade to Shield Sentinel (99 AED) to enable automated auto-fix.'
     };
     defenseLogs.unshift(entry);
     newActions.push(entry);

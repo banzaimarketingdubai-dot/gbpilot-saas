@@ -19,74 +19,76 @@ export const PLANS: Record<PlanId, PlanDetails> = {
     locationLimit: 1,
     isPro: false,
     features: [
-      'Diagnostic Health Score',
-      'Free Manual Copy-Paste',
+      'Diagnostic Health Score & Geo-Grid Heatmap',
+      'Free Manual Copy-Paste Recommendations',
       '1 Free Legal Takedown Dossier',
-      'Competitor Hidden Category Teaser (1 Rival)',
-      'Community Support'
+      'Competitor Hidden Category Teaser (Top-1 Rival)',
+      'Read-Only 360° Attribute Matrix'
     ]
   },
   SLEEP_GUARD: {
     id: 'SLEEP_GUARD',
-    name: 'Sleep Guard Mode (24/7 Shield Only)',
-    priceAed: 35,
-    priceUsd: 9,
+    name: 'Base Monitor & Threat Alerts',
+    priceAed: 39,
+    priceUsd: 11,
     locationLimit: 1,
-    isPro: false,
+    isPro: true,
     features: [
-      '1 Location Protected 24/7',
-      '5-Min Auto-Revert of Competitor Edits',
-      'Phone (NAP), Hours & Status Lock',
-      'AI Posts & Campaigns Paused'
+      '1 Location Monitored 24/7',
+      'Radar Geo-Grid Rank Tracking',
+      'Threat & Competitor Tamper Notifications',
+      'Instant WhatsApp/Email Alert on Unauthorized Edits',
+      'Review Velocity & Sentiment Tracking'
     ]
   },
   STARTER: {
     id: 'STARTER',
-    name: 'Starter / Solo Spot',
-    priceAed: 99,
-    priceUsd: 29,
+    name: 'Base Monitor & Alerts',
+    priceAed: 39,
+    priceUsd: 11,
     locationLimit: 1,
     isPro: true,
     features: [
-      '1 Location Connected',
-      '24/7 Digital Insurance & Profile Guard',
-      '1-Click Optimization Apply',
-      'Competitor Category Spy (Top-1 Rival Gap)',
-      'Smart Review Auto-Drafts (UAE Law 34/2021)',
-      'Peak Traffic & Dynamic Hours Presets'
+      '1 Location Connected & Monitored 24/7',
+      'Radar Geo-Grid Rank Tracking & Discovery Health',
+      'Threat & Competitor Tamper Detection Notifications',
+      'Instant WhatsApp/Email Alerts (Phone, Hours, Status)',
+      'Manual 1-Click Fix Suggestions',
+      'Review Velocity & Sentiment Tracking'
     ]
   },
   PRO_GROWTH: {
     id: 'PRO_GROWTH',
-    name: 'Growth / Pro',
-    priceAed: 249,
-    priceUsd: 69,
-    locationLimit: 3,
+    name: 'Growth & Social Repurposer',
+    priceAed: 69,
+    priceUsd: 19,
+    locationLimit: 2,
     isPro: true,
     features: [
-      'Up to 3 Locations Connected',
-      'Everything in Starter',
-      'Competitor Category Spy™ & 1-Click Click Stealer (All Top 3 Rivals)',
-      'Geo-Grid 5x5 Rank Tracking',
-      'AI LLM Share-of-Voice (ChatGPT / Gemini)',
-      'Unlimited Review Takedown™ Dossiers',
-      'Ramadan & Summer Mode Automations'
+      'Up to 2 Locations Connected',
+      'Everything in Base Monitor',
+      'Instagram & TikTok Auto-Sync to Google Maps',
+      'Gemini AI Caption Adaptation & Local SEO CTAs',
+      'Automated Weekly Local Updates & Offer Posts',
+      'Threat & Tamper Alerts with 1-Click Auto-Fix Upgrade',
+      'Competitor Category Spy & Click Stealer'
     ]
   },
   AGENCY: {
     id: 'AGENCY',
-    name: 'Agency / Chain',
-    priceAed: 749,
-    priceUsd: 199,
-    locationLimit: 10,
+    name: 'Shield Sentinel (5 Locations)',
+    priceAed: 99,
+    priceUsd: 27,
+    locationLimit: 5,
     isPro: true,
     features: [
-      'Up to 10 Locations Connected',
-      'Everything in Growth / Pro',
-      'Bulk Multi-Location Category Espionage Matrix',
-      'White-Label PDF & WhatsApp Audit Reports',
-      'Multi-Account Fast Switcher',
-      'Dedicated Dubai SEO Strategist via WhatsApp'
+      'Up to 5 Locations Connected',
+      'Full 24/7 Sentinel Auto-Rollback Shield (5-Min Auto-Revert)',
+      'Guaranteed Immunity to Competitor Tampering & Fake Closures',
+      'Instagram & TikTok Auto-Sync for all 5 venues',
+      'Autonomous AI Review Replier (UAE Law 34/2021)',
+      '150+ Attributes Synchronized via Approved 300 QPM API',
+      'Priority WhatsApp Concierge Support'
     ]
   }
 };
