@@ -11,9 +11,9 @@ export interface OAuthTokens {
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'mock_gbpilot_google_client_id.apps.googleusercontent.com';
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'mock_gbpilot_google_client_secret';
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/v1/auth/callback';
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '1025915570314-u36sfq2t3h689rkcpabfen7f3o5nqh3v.apps.googleusercontent.com';
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://gbpilot-saas-production.up.railway.app/api/v1/auth/google/callback';
 
 export const GBP_SCOPES = [
   'https://www.googleapis.com/auth/business.manage',
@@ -26,9 +26,9 @@ export const GBP_SCOPES = [
  */
 export function getGoogleOAuthUrl(state?: string): string {
   const params = new URLSearchParams({
+    response_type: 'code',
     client_id: CLIENT_ID,
     redirect_uri: REDIRECT_URI,
-    response_type: 'code',
     scope: GBP_SCOPES,
     access_type: 'offline',
     prompt: 'consent',

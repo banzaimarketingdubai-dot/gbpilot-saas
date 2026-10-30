@@ -1,5 +1,6 @@
 import os
 import requests
+import urllib.parse
 from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
 
@@ -24,9 +25,9 @@ def get_google_auth_url(state: Optional[str] = None) -> str:
     Generates the Google OAuth 2.0 Consent URL for the user to grant access.
     """
     params = {
+        "response_type": "code",
         "client_id": GOOGLE_CLIENT_ID,
         "redirect_uri": GOOGLE_REDIRECT_URI,
-        "response_type": "code",
         "scope": " ".join(SCOPES),
         "access_type": "offline",  # Request refresh_token for background automation
         "prompt": "consent",      # Force consent screen to ensure refresh_token is returned
@@ -34,7 +35,7 @@ def get_google_auth_url(state: Optional[str] = None) -> str:
     if state:
         params["state"] = state
 
-    query_string = "&".join(f"{k}={requests.utils.quote(v)}" for k, v in params.items())
+    query_string = urllib.parse.urlencode(params)
     return f"https://accounts.google.com/o/oauth2/v2/auth?{query_string}"
 
 def exchange_code_for_tokens(code: str) -> Dict[str, Any]:
