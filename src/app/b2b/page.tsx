@@ -36,7 +36,8 @@ import {
   ExternalLink,
   X,
   Calculator,
-  Sliders
+  Sliders,
+  Share2
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -540,31 +541,41 @@ export default function B2BLandingPage() {
               </div>
             </div>
 
-            {/* Feature 4: 24/7 Profile Sentinel Guard */}
+            {/* Feature 4: Social Media Autopilot (Instagram & TikTok ➔ Google Maps) */}
             <div className="material-card bg-white p-6 sm:p-8 border border-google-border overflow-hidden relative">
               <div className="relative z-10 space-y-4">
-                <div className="p-2 bg-rose-50 rounded-xl inline-block border border-rose-200">
-                  <ShieldCheck className="w-6 h-6 text-rose-600" />
+                <div className="p-2 bg-gradient-to-tr from-pink-500/10 via-rose-500/10 to-amber-500/10 rounded-xl inline-block border border-pink-200">
+                  <Share2 className="w-6 h-6 text-pink-600" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-xl font-bold text-google-text-primary">24/7 Sentinel Guard (Anti-Sabotage)</h3>
-                  <p className="text-xs text-rose-700 font-semibold">5-Minute Cryptographic Auto-Revert</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-google-text-primary">Social Media Autopilot</h3>
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full border border-pink-200">
+                      ⚡ 69 AED Flagship
+                    </span>
+                  </div>
+                  <p className="text-xs text-pink-700 font-semibold">Instagram &amp; TikTok ➔ Google Maps Repurposer</p>
                 </div>
                 <p className="text-sm text-google-text-secondary">
-                  Anyone on Google Maps can click "Suggest an edit" to hijack your phone number or mark you as "Temporarily Closed" on busy weekends. Sentinel Guard takes a cryptographic snapshot and auto-reverts rogue edits within 5 minutes.
+                  You spend time and money posting Reels and TikToks, but your Google Maps card sits completely dead. GBPilot automatically ingests your latest posts, strips social hashtag fluff, adapts copy via Gemini AI, and publishes Google Local Posts with direct "Order Online" or "Book Table" CTA buttons.
                 </p>
                 
-                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-rose-700 flex items-center gap-1.5">
-                      <ShieldAlert className="w-3.5 h-3.5" /> Unauthorized Edit Detected
+                    <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Seamless AI Cross-Posting
                     </span>
-                    <span className="text-[10px] text-slate-400">2 min ago</span>
+                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">
+                      +35% Discovery Lift
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-600">Rival suggested phone change: +971 4 000 0000</p>
-                  <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-[11px] text-emerald-800 font-bold">
-                    <span>✓ Auto-Reverted to Official Number</span>
-                    <span className="text-[10px] bg-emerald-100 px-2 py-0.5 rounded text-emerald-900">Protected</span>
+                  <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
+                    <span className="text-slate-400 font-mono text-[10px] block">IG Reel: "Fresh morning roast is brewing! #coffee #fyp..."</span>
+                    <span className="font-semibold text-slate-900 block">➔ Google Maps: "📍 Downtown Dubai: Savor specialty morning flat white &amp; brunch..."</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] pt-1">
+                    <span className="text-emerald-700 font-bold">✓ Direct CTA: [Order Online]</span>
+                    <span className="text-slate-400">0 manual hours wasted</span>
                   </div>
                 </div>
               </div>

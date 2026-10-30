@@ -48,6 +48,7 @@ import { Footer } from '@/components/Footer';
 import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
 import { LocationQuotaModal } from '@/components/LocationQuotaModal';
 import { GbpDataMatrix } from '@/components/GbpDataMatrix';
+import { SocialSyncHub } from '@/components/SocialSyncHub';
 import { getSubscription, setSubscriptionPlan, activateTrial, SubscriptionState, PlanId } from '@/lib/subscription';
 import { isSuperAdmin } from '@/lib/roles';
 import { runInspectionAudit } from '@/lib/inspection/auditEngine';
@@ -1079,6 +1080,23 @@ export default function DashboardCockpitPage() {
                 rating={activeProfile?.rating || 5.0}
                 reviewsCount={activeProfile?.reviews_count || 28}
                 isPro={isProUser}
+                onUpgradeClick={() => {
+                  const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
+                  window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
+                }}
+              />
+            </div>
+
+            {/* ======================================================== */}
+            {/* BLOCK 1.9: SOCIAL AUTOPILOT (INSTAGRAM & TIKTOK SYNC)   */}
+            {/* ======================================================== */}
+            <div id="social-sync-hub">
+              <SocialSyncHub
+                venueName={activeProfile?.name || 'Cafe Svoi'}
+                category={activeProfile?.category || 'Coffee Shop & Bakery'}
+                city={activeProfile?.city || 'Dubai'}
+                isPro={isProUser}
+                planId={subscription?.planId || 'FREE_SCOUT'}
                 onUpgradeClick={() => {
                   const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
                   window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
