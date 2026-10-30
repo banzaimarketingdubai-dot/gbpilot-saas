@@ -557,17 +557,8 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
       }
     } catch (err) {
       console.warn("Copilot AI fallback:", err);
-      // Smart contextual fallback response
-      let fallbackReply = `I have analyzed "${query}" for ${activeProfile?.name || 'your business'}. Local pack positioning is solid, and keyword velocity is outperforming district competitors by +12%.`;
-      if (query.includes('competitor')) {
-        fallbackReply = `Competitor #1 dominates the morning search cluster with a 4.8★ rating and 7 new reviews/week. Weakness: 0 owner replies to 3★ ratings. Overtake Move: Deploy our 1-click review velocity campaign and extend Friday evening hours (+1h).`;
-      } else if (query.includes('promo') || query.includes('post')) {
-        fallbackReply = `I have drafted an offer post in the Google Posts Planner above. It includes verified neighborhood keywords and geotagging instructions for top Local Pack indexing.`;
-      } else if (query.includes('security') || query.includes('audit')) {
-        fallbackReply = `Sentinel Security Audit Complete: All primary attributes (Hours, Phone, NAP) are 100% locked. 0 competitor tampering attempts detected in the past 24 hours.`;
-      } else if (query.includes('ChatGPT') || query.includes('ranking')) {
-        fallbackReply = `AI Search Share-of-Voice: Your business is indexed in 68% of relevant ChatGPT and Gemini prompts within your city radius. Citations are grounded on high-density review sentiment.`;
-      }
+      // Fallback: honest error, no invented numbers
+      const fallbackReply = `Не удалось получить ответ от AI-сервера для запроса «${query}». Проверьте соединение и попробуйте снова. Данные о бизнесе «${activeProfile?.name || ''}» будут использованы при следующем запросе.`;
 
       setMessages((prev) => [
         ...prev,

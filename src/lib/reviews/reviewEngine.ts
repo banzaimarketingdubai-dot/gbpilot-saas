@@ -33,88 +33,11 @@ export interface ReviewVelocityStats {
   savedAdSpendValue: string;
 }
 
-export const INITIAL_MOCK_REVIEWS: ReviewInboxItem[] = [
-  {
-    id: 'rev_1',
-    author: 'Cynthia Martinez',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
-    rating: 5,
-    comment: 'Exceptional craftsmanship and precision! The team arrived on time, completed the installation flawlessly, and left everything spotless. Photos attached show the final setup in the evening — breathtaking!',
-    date: '2 days ago',
-    status: 'AUTO_REPLIED',
-    confidenceZone: 'GREEN',
-    sentiment: 'POSITIVE',
-    aiDraftReply: 'Thank you so much Cynthia! We truly appreciate you sharing the stunning photos of our installation. Visual feedback like yours helps local neighbors see the quality standards we strive for every day.',
-    injectedKeywords: ['installation', 'craftsmanship', 'quality standards'],
-    hasPhotos: true,
-    photosCount: 3,
-    photoUrls: [
-      'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=300&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=300&q=80'
-    ],
-    isLocalGuide: true,
-    localGuideLevel: 6,
-    exifVerified: true,
-    reviewWeight: 'MAX_LOCAL_GUIDE'
-  },
-  {
-    id: 'rev_2',
-    author: 'Pamela Sterling',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
-    rating: 5,
-    comment: 'Top-tier service from start to finish! Tapped their NFC stand at checkout, super smooth. Highly recommend to anyone seeking genuine quality in this area.',
-    date: '4 days ago',
-    status: 'APPROVED',
-    confidenceZone: 'GREEN',
-    sentiment: 'POSITIVE',
-    aiDraftReply: 'Thank you Pamela for the wonderful 5-star review! The whole team is thrilled to deliver exceptional service. Looking forward to welcoming you back soon!',
-    injectedKeywords: ['service quality', 'local area'],
-    hasPhotos: true,
-    photosCount: 1,
-    photoUrls: [
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'
-    ],
-    isLocalGuide: true,
-    localGuideLevel: 5,
-    exifVerified: true,
-    reviewWeight: 'HIGH_EXIF_TRUST'
-  },
-  {
-    id: 'rev_3',
-    author: 'David Henderson',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-    rating: 4,
-    comment: 'Great overall work and friendly technicians. Only slight delay in arrival due to morning traffic, but communication was prompt throughout.',
-    date: '1 week ago',
-    status: 'PENDING',
-    confidenceZone: 'YELLOW',
-    sentiment: 'NEUTRAL',
-    aiDraftReply: 'Thank you for your candid feedback, David! We are glad you enjoyed our service and will continue refining our scheduling dispatch to minimize transit delays.',
-    injectedKeywords: ['friendly technicians', 'scheduling'],
-    hasPhotos: false,
-    isLocalGuide: false,
-    reviewWeight: 'STANDARD'
-  },
-  {
-    id: 'rev_extortion_demo',
-    author: 'Anonymous Local Guide',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-    rating: 1,
-    comment: 'Terrible experience, fraudulent service! To delete this negative review and protect your profile reputation, contact our team on Telegram: @reputation_fix_bot',
-    date: 'Yesterday',
-    status: 'PENDING',
-    confidenceZone: 'RED',
-    sentiment: 'CRITICAL',
-    aiDraftReply: 'We have zero customer records matching your profile. Demanding Telegram contact or payment to delete negative reviews is a direct violation of Google Maps Review Extortion Policy. An expedited takedown dossier has been submitted to Google Trust & Safety.',
-    injectedKeywords: ['fraud investigation', 'legal escalation'],
-    hasPhotos: false,
-    isLocalGuide: true,
-    localGuideLevel: 7,
-    reviewWeight: 'STANDARD'
-  }
-];
+// INITIAL_MOCK_REVIEWS removed — reviews are loaded from real GBP API only
+export const INITIAL_MOCK_REVIEWS: ReviewInboxItem[] = [];
 
-let mockReviewInbox: ReviewInboxItem[] = [...INITIAL_MOCK_REVIEWS];
+// Real reviews are injected by the reviews page from GBP API — no mock data
+let mockReviewInbox: ReviewInboxItem[] = [];
 
 export function getReviewInbox(): ReviewInboxItem[] {
   return mockReviewInbox;
