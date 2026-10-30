@@ -373,6 +373,16 @@ export default function GeoGridPage() {
     }
   }, []);
 
+  // Auto-run initial live scan once profile and initial keyword are loaded
+  const hasAutoScannedRef = React.useRef<string>('');
+  useEffect(() => {
+    const profileKey = `${activeProfile?.id || activeProfile?.name || ''}_${selectedKeyword}`;
+    if (selectedKeyword && hasAutoScannedRef.current !== profileKey && !isScanning) {
+      hasAutoScannedRef.current = profileKey;
+      handleScan(selectedKeyword);
+    }
+  }, [activeProfile?.id, activeProfile?.name, selectedKeyword]);
+
   const directoryBlueprints = React.useMemo(() => {
     return buildDirectoryBlueprints(
       activeProfile
@@ -527,7 +537,6 @@ export default function GeoGridPage() {
   };
 
   const generateLocalSpatialRanks = (dimension: number, businessName: string, keyword: string) => {
-    const total = dimension * dimension;
     const half = Math.floor(dimension / 2);
     const ranks: { pos: number; rank: number; competitor: string }[] = [];
     
@@ -543,13 +552,13 @@ export default function GeoGridPage() {
           comp = 'You';
         } else if (distFromCenter <= 1.0) {
           rank = Math.min(3, 1 + Math.floor(distFromCenter * 1.5));
-          comp = rank === 1 ? 'You' : `${keyword.charAt(0).toUpperCase() + keyword.slice(1)} Hub`;
+          comp = rank === 1 ? 'You' : 'Local Competitor';
         } else if (distFromCenter <= 1.8) {
           rank = 3 + Math.floor(distFromCenter * 2);
-          comp = 'District Competitor';
+          comp = 'Local Competitor';
         } else {
           rank = 7 + Math.floor(distFromCenter * 3);
-          comp = 'Regional Chain';
+          comp = 'Local Competitor';
         }
         
         ranks.push({ pos, rank, competitor: comp });
@@ -557,45 +566,12 @@ export default function GeoGridPage() {
       }
     }
     setGridRanks(ranks);
-
-    // Also populate real competitor matrix based on target keyword
-    const kwCap = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-    setCompetitors([
-      {
-        name: `${kwCap} Prime Spot`,
-        rating: 4.8,
-        reviewsCount: 154,
-        reviewVelocityPerWeek: 7,
-        priceLevel: '$$',
-        convenience: ['Dine-in', 'Takeout', 'Fast Route'],
-        specialtyKeywords: [keyword, 'top rated', 'fast wifi'],
-        diffScore: 'LEADER'
-      },
-      {
-        name: `Central ${kwCap} Express`,
-        rating: 4.5,
-        reviewsCount: 98,
-        reviewVelocityPerWeek: 4,
-        priceLevel: '$$',
-        convenience: ['Takeout', 'Curbside Pickup'],
-        specialtyKeywords: [keyword, 'friendly staff'],
-        diffScore: 'CHALLENGER'
-      },
-      {
-        name: `District ${kwCap} Corner`,
-        rating: 4.1,
-        reviewsCount: 52,
-        reviewVelocityPerWeek: 2,
-        priceLevel: '$',
-        convenience: ['Takeout only'],
-        specialtyKeywords: [keyword, 'budget friendly'],
-        diffScore: 'LAGGING'
-      }
-    ]);
+    setCompetitors([]);
   };
 
-  const handleScan = async () => {
-    if (!selectedKeyword.trim()) {
+  const handleScan = async (keywordOverride?: string) => {
+    const kwToScan = (typeof keywordOverride === 'string' ? keywordOverride : selectedKeyword).trim();
+    if (!kwToScan) {
       alert("Please enter or select a target keyword for the ranking scan");
       return;
     }
@@ -604,7 +580,7 @@ export default function GeoGridPage() {
     setSelectedNode(null);
 
     const dim = gridSize === '7x7' ? 7 : gridSize === '5x5' ? 5 : 3;
-    const bName = activeProfile?.name || selectedKeyword.trim();
+    const bName = activeProfile?.name || kwToScan;
     const bAddress = activeProfile?.address || activeProfile?.city || '';
 
     try {
@@ -619,7 +595,7 @@ export default function GeoGridPage() {
 
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${baseUrl}/api/v1/geo-grid/scan`, {
         method: 'POST',
@@ -628,7 +604,7 @@ export default function GeoGridPage() {
           profile_id: profileId,
           business_name: bName,
           address: bAddress,
-          keyword: selectedKeyword.trim(), 
+          keyword: kwToScan, 
           grid_size: dim, 
           distance_meters: 500.0 
         }),
@@ -647,30 +623,61 @@ export default function GeoGridPage() {
           }));
           setGridRanks(newRanks);
 
-          // Extract distinct competitors from scan
-          const distinct = Array.from(
-            new Set(
-              data.grid
-                .map((g: any) => g.competitor)
-                .filter((c: string) => c && c !== 'You' && c !== '—' && c !== 'Not Found')
-            )
-          ).slice(0, 3);
-
-          if (distinct.length > 0) {
+          if (Array.isArray(data.competitors) && data.competitors.length > 0) {
             setCompetitors(
-              distinct.map((cName: any, idx: number) => ({
-                name: String(cName),
-                rating: Number((4.7 - idx * 0.2).toFixed(1)),
-                reviewsCount: 95 - idx * 25,
-                reviewVelocityPerWeek: 6 - idx * 2,
-                priceLevel: idx === 0 ? '$$' : '$',
-                convenience: ['Google Verified', 'Fast Route'],
-                specialtyKeywords: [selectedKeyword, 'local service'],
-                diffScore: idx === 0 ? 'LEADER' : idx === 1 ? 'CHALLENGER' : 'LAGGING'
+              data.competitors.map((c: any, idx: number) => ({
+                placeId: c.place_id,
+                name: String(c.name || 'Local Business'),
+                address: c.address || '',
+                googleMapsUrl: c.google_maps_url || '',
+                websiteUrl: c.website_url || '',
+                phone: c.phone || '',
+                rating: Number(c.rating || 0),
+                reviewsCount: Number(c.reviews_count || 0),
+                priceLevel: c.price_level || '',
+                convenience: [],
+                specialtyKeywords: [kwToScan],
+                diffScore: idx === 0 ? 'LEADER' : idx === 1 ? 'CHALLENGER' : 'LAGGING',
+                primaryCategory: c.primary_category || 'Local Business',
+                secondaryCategories: Array.isArray(c.secondary_categories) ? c.secondary_categories : [],
+                gridWins: Number(c.grid_wins || 1),
+                avgRank: Number(c.avg_rank || idx + 1),
+                openNow: c.open_now,
+                photosCount: Number(c.photos_count || 0),
+                winningMoat: c.winning_moat || '',
+                criticalWeakness: c.critical_weakness || '',
+                overtakeStrategy: c.overtake_strategy || ''
               }))
             );
+          } else {
+            // Fallback if backend returned grid nodes before competitors array
+            const distinct = Array.from(
+              new Set(
+                data.grid
+                  .map((g: any) => g.competitor)
+                  .filter((c: string) => c && c !== 'You' && c !== '—' && c !== 'Not Found' && c !== 'Local Competitor')
+              )
+            ).slice(0, 3);
+            setCompetitors(
+              distinct.map((cName: any, idx: number) => {
+                const nodeMatch = data.grid.find((g: any) => g.competitor === cName) || {};
+                return {
+                  name: String(cName),
+                  googleMapsUrl:
+                    nodeMatch.competitor_url ||
+                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${cName} ${bAddress}`.trim())}`,
+                  rating: Number(nodeMatch.competitor_rating || 0),
+                  reviewsCount: Number(nodeMatch.competitor_reviews || 0),
+                  convenience: [],
+                  specialtyKeywords: [kwToScan],
+                  diffScore: idx === 0 ? 'LEADER' : idx === 1 ? 'CHALLENGER' : 'LAGGING',
+                  primaryCategory: 'Local Business',
+                  secondaryCategories: []
+                };
+              })
+            );
           }
-          setScanNotice(`Live Geo-Grid scan complete for "${selectedKeyword.trim()}". Displaying ${data.grid.length} spatial points.`);
+          setScanNotice(`Live Geo-Grid scan complete for "${kwToScan}". Displaying ${data.grid.length} spatial points.`);
           return;
         }
       }
@@ -858,7 +865,7 @@ export default function GeoGridPage() {
                       key={pill.id}
                       onClick={() => {
                         setSelectedKeyword(pill.label);
-                        setScanNotice(`Target keyword updated to "${pill.label}". Click "Run Live Grid Scan" to refresh ranking.`);
+                        handleScan(pill.label);
                       }}
                       className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
@@ -952,7 +959,7 @@ export default function GeoGridPage() {
               {/* Scan Trigger */}
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleScan}
+                  onClick={() => handleScan()}
                   disabled={isScanning}
                   className="material-button-primary text-xs py-2 px-5 font-bold flex items-center gap-2 cursor-pointer shadow-sm"
                 >
@@ -1098,7 +1105,22 @@ export default function GeoGridPage() {
             </div>
 
             {/* Competitor Differentiation Matrix Component */}
-            <CompetitorMatrix competitors={competitors} targetKeyword={selectedKeyword} />
+            <CompetitorMatrix
+              competitors={competitors}
+              targetKeyword={selectedKeyword}
+              activeProfileId={String(activeProfile?.id || 'default')}
+              activeBusinessName={activeProfile?.name || ''}
+              activeBusinessCategory={activeProfile?.category || ''}
+              totalGridNodes={gridRanks.length}
+              onCategoriesAdopted={(newCats) => {
+                if (activeProfile) {
+                  setActiveProfile({
+                    ...activeProfile,
+                    category: newCats.join(', ')
+                  });
+                }
+              }}
+            />
 
           </div>
         )}

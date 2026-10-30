@@ -305,10 +305,23 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
         print(f"[GoogleService] Public Place API lookup failed: {e}")
     return None
 
+_GENERIC_PLACE_TYPES = {
+    "point_of_interest", "establishment", "local_business", "store",
+    "service", "food", "premise", "subpremise", "route", "political",
+    "locality", "general_contractor",
+}
+
+
+def _humanize_place_type(raw_type: str) -> str:
+    if not raw_type:
+        return ""
+    return raw_type.replace("_", " ").strip().title()
+
+
 def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_meters: float = 500.0) -> List[Dict[str, Any]]:
     """
     Searches for businesses matching the keyword around a specific lat/lng point 
-    using Google Places API (New) LocationBias.
+    using Google Places API (New) LocationBias and returns full real competitor data.
     """
     if not GOOGLE_PLACES_API_KEY:
         return []
@@ -317,7 +330,13 @@ def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_mete
         url = 'https://places.googleapis.com/v1/places:searchText'
         headers = {
             'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.rating',
+            'X-Goog-FieldMask': (
+                'places.id,places.displayName,places.formattedAddress,places.location,'
+                'places.rating,places.userRatingCount,places.primaryType,'
+                'places.primaryTypeDisplayName,places.types,places.googleMapsUri,'
+                'places.websiteUri,places.internationalPhoneNumber,'
+                'places.currentOpeningHours,places.photos,places.priceLevel'
+            ),
             'Content-Type': 'application/json'
         }
         data = {
@@ -334,12 +353,45 @@ def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_mete
             places = res.json().get("places", [])
             results = []
             for p in places:
+                place_id = p.get("id") or ""
+                name = (p.get("displayName") or {}).get("text") or ""
+                primary_display = (p.get("primaryTypeDisplayName") or {}).get("text")
+                primary_raw = p.get("primaryType") or ""
+                primary_cat = primary_display or _humanize_place_type(primary_raw) or ""
+                raw_types = p.get("types") or []
+                secondary_cats = []
+                for t in raw_types:
+                    if t in _GENERIC_PLACE_TYPES or t == primary_raw:
+                        continue
+                    label = _humanize_place_type(t)
+                    if label and label.lower() != primary_cat.lower() and label not in secondary_cats:
+                        secondary_cats.append(label)
+                if not primary_cat and secondary_cats:
+                    primary_cat = secondary_cats.pop(0)
+
+                maps_uri = p.get("googleMapsUri") or (
+                    f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(name)}"
+                    + (f"&query_place_id={place_id}" if place_id else "")
+                )
+                open_now = (p.get("currentOpeningHours") or {}).get("openNow")
+                photos_count = len(p.get("photos") or [])
+
                 results.append({
-                    "name": p.get("displayName", {}).get("text"),
-                    "address": p.get("formattedAddress"),
-                    "lat": p.get("location", {}).get("latitude"),
-                    "lng": p.get("location", {}).get("longitude"),
-                    "rating": p.get("rating", 0)
+                    "place_id": place_id,
+                    "name": name,
+                    "address": p.get("formattedAddress") or "",
+                    "lat": (p.get("location") or {}).get("latitude"),
+                    "lng": (p.get("location") or {}).get("longitude"),
+                    "rating": p.get("rating") or 0,
+                    "reviews_count": p.get("userRatingCount") or 0,
+                    "primary_category": primary_cat,
+                    "secondary_categories": secondary_cats[:5],
+                    "google_maps_url": maps_uri,
+                    "website_url": p.get("websiteUri") or "",
+                    "phone": p.get("internationalPhoneNumber") or "",
+                    "open_now": open_now,
+                    "photos_count": photos_count,
+                    "price_level": p.get("priceLevel") or "",
                 })
             return results
     except Exception as e:
@@ -413,28 +465,40 @@ def fetch_google_reviews(access_token: str, location_name: str) -> List[Dict[str
         print(f"[GoogleService] Exception fetching reviews: {e}")
         return []
 
-def publish_google_post(access_token: str, location_name: str, post_text: str) -> bool:
+def publish_google_post(access_token: str, location_name: str, post_text: str, cta_url: Optional[str] = None, cta_type: str = "LEARN_MORE") -> bool:
     """
-    Publishes a new 'Local Post' (Offer, Update, or Event) to the Google Business Profile.
+    Publishes a new 'Local Post' to the Google Business Profile via v4 API.
+    Automatically resolves account_name if location_name is 'locations/123'.
     """
     if not access_token:
         raise ValueError("No OAuth access token provided")
         
     try:
-        url = f"https://mybusiness.googleapis.com/v4/{location_name}/localPosts"
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
         }
-        payload = {
+        loc_ref = location_name if "locations/" in location_name else f"locations/{location_name}"
+        if not loc_ref.startswith("accounts/"):
+            acc_res = requests.get("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", headers=headers, timeout=6)
+            if acc_res.ok and acc_res.json().get("accounts"):
+                acc_name = acc_res.json()["accounts"][0].get("name")
+                loc_ref = f"{acc_name}/{loc_ref}"
+
+        url = f"https://mybusiness.googleapis.com/v4/{loc_ref}/localPosts"
+        payload: Dict[str, Any] = {
             "languageCode": "en-US",
             "summary": post_text,
-            "callToAction": {
-                "actionType": "LEARN_MORE",
-                "url": "https://gbpilot.com"
-            }
+            "topicType": "STANDARD",
         }
-        res = requests.post(url, headers=headers, json=payload, timeout=5)
+        if cta_url:
+            payload["callToAction"] = {
+                "actionType": cta_type or "LEARN_MORE",
+                "url": cta_url
+            }
+        res = requests.post(url, headers=headers, json=payload, timeout=8)
+        if not res.ok:
+            print(f"[GoogleService] publish_google_post failed: {res.status_code} {res.text}")
         return res.ok
     except Exception as e:
         print(f"[GoogleService] Exception publishing post: {e}")

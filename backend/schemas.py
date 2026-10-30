@@ -88,10 +88,34 @@ class GeoGridNode(BaseModel):
     lat: float
     lng: float
     competitor: Optional[str] = None
+    competitor_url: Optional[str] = None
+    competitor_rating: Optional[float] = None
+    competitor_reviews: Optional[int] = None
+
+class GeoGridCompetitor(BaseModel):
+    place_id: str = ""
+    name: str
+    address: str = ""
+    google_maps_url: str = ""
+    website_url: str = ""
+    phone: str = ""
+    rating: float = 0.0
+    reviews_count: int = 0
+    primary_category: str = ""
+    secondary_categories: List[str] = []
+    open_now: Optional[bool] = None
+    photos_count: int = 0
+    price_level: str = ""
+    grid_wins: int = 0
+    avg_rank: float = 0.0
+    winning_moat: str = ""
+    critical_weakness: str = ""
+    overtake_strategy: str = ""
 
 class GeoGridScanResponse(BaseModel):
     status: str
     grid: List[GeoGridNode]
+    competitors: List[GeoGridCompetitor] = []
     message: str = ""
 
 class B2BLead(BaseModel):
