@@ -57,9 +57,12 @@
    - **My Business Business Information API** (`mybusinessbusinessinformation.googleapis.com`) — чтение и обновление атрибутов, часов, меню, адресов.
    - **My Business Account Management API** (`mybusinessaccountmanagement.googleapis.com`) — управление локациями и аккаунтами.
    - **Google My Business API Gateway** (`mybusiness.googleapis.com`) — отзывы, ответы на отзывы, посты.
-3. **OAuth 2.0 Client Credentials:**
-   - В разделе **APIs & Services ➔ Credentials** создать OAuth 2.0 Client ID (Web Application).
-   - Authorized redirect URIs:
-     - `http://localhost:3000/api/v1/auth/google/callback`
+3. **OAuth 2.0 Client Credentials (Активированы):**
+   - **Client ID:** `1025915570314-u36••••••••••••••••••••••••.apps.googleusercontent.com`
+   - **Client Secret:** `GOCSPX-••••••••••••••••••••••••` (Хранится в `.env.local` и переменных окружения Railway/Vercel)
+   - **Authorized Redirect URIs:**
+     - `https://gbpilot-saas-production.up.railway.app/api/v1/auth/google/callback`
      - `https://www.gbpilot.top/api/v1/auth/google/callback`
-   - Скопировать `Client ID` и `Client Secret` в переменные окружения (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
+     - `https://gbpilot.top/api/v1/auth/google/callback`
+     - `http://localhost:3000/api/v1/auth/google/callback`
+
