@@ -802,3 +802,111 @@ def _within_days(iso: Optional[str], days: int) -> bool:
         return datetime.now(timezone.utc) - dt <= timedelta(days=days)
     except Exception:
         return False
+
+
+# ---------------------------------------------------------------------------
+# Stage-1: Real keyword impressions from GBP Performance API
+# ---------------------------------------------------------------------------
+
+def get_search_keywords_impressions(access_token: str, location_name: str) -> list:
+    """
+    Fetches top search keywords with monthly impressions from the
+    GBP Business Profile Performance API (searchkeywords.impressions.monthly).
+
+    Args:
+        access_token:   OAuth2 Bearer token for the GMB account owner.
+        location_name:  Full GBP resource name, e.g. "locations/1234567890".
+
+    Returns:
+        List of dicts sorted by impressions desc:
+          [{"keyword": str, "impressions": int, "source": "GBP_REAL"}, ...]
+        Returns [] on any error (token expired, no data, quota hit, etc.)
+    """
+    from datetime import date, timedelta
+    import urllib.parse
+
+    # Use last full calendar month for stable data
+    today = date.today()
+    first_of_this_month = today.replace(day=1)
+    last_month_end = first_of_this_month - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+    # Clean location_name: strip leading slash if present
+    loc = location_name.lstrip("/")
+
+    params = urllib.parse.urlencode([
+        ("monthlyRange.startMonth.year",  last_month_start.year),
+        ("monthlyRange.startMonth.month", last_month_start.month),
+        ("monthlyRange.endMonth.year",    last_month_end.year),
+        ("monthlyRange.endMonth.month",   last_month_end.month),
+    ])
+
+    url = (
+        f"https://businessprofileperformance.googleapis.com/v1/"
+        f"{loc}/searchkeywords/impressions/monthly?{params}"
+    )
+
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        keywords = data.get("searchKeywordsCounts", [])
+        result = []
+        for item in keywords:
+            kw = (item.get("searchKeyword") or "").strip()
+            if not kw or kw.lower() in ("local business", "establishment"):
+                continue
+            # insightsValue can be a dict {"value": "123"} or int
+            iv = item.get("insightsValue", {})
+            if isinstance(iv, dict):
+                impressions = int(iv.get("value", 0) or 0)
+            else:
+                impressions = int(iv or 0)
+            result.append({"keyword": kw, "impressions": impressions, "source": "GBP_REAL"})
+        # Sort by impressions descending
+        result.sort(key=lambda x: x["impressions"], reverse=True)
+        return result
+    except Exception:
+        return []
+
+
+def get_google_autocomplete_suggestions(keyword_seed: str, location_hint: str = "") -> list:
+    """
+    Returns Google Autocomplete suggestions for a seed term.
+    Uses the unofficial but publicly accessible Maps suggest endpoint.
+    No API key required; rate-limited by IP.
+
+    Returns:
+        [{"keyword": str, "source": "GOOGLE_SUGGEST"}, ...]
+    """
+    import urllib.parse
+
+    query = f"{keyword_seed} {location_hint}".strip()
+    url = (
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+        f"?input={urllib.parse.quote(query)}&types=establishment&language=en"
+    )
+
+    # Fallback: use suggestqueries (no key needed, returns JSON)
+    fallback_url = (
+        "https://suggestqueries.google.com/complete/search"
+        f"?client=firefox&q={urllib.parse.quote(query)}&hl=en"
+    )
+
+    try:
+        resp = requests.get(fallback_url, timeout=6, headers={"User-Agent": "Mozilla/5.0"})
+        if resp.status_code == 200:
+            data = resp.json()
+            # suggestqueries returns [query, [suggestions]]
+            suggestions = data[1] if isinstance(data, list) and len(data) > 1 else []
+            return [
+                {"keyword": s.strip(), "source": "GOOGLE_SUGGEST"}
+                for s in suggestions
+                if s.strip() and s.strip().lower() != keyword_seed.lower()
+            ][:8]
+    except Exception:
+        pass
+    return []

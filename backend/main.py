@@ -656,6 +656,86 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
     result = await run_geo_grid(request, db, db_profile_name)
     return GeoGridScanResponse(**result)
 
+@app.get("/api/v1/geo-grid/suggest-keywords", tags=["Geo-Grid"])
+async def suggest_keywords_endpoint(
+    profile_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns keyword suggestions for the Geo-Grid keyword pill selector.
+    Sources (in priority order):
+      1. GBP_REAL     — real search queries from GBP Performance API (searchkeywords/impressions)
+      2. GOOGLE_SUGGEST — Google Autocomplete completions seeded from primary category
+    Each item: { keyword, source, impressions? }
+    """
+    from google_service import (
+        refresh_access_token,
+        get_search_keywords_impressions,
+        get_google_autocomplete_suggestions,
+    )
+
+    profile = None
+    if db is not None and profile_id and profile_id != "default":
+        try:
+            profile = db.query(models.GBPProfile).filter(
+                models.GBPProfile.id == profile_id
+            ).first()
+            if not profile:
+                # try by google_location_id
+                profile = db.query(models.GBPProfile).filter(
+                    models.GBPProfile.google_location_id.in_(
+                        [profile_id, f"locations/{profile_id}"]
+                    )
+                ).first()
+        except Exception as e:
+            logger.warning(f"[SuggestKeywords] DB lookup failed: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
+
+    real_keywords: list = []
+    google_suggestions: list = []
+    location_hint = ""
+
+    # --- Source 1: GBP_REAL via Performance API ---
+    if profile and profile.refresh_token and profile.google_location_id:
+        try:
+            access = refresh_access_token(profile.refresh_token)
+            loc_id = profile.google_location_id
+            if not loc_id.startswith("locations/"):
+                loc_id = f"locations/{loc_id}"
+            real_keywords = get_search_keywords_impressions(access, loc_id)
+        except Exception as e:
+            logger.warning(f"[SuggestKeywords] GBP impressions failed: {e}")
+
+    # --- Source 2: GOOGLE_SUGGEST seeded from primary category ---
+    seed = ""
+    if profile:
+        seed = profile.category or profile.business_name or ""
+        location_hint = profile.city or profile.address or ""
+    if seed:
+        try:
+            google_suggestions = get_google_autocomplete_suggestions(seed, location_hint)
+        except Exception as e:
+            logger.warning(f"[SuggestKeywords] Autocomplete failed: {e}")
+
+    # Merge: GBP_REAL first (sorted by impressions), then GOOGLE_SUGGEST (deduped)
+    real_kw_lower = {k["keyword"].lower() for k in real_keywords}
+    deduped_suggest = [
+        s for s in google_suggestions
+        if s["keyword"].lower() not in real_kw_lower
+    ]
+
+    all_keywords = real_keywords + deduped_suggest
+
+    return {
+        "keywords": all_keywords,
+        "has_real_data": len(real_keywords) > 0,
+        "profile_id": profile_id,
+    }
+
+
 from pydantic import BaseModel
 class PublishPostRequest(BaseModel):
     profile_id: str

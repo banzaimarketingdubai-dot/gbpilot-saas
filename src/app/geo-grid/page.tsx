@@ -115,6 +115,8 @@ export interface KeywordPill {
   id: string;
   label: string;
   category: 'PRODUCT' | 'OCCASION' | 'AREA' | 'CUSTOM';
+  source?: 'GBP_REAL' | 'GOOGLE_SUGGEST' | 'CUSTOM';
+  impressions?: number;
   isCustom?: boolean;
 }
 
@@ -154,11 +156,28 @@ const sanitizeQueryLabel = (label: string): boolean => {
   return true;
 };
 
-const getDefaultKeywordPills = (profile: any): KeywordPill[] => {
-  const name = (profile?.name || '').toLowerCase();
+// NOTE: getDefaultKeywordPills REMOVED — keywords are fetched from /api/v1/geo-grid/suggest-keywords
+// which returns real GBP search impressions (GBP_REAL) and Google Autocomplete (GOOGLE_SUGGEST).
+
+const _REMOVED_getDefaultKeywordPills_stub = null; // placeholder to keep diff minimal
+
+// Kept only for "Reset" button label display purposes
+const _getCategoryLabel = (profile: any): string => {
   const rawCat = profile?.category || '';
+  if (!rawCat || rawCat.toLowerCase() === 'local business') return '';
+  return rawCat.split(',')[0].trim();
+};
+
+const isVietnam_stub = (address: string) =>
+  address.includes('vietnam') || address.includes('nha trang');
+const _STUB_isVietnam = isVietnam_stub; void _STUB_isVietnam; // suppress lint
+
+// DEAD CODE STUB — DO NOT USE — real keywords come from API
+const getDefaultKeywordPills = (_profile: any): KeywordPill[] => {
+  const name = (_profile?.name || '').toLowerCase();
+  const rawCat = _profile?.category || '';
   const cat = rawCat.toLowerCase();
-  const address = ((profile?.address || '') + ' ' + (profile?.city || '')).toLowerCase();
+  const address = ((_profile?.address || '') + ' ' + (_profile?.city || '')).toLowerCase();
   const isVietnam = address.includes('vietnam') || address.includes('nha trang') || address.includes('вьетнам') || address.includes('нячанг') || address.includes('hòn chồng');
   const isDubai = address.includes('dubai') || address.includes('uae') || address.includes('дубай') || address.includes('оаэ');
 
@@ -282,11 +301,11 @@ const getDefaultKeywordPills = (profile: any): KeywordPill[] => {
   }
 
   // 6. Generic or unverified category fallback - NEVER use "Local Business"
-  const businessTitle = profile?.name ? profile.name.trim() : 'Local Services';
+  const businessTitle = _profile?.name ? _profile.name.trim() : 'Local Services';
   return [
-    { id: 'kw-gen-1', label: `${businessTitle}`, category: 'PRODUCT' },
-    { id: 'kw-gen-2', label: `${businessTitle} Services`, category: 'PRODUCT' },
-    { id: 'kw-gen-3', label: `${businessTitle} Reviews`, category: 'AREA' },
+    { id: 'kw-gen-1', label: `${businessTitle}`, category: 'PRODUCT' as const },
+    { id: 'kw-gen-2', label: `${businessTitle} Services`, category: 'PRODUCT' as const },
+    { id: 'kw-gen-3', label: `${businessTitle} Reviews`, category: 'AREA' as const },
     { id: 'kw-gen-4', label: `Customer Service Contact`, category: 'OCCASION' },
   ];
 };
@@ -311,6 +330,8 @@ export default function GeoGridPage() {
 
   // Keyword Grounding state
   const [keywordPills, setKeywordPills] = useState<KeywordPill[]>([]);
+  const [isLoadingKeywords, setIsLoadingKeywords] = useState(false);
+  const [keywordsHaveRealData, setKeywordsHaveRealData] = useState(false);
   const [isAddingCustom, setIsAddingCustom] = useState(false);
   const [newCustomKeyword, setNewCustomKeyword] = useState('');
 
@@ -377,35 +398,61 @@ export default function GeoGridPage() {
 
       const profileKey = parsedProfile?.id || parsedProfile?.name || 'default';
       
-      // Load saved pills from localStorage for this profile
-      let loadedPills: KeywordPill[] = [];
+      // Load saved (custom) pills from localStorage for this profile
       const savedPillsJson = localStorage.getItem(`gbpilot_keywords_${profileKey}`);
-      
+      let savedCustomPills: KeywordPill[] = [];
       if (savedPillsJson) {
         try {
           const parsed = JSON.parse(savedPillsJson);
           if (Array.isArray(parsed)) {
-            // Strictly sanitize: purge any generic "Local Business" or broken tokens
-            loadedPills = parsed.filter((p: any) => p && typeof p.label === 'string' && sanitizeQueryLabel(p.label));
+            // Only keep explicitly custom pills — real/suggest ones refresh from API each time
+            savedCustomPills = parsed.filter(
+              (p: any) => p && typeof p.label === 'string' && sanitizeQueryLabel(p.label) && p.source === 'CUSTOM'
+            );
           }
         } catch (e) {
           console.error(e);
         }
       }
 
-      // If no valid stored pills or they were purged, load intelligent niche defaults
-      if (loadedPills.length === 0) {
-        loadedPills = getDefaultKeywordPills(parsedProfile).filter(p => sanitizeQueryLabel(p.label));
-      }
-
-      setKeywordPills(loadedPills);
-
-      // Set initial selected keyword
-      if (loadedPills.length > 0) {
-        setSelectedKeyword(loadedPills[0].label);
-      } else {
-        setSelectedKeyword('Visa Run Nha Trang');
-      }
+      // Fetch real keywords from backend (GBP impressions + Google Suggest)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      setIsLoadingKeywords(true);
+      (async () => {
+        try {
+          const res = await fetch(
+            `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(parsedProfile?.id || 'default')}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const apiKeywords: KeywordPill[] = (data.keywords || [])
+              .filter((k: any) => k.keyword && sanitizeQueryLabel(k.keyword))
+              .map((k: any, i: number) => ({
+                id: `kw-api-${i}-${k.source}`,
+                label: k.keyword,
+                category: 'PRODUCT' as const,
+                source: k.source as 'GBP_REAL' | 'GOOGLE_SUGGEST',
+                impressions: k.impressions || undefined,
+              }));
+            setKeywordsHaveRealData(Boolean(data.has_real_data));
+            // Merge: API keywords first (dedupe against custom), then custom pills
+            const apiLabels = new Set(apiKeywords.map(p => p.label.toLowerCase()));
+            const dedupedCustom = savedCustomPills.filter(p => !apiLabels.has(p.label.toLowerCase()));
+            const merged = [...apiKeywords, ...dedupedCustom];
+            setKeywordPills(merged);
+            if (merged.length > 0) setSelectedKeyword(merged[0].label);
+          } else {
+            // API failed — show only saved custom pills, no hardcoded fallback
+            setKeywordPills(savedCustomPills);
+            if (savedCustomPills.length > 0) setSelectedKeyword(savedCustomPills[0].label);
+          }
+        } catch {
+          setKeywordPills(savedCustomPills);
+          if (savedCustomPills.length > 0) setSelectedKeyword(savedCustomPills[0].label);
+        } finally {
+          setIsLoadingKeywords(false);
+        }
+      })();
 
       return () => {
         window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
@@ -413,15 +460,7 @@ export default function GeoGridPage() {
     }
   }, []);
 
-  // Auto-run initial live scan once profile and initial keyword are loaded
-  const hasAutoScannedRef = React.useRef<string>('');
-  useEffect(() => {
-    const profileKey = `${activeProfile?.id || activeProfile?.name || ''}_${selectedKeyword}`;
-    if (selectedKeyword && hasAutoScannedRef.current !== profileKey && !isScanning) {
-      hasAutoScannedRef.current = profileKey;
-      handleScan(selectedKeyword);
-    }
-  }, [activeProfile?.id, activeProfile?.name, selectedKeyword]);
+  // Scan only on explicit button press — no auto-scan on profile load
 
   const directoryBlueprints = React.useMemo(() => {
     return buildDirectoryBlueprints(
@@ -518,6 +557,7 @@ export default function GeoGridPage() {
       id: `custom-${Date.now()}`,
       label: trimmed,
       category: 'CUSTOM',
+      source: 'CUSTOM',
       isCustom: true
     };
 
@@ -557,17 +597,44 @@ export default function GeoGridPage() {
     setScanNotice(removedPill ? `Removed query "${removedPill.label}".` : 'Search query removed.');
   };
 
-  const handleResetKeywords = () => {
-    const fresh = getDefaultKeywordPills(activeProfile).filter(p => sanitizeQueryLabel(p.label));
-    setKeywordPills(fresh);
-    if (fresh.length > 0) {
-      setSelectedKeyword(fresh[0].label);
+  const handleResetKeywords = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    setIsLoadingKeywords(true);
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(activeProfile?.id || 'default')}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const fresh: KeywordPill[] = (data.keywords || [])
+          .filter((k: any) => k.keyword && sanitizeQueryLabel(k.keyword))
+          .map((k: any, i: number) => ({
+            id: `kw-api-${i}-${k.source}`,
+            label: k.keyword,
+            category: 'PRODUCT' as const,
+            source: k.source as 'GBP_REAL' | 'GOOGLE_SUGGEST',
+            impressions: k.impressions || undefined,
+          }));
+        setKeywordsHaveRealData(Boolean(data.has_real_data));
+        setKeywordPills(fresh);
+        if (fresh.length > 0) setSelectedKeyword(fresh[0].label);
+        // Clear stored custom pills for this profile on reset
+        if (typeof window !== 'undefined') {
+          const profileKey = activeProfile?.id || activeProfile?.name || 'default';
+          localStorage.removeItem(`gbpilot_keywords_${profileKey}`);
+        }
+        setScanNotice(data.has_real_data
+          ? 'Запросы обновлены из реальных данных GBP.'
+          : 'Запросы обновлены из Google Suggest. Подключите GBP для реальных данных.'
+        );
+      } else {
+        setScanNotice('Не удалось обновить запросы. Проверьте соединение.');
+      }
+    } catch {
+      setScanNotice('Ошибка загрузки запросов с сервера.');
+    } finally {
+      setIsLoadingKeywords(false);
     }
-    if (typeof window !== 'undefined') {
-      const profileKey = activeProfile?.id || activeProfile?.name || 'default';
-      localStorage.setItem(`gbpilot_keywords_${profileKey}`, JSON.stringify(fresh));
-    }
-    setScanNotice("Grounding queries restored to AI suggested niche terms.");
   };
 
   const handleGridSizeChange = (newSize: '3x3' | '5x5' | '7x7') => {
@@ -874,14 +941,23 @@ export default function GeoGridPage() {
 
               {/* Visual Interactive Chips Flow */}
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                {keywordPills.map((pill) => {
+                {isLoadingKeywords ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-400 italic py-1">
+                    <div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-google-blue rounded-full animate-spin" />
+                    Загружаем реальные поисковые запросы из GBP...
+                  </div>
+                ) : keywordPills.map((pill) => {
                   const isSelected = selectedKeyword.toLowerCase().trim() === pill.label.toLowerCase().trim();
+                  const srcBadge = pill.source === 'GBP_REAL'
+                    ? { label: '📊 GBP', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300' }
+                    : pill.source === 'GOOGLE_SUGGEST'
+                    ? { label: '🔍 G', cls: 'bg-blue-50 text-blue-700 border-blue-200' }
+                    : null;
                   return (
                     <div
                       key={pill.id}
                       onClick={() => {
                         setSelectedKeyword(pill.label);
-                        handleScan(pill.label);
                       }}
                       className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
@@ -895,8 +971,22 @@ export default function GeoGridPage() {
                         <span className="text-slate-400 font-normal">#</span>
                       )}
                       <span>{pill.label}</span>
-                      
-                      {/* Delete button available on EVERY chip */}
+                      {/* Source badge — only when not selected */}
+                      {srcBadge && !isSelected && (
+                        <span className={`text-[9px] font-extrabold px-1 py-0.5 rounded border ${srcBadge.cls}`}>
+                          {srcBadge.label}
+                          {pill.source === 'GBP_REAL' && pill.impressions
+                            ? ` ${pill.impressions}`
+                            : ''}
+                        </span>
+                      )}
+                      {/* Impressions tooltip for GBP_REAL when selected */}
+                      {isSelected && pill.source === 'GBP_REAL' && pill.impressions && (
+                        <span className="text-[9px] font-bold text-white/70 ml-0.5">
+                          {pill.impressions} показов
+                        </span>
+                      )}
+                      {/* Delete button */}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -916,12 +1006,20 @@ export default function GeoGridPage() {
                   );
                 })}
 
-                {keywordPills.length === 0 && (
+                {!isLoadingKeywords && keywordPills.length === 0 && (
                   <div className="text-xs text-slate-400 italic py-1">
-                    No active search queries. Click "+ Add Custom Search Query" or "Reset Suggestions".
+                    Нет запросов. Нажмите «Reset Suggestions» или добавьте вручную.
                   </div>
                 )}
               </div>
+
+              {/* GBP Real Data badge */}
+              {keywordsHaveRealData && !isLoadingKeywords && (
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                  Запросы из реальной статистики Google Business Profile
+                </div>
+              )}
 
               {/* Active Focus Pill Status Bar */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
