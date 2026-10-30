@@ -4,53 +4,62 @@
 
 ---
 
-## 📌 Реквизиты активного обращения в Google (Подача №3)
+## 📌 Реквизиты обращения в Google (Подача №3) — ✅ ОДОБРЕНО!
 
 | Параметр | Значение |
 | :--- | :--- |
-| **Актуальный номер обращения (Case ID)** | **`7-8232000041779`** |
-| **Дата подачи заявки** | **27 октября 2026 г., 14:56** |
-| **Текущий статус** | **Opened a support case (На рассмотрении — ожидаем ответ 3–7 ноября 2026 г.)** |
-| **Google-аккаунт заявителя** | `0451611@gmail.com` (Primary Owner профиля) |
+| **Номер обращения (Case ID)** | **`7-8232000041779`** |
+| **Дата подачи заявки** | 27 октября 2026 г., 14:56 |
+| **Дата одобрения Google** | **29 октября 2026 г., 18:12** |
+| **Текущий статус** | **✅ APPROVED (Одобрено Google GBP API Team — квота 300 QPM выделена)** |
+| **Выделенная квота** | **300 Queries Per Minute (QPM)** |
 | **Google Cloud Project Number** | **`1025915570314`** |
 | **Имя проекта в Google Cloud** | `GbPilot` |
-| **Указанный сайт (сайт заведения)** | **`https://svoi.gbpilot.top/`** |
+| **Google-аккаунт заявителя** | `0451611@gmail.com` |
+| **Официальный сайт заведения** | `https://svoi.gbpilot.top/` |
 | **Подтвержденный бизнес-профиль** | **Кафе СВОИ (Cafe SVOI)** (ID: `15286059258947661772`) |
 | **Физический адрес** | `58 Cao Van Be, Nha Trang 650000, Khanh Hoa, Vietnam` |
 
 ---
 
-## 📜 История всех обращений и причины отказов
+## 📜 Официальный ответ от Google Business Profile API Team
+
+> **От:** `googlebusinessprofile-support@google.com`  
+> **Тема:** `[7-8232000041779] Your Business Profile support inquiry`  
+> 
+> *«Congratulations! We have reviewed your allowlist request, and your project (1025915570314) has been approved to use the Google Business Profile API.*  
+> *Your project has been granted a default quota of 300 Queries Per Minute (QPM), as outlined in our Usage Limits and Quotas documentation.»*
+
+---
+
+## 📜 История всех обращений
 
 ### 1. Обращение №1: `8-2301000041527` (15–16 октября 2026 г.)
 * **Указанный сайт:** `https://www.gbpilot.top`
-* **Причина отказа (16.10.2026):**
-  > *«The website URL listed on your application form (https://www.gbpilot.top) does not exactly match the website URL displayed on your Google Business Profile.»*
-  *(В карточке кафе в Google Картах на тот момент стояла ссылка на Instagram).*
+* **Причина отказа:** Несовпадение URL сайта в форме и карточке заведения.
 
 ### 2. Обращение №2: `5-9695000042388` (19–22 октября 2026 г.)
 * **Указанный сайт:** `https://www.instagram.com/svoi_nhatrang...`
-* **Причина отказа (22.10.2026):**
-  > *«The provided website URL is a social media link, which is not accepted for API verification. To resolve this issue and qualify for API access, the website URL you submit on your application must be an exact match to the one publicly visible on your verified Business Profile.»*
-  *(Google категорически запрещает ссылки на соцсети для верификации API).*
+* **Причина отказа:** Ссылки на социальные сети не принимаются для API-верификации разработчиков.
 
-### 3. Обращение №3: `7-8232000041779` (Успешно отправлено 27 октября 2026 г.)
-* **Указанный сайт:** **`https://svoi.gbpilot.top/`**
-* **Решение:** Развернут официальный двуязычный (RU/EN) сайт для **Кафе СВОИ** с пастельным дизайном, меню, галереей, точным адресом `58 Cao Van Be, Nha Trang 650000` и микроразметкой `Schema.org Restaurant / Cafe`. Ссылка на поддомен теперь полностью совпадает с карточкой в Google Maps и находится на автономном домене, соответствуя всем требованиям Google API Team.
+### 3. Обращение №3: `7-8232000041779` (27–29 октября 2026 г.) — 🚀 УСПЕХ
+* **Указанный сайт:** `https://svoi.gbpilot.top/`
+* **Результат:** Развернут отдельный сайт для кафе на поддомене `svoi.gbpilot.top`, синхронизирован с Google Maps карточкой. Заявка рассмотрена за 48 часов и **одобрена с базовой квотой 300 QPM**.
 
 ---
 
-## 🎯 Что произойдет после одобрения Google
+## 🚀 Чек-лист финальной активации в Google Cloud Console
 
-1. **Письмо от Google Support:** На почту `0451611@gmail.com` поступит подтверждение об успешном внесении проекта `1025915570314` в белый список (Allowlist).
-2. **Активация квоты:** В Google Cloud Console проекта `1025915570314` квота для Business Profile API автоматически вырастет с `0 QPM` до базовых **`300 QPM`** (Queries Per Minute).
-3. **Библиотеки API для работы:**
-   - `mybusinessbusinessinformation.googleapis.com` (My Business Business Information API)
-   - `mybusinessaccountmanagement.googleapis.com` (My Business Account Management API)
-   - `mybusiness.googleapis.com` (Google My Business API Gateway)
+Для проекта **`1025915570314` (`GbPilot`)**:
 
----
-
-## 🛠️ Временный режим работы в приложении GBPilot
-Пока заявка находится на рассмотрении, в дашборде GBPilot работает гибридный режим:
-- **Кнопка «⚡ Add Venue via Search»:** прямое подключение заведений через публичный Google Places API без блокировки квоты GBP API.
+1. Открыть [Google Cloud Console — API Library](https://console.cloud.google.com/apis/library?project=1025915570314) под аккаунтом `0451611@gmail.com`.
+2. Найти и нажать **«Enable» (Включить)** для библиотек:
+   - **My Business Business Information API** (`mybusinessbusinessinformation.googleapis.com`) — чтение и обновление атрибутов, часов, меню, адресов.
+   - **My Business Account Management API** (`mybusinessaccountmanagement.googleapis.com`) — управление локациями и аккаунтами.
+   - **Google My Business API Gateway** (`mybusiness.googleapis.com`) — отзывы, ответы на отзывы, посты.
+3. **OAuth 2.0 Client Credentials:**
+   - В разделе **APIs & Services ➔ Credentials** создать OAuth 2.0 Client ID (Web Application).
+   - Authorized redirect URIs:
+     - `http://localhost:3000/api/v1/auth/google/callback`
+     - `https://www.gbpilot.top/api/v1/auth/google/callback`
+   - Скопировать `Client ID` и `Client Secret` в переменные окружения (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
