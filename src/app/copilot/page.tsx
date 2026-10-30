@@ -388,8 +388,9 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
       };
       window.addEventListener('gbpilot_subscription_changed', handleSubChange);
 
+      const isUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
       const stored = localStorage.getItem('gbpilot_active_profile');
-      if (stored) {
+      if (stored && !isUnlinked) {
         try {
           const parsed = JSON.parse(stored);
           parsedProfile = parsed;

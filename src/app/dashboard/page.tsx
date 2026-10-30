@@ -40,12 +40,14 @@ import {
   Unlink,
   CheckSquare,
   LogOut,
-  Plus
+  Plus,
+  Database
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
 import { LocationQuotaModal } from '@/components/LocationQuotaModal';
+import { GbpDataMatrix } from '@/components/GbpDataMatrix';
 import { getSubscription, setSubscriptionPlan, activateTrial, SubscriptionState, PlanId } from '@/lib/subscription';
 import { isSuperAdmin } from '@/lib/roles';
 import { runInspectionAudit } from '@/lib/inspection/auditEngine';
@@ -74,6 +76,8 @@ interface ActiveBusinessProfile {
   city?: string;
   category?: string;
   phone?: string;
+  website?: string;
+  website_url?: string;
   rating?: number;
   reviews_count?: number;
   role?: string;
@@ -237,9 +241,10 @@ export default function DashboardCockpitPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
+      const isExplicitlyUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
       const storedActive = localStorage.getItem('gbpilot_active_profile');
       let currentProf: ActiveBusinessProfile | null = null;
-      if (storedActive) {
+      if (storedActive && !isExplicitlyUnlinked) {
         try {
           currentProf = JSON.parse(storedActive);
           if (currentProf && currentProf.name) {
@@ -263,7 +268,7 @@ export default function DashboardCockpitPage() {
               cover_url: p.cover_url || p.photo_url || p.snapshot_url || DEFAULT_VENUE_PHOTO
             }));
             setAvailableProfiles(enriched);
-            if (!currentProf) {
+            if (!currentProf && !isExplicitlyUnlinked) {
               setActiveProfile(enriched[0]);
               currentProf = enriched[0];
             }
@@ -327,6 +332,35 @@ export default function DashboardCockpitPage() {
       const handleOpenProfileModal = () => setIsProfileModalOpen(true);
       window.addEventListener('open_user_profile_modal', handleOpenProfileModal);
 
+      const handleProfileUpdate = () => {
+        const isUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
+        const storedActive = localStorage.getItem('gbpilot_active_profile');
+        const storedList = localStorage.getItem('gbpilot_available_profiles');
+
+        if (storedList) {
+          try {
+            const list = JSON.parse(storedList);
+            if (Array.isArray(list)) {
+              setAvailableProfiles(list);
+            }
+          } catch (e) {}
+        } else {
+          setAvailableProfiles([]);
+        }
+
+        if (storedActive && !isUnlinked) {
+          try {
+            const parsed = JSON.parse(storedActive);
+            if (parsed && parsed.name && parsed.name !== 'Connect Business Profile' && parsed.name !== 'No Business Connected') {
+              setActiveProfile(parsed);
+              return;
+            }
+          } catch (e) {}
+        }
+        setActiveProfile(null);
+      };
+      window.addEventListener('active_profile_updated', handleProfileUpdate);
+
       const storedMode = localStorage.getItem('gbpilot_autopilot_mode');
       if (storedMode === 'FULL_AUTOPILOT') {
         setCopilotMode('AUTONOMOUS');
@@ -351,6 +385,7 @@ export default function DashboardCockpitPage() {
       return () => {
         window.removeEventListener('user_session_updated', handleUserUpdate);
         window.removeEventListener('open_user_profile_modal', handleOpenProfileModal);
+        window.removeEventListener('active_profile_updated', handleProfileUpdate);
         window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
       };
     }
@@ -486,8 +521,20 @@ export default function DashboardCockpitPage() {
   };
 
   const handleUnlinkProfile = async (profileToUnlink: ActiveBusinessProfile) => {
+    // 0. Close modals IMMEDIATELY so the confirmation dialog never hangs on screen
+    setProfileToUnlinkConfirm(null);
+    setIsProfileModalOpen(false);
+
     // 1. Remove from availableProfiles
-    const updated = availableProfiles.filter(
+    let currentStoredList: ActiveBusinessProfile[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('gbpilot_available_profiles');
+        if (raw) currentStoredList = JSON.parse(raw);
+      } catch (e) {}
+    }
+    const baseList = currentStoredList.length > 0 ? currentStoredList : availableProfiles;
+    const updated = baseList.filter(
       p => p.name !== profileToUnlink.name && (profileToUnlink.id ? p.id !== profileToUnlink.id : true)
     );
     setAvailableProfiles(updated);
@@ -496,11 +543,13 @@ export default function DashboardCockpitPage() {
     }
 
     // 2. If it was the active profile:
-    if (activeProfile?.name === profileToUnlink.name || (profileToUnlink.id && activeProfile?.id === profileToUnlink.id)) {
+    const isTargetActive = !activeProfile || activeProfile.name === profileToUnlink.name || (profileToUnlink.id && activeProfile.id === profileToUnlink.id);
+    if (isTargetActive) {
       if (updated.length > 0) {
         setActiveProfile(updated[0]);
         if (typeof window !== 'undefined') {
           localStorage.setItem('gbpilot_active_profile', JSON.stringify(updated[0]));
+          localStorage.removeItem('gbpilot_profile_unlinked');
         }
       } else {
         setActiveProfile(null);
@@ -511,25 +560,33 @@ export default function DashboardCockpitPage() {
       }
     }
 
-    // 3. Backend sync if it has an id
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('active_profile_updated'));
+    }
+    showToast(`Profile "${profileToUnlink.name}" unlinked successfully. Base plan quota (1/1) freed.`);
+
+    // 3. Backend sync in background (non-blocking)
     if (profileToUnlink.id && !profileToUnlink.id.startsWith('demo_')) {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-        await fetch(`${baseUrl}/api/v1/profiles/${profileToUnlink.id}/unlink`, { method: 'POST' });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        fetch(`${baseUrl}/api/v1/profiles/${profileToUnlink.id}/unlink`, { 
+          method: 'POST',
+          signal: controller.signal
+        })
+          .catch(e => console.warn("Backend unlink failed", e))
+          .finally(() => clearTimeout(timeoutId));
       } catch (e) {
         console.warn("Backend unlink failed", e);
       }
     }
-
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('active_profile_updated'));
-    }
-    setProfileToUnlinkConfirm(null);
-    setIsProfileModalOpen(false);
-    showToast(`Profile "${profileToUnlink.name}" unlinked successfully. Base plan quota (1/1) freed.`);
   };
 
   const handleUnlinkAndConnectNew = () => {
+    setProfileToUnlinkConfirm(null);
+    setIsProfileModalOpen(false);
+    setIsLocationQuotaModalOpen(false);
     if (activeProfile) {
       handleUnlinkProfile(activeProfile);
     } else {
@@ -540,7 +597,6 @@ export default function DashboardCockpitPage() {
         window.dispatchEvent(new CustomEvent('active_profile_updated'));
       }
     }
-    setIsLocationQuotaModalOpen(false);
     router.push('/onboarding');
   };
 
@@ -908,6 +964,15 @@ export default function DashboardCockpitPage() {
                     <CheckSquare className="w-3 h-3 text-purple-600" />
                     <span className="text-[11px]">150+ Attributes</span>
                   </Link>
+
+                  <a
+                    href="#gbp-data-matrix"
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    title="View 360° Google Profile Data Matrix"
+                  >
+                    <Database className="w-3 h-3 text-blue-400" />
+                    <span className="text-[11px]">360° Data Matrix</span>
+                  </a>
                 </div>
 
               </div>
@@ -1000,6 +1065,26 @@ export default function DashboardCockpitPage() {
                 showToast('🎉 Recommendation applied successfully! Synced with Google Maps.');
               }}
             />
+
+            {/* ======================================================== */}
+            {/* BLOCK 1.8: 360° GOOGLE BUSINESS PROFILE DATA PASSPORT   */}
+            {/* ======================================================== */}
+            <div id="gbp-data-matrix">
+              <GbpDataMatrix
+                venueName={activeProfile?.name || 'Your Business Location'}
+                category={activeProfile?.category || 'Local Business'}
+                address={activeProfile?.address || activeProfile?.city || 'Verified Storefront Address'}
+                phone={activeProfile?.phone || ''}
+                website={activeProfile?.website || activeProfile?.website_url || ''}
+                rating={activeProfile?.rating || 5.0}
+                reviewsCount={activeProfile?.reviews_count || 28}
+                isPro={isProUser}
+                onUpgradeClick={() => {
+                  const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
+                  window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
+                }}
+              />
+            </div>
 
             {/* ======================================================== */}
             {/* BLOCK 2: ACTION INBOX (FOCUS OF THE DAY / ZERO INBOX)   */}

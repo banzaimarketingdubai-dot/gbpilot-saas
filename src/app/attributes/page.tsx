@@ -136,7 +136,13 @@ export default function AttributesManagerPage() {
   // Load active profile from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const isUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
       const stored = localStorage.getItem('gbpilot_active_profile');
+      if (isUnlinked || !stored) {
+        setActiveProfile(null);
+        return;
+      }
+
       let prof: ActiveVenueProfile = {
         name: 'Сэр Визаранус',
         address: '60 Hòn Chồng, Bắc Nha Trang, Khánh Hòa 650000, Vietnam',
@@ -209,6 +215,20 @@ export default function AttributesManagerPage() {
 
       setAttributeValues(currentMap);
       setInitialValues(currentMap);
+
+      const handleProfileUpdate = () => {
+        const isUnlinkedNow = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
+        const storedNow = localStorage.getItem('gbpilot_active_profile');
+        if (isUnlinkedNow || !storedNow) {
+          setActiveProfile(null);
+        } else {
+          try {
+            setActiveProfile(JSON.parse(storedNow));
+          } catch (e) {}
+        }
+      };
+      window.addEventListener('active_profile_updated', handleProfileUpdate);
+      return () => window.removeEventListener('active_profile_updated', handleProfileUpdate);
     }
   }, []);
 

@@ -80,6 +80,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [subscription, setSubscription] = useState<SubscriptionState>(() => getSubscription());
   const isLandingMode = (pathname === '/' || pathname === '/onboarding') && !currentUser;
 
+  const hasConnectedProfile = Boolean(
+    activeProfile && 
+    activeProfile.name && 
+    activeProfile.name !== defaultProfile.name && 
+    activeProfile.name !== 'Connect Business Profile' && 
+    activeProfile.name !== 'No Business Connected'
+  );
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const handleSubChange = () => setSubscription(getSubscription());
@@ -132,25 +140,60 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   useEffect(() => {
-    if (initialProfile && initialProfile.name && initialProfile.name !== 'Manhattan Bakery & Cafe') {
+    if (initialProfile && initialProfile.name && initialProfile.name !== 'Manhattan Bakery & Cafe' && initialProfile.name !== defaultProfile.name && initialProfile.name !== 'No Business Connected') {
       setActiveProfile(initialProfile);
       setSelectedProfile(initialProfile.name);
+      if ((initialProfile as any).autopilotMode) {
+        setAutopilotMode((initialProfile as any).autopilotMode);
+      }
+    } else if (!initialProfile || initialProfile.name === defaultProfile.name || initialProfile.name === 'No Business Connected') {
+      setActiveProfile(defaultProfile);
+      setSelectedProfile(defaultProfile.name);
     }
   }, [initialProfile]);
 
   useEffect(() => {
     const handleProfileSync = () => {
-      const storedActive = localStorage.getItem('gbpilot_active_profile');
-      if (storedActive) {
+      const isUnlinked = typeof window !== 'undefined' && localStorage.getItem('gbpilot_profile_unlinked') === 'true';
+      const storedActive = typeof window !== 'undefined' ? localStorage.getItem('gbpilot_active_profile') : null;
+      const storedList = typeof window !== 'undefined' ? localStorage.getItem('gbpilot_available_profiles') : null;
+
+      let parsedList: BusinessProfile[] = [];
+      if (storedList) {
         try {
-          const parsed = JSON.parse(storedActive);
-          if (parsed && parsed.name) {
-            setActiveProfile(parsed);
-            setSelectedProfile(parsed.name);
+          const list = JSON.parse(storedList);
+          if (Array.isArray(list)) {
+            parsedList = list.filter((p: any) => p && p.name !== 'Manhattan Bakery & Cafe');
+            setAvailableProfiles(parsedList);
           }
         } catch (e) {
           console.error(e);
         }
+      } else {
+        setAvailableProfiles([]);
+      }
+
+      if (storedActive && !isUnlinked) {
+        try {
+          const parsed = JSON.parse(storedActive);
+          if (parsed && parsed.name && parsed.name !== 'Manhattan Bakery & Cafe' && parsed.name !== defaultProfile.name && parsed.name !== 'No Business Connected') {
+            setActiveProfile(parsed);
+            setSelectedProfile(parsed.name);
+            if (parsed.autopilotMode) setAutopilotMode(parsed.autopilotMode);
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (parsedList.length > 0 && !isUnlinked) {
+        setActiveProfile(parsedList[0]);
+        setSelectedProfile(parsedList[0].name);
+        if (parsedList[0].autopilotMode) setAutopilotMode(parsedList[0].autopilotMode);
+      } else {
+        setActiveProfile(defaultProfile);
+        setSelectedProfile(defaultProfile.name);
       }
     };
 
@@ -161,6 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     // Load active and available profiles from local storage
     if (typeof window !== 'undefined') {
+      const isUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
       const storedActive = localStorage.getItem('gbpilot_active_profile');
       const storedList = localStorage.getItem('gbpilot_available_profiles');
 
@@ -177,7 +221,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         }
       }
 
-      if (storedActive) {
+      if (storedActive && !isUnlinked) {
         try {
           const parsed = JSON.parse(storedActive);
           if (parsed.name === 'Manhattan Bakery & Cafe' && parsedList.length > 0) {
@@ -200,10 +244,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         } catch (e) {
           console.error(e);
         }
-      } else if (parsedList.length > 0) {
+      } else if (parsedList.length > 0 && !isUnlinked) {
         setActiveProfile(parsedList[0]);
         setSelectedProfile(parsedList[0].name);
         localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedList[0]));
+      } else {
+        setActiveProfile(defaultProfile);
+        setSelectedProfile(defaultProfile.name);
       }
 
       // Load current user from storage
@@ -227,31 +274,35 @@ export const Navbar: React.FC<NavbarProps> = ({
       };
       window.addEventListener('user_session_updated', handleUserUpdate);
 
-      // Also fetch profiles from backend
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      fetch(`${baseUrl}/api/v1/profiles`)
-        .then(res => res.json())
-        .then(data => {
-          if (data?.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
-            setAvailableProfiles(prev => {
-              const combined = [...prev];
-              data.profiles.forEach((p: any) => {
-                if (!combined.some(c => c.name === p.name || c.id === p.id)) {
-                  combined.push(p);
-                }
+      // Also fetch profiles from backend only if not unlinked
+      if (!isUnlinked) {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        fetch(`${baseUrl}/api/v1/profiles`)
+          .then(res => res.json())
+          .then(data => {
+            if (data?.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+              const stillUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
+              if (stillUnlinked) return;
+              setAvailableProfiles(prev => {
+                const combined = [...prev];
+                data.profiles.forEach((p: any) => {
+                  if (!combined.some(c => c.name === p.name || c.id === p.id)) {
+                    combined.push(p);
+                  }
+                });
+                localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combined));
+                return combined;
               });
-              localStorage.setItem('gbpilot_available_profiles', JSON.stringify(combined));
-              return combined;
-            });
-            const stored = localStorage.getItem('gbpilot_active_profile');
-            if (!stored || JSON.parse(stored).name === 'Manhattan Bakery & Cafe') {
-              setActiveProfile(data.profiles[0]);
-              setSelectedProfile(data.profiles[0].name);
-              localStorage.setItem('gbpilot_active_profile', JSON.stringify(data.profiles[0]));
+              const stored = localStorage.getItem('gbpilot_active_profile');
+              if (!stored || JSON.parse(stored).name === 'Manhattan Bakery & Cafe') {
+                setActiveProfile(data.profiles[0]);
+                setSelectedProfile(data.profiles[0].name);
+                localStorage.setItem('gbpilot_active_profile', JSON.stringify(data.profiles[0]));
+              }
             }
-          }
-        })
-        .catch(e => console.error("Could not fetch profiles from backend", e));
+          })
+          .catch(e => console.error("Could not fetch profiles from backend", e));
+      }
 
       return () => {
         window.removeEventListener('user_session_updated', handleUserUpdate);
@@ -301,14 +352,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const confirmDelete = async () => {
     if (!profileToDelete) return;
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
-      if (!profileToDelete.startsWith('demo_')) {
-        await fetch(`${baseUrl}/api/v1/profiles/${profileToDelete}`, { method: 'DELETE' });
-      }
-    } catch (e) {
-      console.error("Failed to delete from DB", e);
-    }
+    const targetId = profileToDelete;
+    // Close modal immediately
+    setProfileToDelete(null);
 
     if (typeof window !== 'undefined') {
       const storedList = localStorage.getItem('gbpilot_available_profiles');
@@ -316,25 +362,45 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (storedList) {
         try {
           const list = JSON.parse(storedList);
-          updatedList = list.filter((p: any) => p.id !== profileToDelete && p.name !== profileToDelete);
+          updatedList = list.filter((p: any) => p.id !== targetId && p.name !== targetId);
         } catch (e) {}
+      } else {
+        updatedList = availableProfiles.filter(p => p.id !== targetId && p.name !== targetId);
       }
       localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updatedList));
       setAvailableProfiles(updatedList);
 
-      if (activeProfile?.id === profileToDelete || activeProfile?.name === profileToDelete) {
+      if (activeProfile?.id === targetId || activeProfile?.name === targetId) {
         if (updatedList.length > 0) {
           localStorage.setItem('gbpilot_active_profile', JSON.stringify(updatedList[0]));
+          localStorage.removeItem('gbpilot_profile_unlinked');
           setActiveProfile(updatedList[0]);
+          setSelectedProfile(updatedList[0].name);
         } else {
           localStorage.removeItem('gbpilot_active_profile');
           localStorage.setItem('gbpilot_profile_unlinked', 'true');
           setActiveProfile(defaultProfile);
+          setSelectedProfile(defaultProfile.name);
         }
       }
-      setProfileToDelete(null);
       window.dispatchEvent(new CustomEvent('active_profile_updated'));
-      window.location.reload();
+    }
+
+    // Backend sync in background (non-blocking)
+    if (!targetId.startsWith('demo_')) {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        fetch(`${baseUrl}/api/v1/profiles/${targetId}`, { 
+          method: 'DELETE',
+          signal: controller.signal
+        })
+          .catch(e => console.error("Failed to delete from DB", e))
+          .finally(() => clearTimeout(timeoutId));
+      } catch (e) {
+        console.error("Failed to delete from DB", e);
+      }
     }
   };
 
@@ -412,21 +478,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                     window.dispatchEvent(new CustomEvent('require_google_login'));
                     return;
                   }
+                  if (!hasConnectedProfile && availableProfiles.length === 0) {
+                    router.push('/onboarding');
+                    return;
+                  }
                   setIsLocationOpen(!isLocationOpen);
                 }}
                 data-testid="location-selector"
-                className="flex items-center space-x-2 bg-google-bg border border-google-border px-3 py-1.5 rounded-lg text-xs hover:bg-white transition-colors"
+                className="flex items-center space-x-2 bg-google-bg border border-google-border px-3 py-1.5 rounded-lg text-xs hover:bg-white transition-colors cursor-pointer"
               >
                 <Building2 className="w-3.5 h-3.5 text-google-blue" />
-                <span className="font-semibold text-google-text-primary max-w-[130px] truncate">{selectedProfile}</span>
-                {currentUser ? (
-                  <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
-                    {((activeProfile as any)?.role || '').toLowerCase().includes('own') || ((activeProfile as any)?.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
-                  </span>
-                ) : (
-                  <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 hidden sm:inline-block">
-                    Demo
-                  </span>
+                <span className="font-semibold text-google-text-primary max-w-[130px] truncate">
+                  {hasConnectedProfile ? selectedProfile : 'Connect Profile'}
+                </span>
+                {hasConnectedProfile && (
+                  currentUser ? (
+                    <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200 hidden sm:inline-block">
+                      {((activeProfile as any)?.role || '').toLowerCase().includes('own') || ((activeProfile as any)?.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
+                    </span>
+                  ) : (
+                    <span className="text-[9px] bg-amber-50 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 hidden sm:inline-block">
+                      Demo
+                    </span>
+                  )
                 )}
                 <ChevronDown className="w-3.5 h-3.5 text-google-text-tertiary" />
               </button>
@@ -450,43 +524,50 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   
                   <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 my-1">
-                    {availableProfiles.map((p, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-0.5 rounded-lg hover:bg-google-bg transition-colors group pr-1">
-                        <button
-                          onClick={() => {
-                            setSelectedProfile(p.name);
-                            setActiveProfile(p);
-                            if (typeof window !== 'undefined') {
-                              localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
-                              window.location.reload();
-                            }
-                            setIsLocationOpen(false);
-                          }}
-                          className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
-                            selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
-                          }`}
-                        >
-                          <div className="truncate max-w-[150px]">
-                            <div className="truncate font-semibold">{p.name}</div>
-                            <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
-                          </div>
-                          <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
-                            {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
-                          </span>
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setProfileToDelete(p.id || p.name);
-                            setIsLocationOpen(false);
-                          }}
-                          className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-                          title="Unlink profile"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                    {availableProfiles.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-google-text-tertiary">
+                        No locations connected yet.
                       </div>
-                    ))}
+                    ) : (
+                      availableProfiles.map((p, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-0.5 rounded-lg hover:bg-google-bg transition-colors group pr-1">
+                          <button
+                            onClick={() => {
+                              setSelectedProfile(p.name);
+                              setActiveProfile(p);
+                              if (typeof window !== 'undefined') {
+                                localStorage.setItem('gbpilot_active_profile', JSON.stringify(p));
+                                localStorage.removeItem('gbpilot_profile_unlinked');
+                                window.dispatchEvent(new CustomEvent('active_profile_updated'));
+                              }
+                              setIsLocationOpen(false);
+                            }}
+                            className={`flex-1 text-left px-3 py-2 flex items-center justify-between font-medium ${
+                              selectedProfile === p.name ? 'text-google-blue font-bold bg-google-blue-light/20' : 'text-google-text-primary'
+                            }`}
+                          >
+                            <div className="truncate max-w-[150px]">
+                              <div className="truncate font-semibold">{p.name}</div>
+                              <div className="text-[10px] text-google-text-tertiary truncate">{p.city || p.address}</div>
+                            </div>
+                            <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold shrink-0 ml-1">
+                              {(p.role || '').toLowerCase().includes('own') || (p.role || '').includes('\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446') ? 'Owner' : 'Manager'}
+                            </span>
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProfileToDelete(p.id || p.name);
+                              setIsLocationOpen(false);
+                            }}
+                            className="p-1.5 text-google-text-tertiary hover:text-google-red hover:bg-google-red-light rounded-md opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                            title="Unlink profile"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Prominent CTA: + Add Location */}
