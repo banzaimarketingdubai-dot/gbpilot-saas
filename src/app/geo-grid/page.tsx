@@ -315,7 +315,6 @@ export default function GeoGridPage() {
   const [activeProfile, setActiveProfile] = useState<{name: string; address: string; category?: string; city?: string; id?: string; lat?: number; lng?: number; location?: string; phone?: string; website_url?: string} | null>(null);
   const [selectedKeyword, setSelectedKeyword] = useState('');
   const [gridSize, setGridSize] = useState<'3x3' | '5x5' | '7x7'>('3x3');
-  const [selectedNode, setSelectedNode] = useState<{ pos: number; rank: number; competitor: string } | null>(null);
   const [showMapBackdrop, setShowMapBackdrop] = useState(true);
   const mapCoords = getProfileCoords(activeProfile);
 
@@ -356,18 +355,22 @@ export default function GeoGridPage() {
     return 'Consultant, Specialist Clinic, Retail, or Restaurant';
   };
 
-  // Build grid node template
-  const buildGridTemplate = (size: '3x3' | '5x5' | '7x7') => {
+  // Build grid node template — empty state before first scan
+  const buildGridTemplate = (size: '3x3' | '5x5' | '7x7'): GridNodeData[] => {
     const dim = size === '7x7' ? 7 : size === '5x5' ? 5 : 3;
     const total = dim * dim;
     return Array.from({ length: total }, (_, i) => ({
       pos: i + 1,
-      rank: 0,
-      competitor: '—'
+      rank: null,
+      state: 'NO_DATA' as GridNodeState,
+      competitor: '—',
     }));
   };
 
-  const [gridRanks, setGridRanks] = useState(buildGridTemplate('3x3'));
+  const [gridRanks, setGridRanks] = useState<GridNodeData[]>(buildGridTemplate('3x3'));
+  const [selectedNode, setSelectedNode] = useState<GridNodeData | null>(null);
+  const [scanMetrics, setScanMetrics] = useState<ScanMetrics | null>(null);
+  const [scanMeta, setScanMeta] = useState<ScanMeta | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -641,76 +644,129 @@ export default function GeoGridPage() {
     setGridSize(newSize);
     setSelectedNode(null);
     setGridRanks(buildGridTemplate(newSize));
+    setScanMetrics(null);
+    setScanMeta(null);
   };
 
   const generateLocalSpatialRanks = (dimension: number, _businessName: string, _keyword: string) => {
-    const ranks: { pos: number; rank: number; competitor: string }[] = [];
+    const ranks: GridNodeData[] = [];
     for (let pos = 1; pos <= dimension * dimension; pos++) {
-      ranks.push({ pos, rank: 0, competitor: '—' });
+      ranks.push({ pos, rank: null, state: 'NO_DATA' as GridNodeState, competitor: '—' });
     }
     setGridRanks(ranks);
     setCompetitors([]);
+    setScanMetrics(null);
+    setScanMeta(null);
   };
 
   const handleScan = async (keywordOverride?: string) => {
     const kwToScan = (typeof keywordOverride === 'string' ? keywordOverride : selectedKeyword).trim();
     if (!kwToScan) {
-      alert("Please enter or select a target keyword for the ranking scan");
+      alert('Введите или выберите поисковый запрос для сканирования');
       return;
     }
     setIsScanning(true);
     setScanNotice(null);
     setSelectedNode(null);
+    setScanMetrics(null);
+    setScanMeta(null);
 
     const dim = gridSize === '7x7' ? 7 : gridSize === '5x5' ? 5 : 3;
     const bName = activeProfile?.name || kwToScan;
     const bAddress = activeProfile?.address || activeProfile?.city || '';
 
     try {
-      const stored = localStorage.getItem('gbpilot_active_profile');
-      let profileId = "default";
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('gbpilot_active_profile') : null;
+      let profileId = 'default';
+      let placeId: string | undefined;
+      let planId = 'FREE_SCOUT';
+      let userEmail: string | undefined;
+
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed.id) profileId = parsed.id;
-        } catch (e) {}
+          if (parsed.id) profileId = String(parsed.id);
+          if (parsed.place_id) placeId = parsed.place_id;
+          if (parsed.email) userEmail = parsed.email;
+        } catch (_) {}
+      }
+
+      const sub = typeof window !== 'undefined' ? localStorage.getItem('gbpilot_subscription') : null;
+      if (sub) {
+        try { planId = JSON.parse(sub).plan_id || 'FREE_SCOUT'; } catch (_) {}
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const res = await fetch(`${baseUrl}/api/v1/geo-grid/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           profile_id: profileId,
           business_name: bName,
           address: bAddress,
-          keyword: kwToScan, 
-          grid_size: dim, 
-          distance_meters: 500.0 
+          keyword: kwToScan,
+          grid_size: dim,
+          distance_meters: 500.0,
+          place_id: placeId,
+          plan_id: planId,
+          user_email: userEmail,
+          mode: 'bias',
         }),
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
+
+        // ── Handle limit_reached ──
+        if (data.status === 'limit_reached') {
+          setScanNotice(
+            `Лимит сканов исчерпан (${data.meta?.scans_used ?? '?'}/${data.meta?.scans_limit ?? '?'} в месяц). ` +
+            `Сброс в начале следующего месяца.`
+          );
+          setIsScanning(false);
+          return;
+        }
+
+        // ── Handle error (no coordinates etc.) ──
+        if (data.status === 'error') {
+          setScanNotice(`Ошибка: ${data.message || 'Не удалось определить координаты бизнеса. Подключите Google Business Profile.'}`);
+          setIsScanning(false);
+          return;
+        }
+
         if (data.grid && Array.isArray(data.grid) && data.grid.length > 0) {
-          const newRanks = data.grid.map((g: any) => ({
+          // Map grid nodes — new schema: state, rank (nullable), top3[]
+          const newRanks: GridNodeData[] = data.grid.map((g: any) => ({
             pos: g.pos,
-            rank: g.rank,
-            competitor: g.competitor || (g.rank === 1 ? 'You' : (g.rank > 20 ? 'Not Found' : 'Competitor'))
+            rank: g.rank ?? null,
+            state: (g.state || 'NO_DATA') as GridNodeState,
+            competitor: g.state === 'FOUND'
+              ? (g.top3?.[0]?.name || '—')
+              : g.state === 'NOT_IN_TOP20'
+              ? '20+'
+              : '—',
+            lat: g.lat,
+            lng: g.lng,
+            top3: Array.isArray(g.top3) ? g.top3 : [],
           }));
           setGridRanks(newRanks);
 
+          // Metrics
+          if (data.metrics) setScanMetrics(data.metrics as ScanMetrics);
+          if (data.meta)    setScanMeta(data.meta as ScanMeta);
+
+          // Competitors list (from top-level competitors array)
           if (Array.isArray(data.competitors) && data.competitors.length > 0) {
             setCompetitors(
               data.competitors.map((c: any, idx: number) => ({
                 placeId: c.place_id,
-                name: String(c.name || 'Local Business'),
+                name: String(c.name || ''),
                 address: c.address || '',
                 googleMapsUrl: c.google_maps_url || '',
                 websiteUrl: c.website_url || '',
@@ -721,64 +777,49 @@ export default function GeoGridPage() {
                 convenience: [],
                 specialtyKeywords: [kwToScan],
                 diffScore: idx === 0 ? 'LEADER' : idx === 1 ? 'CHALLENGER' : 'LAGGING',
-                primaryCategory: c.primary_category || 'Local Business',
+                primaryCategory: c.primary_category || '',
                 secondaryCategories: Array.isArray(c.secondary_categories) ? c.secondary_categories : [],
-                gridWins: Number(c.grid_wins || 1),
-                avgRank: Number(c.avg_rank || idx + 1),
+                gridWins: Number(c.appearances ?? c.grid_wins ?? 1),
+                avgRank: Number(c.avg_rank ?? idx + 1),
                 openNow: c.open_now,
                 photosCount: Number(c.photos_count || 0),
-                winningMoat: c.winning_moat || '',
-                criticalWeakness: c.critical_weakness || '',
-                overtakeStrategy: c.overtake_strategy || ''
               }))
             );
           } else {
-            // Fallback if backend returned grid nodes before competitors array
-            const distinct = Array.from(
-              new Set(
-                data.grid
-                  .map((g: any) => g.competitor)
-                  .filter((c: string) => c && c !== 'You' && c !== '—' && c !== 'Not Found' && c !== 'Local Competitor')
-              )
-            ).slice(0, 3);
-            setCompetitors(
-              distinct.map((cName: any, idx: number) => {
-                const nodeMatch = data.grid.find((g: any) => g.competitor === cName) || {};
-                return {
-                  name: String(cName),
-                  googleMapsUrl:
-                    nodeMatch.competitor_url ||
-                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${cName} ${bAddress}`.trim())}`,
-                  rating: Number(nodeMatch.competitor_rating || 0),
-                  reviewsCount: Number(nodeMatch.competitor_reviews || 0),
-                  convenience: [],
-                  specialtyKeywords: [kwToScan],
-                  diffScore: idx === 0 ? 'LEADER' : idx === 1 ? 'CHALLENGER' : 'LAGGING',
-                  primaryCategory: 'Local Business',
-                  secondaryCategories: []
-                };
-              })
-            );
+            setCompetitors([]);
           }
-          setScanNotice(`Live Geo-Grid scan complete for "${kwToScan}". Displaying ${data.grid.length} spatial points.`);
+
+          const cacheMsg = data.meta?.cached ? ' (из кэша)' : '';
+          const accuracyMsg = data.meta?.accuracy_note ? ` · ${data.meta.accuracy_note}` : '';
+          setScanNotice(
+            `Сканирование завершено для «${kwToScan}»${cacheMsg}${accuracyMsg}`
+          );
           return;
         }
       }
 
-      // If backend responded with non-200 or empty, generate localized spatial calculation
-      generateLocalSpatialRanks(dim, bName, selectedKeyword.trim());
-      setScanNotice(`Spatial ranking model compiled for "${selectedKeyword.trim()}" around ${bName}.`);
+      // Non-200 or empty grid — show empty state
+      generateLocalSpatialRanks(dim, bName, kwToScan);
+      setScanNotice('Бэкенд не вернул данные. Проверьте соединение или попробуйте позже.');
 
-    } catch (e) {
-      console.warn("Scan endpoint connection fallback:", e);
-      generateLocalSpatialRanks(dim, bName, selectedKeyword.trim());
-      setScanNotice(`Spatial rank distribution generated for "${selectedKeyword.trim()}" around ${bName}.`);
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        setScanNotice('Сканирование превысило тайм-аут (30 с). Попробуйте меньшую сетку.');
+      } else {
+        console.warn('Scan error:', e);
+        generateLocalSpatialRanks(
+          gridSize === '7x7' ? 7 : gridSize === '5x5' ? 5 : 3,
+          activeProfile?.name || '',
+          kwToScan
+        );
+        setScanNotice('Ошибка соединения. Данные не загружены.');
+      }
     } finally {
       setIsScanning(false);
     }
   };
 
-  const getColClass = () => {
+    const getColClass = () => {
     if (gridSize === '7x7') return 'grid-cols-7 gap-2 sm:gap-3';
     if (gridSize === '5x5') return 'grid-cols-5 gap-3 sm:gap-4';
     return 'grid-cols-3 gap-4 sm:gap-6';
@@ -1101,7 +1142,54 @@ export default function GeoGridPage() {
               </div>
             )}
 
-            {/* Spatial Map Viewport & Pin Heatmap */}
+            
+              {/* ── Scan Meta: cache badge + quota + accuracy note ── */}
+              {scanMeta && (
+                <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                  {scanMeta.cached && (
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-bold flex items-center gap-1">
+                      💾 Кэш{scanMeta.cached_at ? ` · ${new Date(scanMeta.cached_at).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}` : ''}
+                    </span>
+                  )}
+                  {scanMeta.scans_limit !== null && (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200 font-bold">
+                      Сканов: {scanMeta.scans_used ?? 0}/{scanMeta.scans_limit}
+                    </span>
+                  )}
+                  {scanMeta.accuracy_note && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
+                      ℹ️ {scanMeta.accuracy_note}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* ── ARP / ATRP / SoLV metrics bar ── */}
+              {scanMetrics && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-center">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">ARP</div>
+                    <div className="text-lg font-black text-slate-900">{scanMetrics.arp?.toFixed(1) ?? '—'}</div>
+                    <div className="text-[10px] text-slate-400">Ср. ранг</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-center">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">ATRP</div>
+                    <div className="text-lg font-black text-slate-900">{scanMetrics.atrp?.toFixed(1) ?? '—'}</div>
+                    <div className="text-[10px] text-slate-400">Топ-ранг</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                    <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">SoLV</div>
+                    <div className="text-lg font-black text-emerald-800">
+                      {scanMetrics.solv !== undefined && scanMetrics.solv !== null
+                        ? `${(scanMetrics.solv * 100).toFixed(0)}%`
+                        : '—'}
+                    </div>
+                    <div className="text-[10px] text-emerald-600">Видимость в топ-3</div>
+                  </div>
+                </div>
+              )}
+
+{/* Spatial Map Viewport & Pin Heatmap */}
             <div className="material-card p-4 sm:p-6 bg-white relative overflow-hidden border border-google-border rounded-2xl shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
@@ -1157,30 +1245,37 @@ export default function GeoGridPage() {
                 <div className={`grid ${getColClass()} relative z-10 p-2 sm:p-4 max-w-full overflow-x-auto`}>
                   {gridRanks.map((item) => {
                     const isSelected = selectedNode?.pos === item.pos;
-                    const isRanked = item.rank > 0;
-                    const isTop3 = isRanked && item.rank <= 3;
-                    const isMid = isRanked && item.rank > 3 && item.rank <= 8;
-                    const isLow = isRanked && item.rank > 8;
+                    const state = (item as GridNodeData).state || 'NO_DATA';
+                    const rank = (item as GridNodeData).rank;
 
-                    let bgClass = 'bg-slate-300 text-slate-600 border border-slate-300';
-                    if (isTop3) bgClass = 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20';
-                    else if (isMid) bgClass = 'bg-amber-500 text-white shadow-md shadow-amber-500/20';
-                    else if (isLow) bgClass = 'bg-rose-500 text-white shadow-md shadow-rose-500/20';
+                    // Colour by state
+                    let bgClass = 'bg-slate-300 text-slate-500 border border-slate-300'; // NO_DATA
+                    if (state === 'NOT_IN_TOP20') bgClass = 'bg-rose-500 text-white shadow-md shadow-rose-500/20';
+                    else if (state === 'FOUND') {
+                      if (rank !== null && rank <= 3) bgClass = 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20';
+                      else if (rank !== null && rank <= 8) bgClass = 'bg-amber-500 text-white shadow-md shadow-amber-500/20';
+                      else bgClass = 'bg-rose-500 text-white shadow-md shadow-rose-500/20';
+                    }
+
+                    // Label inside pin
+                    let pinLabel = '—';
+                    if (state === 'NOT_IN_TOP20') pinLabel = '20+';
+                    else if (state === 'FOUND' && rank !== null) pinLabel = `#${rank}`;
 
                     return (
                       <div
                         key={item.pos}
-                        onClick={() => setSelectedNode(item)}
+                        onClick={() => setSelectedNode(item as GridNodeData)}
                         className={`${getPinSizeClass()} rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all transform hover:scale-110 active:scale-95 cursor-pointer relative ${bgClass} ${
                           isSelected ? 'ring-3 ring-google-blue scale-110 shadow-lg' : ''
                         }`}
-                        title={`Node #${item.pos}: Rank #${item.rank || '—'} (${item.competitor})`}
+                        title={`Точка #${item.pos}: ${pinLabel} — ${(item as GridNodeData).competitor || state}`}
                       >
                         <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5 fill-current opacity-90" />
-                        <span className="font-black leading-none">{item.rank === 0 ? '—' : `#${item.rank}`}</span>
-                        {gridSize !== '7x7' && (
+                        <span className="font-black leading-none">{pinLabel}</span>
+                        {gridSize !== '7x7' && state === 'FOUND' && (
                           <span className="text-[8px] sm:text-[9px] opacity-90 truncate max-w-[50px] sm:max-w-[65px] px-0.5">
-                            {item.competitor}
+                            {(item as GridNodeData).competitor}
                           </span>
                         )}
                       </div>
@@ -1189,31 +1284,106 @@ export default function GeoGridPage() {
                 </div>
               </div>
 
-              {/* Node Inspector Callout */}
+              {/* Node Inspector — shows top3 for the selected grid point */}
               {selectedNode && (
-                <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white text-sm ${
-                      selectedNode.rank <= 3 && selectedNode.rank > 0
-                        ? 'bg-emerald-600'
-                        : selectedNode.rank <= 8 && selectedNode.rank > 0
-                        ? 'bg-amber-500'
-                        : 'bg-rose-500'
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 text-xs animate-in fade-in overflow-hidden">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between gap-3 p-3 border-b border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white text-xs ${
+                        selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 3
+                          ? 'bg-emerald-600'
+                          : selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 8
+                          ? 'bg-amber-500'
+                          : selectedNode.state === 'NOT_IN_TOP20'
+                          ? 'bg-rose-500'
+                          : 'bg-slate-400'
+                      }`}>
+                        {selectedNode.state === 'FOUND' && selectedNode.rank !== null
+                          ? `#${selectedNode.rank}`
+                          : selectedNode.state === 'NOT_IN_TOP20'
+                          ? '20+'
+                          : '—'}
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-900">
+                          Точка #{selectedNode.pos} ·{' '}
+                          {selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 3
+                            ? 'Зона доминирования'
+                            : selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 8
+                            ? 'Уязвимая зона'
+                            : selectedNode.state === 'NOT_IN_TOP20'
+                            ? 'Зона потери клиентов (20+)'
+                            : 'Нет данных API'}
+                        </div>
+                        <div className="text-slate-500 text-[11px]">Запрос: «{selectedKeyword}»</div>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-lg font-bold border text-[11px] ${
+                      selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 3
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : selectedNode.state === 'NOT_IN_TOP20'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
                     }`}>
-                      #{selectedNode.rank || '—'}
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-900">
-                        Node #{selectedNode.pos} Details • {selectedNode.rank <= 3 && selectedNode.rank > 0 ? 'Dominance Zone' : selectedNode.rank <= 8 && selectedNode.rank > 0 ? 'Vulnerable Zone' : 'Lost Traffic Zone'}
-                      </div>
-                      <div className="text-slate-500 text-[11px]">
-                        Leading Business: <strong>{selectedNode.competitor}</strong> | Search Keyword: "{selectedKeyword}"
-                      </div>
-                    </div>
+                      {selectedNode.state === 'FOUND' && selectedNode.rank === 1
+                        ? '100% Видимость'
+                        : selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 3
+                        ? 'Топ-3 Local Pack'
+                        : selectedNode.state === 'NOT_IN_TOP20'
+                        ? 'Ниже 20-го места'
+                        : 'NO DATA'}
+                    </span>
                   </div>
-                  <span className="px-3 py-1 rounded-lg font-bold bg-white border border-slate-200 text-slate-700">
-                    {selectedNode.rank === 1 ? '100% Visibility' : selectedNode.rank <= 3 ? 'Top 3 Map Pack' : 'Below Fold'}
-                  </span>
+
+                  {/* Top-3 table for this grid point */}
+                  {selectedNode.top3 && selectedNode.top3.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-[11px]">
+                        <thead>
+                          <tr className="bg-white border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wide text-[10px]">
+                            <th className="py-2 px-3">#</th>
+                            <th className="py-2 px-3">Бизнес в этой точке</th>
+                            <th className="py-2 px-3">Рейтинг</th>
+                            <th className="py-2 px-3">Вы?</th>
+                            <th className="py-2 px-3">Maps</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {selectedNode.top3.map((t) => (
+                            <tr key={t.place_id || t.rank} className={t.is_you ? 'bg-emerald-50' : 'bg-white'}>
+                              <td className="py-2 px-3 font-extrabold text-slate-700">#{t.rank}</td>
+                              <td className="py-2 px-3 font-semibold text-slate-900 max-w-[180px] truncate">{t.name}</td>
+                              <td className="py-2 px-3 text-slate-600">{t.rating > 0 ? t.rating.toFixed(1) : '—'}</td>
+                              <td className="py-2 px-3">
+                                {t.is_you
+                                  ? <span className="text-emerald-700 font-bold">✓ Вы</span>
+                                  : <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="py-2 px-3">
+                                <a
+                                  href={t.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${t.place_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-google-blue hover:underline font-bold"
+                                >
+                                  ↗
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-3 text-slate-400 italic text-[11px]">
+                      {selectedNode.state === 'NO_DATA'
+                        ? 'Google Places API не вернул данные для этой точки.'
+                        : selectedNode.state === 'NOT_IN_TOP20'
+                        ? 'Ваш бизнес не попал в топ-20 из этой точки.'
+                        : 'Нажмите «Run Live Grid Scan» для получения данных.'}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
