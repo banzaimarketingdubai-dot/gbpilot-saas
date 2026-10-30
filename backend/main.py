@@ -293,6 +293,44 @@ async def google_callback(code: str = None, state: str = None, error: str = None
         err_msg = urllib.parse.quote(str(e))
         return RedirectResponse(url=f"{target_frontend}/dashboard?auth=error&detail={err_msg}")
 
+@app.get("/api/v1/profiles/{profile_id}/google-sync", tags=["Onboarding"])
+async def google_deep_sync_endpoint(profile_id: str, db: Session = Depends(get_db)):
+    """
+    Live deep sync of one connected location via the approved Google Business
+    Profile APIs (info, attributes, performance, reviews, posts, media, Q&A).
+    Returns real fields, per-API status, and a health score computed from them.
+    """
+    from google_service import refresh_access_token, deep_sync_location, compute_live_health
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    raw = profile_id.replace("profile_", "")
+    profile = None
+    try:
+        profile = db.query(models.GBPProfile).filter(
+            (models.GBPProfile.google_location_id == profile_id)
+            | (models.GBPProfile.google_location_id == f"locations/{raw}")
+            | (models.GBPProfile.google_location_id.like(f"%/{raw}"))
+        ).first()
+        if not profile:
+            import uuid as _uuid
+            try:
+                profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == _uuid.UUID(profile_id)).first()
+            except ValueError:
+                profile = None
+    except Exception as e:
+        logger.warning(f"[GoogleSync] lookup failed: {e}")
+    if not profile or not profile.refresh_token_encrypted:
+        raise HTTPException(status_code=404, detail="Profile not found or Google not connected")
+
+    access = refresh_access_token(profile.refresh_token_encrypted)
+    if not access:
+        raise HTTPException(status_code=401, detail="Google token expired. Please reconnect Google.")
+
+    snapshot = deep_sync_location(access, profile.google_location_id)
+    snapshot["health"] = compute_live_health(snapshot["fields"])
+    return snapshot
+
+
 @app.get("/api/v1/profiles", tags=["Onboarding"])
 async def list_profiles_endpoint(db: Session = Depends(get_db)):
     """

@@ -110,6 +110,20 @@ export default function DashboardCockpitPage() {
   const [dubaiSmartMode, setDubaiSmartMode] = useState<'STANDARD' | 'PEAK_TRAFFIC' | 'RAMADAN' | 'SUMMER'>('STANDARD');
   const [pendingActionToExecute, setPendingActionToExecute] = useState<string | null>(null);
   const [activeProfile, setActiveProfile] = useState<ActiveBusinessProfile | null>(null);
+  const [liveSync, setLiveSync] = useState<{ fields?: Record<string, any>; sources?: Record<string, string>; health?: { score: number; gaps: string[] } } | null>(null);
+
+  // Pull REAL Google Business Profile data for the active location.
+  useEffect(() => {
+    const locId = (activeProfile as any)?.google_location_id || activeProfile?.id;
+    if (!locId) { setLiveSync(null); return; }
+    let cancelled = false;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    fetch(`${baseUrl}/api/v1/profiles/${encodeURIComponent(String(locId))}/google-sync`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled) setLiveSync(d); })
+      .catch(() => { if (!cancelled) setLiveSync(null); });
+    return () => { cancelled = true; };
+  }, [activeProfile?.id, (activeProfile as any)?.google_location_id]);
   const [availableProfiles, setAvailableProfiles] = useState<ActiveBusinessProfile[]>([]);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -1080,6 +1094,7 @@ export default function DashboardCockpitPage() {
                 rating={activeProfile?.rating || 5.0}
                 reviewsCount={activeProfile?.reviews_count || 28}
                 isPro={isProUser}
+                live={liveSync}
                 onUpgradeClick={() => {
                   const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
                   window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');

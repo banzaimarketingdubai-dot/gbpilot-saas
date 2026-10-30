@@ -128,7 +128,7 @@ def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
     
     # Method 1: Wildcard endpoint to fetch all locations across all accounts directly
     try:
-        wildcard_url = "https://mybusinessbusinessinformation.googleapis.com/v1/accounts/-/locations?readMask=name,title,storefrontAddress,websiteUri,phoneNumbers,categories,latlng"
+        wildcard_url = "https://mybusinessbusinessinformation.googleapis.com/v1/accounts/-/locations?readMask=name,title,storefrontAddress,websiteUri,phoneNumbers,categories,latlng,regularHours,profile,openInfo,metadata"
         res_w = requests.get(wildcard_url, headers=headers, timeout=8)
         if res_w.ok:
             w_data = res_w.json()
@@ -156,7 +156,7 @@ def fetch_user_managed_locations(access_token: str) -> Dict[str, Any]:
             for account in accounts:
                 account_name = account.get("name") # e.g. "accounts/12345"
                 role = account.get("role", "OWNER")
-                loc_url = f"https://mybusinessbusinessinformation.googleapis.com/v1/{account_name}/locations?readMask=name,title,categories,storefrontAddress,phoneNumbers,websiteUri,latlng"
+                loc_url = f"https://mybusinessbusinessinformation.googleapis.com/v1/{account_name}/locations?readMask=name,title,categories,storefrontAddress,phoneNumbers,websiteUri,latlng,regularHours,profile,openInfo,metadata"
                 loc_res = requests.get(loc_url, headers=headers, timeout=8)
                 if loc_res.ok:
                     loc_data = loc_res.json()
@@ -438,4 +438,234 @@ def publish_google_post(access_token: str, location_name: str, post_text: str) -
         return res.ok
     except Exception as e:
         print(f"[GoogleService] Exception publishing post: {e}")
+        return False
+
+
+# ============================================================================
+# DEEP SYNC: full Google Business Profile snapshot (Business Information,
+# Performance, v4 Reviews/Posts/Media APIs). Every section is fetched
+# independently so one failing API never blanks the whole snapshot.
+# ============================================================================
+
+FULL_READ_MASK = (
+    "name,title,storeCode,languageCode,categories,storefrontAddress,phoneNumbers,"
+    "websiteUri,regularHours,specialHours,moreHours,serviceItems,profile,openInfo,"
+    "metadata,latlng,serviceArea,labels,adWordsLocationExtensions,relationshipData"
+)
+
+
+def refresh_access_token(refresh_token: str) -> Optional[str]:
+    """Exchanges a stored refresh token for a fresh access token."""
+    if not refresh_token:
+        return None
+    try:
+        res = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            },
+            timeout=8,
+        )
+        if res.ok:
+            return res.json().get("access_token")
+        print(f"[GoogleService] Token refresh failed: {res.status_code} {res.text}")
+    except Exception as e:
+        print(f"[GoogleService] Token refresh error: {e}")
+    return None
+
+
+def _get(url: str, headers: Dict[str, str], params: Optional[Dict[str, Any]] = None):
+    """GET helper returning (json | None, error | None)."""
+    try:
+        res = requests.get(url, headers=headers, params=params, timeout=10)
+        if res.ok:
+            return res.json(), None
+        return None, f"{res.status_code}: {res.text[:200]}"
+    except Exception as e:
+        return None, str(e)
+
+
+def _day_hours_summary(regular_hours: Dict[str, Any]) -> List[str]:
+    periods = (regular_hours or {}).get("periods", [])
+    out = []
+    for p in periods:
+        o, c = p.get("openTime", {}), p.get("closeTime", {})
+        out.append(
+            f"{p.get('openDay', '')[:3]} "
+            f"{o.get('hours', 0):02d}:{o.get('minutes', 0):02d}-"
+            f"{c.get('hours', 0):02d}:{c.get('minutes', 0):02d}"
+        )
+    return out
+
+
+def deep_sync_location(access_token: str, location_id: str) -> Dict[str, Any]:
+    """
+    Builds a full live snapshot of one location.
+    location_id: 'locations/123' or just '123'.
+    Returns {"fields": {...}, "sources": {section: "ok" | error}}.
+    """
+    loc_ref = location_id if location_id.startswith("locations/") else f"locations/{location_id.split('/')[-1]}"
+    loc_num = loc_ref.split("/")[-1]
+    headers = {"Authorization": f"Bearer {access_token}"}
+    sources: Dict[str, str] = {}
+    f: Dict[str, Any] = {}
+
+    # 1. Business Information: core listing
+    info, err = _get(
+        f"https://mybusinessbusinessinformation.googleapis.com/v1/{loc_ref}",
+        headers, {"readMask": FULL_READ_MASK},
+    )
+    sources["business_information"] = err or "ok"
+    if info:
+        cats = info.get("categories", {}) or {}
+        f["title"] = info.get("title")
+        f["primary_category"] = (cats.get("primaryCategory") or {}).get("displayName")
+        f["additional_categories"] = [c.get("displayName") for c in cats.get("additionalCategories", [])]
+        f["phone_primary"] = (info.get("phoneNumbers") or {}).get("primaryPhone")
+        f["phone_additional"] = (info.get("phoneNumbers") or {}).get("additionalPhones", [])
+        f["website"] = info.get("websiteUri")
+        f["description"] = (info.get("profile") or {}).get("description")
+        f["address"] = info.get("storefrontAddress")
+        f["open_status"] = (info.get("openInfo") or {}).get("status")
+        f["regular_hours"] = _day_hours_summary(info.get("regularHours"))
+        f["special_hours_count"] = len((info.get("specialHours") or {}).get("specialHourPeriods", []))
+        f["more_hours_types"] = [m.get("hoursTypeId") for m in info.get("moreHours", [])]
+        f["service_items_count"] = len(info.get("serviceItems", []))
+        f["service_area"] = bool(info.get("serviceArea"))
+        f["labels"] = info.get("labels", [])
+        meta = info.get("metadata") or {}
+        f["has_voice_of_merchant"] = meta.get("hasVoiceOfMerchant")
+        f["maps_uri"] = meta.get("mapsUri")
+        f["new_review_uri"] = meta.get("newReviewUri")
+        f["place_id"] = meta.get("placeId")
+        f["can_delete"] = meta.get("canDelete")
+        f["duplicate"] = bool(meta.get("duplicateLocation"))
+
+    # 2. Attributes
+    attrs, err = _get(
+        f"https://mybusinessbusinessinformation.googleapis.com/v1/{loc_ref}/attributes", headers
+    )
+    sources["attributes"] = err or "ok"
+    if attrs:
+        f["attributes_set"] = [
+            a.get("name", "").split("/")[-1] for a in attrs.get("attributes", [])
+        ]
+        f["attributes_count"] = len(f["attributes_set"])
+
+    # 3. Performance: last 30 days of search/maps/calls/clicks
+    from datetime import date, timedelta
+    end, start = date.today() - timedelta(days=2), date.today() - timedelta(days=32)
+    metrics = [
+        "BUSINESS_IMPRESSIONS_DESKTOP_MAPS", "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
+        "BUSINESS_IMPRESSIONS_MOBILE_MAPS", "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
+        "CALL_CLICKS", "WEBSITE_CLICKS", "BUSINESS_DIRECTION_REQUESTS",
+        "BUSINESS_BOOKINGS", "BUSINESS_FOOD_ORDERS", "BUSINESS_CONVERSATIONS",
+    ]
+    params = [("dailyMetrics", m) for m in metrics] + [
+        ("dailyRange.startDate.year", start.year), ("dailyRange.startDate.month", start.month),
+        ("dailyRange.startDate.day", start.day), ("dailyRange.endDate.year", end.year),
+        ("dailyRange.endDate.month", end.month), ("dailyRange.endDate.day", end.day),
+    ]
+    perf, err = _get(
+        f"https://businessprofileperformance.googleapis.com/v1/{loc_ref}:fetchMultiDailyMetricsTimeSeries",
+        headers, params,
+    )
+    sources["performance"] = err or "ok"
+    if perf:
+        totals: Dict[str, int] = {}
+        for grp in perf.get("multiDailyMetricTimeSeries", []):
+            for ts in grp.get("dailyMetricTimeSeries", []):
+                m = ts.get("dailyMetric")
+                vals = (ts.get("timeSeries") or {}).get("datedValues", [])
+                totals[m] = totals.get(m, 0) + sum(int(v.get("value", 0) or 0) for v in vals)
+        f["performance_30d"] = totals
+        f["impressions_30d"] = sum(v for k, v in totals.items() if k.startswith("BUSINESS_IMPRESSIONS"))
+
+    # 4. Reviews (v4 needs an account id; wildcard-less path via accounts list)
+    account_name = None
+    accs, aerr = _get("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", headers)
+    if accs and accs.get("accounts"):
+        account_name = accs["accounts"][0].get("name")
+    v4_ref = f"{account_name}/{loc_ref}" if account_name else None
+    sources["accounts"] = aerr or "ok"
+
+    if v4_ref:
+        revs, err = _get(f"https://mybusiness.googleapis.com/v4/{v4_ref}/reviews", headers, {"pageSize": 50})
+        sources["reviews"] = err or "ok"
+        if revs:
+            items = revs.get("reviews", [])
+            star = {"ONE": 1, "TWO": 2, "THREE": 3, "FOUR": 4, "FIVE": 5}
+            f["rating"] = revs.get("averageRating")
+            f["reviews_total"] = revs.get("totalReviewCount", len(items))
+            f["reviews_unreplied"] = sum(1 for r in items if not r.get("reviewReply"))
+            f["reviews_low_unreplied"] = sum(
+                1 for r in items if not r.get("reviewReply") and star.get(r.get("starRating"), 5) <= 3
+            )
+            f["recent_reviews"] = [
+                {
+                    "author": (r.get("reviewer") or {}).get("displayName"),
+                    "rating": star.get(r.get("starRating"), 0),
+                    "text": r.get("comment", ""),
+                    "date": r.get("createTime"),
+                    "replied": bool(r.get("reviewReply")),
+                }
+                for r in items[:10]
+            ]
+
+        posts, err = _get(f"https://mybusiness.googleapis.com/v4/{v4_ref}/localPosts", headers, {"pageSize": 20})
+        sources["local_posts"] = err or "ok"
+        if posts is not None:
+            plist = posts.get("localPosts", [])
+            f["posts_count"] = len(plist)
+            f["last_post_at"] = max((p.get("createTime", "") for p in plist), default=None)
+
+        media, err = _get(f"https://mybusiness.googleapis.com/v4/{v4_ref}/media", headers, {"pageSize": 100})
+        sources["media"] = err or "ok"
+        if media is not None:
+            f["photos_count"] = media.get("totalMediaItemCount", len(media.get("mediaItems", [])))
+
+        qa, err = _get(f"https://mybusinessqanda.googleapis.com/v1/{loc_ref}/questions", headers, {"pageSize": 20})
+        sources["questions"] = err or "ok"
+        if qa is not None:
+            f["questions_count"] = len(qa.get("questions", []))
+    else:
+        for s in ("reviews", "local_posts", "media"):
+            sources[s] = "skipped: no account"
+
+    return {"location": loc_ref, "fields": f, "sources": sources}
+
+
+def compute_live_health(fields: Dict[str, Any]) -> Dict[str, Any]:
+    """Scores the profile from real fields only; lists concrete gaps."""
+    checks = [
+        ("Description filled", bool(fields.get("description")), 10),
+        ("Website set", bool(fields.get("website")), 8),
+        ("Phone set", bool(fields.get("phone_primary")), 8),
+        ("Regular hours set", bool(fields.get("regular_hours")), 10),
+        ("Secondary categories (3+)", len(fields.get("additional_categories") or []) >= 3, 12),
+        ("Attributes (10+)", (fields.get("attributes_count") or 0) >= 10, 8),
+        ("Photos (10+)", (fields.get("photos_count") or 0) >= 10, 12),
+        ("Services/menu items", (fields.get("service_items_count") or 0) > 0, 6),
+        ("Post in last 30 days", bool(fields.get("last_post_at")) and _within_days(fields.get("last_post_at"), 30), 10),
+        ("All reviews answered", (fields.get("reviews_unreplied") or 0) == 0, 10),
+        ("Rating 4.5+", (fields.get("rating") or 0) >= 4.5, 6),
+    ]
+    total = sum(w for _, _, w in checks)
+    score = sum(w for _, ok, w in checks if ok)
+    return {
+        "score": round(score * 100 / total),
+        "passed": [n for n, ok, _ in checks if ok],
+        "gaps": [n for n, ok, _ in checks if not ok],
+    }
+
+
+def _within_days(iso: Optional[str], days: int) -> bool:
+    from datetime import datetime, timezone, timedelta
+    try:
+        dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+        return datetime.now(timezone.utc) - dt <= timedelta(days=days)
+    except Exception:
         return False

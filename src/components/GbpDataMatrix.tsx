@@ -52,6 +52,8 @@ interface GbpDataMatrixProps {
   rating?: number;
   reviewsCount?: number;
   isPro?: boolean;
+  /** Live snapshot from /api/v1/profiles/{id}/google-sync (real Google data). */
+  live?: { fields?: Record<string, any>; sources?: Record<string, string> } | null;
   onUpgradeClick?: () => void;
 }
 
@@ -64,13 +66,14 @@ export function GbpDataMatrix({
   rating = 5.0,
   reviewsCount = 28,
   isPro = false,
+  live = null,
   onUpgradeClick
 }: GbpDataMatrixProps) {
   const [selectedGroup, setSelectedGroup] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
-  const parameters: DataParameterItem[] = useMemo(() => [
+  const baseParameters: DataParameterItem[] = useMemo(() => [
     // 1. Identity & Shield
     {
       id: 'gov-status',
@@ -319,6 +322,57 @@ export function GbpDataMatrix({
       proFeatureLabel: 'PPC Equivalence Analytics'
     }
   ], [venueName, category, address, phone, website, rating, reviewsCount, isPro]);
+
+  // Override template rows with REAL Google values whenever the live sync provided them.
+  const parameters: DataParameterItem[] = useMemo(() => {
+    const f = live?.fields;
+    if (!f) return baseParameters;
+    const ok = (s: boolean): DataParameterItem['status'] => (s ? 'OPTIMIZED' : 'ACTION_NEEDED');
+    const over: Record<string, Partial<DataParameterItem>> = {};
+    if (f.open_status) over['gov-status'] = { currentValue: String(f.open_status), status: ok(f.open_status === 'OPEN') };
+    if (f.has_voice_of_merchant !== undefined) over['gov-vom'] = {
+      currentValue: f.has_voice_of_merchant ? 'Verified: Voice of Merchant active' : 'Not verified: Google restricts edits',
+      status: ok(!!f.has_voice_of_merchant),
+    };
+    if (f.new_review_uri !== undefined) over['gov-review-link'] = {
+      currentValue: f.new_review_uri ? 'Direct review link available' : 'No review link returned', status: ok(!!f.new_review_uri),
+    };
+    if (f.description !== undefined || f.title) over['nap-description'] = {
+      currentValue: f.description ? `${f.description.length}/750 chars` : 'Empty: no description set',
+      status: ok(!!f.description && f.description.length >= 250), isProOnly: false,
+    };
+    if (f.additional_categories) over['cat-secondary'] = {
+      currentValue: f.additional_categories.length ? f.additional_categories.join(', ') : 'None configured',
+      status: ok(f.additional_categories.length >= 3), isProOnly: false,
+    };
+    if (f.regular_hours) over['hrs-regular'] = {
+      currentValue: f.regular_hours.length ? `${f.regular_hours.length} periods set` : 'Not set', status: ok(f.regular_hours.length > 0),
+    };
+    if (f.special_hours_count !== undefined) over['hrs-special'] = {
+      currentValue: f.special_hours_count ? `${f.special_hours_count} special day(s) set` : 'No holiday hours set',
+      status: ok(f.special_hours_count > 0), isProOnly: false,
+    };
+    if (f.attributes_count !== undefined) over['attr-amenities'] = {
+      currentValue: `${f.attributes_count} attributes set`, status: ok(f.attributes_count >= 10), isProOnly: false,
+    };
+    if (f.reviews_total !== undefined) over['rev-velocity'] = {
+      currentValue: `${f.reviews_total} reviews, avg ${f.rating ?? 'n/a'}, ${f.reviews_unreplied ?? 0} unanswered`,
+      status: ok((f.reviews_unreplied ?? 0) === 0), isProOnly: false,
+    };
+    if (f.posts_count !== undefined) over['post-cadence'] = {
+      currentValue: f.posts_count ? `${f.posts_count} posts, last ${String(f.last_post_at || '').slice(0, 10)}` : 'No posts yet',
+      status: ok(f.posts_count > 0), isProOnly: false,
+    };
+    if (f.service_items_count !== undefined) over['menu-catalog'] = {
+      currentValue: f.service_items_count ? `${f.service_items_count} items` : 'No items in catalog',
+      status: ok(f.service_items_count > 0), isProOnly: false,
+    };
+    if (f.impressions_30d !== undefined) over['ins-traffic'] = {
+      currentValue: `${f.impressions_30d} impressions, ${f.performance_30d?.CALL_CLICKS ?? 0} calls, ${f.performance_30d?.WEBSITE_CLICKS ?? 0} site clicks (30d)`,
+      status: 'OPTIMIZED', isProOnly: false,
+    };
+    return baseParameters.map(p => (over[p.id] ? { ...p, ...over[p.id] } : p));
+  }, [baseParameters, live]);
 
   const groups = ['ALL', 'Identity & Shield', 'NAP & Contact', 'SEO & Categories', 'Hours & Shifts', '150+ Attributes', 'Reviews & AI', 'Posts & Promos', 'Menu & Catalog', 'Search Insights'];
 
