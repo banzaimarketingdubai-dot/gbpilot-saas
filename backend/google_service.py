@@ -1,3 +1,5 @@
+import time
+import math
 import os
 import requests
 import urllib.parse
@@ -288,7 +290,7 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
                     "business_name": place.get("displayName", {}).get("text"),
                     "address": place.get("formattedAddress"),
                     "google_maps_url": place_maps_uri,
-                    "rating": place.get("rating", 4.5),
+                    "rating": place.get("rating") or 0,
                     "reviews_count": place.get("userRatingCount", 0),
                     "lat": place.get("location", {}).get("latitude"),
                     "lng": place.get("location", {}).get("longitude"),
@@ -318,85 +320,152 @@ def _humanize_place_type(raw_type: str) -> str:
     return raw_type.replace("_", " ").strip().title()
 
 
-def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_meters: float = 500.0) -> List[Dict[str, Any]]:
+_GRID_FIELD_MASK = (
+    'places.id,places.displayName,places.formattedAddress,places.location,'
+    'places.rating,places.userRatingCount,places.primaryType,'
+    'places.primaryTypeDisplayName,places.types,places.googleMapsUri,'
+    'places.websiteUri,places.internationalPhoneNumber,'
+    'places.currentOpeningHours,places.photos,places.priceLevel'
+)
+
+
+def _parse_grid_place(p: Dict[str, Any]) -> Dict[str, Any]:
+    place_id = p.get("id") or ""
+    name = (p.get("displayName") or {}).get("text") or ""
+    primary_display = (p.get("primaryTypeDisplayName") or {}).get("text")
+    primary_raw = p.get("primaryType") or ""
+    primary_cat = primary_display or _humanize_place_type(primary_raw) or ""
+    secondary_cats: List[str] = []
+    for t in (p.get("types") or []):
+        if t in _GENERIC_PLACE_TYPES or t == primary_raw:
+            continue
+        label = _humanize_place_type(t)
+        if label and label.lower() != primary_cat.lower() and label not in secondary_cats:
+            secondary_cats.append(label)
+    if not primary_cat and secondary_cats:
+        primary_cat = secondary_cats.pop(0)
+
+    maps_uri = p.get("googleMapsUri") or (
+        f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(name)}"
+        + (f"&query_place_id={place_id}" if place_id else "")
+    )
+    return {
+        "place_id": place_id,
+        "name": name,
+        "address": p.get("formattedAddress") or "",
+        "lat": (p.get("location") or {}).get("latitude"),
+        "lng": (p.get("location") or {}).get("longitude"),
+        "rating": p.get("rating") or 0,
+        "reviews_count": p.get("userRatingCount") or 0,
+        "primary_category": primary_cat,
+        "secondary_categories": secondary_cats[:5],
+        "google_maps_url": maps_uri,
+        "website_url": p.get("websiteUri") or "",
+        "phone": p.get("internationalPhoneNumber") or "",
+        "open_now": (p.get("currentOpeningHours") or {}).get("openNow"),
+        "photos_count": len(p.get("photos") or []),
+        "price_level": p.get("priceLevel") or "",
+    }
+
+
+def search_places_grid_point(
+    keyword: str,
+    lat: float,
+    lng: float,
+    radius_meters: float = 500.0,
+    mode: str = "bias",
+    step_meters: float = 500.0,
+    page_size: int = 20,
+) -> Optional[List[Dict[str, Any]]]:
     """
-    Searches for businesses matching the keyword around a specific lat/lng point 
-    using Google Places API (New) LocationBias and returns full real competitor data.
+    One Geo-Grid point lookup via Places API (New) Text Search.
+
+    Returns:
+      - list (possibly empty) -> Google answered; empty list = nothing found
+      - None                  -> API key missing / request failed (NO DATA, must never be shown as a rank)
+
+    mode="bias":   circular locationBias around the point (soft preference, closest to a real user search)
+    mode="strict": rectangular locationRestriction (+/- step_meters) - only businesses inside the box
     """
     if not GOOGLE_PLACES_API_KEY:
-        return []
-        
-    try:
-        url = 'https://places.googleapis.com/v1/places:searchText'
-        headers = {
-            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': (
-                'places.id,places.displayName,places.formattedAddress,places.location,'
-                'places.rating,places.userRatingCount,places.primaryType,'
-                'places.primaryTypeDisplayName,places.types,places.googleMapsUri,'
-                'places.websiteUri,places.internationalPhoneNumber,'
-                'places.currentOpeningHours,places.photos,places.priceLevel'
-            ),
-            'Content-Type': 'application/json'
-        }
-        data = {
-            'textQuery': keyword,
-            'locationBias': {
-                'circle': {
-                    'center': {'latitude': lat, 'longitude': lng},
-                    'radius': radius_meters
-                }
+        return None
+
+    url = 'https://places.googleapis.com/v1/places:searchText'
+    headers = {
+        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+        'X-Goog-FieldMask': _GRID_FIELD_MASK,
+        'Content-Type': 'application/json'
+    }
+    data: Dict[str, Any] = {
+        'textQuery': keyword,
+        'pageSize': max(1, min(20, int(page_size))),
+    }
+    if mode == "strict":
+        d_lat = step_meters / 111111.0
+        d_lng = step_meters / (111111.0 * max(0.1, math.cos(math.radians(lat))))
+        data['locationRestriction'] = {
+            'rectangle': {
+                'low': {'latitude': lat - d_lat, 'longitude': lng - d_lng},
+                'high': {'latitude': lat + d_lat, 'longitude': lng + d_lng},
             }
         }
-        res = requests.post(url, headers=headers, json=data, timeout=8)
+    else:
+        data['locationBias'] = {
+            'circle': {
+                'center': {'latitude': lat, 'longitude': lng},
+                'radius': min(50000.0, float(radius_meters)),
+            }
+        }
+
+    for attempt in range(2):
+        try:
+            res = requests.post(url, headers=headers, json=data, timeout=10)
+            if res.ok:
+                return [_parse_grid_place(p) for p in res.json().get("places", [])]
+            if res.status_code in (429, 500, 502, 503) and attempt == 0:
+                time.sleep(0.7)
+                continue
+            print(f"[GoogleService] GeoGrid point HTTP {res.status_code}: {res.text[:200]}")
+            return None
+        except Exception as e:
+            if attempt == 0:
+                time.sleep(0.5)
+                continue
+            print(f"[GoogleService] GeoGrid point lookup failed: {e}")
+            return None
+    return None
+
+
+def get_place_location_by_id(place_id: str) -> Optional[Dict[str, Any]]:
+    """Resolve coordinates/name of a known Google place_id (Place Details, minimal field mask)."""
+    if not GOOGLE_PLACES_API_KEY or not place_id:
+        return None
+    try:
+        res = requests.get(
+            f'https://places.googleapis.com/v1/places/{place_id}',
+            headers={
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask': 'id,displayName,location,formattedAddress',
+            },
+            timeout=8,
+        )
         if res.ok:
-            places = res.json().get("places", [])
-            results = []
-            for p in places:
-                place_id = p.get("id") or ""
-                name = (p.get("displayName") or {}).get("text") or ""
-                primary_display = (p.get("primaryTypeDisplayName") or {}).get("text")
-                primary_raw = p.get("primaryType") or ""
-                primary_cat = primary_display or _humanize_place_type(primary_raw) or ""
-                raw_types = p.get("types") or []
-                secondary_cats = []
-                for t in raw_types:
-                    if t in _GENERIC_PLACE_TYPES or t == primary_raw:
-                        continue
-                    label = _humanize_place_type(t)
-                    if label and label.lower() != primary_cat.lower() and label not in secondary_cats:
-                        secondary_cats.append(label)
-                if not primary_cat and secondary_cats:
-                    primary_cat = secondary_cats.pop(0)
-
-                maps_uri = p.get("googleMapsUri") or (
-                    f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(name)}"
-                    + (f"&query_place_id={place_id}" if place_id else "")
-                )
-                open_now = (p.get("currentOpeningHours") or {}).get("openNow")
-                photos_count = len(p.get("photos") or [])
-
-                results.append({
-                    "place_id": place_id,
-                    "name": name,
-                    "address": p.get("formattedAddress") or "",
-                    "lat": (p.get("location") or {}).get("latitude"),
-                    "lng": (p.get("location") or {}).get("longitude"),
-                    "rating": p.get("rating") or 0,
-                    "reviews_count": p.get("userRatingCount") or 0,
-                    "primary_category": primary_cat,
-                    "secondary_categories": secondary_cats[:5],
-                    "google_maps_url": maps_uri,
-                    "website_url": p.get("websiteUri") or "",
-                    "phone": p.get("internationalPhoneNumber") or "",
-                    "open_now": open_now,
-                    "photos_count": photos_count,
-                    "price_level": p.get("priceLevel") or "",
-                })
-            return results
+            p = res.json()
+            return {
+                "place_id": p.get("id") or place_id,
+                "name": (p.get("displayName") or {}).get("text") or "",
+                "address": p.get("formattedAddress") or "",
+                "lat": (p.get("location") or {}).get("latitude"),
+                "lng": (p.get("location") or {}).get("longitude"),
+            }
     except Exception as e:
-        print(f"[GoogleService] GeoGrid API lookup failed: {e}")
-    return []
+        print(f"[GoogleService] Place location lookup failed: {e}")
+    return None
+
+
+def search_places_for_geo_grid(keyword: str, lat: float, lng: float, radius_meters: float = 500.0) -> List[Dict[str, Any]]:
+    """Backward-compatible wrapper (B2B outreach): empty list on failure."""
+    return search_places_grid_point(keyword, lat, lng, radius_meters) or []
 
 def autocomplete_places(query: str, lat: Optional[float] = None, lng: Optional[float] = None) -> List[Dict[str, str]]:
     """

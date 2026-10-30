@@ -95,6 +95,28 @@ class GeoGridScan(Base):
     snapshots = relationship("RankSnapshot", back_populates="scan")
 
 
+class GeoScanHistory(Base):
+    """
+    Persistent Geo-Grid scan history (cache + monthly quota accounting + trend base).
+    Keyed by a plain string profile key (Google location id) so it does not depend on gbp_profiles rows.
+    """
+    __tablename__ = 'geo_scan_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    profile_key = Column(String(255), nullable=False, index=True)
+    cache_key = Column(String(300), nullable=False, index=True)
+    keyword = Column(String(200), nullable=False)
+    grid_size = Column(Integer, nullable=False)
+    step_m = Column(Integer, nullable=False)
+    mode = Column(String(20), nullable=False, default='bias')
+    billed = Column(Boolean, nullable=False, default=True)
+    arp = Column(Float)
+    atrp = Column(Float)
+    solv = Column(Float)
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+
 class RankSnapshot(Base):
     __tablename__ = 'rank_snapshots'
     

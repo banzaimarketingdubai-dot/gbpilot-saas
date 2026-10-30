@@ -33,13 +33,14 @@ import { getSubscription, activateTrial } from '@/lib/subscription';
 import { loadOwnerGroundTruth, OwnerGroundTruth } from '@/lib/groundTruth';
 import { buildDirectoryBlueprints, DirectoryPlatformId } from '@/lib/geo/directoryBuilder';
 
-const getProfileCoords = (profile: any): { lat: number; lng: number } => {
-  if (!profile) return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina
-  
+// Real coordinates only: numeric lat/lng on the profile or a parsed POINT(lng lat). No guessed city defaults.
+const getProfileCoords = (profile: any): { lat: number; lng: number } | null => {
+  if (!profile) return null;
+
   if (typeof profile.lat === 'number' && typeof profile.lng === 'number') {
     return { lat: profile.lat, lng: profile.lng };
   }
-  
+
   if (profile.location && typeof profile.location === 'string') {
     try {
       const cleaned = profile.location.replace('POINT(', '').replace(')', '').trim();
@@ -56,20 +57,59 @@ const getProfileCoords = (profile: any): { lat: number; lng: number } => {
     }
   }
 
-  const name = (profile.name || '').toLowerCase();
-  const address = (profile.address || '').toLowerCase();
-  const city = (profile.city || '').toLowerCase();
-
-  if (name.includes('свои') || address.includes('nha trang') || address.includes('hòn chồng') || city.includes('nha trang')) {
-    return { lat: 12.2718, lng: 109.2016 }; // Hon Chong, Nha Trang
-  }
-
-  if (name.includes('dubai') || address.includes('dubai') || city.includes('dubai') || address.includes('uae')) {
-    return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina
-  }
-
-  return { lat: 25.0805, lng: 55.1403 }; // Dubai Marina Default
+  return null;
 };
+
+type GridNodeState = 'FOUND' | 'NOT_IN_TOP20' | 'NO_DATA';
+
+interface Top3Item {
+  rank: number;
+  place_id: string;
+  name: string;
+  rating: number;
+  reviews_count: number;
+  primary_category: string;
+  google_maps_url: string;
+  is_you: boolean;
+}
+
+interface GridNodeData {
+  pos: number;
+  rank: number | null;
+  state: GridNodeState;
+  competitor: string;
+  lat?: number;
+  lng?: number;
+  top3?: Top3Item[];
+}
+
+interface ScanMetrics {
+  arp: number | null;
+  atrp: number | null;
+  solv: number | null;
+  nodes_total: number;
+  nodes_with_data: number;
+  nodes_found: number;
+  nodes_top3: number;
+}
+
+interface ScanMeta {
+  cached?: boolean;
+  stale?: boolean;
+  cached_at?: string | null;
+  plan_id?: string;
+  scans_used?: number;
+  scans_limit?: number | null;
+  scans_remaining?: number | null;
+  own_place_id?: string | null;
+  own_name?: string | null;
+  own_resolved_by?: string;
+  center_lat?: number | null;
+  center_lng?: number | null;
+  accuracy_note?: string;
+  step_m?: number;
+  mode?: string;
+}
 
 export interface KeywordPill {
   id: string;
@@ -388,13 +428,13 @@ export default function GeoGridPage() {
       activeProfile
         ? {
             ...activeProfile,
-            lat: mapCoords.lat,
-            lng: mapCoords.lng
+            lat: mapCoords?.lat,
+            lng: mapCoords?.lng
           }
         : null,
       groundTruth
     );
-  }, [activeProfile, mapCoords.lat, mapCoords.lng, groundTruth]);
+  }, [activeProfile, mapCoords?.lat, mapCoords?.lng, groundTruth]);
 
   const activeDirectoryBlueprint = directoryBlueprints.find(d => d.id === selectedDirectoryPlatform) || directoryBlueprints[0];
 
@@ -1001,7 +1041,7 @@ export default function GeoGridPage() {
                   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
                     <iframe
                       title="Google Maps Street Backdrop"
-                      src={`https://www.google.com/maps?q=${mapCoords.lat},${mapCoords.lng}&z=15&output=embed`}
+                      src={`https://www.google.com/maps?q=${mapCoords?.lat},${mapCoords?.lng}&z=15&output=embed`}
                       className="w-full h-full border-0 opacity-35 grayscale-[65%] contrast-[110%] scale-110 pointer-events-none"
                       tabIndex={-1}
                       loading="lazy"

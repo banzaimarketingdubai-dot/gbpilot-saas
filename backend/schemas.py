@@ -76,21 +76,39 @@ class GeoGridScanRequest(BaseModel):
     profile_id: Optional[str] = "default"
     keyword: str
     grid_size: int = 3
-    distance_meters: float = 500.0
+    distance_meters: float = 500.0          # grid step in meters (250 / 500 / 1000)
+    mode: str = "bias"                      # "bias" (soft, like a real search) | "strict" (only inside the cell box)
     business_name: Optional[str] = None
     address: Optional[str] = None
+    place_id: Optional[str] = None          # Google place_id of the user's own business (preferred over name matching)
     lat: Optional[float] = None
     lng: Optional[float] = None
+    plan_id: Optional[str] = None           # subscription plan asserted by the client (soft limit, no server-side billing yet)
+    user_email: Optional[str] = None
+    cache_only: bool = False                # return the last stored scan without calling Google / spending quota
+    force_refresh: bool = False             # bypass the 24h cache (spends quota; superadmin only)
+
+class GeoGridTop3Item(BaseModel):
+    rank: int
+    place_id: str = ""
+    name: str
+    rating: float = 0.0
+    reviews_count: int = 0
+    primary_category: str = ""
+    google_maps_url: str = ""
+    is_you: bool = False
 
 class GeoGridNode(BaseModel):
     pos: int
-    rank: int
+    rank: Optional[int] = None              # 1..20 when found; None when not found / no data
+    state: str = "NO_DATA"                  # FOUND | NOT_IN_TOP20 | NO_DATA
     lat: float
     lng: float
-    competitor: Optional[str] = None
+    competitor: Optional[str] = None        # leader at this point ("You" if the user is #1)
     competitor_url: Optional[str] = None
     competitor_rating: Optional[float] = None
     competitor_reviews: Optional[int] = None
+    top3: List[GeoGridTop3Item] = []
 
 class GeoGridCompetitor(BaseModel):
     place_id: str = ""
@@ -108,14 +126,42 @@ class GeoGridCompetitor(BaseModel):
     price_level: str = ""
     grid_wins: int = 0
     avg_rank: float = 0.0
-    winning_moat: str = ""
-    critical_weakness: str = ""
-    overtake_strategy: str = ""
+    appearances: int = 0
+
+class GeoGridMetrics(BaseModel):
+    arp: Optional[float] = None             # average rank, "not in top 20" counted as 21
+    atrp: Optional[float] = None            # average rank over points where the business was found
+    solv: Optional[float] = None            # share of local voice: % of points in Top-3
+    nodes_total: int = 0
+    nodes_with_data: int = 0
+    nodes_found: int = 0
+    nodes_top3: int = 0
+
+class GeoGridMeta(BaseModel):
+    keyword: str = ""
+    grid_size: int = 3
+    step_m: int = 500
+    mode: str = "bias"
+    cached: bool = False
+    stale: bool = False
+    cached_at: Optional[str] = None
+    plan_id: str = "FREE_SCOUT"
+    scans_used: int = 0
+    scans_limit: Optional[int] = None       # None = unlimited
+    scans_remaining: Optional[int] = None
+    own_place_id: Optional[str] = None
+    own_name: Optional[str] = None
+    own_resolved_by: str = "none"           # request | search | none
+    center_lat: Optional[float] = None
+    center_lng: Optional[float] = None
+    accuracy_note: str = ""
 
 class GeoGridScanResponse(BaseModel):
-    status: str
-    grid: List[GeoGridNode]
+    status: str                             # success | error | limit_reached | no_cache
+    grid: List[GeoGridNode] = []
     competitors: List[GeoGridCompetitor] = []
+    metrics: GeoGridMetrics = GeoGridMetrics()
+    meta: GeoGridMeta = GeoGridMeta()
     message: str = ""
 
 class B2BLead(BaseModel):

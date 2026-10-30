@@ -631,201 +631,30 @@ from google_service import search_places_for_geo_grid
 @app.post("/api/v1/geo-grid/scan", response_model=GeoGridScanResponse, tags=["Geo-Grid"])
 async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depends(get_db)):
     """
-    Generate a Geo-Grid (3x3, 5x5, 7x7) and scan Google Places API at each point for the given keyword.
-    Completely resilient to database availability.
+    Geo-Grid scan (3x3 / 5x5 / 7x7) over Google Places API.
+    - Own business is matched by Google place_id (name match only as a last resort).
+    - Every point keeps its real Top-3; ranks are never synthesized (FOUND / NOT_IN_TOP20 / NO_DATA).
+    - Results are cached for 24h; fresh scans are limited per plan per month (cache hits are free).
     """
-    profile = None
-    if db:
+    from geo_grid_service import run_geo_grid
+
+    db_profile_name = None
+    if db is not None and request.profile_id and request.profile_id != "default":
         try:
-            profile = db.query(models.GBPProfile).filter(models.GBPProfile.id == request.profile_id).first()
+            prof = db.query(models.GBPProfile).filter(
+                models.GBPProfile.google_location_id.in_([request.profile_id, f"locations/{request.profile_id}"])
+            ).first()
+            if prof:
+                db_profile_name = prof.business_name
         except Exception as e:
-            logger.warning(f"[GeoGrid] Database lookup failed for profile {request.profile_id}: {e}")
-            profile = None
-
-    # Determine business target name
-    target_name = (request.business_name or (profile.business_name if profile else "") or "my business").strip()
-
-    # Determine center coordinates
-    center_lat = request.lat
-    center_lng = request.lng
-
-    if (center_lat is None or center_lng is None) and profile and profile.location:
-        try:
-            coords = profile.location.replace("POINT(", "").replace(")", "").split()
-            center_lng, center_lat = float(coords[0]), float(coords[1])
-        except Exception:
-            pass
-
-    if center_lat is None or center_lng is None:
-        lookup_query = request.address or target_name
-        if lookup_query and lookup_query.lower() != "my business":
+            logger.warning(f"[GeoGrid] Profile lookup skipped: {e}")
             try:
-                from google_service import get_public_place_details
-                pd = await asyncio.to_thread(get_public_place_details, lookup_query)
-                if pd and pd.get("lat") and pd.get("lng"):
-                    center_lat = pd["lat"]
-                    center_lng = pd["lng"]
-            except Exception as e:
-                logger.warning(f"[GeoGrid] Geocoding lookup failed: {e}")
+                db.rollback()
+            except Exception:
+                pass
 
-    # Fallback coordinates if completely unknown (default to Dubai Downtown / regional hub)
-    if center_lat is None or center_lng is None:
-        center_lat, center_lng = 25.1972, 55.2744
-
-    # Determine grid dimension: 3 (3x3=9), 5 (5x5=25), or 7 (7x7=49)
-    dimension = 3
-    if request.grid_size in [3, 5, 7]:
-        dimension = request.grid_size
-    elif request.grid_size == 9:
-        dimension = 3
-
-    # Calculate step offsets
-    distance = request.distance_meters if request.distance_meters and request.distance_meters > 50 else 500.0
-    lat_offset_per_m = 1.0 / 111111.0
-    lng_offset_per_m = 1.0 / (111111.0 * max(0.1, math.cos(math.radians(center_lat))))
-
-    half_dim = dimension // 2
-    steps = [i * distance for i in range(half_dim, -half_dim - 1, -1)]
-
-    grid_nodes = []
-    pos = 1
-    for dy in steps:
-        for dx in [-s for s in reversed(steps)]:
-            grid_lat = center_lat + (dy * lat_offset_per_m)
-            grid_lng = center_lng + (dx * lng_offset_per_m)
-            grid_nodes.append({
-                "pos": pos, 
-                "lat": grid_lat, 
-                "lng": grid_lng,
-                "dist": math.sqrt(dx**2 + dy**2)
-            })
-            pos += 1
-
-    safe_target = target_name.lower().strip()
-
-    async def scan_point(node):
-        places = []
-        try:
-            places = await asyncio.to_thread(
-                search_places_for_geo_grid, 
-                request.keyword, 
-                node["lat"], 
-                node["lng"], 
-                distance
-            )
-        except Exception as e:
-            logger.warning(f"[GeoGrid] Scan point failed: {e}")
-            places = []
-
-        rank = 0
-        top_competitor = "—"
-        top_url = None
-        top_rating = None
-        top_reviews = None
-
-        if places:
-            first_place = places[0]
-            top_competitor = first_place.get("name") or "—"
-            top_url = first_place.get("google_maps_url")
-            top_rating = first_place.get("rating")
-            top_reviews = first_place.get("reviews_count")
-            rank = 21
-            for idx, place in enumerate(places):
-                p_name = (place.get("name") or "").lower()
-                if safe_target and (safe_target in p_name or p_name in safe_target):
-                    rank = idx + 1
-                    if idx == 0:
-                        top_competitor = "You"
-                    break
-
-        node_obj = GeoGridNode(
-            pos=node["pos"],
-            lat=round(node["lat"], 6),
-            lng=round(node["lng"], 6),
-            rank=rank,
-            competitor="You" if rank == 1 else top_competitor,
-            competitor_url=top_url,
-            competitor_rating=top_rating,
-            competitor_reviews=top_reviews
-        )
-        return node_obj, places
-
-    tasks = [scan_point(node) for node in grid_nodes]
-    raw_results = await asyncio.gather(*tasks)
-    results = [r[0] for r in raw_results]
-
-    # Aggregate real Top Competitors across all grid nodes strictly from Google Places API payloads
-    comp_map = {}
-    for node_obj, places in raw_results:
-        for idx, p in enumerate(places[:5]):
-            p_name = (p.get("name") or "").strip()
-            if not p_name:
-                continue
-            p_lower = p_name.lower()
-            # Exclude user's own business from competitor matrix
-            if safe_target and (safe_target in p_lower or p_lower in safe_target):
-                continue
-            pid = p.get("place_id") or p_lower
-            raw_prim = p.get("primary_category") or ""
-            if raw_prim == "Local Business":
-                raw_prim = ""
-            if pid not in comp_map:
-                comp_map[pid] = {
-                    "place_id": p.get("place_id") or pid,
-                    "name": p_name,
-                    "address": p.get("address") or "",
-                    "google_maps_url": p.get("google_maps_url") or f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(p_name)}",
-                    "website_url": p.get("website_url") or "",
-                    "phone": p.get("phone") or "",
-                    "rating": float(p.get("rating") or 0.0),
-                    "reviews_count": int(p.get("reviews_count") or 0),
-                    "primary_category": raw_prim,
-                    "secondary_categories": p.get("secondary_categories") or [],
-                    "open_now": p.get("open_now"),
-                    "photos_count": int(p.get("photos_count") or 0),
-                    "price_level": p.get("price_level") or "",
-                    "ranks": [],
-                    "top3_wins": 0
-                }
-            comp_map[pid]["ranks"].append(idx + 1)
-            if idx < 3:
-                comp_map[pid]["top3_wins"] += 1
-
-    sorted_comps = sorted(
-        comp_map.values(),
-        key=lambda c: (-c["top3_wins"], sum(c["ranks"]) / max(1, len(c["ranks"])), -c["reviews_count"])
-    )[:5]
-
-    competitors_list = []
-    for c in sorted_comps:
-        avg_r = round(sum(c["ranks"]) / max(1, len(c["ranks"])), 1)
-        competitors_list.append(GeoGridCompetitor(
-            place_id=c["place_id"],
-            name=c["name"],
-            address=c["address"],
-            google_maps_url=c["google_maps_url"],
-            website_url=c["website_url"] or None,
-            phone=c["phone"] or None,
-            rating=c["rating"],
-            reviews_count=c["reviews_count"],
-            primary_category=c["primary_category"],
-            secondary_categories=c["secondary_categories"],
-            grid_wins=c["top3_wins"],
-            avg_rank=avg_r,
-            open_now=c["open_now"],
-            photos_count=c["photos_count"],
-            price_level=c["price_level"] or None,
-            winning_moat="",
-            critical_weakness="",
-            overtake_strategy=""
-        ))
-
-    return GeoGridScanResponse(
-        status="success",
-        grid=results,
-        competitors=competitors_list,
-        message=f"Successfully scanned {len(results)} nodes for '{request.keyword}' around {target_name}."
-    )
+    result = await run_geo_grid(request, db, db_profile_name)
+    return GeoGridScanResponse(**result)
 
 from pydantic import BaseModel
 class PublishPostRequest(BaseModel):
