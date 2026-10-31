@@ -83,7 +83,7 @@ export function GbpDataMatrix({
         paramName: 'Business Status & Operational Flag',
         apiField: 'openInfo.status',
         currentValue: '—',
-        platformAction: 'Мониторинг статуса работы в Google Business Profile API.',
+        platformAction: 'Monitors operational status via Google Business Profile API.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -93,7 +93,7 @@ export function GbpDataMatrix({
         paramName: 'Pending Google Community Edits',
         apiField: 'metadata.hasPendingEdits',
         currentValue: '—',
-        platformAction: 'Проверка наличия внешних правок карточки в Google API.',
+        platformAction: 'Detects unauthorized external edits and third-party suggestions.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -103,7 +103,7 @@ export function GbpDataMatrix({
         paramName: 'Voice of Merchant Verification Authority',
         apiField: 'metadata.hasVoiceOfMerchant',
         currentValue: '—',
-        platformAction: 'Статус подтвержденного владельца в Google Business Profile.',
+        platformAction: 'Verifies owner authority and Google business verification badge.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -113,7 +113,7 @@ export function GbpDataMatrix({
         paramName: 'Direct Review Generation URI',
         apiField: 'metadata.newReviewUri',
         currentValue: '—',
-        platformAction: 'Прямая ссылка Google для оставления отзыва клиентом.',
+        platformAction: 'Generates direct Google review links and QR codes for customers.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -125,7 +125,7 @@ export function GbpDataMatrix({
         paramName: 'Official Business Title',
         apiField: 'title',
         currentValue: venueName || '—',
-        platformAction: 'Официальное название компании в Google Maps.',
+        platformAction: 'Monitors official business brand name and keyword consistency.',
         status: venueName && venueName !== '—' ? 'OPTIMIZED' : 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -135,7 +135,7 @@ export function GbpDataMatrix({
         paramName: 'Storefront Address & Geocoordinates',
         apiField: 'storefrontAddress & latlng',
         currentValue: address || '—',
-        platformAction: 'Физический адрес и координаты точки в Google Maps.',
+        platformAction: 'Guards physical storefront address and map pin coordinates.',
         status: address && address !== '—' ? 'OPTIMIZED' : 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -145,7 +145,7 @@ export function GbpDataMatrix({
         paramName: 'Primary Phone Number',
         apiField: 'phoneNumbers.primaryPhone',
         currentValue: phone || '—',
-        platformAction: 'Основной контактный телефон в карточке Google Maps.',
+        platformAction: 'Monitors primary phone number and click-to-call routing.',
         status: phone ? 'OPTIMIZED' : 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -155,7 +155,7 @@ export function GbpDataMatrix({
         paramName: 'Website URI',
         apiField: 'websiteUri',
         currentValue: website || '—',
-        platformAction: 'Официальный сайт или ссылка в карточке Google.',
+        platformAction: 'Monitors website URL and tracking UTM parameters.',
         status: website ? 'OPTIMIZED' : 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -165,7 +165,7 @@ export function GbpDataMatrix({
         paramName: 'Profile Description',
         apiField: 'profile.description',
         currentValue: '—',
-        platformAction: 'Описание компании в Google Business Profile (до 750 символов).',
+        platformAction: 'Optimizes business profile description (up to 750 characters).',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -177,7 +177,7 @@ export function GbpDataMatrix({
         paramName: 'Primary Google Category',
         apiField: 'categories.primaryCategory',
         currentValue: cleanCat,
-        platformAction: 'Основная категория бизнеса в Google Maps.',
+        platformAction: 'Guards primary Google category for local search visibility.',
         status: cleanCat !== '—' ? 'OPTIMIZED' : 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -187,7 +187,7 @@ export function GbpDataMatrix({
         paramName: 'Additional Categories',
         apiField: 'categories.additionalCategories',
         currentValue: '—',
-        platformAction: 'Дополнительные категории профиля в Google Business Profile API.',
+        platformAction: 'Enriches profile with secondary categories to outrank competitors.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -199,7 +199,7 @@ export function GbpDataMatrix({
         paramName: 'Standard Operating Hours',
         apiField: 'regularHours.periods',
         currentValue: '—',
-        platformAction: 'График работы по дням недели из Google Business Profile API.',
+        platformAction: 'Synchronizes daily business opening hours and break intervals.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -209,7 +209,7 @@ export function GbpDataMatrix({
         paramName: 'Special & Holiday Hours',
         apiField: 'specialHours.specialHourPeriods',
         currentValue: '—',
-        platformAction: 'Специальные часы работы в праздничные дни.',
+        platformAction: 'Configures holiday schedules to eliminate Google warning badges.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -221,7 +221,7 @@ export function GbpDataMatrix({
         paramName: 'Configured Profile Attributes',
         apiField: 'attributes',
         currentValue: '—',
-        platformAction: 'Количество заполненных атрибутов карточки в Google API.',
+        platformAction: 'Enriches all 150+ Google profile attributes and features.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -232,8 +232,8 @@ export function GbpDataMatrix({
         categoryGroup: 'Reviews & AI',
         paramName: 'Rating & Reviews Count',
         apiField: 'reviews.starRating & reviews.count',
-        currentValue: rating > 0 ? `${rating.toFixed(1)} ★ (${reviewsCount} отзывов)` : '—',
-        platformAction: 'Фактический рейтинг и количество отзывов из Google API.',
+        currentValue: rating > 0 ? `${rating.toFixed(1)} ★ (${reviewsCount} reviews)` : '—',
+        platformAction: 'Synchronizes live Google star rating and customer review counts.',
         status: rating > 0 ? 'OPTIMIZED' : 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -245,7 +245,7 @@ export function GbpDataMatrix({
         paramName: 'Published Local Posts',
         apiField: 'localPosts',
         currentValue: '—',
-        platformAction: 'Опубликованные посты в ленте Google Maps.',
+        platformAction: 'Publishes local updates, offers, and events directly to Google Maps.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -257,7 +257,7 @@ export function GbpDataMatrix({
         paramName: 'Service Items & Catalog',
         apiField: 'serviceItems',
         currentValue: '—',
-        platformAction: 'Позиции услуг и меню в Google Business Profile.',
+        platformAction: 'Synchronizes structured service catalog and food & drink menus.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -269,7 +269,7 @@ export function GbpDataMatrix({
         paramName: 'Monthly Search Keywords (GBP Performance API)',
         apiField: 'searchkeywords.impressions.monthly',
         currentValue: '—',
-        platformAction: 'Поисковые запросы из Business Profile Performance API.',
+        platformAction: 'Monitors organic discovery queries from GBP Performance API.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       },
@@ -279,7 +279,7 @@ export function GbpDataMatrix({
         paramName: '30-Day Interactions (Calls, Website, Directions)',
         apiField: 'fetchMultiDailyMetricsTimeSeries',
         currentValue: '—',
-        platformAction: 'Клики по звонкам, сайту и маршрутам за 30 дней из Performance API.',
+        platformAction: 'Tracks 30-day customer actions: phone calls, directions, website visits.',
         status: 'ACTION_NEEDED',
         isProOnly: false
       }
@@ -299,11 +299,11 @@ export function GbpDataMatrix({
     if (f.primary_category) over['cat-primary'] = { currentValue: String(f.primary_category), status: 'OPTIMIZED' };
     if (f.open_status) over['gov-status'] = { currentValue: String(f.open_status), status: ok(f.open_status === 'OPEN') };
     if (f.has_pending_edits !== undefined) over['gov-pending-edits'] = {
-      currentValue: f.has_pending_edits ? 'Есть внешние правки' : '0 внешних правок',
+      currentValue: f.has_pending_edits ? 'External edits pending' : '0 pending edits',
       status: ok(!f.has_pending_edits),
     };
     if (f.has_voice_of_merchant !== undefined) over['gov-vom'] = {
-      currentValue: f.has_voice_of_merchant ? 'Подтверждено (Voice of Merchant)' : 'Не подтверждено',
+      currentValue: f.has_voice_of_merchant ? 'Verified (Voice of Merchant)' : 'Not Verified',
       status: ok(!!f.has_voice_of_merchant),
     };
     if (f.new_review_uri !== undefined) over['gov-review-link'] = {
@@ -311,35 +311,35 @@ export function GbpDataMatrix({
       status: ok(!!f.new_review_uri),
     };
     if (f.description !== undefined) over['nap-description'] = {
-      currentValue: f.description ? `${f.description.length}/750 симв.` : '— (Пусто)',
+      currentValue: f.description ? `${f.description.length}/750 chars` : '— (Empty)',
       status: ok(!!f.description),
     };
     if (f.additional_categories !== undefined) over['cat-secondary'] = {
-      currentValue: f.additional_categories?.length ? f.additional_categories.join(', ') : '— (Не заданы)',
+      currentValue: f.additional_categories?.length ? f.additional_categories.join(', ') : '— (Not set)',
       status: ok(Boolean(f.additional_categories?.length)),
     };
     if (f.regular_hours !== undefined) over['hrs-regular'] = {
-      currentValue: f.regular_hours?.length ? `${f.regular_hours.length} дн. задано` : '— (Не заданы)',
+      currentValue: f.regular_hours?.length ? `${f.regular_hours.length} days set` : '— (Not set)',
       status: ok(Boolean(f.regular_hours?.length)),
     };
     if (f.special_hours_count !== undefined) over['hrs-special'] = {
-      currentValue: f.special_hours_count ? `${f.special_hours_count} спец. дн.` : '—',
+      currentValue: f.special_hours_count ? `${f.special_hours_count} holiday dates` : '—',
       status: ok(f.special_hours_count > 0),
     };
     if (f.attributes_count !== undefined) over['attr-amenities'] = {
-      currentValue: f.attributes_count > 0 ? `${f.attributes_count} атрибутов` : '— (0 атрибутов)',
+      currentValue: f.attributes_count > 0 ? `${f.attributes_count} attributes` : '— (0 attributes)',
       status: ok(f.attributes_count > 0),
     };
     if (f.reviews_total !== undefined || f.rating !== undefined) over['rev-velocity'] = {
-      currentValue: f.rating ? `${f.rating} ★ (${f.reviews_total ?? 0} отзывов, без ответа: ${f.reviews_unreplied ?? 0})` : '—',
+      currentValue: f.rating ? `${f.rating} ★ (${f.reviews_total ?? 0} reviews, unreplied: ${f.reviews_unreplied ?? 0})` : '—',
       status: ok(Boolean(f.rating)),
     };
     if (f.posts_count !== undefined) over['post-cadence'] = {
-      currentValue: f.posts_count > 0 ? `${f.posts_count} постов` : '— (0 постов)',
+      currentValue: f.posts_count > 0 ? `${f.posts_count} posts` : '— (0 posts)',
       status: ok(f.posts_count > 0),
     };
     if (f.service_items_count !== undefined) over['menu-catalog'] = {
-      currentValue: f.service_items_count > 0 ? `${f.service_items_count} поз.` : '— (0 поз.)',
+      currentValue: f.service_items_count > 0 ? `${f.service_items_count} items` : '— (0 items)',
       status: ok(f.service_items_count > 0),
     };
     if (f.top_search_keywords !== undefined) over['ins-keywords'] = {
@@ -349,7 +349,7 @@ export function GbpDataMatrix({
       status: ok(Boolean(f.top_search_keywords?.length)),
     };
     if (f.impressions_30d !== undefined) over['ins-traffic'] = {
-      currentValue: `${f.impressions_30d} показов • ${f.performance_30d?.CALL_CLICKS ?? 0} звонков • ${f.performance_30d?.WEBSITE_CLICKS ?? 0} кликов (30 дн.)`,
+      currentValue: `${f.impressions_30d} views • ${f.performance_30d?.CALL_CLICKS ?? 0} calls • ${f.performance_30d?.WEBSITE_CLICKS ?? 0} clicks (30d)`,
       status: ok(f.impressions_30d > 0),
     };
     return baseParameters.map(p => (over[p.id] ? { ...p, ...over[p.id] } : p));
@@ -540,7 +540,7 @@ export function GbpDataMatrix({
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-xs hover:shadow transition-all cursor-pointer"
                           >
                             <Unlock className="w-3 h-3" />
-                            <span>Unlock Pro ($69)</span>
+                            <span>Unlock Pro (69 AED)</span>
                           </button>
                         ) : (
                           <span className="text-[11px] font-semibold text-slate-400 flex items-center justify-end gap-1">
@@ -567,7 +567,7 @@ export function GbpDataMatrix({
                   </span>
                 </div>
                 <p className="text-xs text-amber-800">
-                  Upgrade to GBPilot Growth ($69/mo) to unblur secret search queries, enable 24/7 Competitor Sentinel Rollback, and activate AI review auto-replies.
+                  Upgrade to GBPilot Pro (69 AED/mo) to unblur secret search queries, enable 24/7 Competitor Sentinel Rollback, and activate AI review auto-replies.
                 </p>
               </div>
 
@@ -575,7 +575,7 @@ export function GbpDataMatrix({
                 onClick={onUpgradeClick}
                 className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
               >
-                <span>Upgrade to Pro ($69/mo)</span>
+                <span>Upgrade to Pro (69 AED/mo)</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

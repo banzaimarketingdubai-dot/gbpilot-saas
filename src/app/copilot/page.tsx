@@ -558,7 +558,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
     } catch (err) {
       console.warn("Copilot AI fallback:", err);
       // Fallback: honest error, no invented numbers
-      const fallbackReply = `Не удалось получить ответ от AI-сервера для запроса «${query}». Проверьте соединение и попробуйте снова. Данные о бизнесе «${activeProfile?.name || ''}» будут использованы при следующем запросе.`;
+      const fallbackReply = `Unable to reach the AI server for query "${query}". Please check your network connection and try again. Profile data for "${activeProfile?.name || ''}" will be attached on next request.`;
 
       setMessages((prev) => [
         ...prev,

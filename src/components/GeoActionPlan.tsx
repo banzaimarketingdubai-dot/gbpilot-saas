@@ -49,9 +49,9 @@ const fmtSolv = (v: number | null | undefined) => (typeof v === 'number' ? `${v.
 const fmtDate = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString('ru-RU') : '—');
 
 const STATUS_LABEL: Record<PlanItem['status'], { text: string; cls: string }> = {
-  PENDING: { text: 'ожидает', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
-  APPLIED: { text: 'применено', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-  DISMISSED: { text: 'пропущено', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+  PENDING: { text: 'Pending', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+  APPLIED: { text: 'Applied', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+  DISMISSED: { text: 'Dismissed', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
 export const GeoActionPlan: React.FC<Props> = ({
@@ -90,7 +90,7 @@ export const GeoActionPlan: React.FC<Props> = ({
       if (!res.ok) throw new Error(String(res.status));
       apply(await res.json());
     } catch {
-      setError('Журнал действий недоступен: сервер не ответил.');
+      setError('Action log unavailable: server did not respond.');
     }
   }, [profileId, businessName, placeId, keyword]);
 
@@ -109,7 +109,7 @@ export const GeoActionPlan: React.FC<Props> = ({
       if (!res.ok) throw new Error(String(res.status));
       apply(await res.json());
     } catch {
-      setError('Не удалось сохранить действие: сервер не ответил.');
+      setError('Failed to save action: server did not respond.');
     } finally {
       setBusy(null);
     }
@@ -149,11 +149,11 @@ export const GeoActionPlan: React.FC<Props> = ({
     <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 space-y-3">
       <div className="flex items-center gap-2">
         <ClipboardList className="w-4 h-4 text-google-blue" />
-        <div className="text-xs font-extrabold text-slate-900">План действий по запросу «{keyword}»</div>
+        <div className="text-xs font-extrabold text-slate-900">Action Plan for "{keyword}"</div>
       </div>
       <p className="text-[10px] text-slate-400">
-        Изменения в Google вносятся вручную: приложение ничего не записывает в ваш профиль. Отметьте действие
-        применённым после правки, а через 7 дней повторите скан, чтобы увидеть до и после.
+        Action execution: mark action as applied after updating Google Maps,
+        then re-scan after 7 days to verify ranking improvements.
       </p>
 
       {error && <div className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2">{error}</div>}
@@ -161,17 +161,17 @@ export const GeoActionPlan: React.FC<Props> = ({
       {rescanDue && (
         <div className="text-[11px] font-semibold text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-2 flex items-center gap-1.5">
           <RotateCcw className="w-3.5 h-3.5" />
-          Прошло 7+ дней после применения. Запустите повторный скан этого запроса и сравните ARP и SoLV.
+          7+ days have passed since application. Run a re-scan on this keyword to verify ARP and SoLV improvements.
         </div>
       )}
 
       {items.length === 0 && available.length === 0 && !error && (
-        <p className="text-[11px] text-slate-500">Нет разрывов, которые можно добавить в план.</p>
+        <p className="text-[11px] text-slate-500">No optimization gaps available to add to plan.</p>
       )}
 
       {available.length > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Доступные разрывы</div>
+          <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Available Optimization Gaps</div>
           {available.map((g) => (
             <div key={g.id} className="flex items-start justify-between gap-2 text-[11px] text-slate-700">
               <span>{g.detail}</span>
@@ -181,7 +181,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                 onClick={() => addToPlan(g)}
                 className="shrink-0 px-2 py-1 rounded-lg bg-google-blue text-white font-bold flex items-center gap-1 disabled:opacity-60 cursor-pointer"
               >
-                <Plus className="w-3 h-3" /> В план
+                <Plus className="w-3 h-3" /> Add to Plan
               </button>
             </div>
           ))}
@@ -214,7 +214,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                   rel="noopener noreferrer"
                   className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-800 flex items-center gap-1"
                 >
-                  Открыть профиль Google <ExternalLink className="w-3 h-3" />
+                  Open Google Profile <ExternalLink className="w-3 h-3" />
                 </a>
               )}
               {cat && (
@@ -224,7 +224,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                   className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-800 flex items-center gap-1 cursor-pointer"
                 >
                   {copied === `cat:${it.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  Копировать «{cat}»
+                  Copy "{cat}"
                 </button>
               )}
               {it.guidance.review_link && (
@@ -235,7 +235,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                     className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-800 flex items-center gap-1 cursor-pointer"
                   >
                     {copied === `rev:${it.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    Ссылка на форму отзыва
+                    Google Review Form Link
                   </button>
                   <button
                     type="button"
@@ -257,11 +257,11 @@ export const GeoActionPlan: React.FC<Props> = ({
             {it.status === 'APPLIED' && (
               <div className="text-[11px] text-slate-600 bg-slate-50 rounded-lg p-2">
                 <div>
-                  До ({fmtDate(it.applied_at)}): ARP {fmtArp(it.baseline_arp)} · SoLV {fmtSolv(it.baseline_solv)}
+                  Before ({fmtDate(it.applied_at)}): ARP {fmtArp(it.baseline_arp)} · SoLV {fmtSolv(it.baseline_solv)}
                 </div>
                 <div>
-                  После{it.after ? ` (${fmtDate(it.after.at)})` : ''}:{' '}
-                  {it.after ? `ARP ${fmtArp(it.after.arp)} · SoLV ${fmtSolv(it.after.solv)}` : 'повторного скана ещё не было'}
+                  After{it.after ? ` (${fmtDate(it.after.at)})` : ''}:{' '}
+                  {it.after ? `ARP ${fmtArp(it.after.arp)} · SoLV ${fmtSolv(it.after.solv)}` : 'no re-scan performed yet'}
                 </div>
               </div>
             )}
@@ -274,7 +274,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                   onClick={() => setStatus(it.id, 'APPLIED')}
                   className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-60 cursor-pointer"
                 >
-                  Отметить применённым
+                  Mark Applied
                 </button>
               )}
               {it.status !== 'PENDING' && (
@@ -284,7 +284,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                   onClick={() => setStatus(it.id, 'PENDING')}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-800 disabled:opacity-60 cursor-pointer"
                 >
-                  Вернуть в ожидание
+                  Revert to Pending
                 </button>
               )}
               {it.status === 'PENDING' && (
@@ -294,7 +294,7 @@ export const GeoActionPlan: React.FC<Props> = ({
                   onClick={() => setStatus(it.id, 'DISMISSED')}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-600 disabled:opacity-60 cursor-pointer"
                 >
-                  Пропустить
+                  Dismiss
                 </button>
               )}
             </div>

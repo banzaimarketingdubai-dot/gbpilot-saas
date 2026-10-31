@@ -138,7 +138,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
         onCategoriesAdopted(nextAdopted);
       }
 
-      showToast(`✅ Категории (${clean.join(', ')}) добавлены в профиль «${activeBusinessName || 'Ваш бизнес'}»!`);
+      showToast(`✅ Categories (${clean.join(', ')}) added to profile "${activeBusinessName || 'Your Business'}"!`);
     } finally {
       setStealingForComp(null);
     }
@@ -156,8 +156,8 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
     const kw = targetKeyword || '';
     setPostDraft(
       bizName && kw
-        ? `${bizName} — ${kw}.\nАдрес: ${comp.address ? '' : ''}`
-            .replace(/\nАдрес: $/, '')
+        ? `${bizName} — ${kw}.\nAddress: ${comp.address ? '' : ''}`
+            .replace(/\nAddress: $/, '')
         : ''
     );
   };
@@ -179,10 +179,10 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
         })
       });
       const data = await res.json();
-      setPostPublishedMsg(data.message || 'Пост опубликован в Google Business Profile.');
-      showToast(`🚀 Пост отправлен в Google Business Profile!`);
+      setPostPublishedMsg(data.message || 'Post published to Google Business Profile.');
+      showToast(`🚀 Post published to Google Business Profile!`);
     } catch {
-      setPostPublishedMsg('Ошибка соединения с API при отправке поста.');
+      setPostPublishedMsg('API connection error while publishing post.');
     } finally {
       setIsPublishingPost(false);
     }
@@ -195,17 +195,17 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
           <div>
             <h2 className="text-base font-bold text-google-text-primary flex items-center gap-2">
               <Compass className="w-5 h-5 text-google-blue" />
-              Топ-3 выдачи Google Maps по запросу {targetKeyword ? `«${targetKeyword}»` : ''}
+              Top 3 Google Maps Results for {targetKeyword ? `"${targetKeyword}"` : ''}
             </h2>
             <p className="text-xs text-google-text-secondary">
-              Только прямые данные из Google Places API
+              Direct Google Places API Data Only
             </p>
           </div>
         </div>
         <div className="p-8 text-center text-xs text-google-text-secondary space-y-1">
-          <p className="font-semibold text-google-text-primary">Нет данных сканирования</p>
+          <p className="font-semibold text-google-text-primary">No Scan Data Available</p>
           <p className="text-[11px] max-w-md mx-auto">
-            Нажмите «Run Live Grid Scan», чтобы получить реальные карточки бизнесов из выдачи Google Maps по выбранному запросу.
+            Click "Run Live Grid Scan" to fetch real competitor business profiles from Google Maps for the selected keyword.
           </p>
         </div>
       </div>
@@ -267,14 +267,14 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <Trophy className="w-5 h-5 text-amber-500" />
             <h2 className="text-base font-bold text-google-text-primary">
-              Топ-3 выдачи Google Maps {targetKeyword ? `по запросу «${targetKeyword}»` : ''}
+              Top 3 Google Maps Results {targetKeyword ? `for "${targetKeyword}"` : ''}
             </h2>
             <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-              Google Places API (Без заглушек)
+              Google Places API (Direct Live Data)
             </span>
           </div>
           <p className="text-xs text-google-text-secondary mt-0.5">
-            Реальные карточки из выдачи Google Maps. Если параметр отсутствует в ответе Google API, отображается прочерк (—).
+            Real listings fetched from Google Maps. Missing parameters are displayed with a dash (—).
           </p>
         </div>
 
@@ -288,7 +288,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Карточки Топ-3
+              Top-3 Cards
             </button>
             <button
               onClick={() => setViewMode('TABLE')}
@@ -298,7 +298,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Таблица
+              Table View
             </button>
           </div>
         </div>
@@ -342,12 +342,12 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                               : 'bg-slate-100 text-slate-700 border border-slate-300'
                           }`}
                         >
-                          #{idx + 1} в выдаче
+                          #{idx + 1} in Rank
                         </span>
                         {typeof comp.gridWins === 'number' && comp.gridWins > 0 && (
                           <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
-                            Топ-3 в {comp.gridWins}/{totalGridNodes} точках
-                            {comp.avgRank ? ` (ср. #${comp.avgRank})` : ''}
+                            Top 3 in {comp.gridWins}/{totalGridNodes} nodes
+                            {comp.avgRank ? ` (avg #${comp.avgRank})` : ''}
                           </span>
                         )}
                       </div>
@@ -368,7 +368,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-google-blue bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition-colors"
                         >
-                          <span>Открыть в Google Maps</span>
+                          <span>Open in Google Maps</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
 
@@ -380,7 +380,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                             className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 px-2 py-1 rounded-lg"
                           >
                             <Globe className="w-3 h-3" />
-                            <span>Сайт</span>
+                            <span>Website</span>
                           </a>
                         )}
                       </div>
@@ -395,7 +395,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                         </span>
                       </div>
                       <span className="text-[10px] font-semibold text-slate-500 mt-0.5">
-                        {comp.reviewsCount > 0 ? `${comp.reviewsCount} отзывов` : '0 отзывов'}
+                        {comp.reviewsCount > 0 ? `${comp.reviewsCount} reviews` : '0 reviews'}
                       </span>
                     </div>
                   </div>
@@ -405,20 +405,20 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
                         <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                        <span>Категории (Google API)</span>
+                        <span>Categories (Google API)</span>
                       </span>
                     </div>
 
                     <div className="text-[11px] space-y-1.5">
                       <div className="flex items-center justify-between text-slate-600 gap-2">
-                        <span className="text-slate-500 text-[10px]">Основная категория:</span>
+                        <span className="text-slate-500 text-[10px]">Primary Category:</span>
                         <span className="font-bold text-slate-900 text-right">
                           {comp.primaryCategory || '—'}
                         </span>
                       </div>
 
                       <div className="space-y-1">
-                        <span className="text-slate-500 text-[10px] block">Дополнительные типы API:</span>
+                        <span className="text-slate-500 text-[10px] block">Additional API Types:</span>
                         {comp.secondaryCategories && comp.secondaryCategories.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {comp.secondaryCategories.map((cat, cIdx) => {
@@ -450,12 +450,12 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                         {missingCats.length === 0 ? (
                           <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            Добавлено в ваш профиль
+                            Added to your profile
                           </span>
                         ) : (
                           <>
                             <span className="text-[10px] text-slate-600 font-semibold">
-                              Нет у вас: {missingCats.slice(0, 2).join(', ')}
+                              Missing in yours: {missingCats.slice(0, 2).join(', ')}
                             </span>
                             <button
                               type="button"
@@ -463,7 +463,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                               onClick={() => handleStealCategories(missingCats, comp.name)}
                               className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg text-[10px] font-bold transition-colors shrink-0 cursor-pointer"
                             >
-                              {stealingForComp === comp.name ? 'Сохранение...' : '⚡ Steal Category'}
+                              {stealingForComp === comp.name ? 'Saving...' : '⚡ Steal Category'}
                             </button>
                           </>
                         )}
@@ -475,13 +475,13 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                   <div className="p-3 bg-white rounded-xl border border-slate-200/80 text-[11px] space-y-1.5">
                     <div className="flex items-center justify-between text-slate-600 gap-2">
                       <span className="flex items-center gap-1 text-slate-500">
-                        <Phone className="w-3 h-3 text-slate-400" /> Телефон:
+                        <Phone className="w-3 h-3 text-slate-400" /> Phone:
                       </span>
                       <span className="font-semibold text-slate-800">{comp.phone || '—'}</span>
                     </div>
                     <div className="flex items-center justify-between text-slate-600 gap-2">
                       <span className="flex items-center gap-1 text-slate-500">
-                        <Globe className="w-3 h-3 text-slate-400" /> Сайт:
+                        <Globe className="w-3 h-3 text-slate-400" /> Website:
                       </span>
                       {comp.websiteUrl ? (
                         <a
@@ -498,7 +498,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     </div>
                     <div className="flex items-center justify-between text-slate-600 gap-2">
                       <span className="flex items-center gap-1 text-slate-500">
-                        <Camera className="w-3 h-3 text-slate-400" /> Фото в ответе API:
+                        <Camera className="w-3 h-3 text-slate-400" /> Photos in API:
                       </span>
                       <span className="font-semibold text-slate-800">
                         {typeof comp.photosCount === 'number' && comp.photosCount > 0
@@ -507,12 +507,12 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-slate-600 gap-2">
-                      <span className="text-slate-500">Статус сейчас:</span>
+                      <span className="text-slate-500">Live Status:</span>
                       <span className="font-semibold text-slate-800">
                         {comp.openNow === true
-                          ? 'Открыто'
+                          ? 'Open Now'
                           : comp.openNow === false
-                          ? 'Закрыто'
+                          ? 'Closed Now'
                           : '—'}
                       </span>
                     </div>
@@ -531,7 +531,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     }`}
                   >
                     <span>
-                      ⚡ Действие по запросу {targetKeyword ? `«${targetKeyword}»` : ''}
+                      ⚡ Counter-Action for {targetKeyword ? `"${targetKeyword}"` : ''}
                     </span>
                     <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                   </button>
@@ -550,12 +550,12 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-google-border text-google-text-tertiary font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-2.5 px-3">Бизнес</th>
-                <th className="py-2.5 px-3">Рейтинг / Отзывы</th>
-                <th className="py-2.5 px-3">Точек в Топ-3</th>
-                <th className="py-2.5 px-3">Основная категория</th>
-                <th className="py-2.5 px-3">Доп. типы API</th>
-                <th className="py-2.5 px-3">Телефон</th>
+                <th className="py-2.5 px-3">Business</th>
+                <th className="py-2.5 px-3">Rating / Reviews</th>
+                <th className="py-2.5 px-3">Top-3 Nodes</th>
+                <th className="py-2.5 px-3">Primary Category</th>
+                <th className="py-2.5 px-3">Additional API Types</th>
+                <th className="py-2.5 px-3">Phone</th>
                 <th className="py-2.5 px-3">Google Maps</th>
               </tr>
             </thead>
@@ -605,7 +605,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                       rel="noopener noreferrer"
                       className="text-google-blue font-bold hover:underline inline-flex items-center gap-1 text-[11px]"
                     >
-                      <span>Открыть</span>
+                      <span>Open</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </td>
@@ -625,10 +625,10 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
             <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  Действие по запросу «{targetKeyword}» (против «{overtakeTarget.name}»)
+                  Action for "{targetKeyword}" (vs "{overtakeTarget.name}")
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Реальные данные конкурента: рейтинг {overtakeTarget.rating > 0 ? overtakeTarget.rating.toFixed(1) : '—'} ({overtakeTarget.reviewsCount} отзывов), категория: {overtakeTarget.primaryCategory || '—'}.
+                  Real competitor data: rating {overtakeTarget.rating > 0 ? overtakeTarget.rating.toFixed(1) : '—'} ({overtakeTarget.reviewsCount} reviews), category: {overtakeTarget.primaryCategory || '—'}.
                 </p>
               </div>
               <button
@@ -644,7 +644,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="text-xs font-bold text-slate-900">
-                  1. Категории конкурента в Google Maps
+                  1. Competitor Categories in Google Maps
                 </div>
                 {overtakeTarget.missingSecondaryCategories &&
                 overtakeTarget.missingSecondaryCategories.length > 0 ? (
@@ -658,13 +658,13 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                     }
                     className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer"
                   >
-                    ⚡ Добавить к себе ({overtakeTarget.missingSecondaryCategories.join(', ')})
+                    ⚡ Adopt Categories ({overtakeTarget.missingSecondaryCategories.join(', ')})
                   </button>
                 ) : (
                   <span className="text-xs text-slate-500">
                     {overtakeTarget.primaryCategory
-                      ? 'Все категории уже добавлены'
-                      : 'У конкурента не указаны категории в API'}
+                      ? 'All categories already added'
+                      : 'Competitor has no additional categories in API'}
                   </span>
                 )}
               </div>
@@ -673,12 +673,12 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
             {/* 2. Publish Google Post */}
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
               <div className="text-xs font-bold text-slate-900">
-                2. Опубликовать пост в Google Business Profile с ключом «{targetKeyword}»
+                2. Publish Post to Google Business Profile targeting "{targetKeyword}"
               </div>
               <textarea
                 value={postDraft}
                 onChange={(e) => setPostDraft(e.target.value)}
-                placeholder={`Введите текст поста для «${activeBusinessName || 'вашего бизнеса'}» по запросу «${targetKeyword}»...`}
+                placeholder={`Enter post copy for "${activeBusinessName || 'Your Business'}" targeting "${targetKeyword}"...`}
                 rows={4}
                 className="w-full p-3 text-xs rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-google-blue"
               />
@@ -691,7 +691,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>
-                    {isPublishingPost ? 'Отправка...' : 'Опубликовать в Google Maps'}
+                    {isPublishingPost ? 'Publishing...' : 'Publish to Google Maps'}
                   </span>
                 </button>
                 <a
@@ -700,7 +700,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                   rel="noopener noreferrer"
                   className="text-xs font-bold text-google-blue hover:underline inline-flex items-center gap-1"
                 >
-                  <span>Карточка конкурента в Google Maps</span>
+                  <span>Competitor Google Maps Card</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
@@ -714,7 +714,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
             {/* 3. Copy Keyword */}
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
               <div className="text-xs text-slate-700">
-                Целевой ключ для упоминания в отзывах: <strong>{targetKeyword || '—'}</strong>
+                Target keyword for review replies & posts: <strong>{targetKeyword || '—'}</strong>
               </div>
               <button
                 type="button"
@@ -725,7 +725,7 @@ export const CompetitorMatrix: React.FC<CompetitorMatrixProps> = ({
                 className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer"
               >
                 {copiedPrompt ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedPrompt ? 'Скопировано' : 'Копировать ключ'}</span>
+                <span>{copiedPrompt ? 'Copied' : 'Copy Keyword'}</span>
               </button>
             </div>
           </div>

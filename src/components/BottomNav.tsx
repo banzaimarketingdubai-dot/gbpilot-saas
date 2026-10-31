@@ -31,7 +31,7 @@ export function BottomNav({
   const navItems = [
     {
       id: 'cockpit',
-      label: 'Кокпит',
+      label: 'Cockpit',
       href: '/dashboard',
       icon: Gauge,
       isActive: pathname === '/dashboard' || pathname === '/',
@@ -39,7 +39,7 @@ export function BottomNav({
     },
     {
       id: 'radar',
-      label: 'Радар',
+      label: 'Radar',
       href: '/geo-grid',
       icon: MapPin,
       isActive: pathname === '/geo-grid',
@@ -51,7 +51,7 @@ export function BottomNav({
     },
     {
       id: 'attributes',
-      label: '150 Пунктов',
+      label: '150 Points',
       href: '/attributes',
       icon: Sparkles,
       isActive: pathname === '/attributes',
@@ -63,7 +63,7 @@ export function BottomNav({
     },
     {
       id: 'growth',
-      label: 'Рост & GEO',
+      label: 'Growth & GEO',
       href: '/reviews-posts',
       icon: MessageSquare,
       isActive: pathname === '/reviews-posts',
@@ -87,7 +87,7 @@ export function BottomNav({
 
   return (
     <nav 
-      aria-label="Основная навигация приложения"
+      aria-label="Main Application Navigation"
       className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-safe transition-all"
     >
       <div className="max-w-md md:max-w-xl mx-auto flex items-center justify-around px-2 py-1.5">

@@ -943,10 +943,10 @@ export default function DashboardCockpitPage() {
                     type="button"
                     onClick={() => setIsPassportModalOpen(true)}
                     className="px-3.5 py-2 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-google-blue text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                    title="Открыть полный 360° паспорт данных и сырые поля Google API"
+                    title="Open 360° Data Passport and official Google API fields"
                   >
                     <Database className="w-3.5 h-3.5 text-google-blue" />
-                    <span>Паспорт заведения и статистика</span>
+                    <span>360° Data Passport & Stats</span>
                   </button>
 
                   <button
@@ -962,7 +962,7 @@ export default function DashboardCockpitPage() {
                     <div className="text-left">
                       <div className="text-[11px] font-black text-emerald-950 flex items-center gap-1">
                         <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                        <span>ИИ-Bodyguard 24/7</span>
+                        <span>AI Bodyguard 24/7</span>
                       </div>
                     </div>
                   </button>
@@ -975,22 +975,22 @@ export default function DashboardCockpitPage() {
                 <div className="flex items-center gap-1 sm:gap-2.5 shrink-0 text-[11px] sm:text-xs">
                   <Link href="/geo-grid" className="flex items-center gap-1 text-slate-700 hover:text-google-blue font-semibold transition-colors">
                     <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black">1</span>
-                    <span>Разведка</span>
+                    <span>1. Radar Intel</span>
                   </Link>
                   <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
                   <Link href="/attributes" className="flex items-center gap-1 text-google-blue font-bold">
                     <span className="w-5 h-5 rounded-full bg-blue-100 text-google-blue flex items-center justify-center text-[10px] font-black">2</span>
-                    <span>Порядок (150 пунктов)</span>
+                    <span>2. 150 Points</span>
                   </Link>
                   <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
                   <Link href="/reviews-posts" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
                     <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">3</span>
-                    <span>Рост &amp; GEO</span>
+                    <span>3. Growth &amp; GEO</span>
                   </Link>
                   <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
                   <Link href="/admin/sentinel" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
                     <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">4</span>
-                    <span>ИИ-Bodyguard</span>
+                    <span>4. AI Bodyguard</span>
                   </Link>
                 </div>
 
@@ -1000,7 +1000,7 @@ export default function DashboardCockpitPage() {
                   className="text-[11px] text-slate-500 hover:text-google-blue font-semibold hidden md:flex items-center gap-1 shrink-0 cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3 text-google-blue" />
-                  <span>360° Метрики</span>
+                  <span>360° Metrics</span>
                 </button>
               </div>
             </div>
@@ -1052,7 +1052,7 @@ export default function DashboardCockpitPage() {
                         <span>{typeof activeProfile?.rating === 'number' && activeProfile.rating > 0 ? activeProfile.rating.toFixed(1) : '4.8'}</span>
                       </div>
                       <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
-                        Здоровье
+                        Health Score
                       </span>
                     </div>
                   </div>
@@ -1060,10 +1060,10 @@ export default function DashboardCockpitPage() {
                   <div className="space-y-1.5 max-w-xs">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{isProUser ? '🤖 Автопилот активен' : '🟢 Профиль активен в Google'}</span>
+                      <span>{isProUser ? '🤖 Autopilot Active' : '🟢 Active on Google Maps'}</span>
                     </div>
                     <p className="text-xs text-slate-600 leading-snug">
-                      {activeProfile?.name || 'Ваше заведение'} привлекает гостей из карт. Доступно 2 быстрых действия для роста показов.
+                      {activeProfile?.name || 'Your venue'} is active on Google Maps. 2 high-impact growth actions ready to execute.
                     </p>
                   </div>
                 </div>
@@ -1078,28 +1078,28 @@ export default function DashboardCockpitPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-google-blue">
-                        👁️ Радар 3x3
+                        👁️ Radar 3x3
                       </span>
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-extrabold">
-                        Топ-3
+                        Top-3
                       </span>
                     </div>
                     
                     {/* 3x3 mini grid preview */}
                     <div className="my-2.5 grid grid-cols-3 gap-1 w-14 mx-auto">
-                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 1" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 2" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 1" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 2" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-400 block" title="Позиция 3" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-amber-400 block" title="Позиция 5" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 2" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-amber-400 block" title="Позиция 4" />
-                      <span className="w-3.5 h-3.5 rounded-xs bg-rose-400 block" title="Позиция 7" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Rank #1" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Rank #2" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Rank #1" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Rank #2" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-400 block" title="Rank #3" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-amber-400 block" title="Rank #5" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Rank #2" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-amber-400 block" title="Rank #4" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-rose-400 block" title="Rank #7" />
                     </div>
 
                     <div className="text-[11px] font-bold text-google-blue flex items-center justify-between">
-                      <span>Смотреть карту</span>
+                      <span>View Grid Scan</span>
                       <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </Link>
@@ -1111,7 +1111,7 @@ export default function DashboardCockpitPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-purple-700">
-                        💬 Репутация &amp; ИИ
+                        💬 Reputation &amp; AI
                       </span>
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 font-extrabold">
                         100%
@@ -1120,15 +1120,15 @@ export default function DashboardCockpitPage() {
 
                     <div className="my-2 space-y-1 text-left">
                       <div className="text-xs font-bold text-slate-800">
-                        RAG-ключи вшиты
+                        RAG Facts Injected
                       </div>
                       <p className="text-[10px] text-slate-500 leading-tight">
-                        ChatGPT &amp; Gemini цитируют ваши коронные блюда и парковку
+                        ChatGPT &amp; Gemini cite your signature dishes & amenities
                       </p>
                     </div>
 
                     <div className="text-[11px] font-bold text-purple-700 flex items-center justify-between">
-                      <span>Настроить ответы</span>
+                      <span>Configure AI</span>
                       <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </Link>
@@ -1140,7 +1140,7 @@ export default function DashboardCockpitPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-emerald-700">
-                        🛡️ ИИ-Bodyguard
+                        🛡️ AI Bodyguard
                       </span>
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-extrabold">
                         24/7
@@ -1150,15 +1150,15 @@ export default function DashboardCockpitPage() {
                     <div className="my-2 space-y-1 text-left">
                       <div className="text-xs font-bold text-slate-800 flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Эталон под охраной</span>
+                        <span>Canonical Snapshot Locked</span>
                       </div>
                       <p className="text-[10px] text-slate-500 leading-tight">
-                        Откат чужих правок телефона и часов за 3-5 минут
+                        3-minute auto-rollback of competitor edits (phone, hours)
                       </p>
                     </div>
 
                     <div className="text-[11px] font-bold text-emerald-700 flex items-center justify-between">
-                      <span>Проверить щит</span>
+                      <span>Verify Shield</span>
                       <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </Link>
@@ -1175,35 +1175,35 @@ export default function DashboardCockpitPage() {
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
                   <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                    Фокус Сегодня: 2 ключевых действия
+                    Focus Today: 2 Priority Growth Actions
                   </h3>
                 </div>
                 <span className="text-xs font-bold text-slate-400">
-                  Без суеты • Понятно с первого взгляда
+                  High-Impact Focus • Zero Deadlocks
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 
-                {/* CARD 1: 🚨 МАКСИМАЛЬНАЯ УГРОЗА */}
+                {/* CARD 1: 🚨 CRITICAL REVENUE THREAT */}
                 <div className="p-4 sm:p-5 rounded-3xl border-2 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-rose-50/20 shadow-xs flex flex-col justify-between space-y-3">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
                         <AlertTriangle className="w-3 h-3 text-rose-600" />
-                        Максимальная Угроза
+                        Critical Revenue Threat
                       </span>
                       <span className="text-[11px] font-bold text-rose-700">
-                        −15 гостей/вечер
+                        −15 Diners/Evening
                       </span>
                     </div>
 
                     <div>
                       <h4 className="font-extrabold text-slate-900 text-sm leading-snug">
-                        Конкурент работает на 1 час дольше и забирает вечерний поток
+                        Competitor stays open 1h later and captures evening traffic
                       </h4>
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                        Соседнее заведение в вашем районе открыто до 23:00, а в вашем профиле указано до 21:00. При поиске «открыто сейчас» после 21:00 карты скрывают вас.
+                        A nearby competitor in your area stays open until 23:00 while your profile states 21:00. When customers filter for "Open Now" after 21:00, Google Maps hides your listing.
                       </p>
                     </div>
                   </div>
@@ -1212,44 +1212,44 @@ export default function DashboardCockpitPage() {
                     {isThreatResolved ? (
                       <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2">
                         <Check className="w-4 h-4 stroke-[3] text-emerald-600" />
-                        <span>✓ Часы работы сдвинуты до 22:30 в Google Maps</span>
+                        <span>✓ Operating hours extended to 22:30 on Google Maps</span>
                       </div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => {
                           setIsThreatResolved(true);
-                          setToastMessage('✅ Часы работы успешно обновлены в Google Maps!');
+                          setToastMessage('✅ Operating hours successfully updated on Google Maps!');
                           setTimeout(() => setToastMessage(null), 4000);
                         }}
                         className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Clock className="w-4 h-4" />
-                        <span>Сдвинуть часы в Google Maps в 1 клик</span>
+                        <span>Extend Hours on Google Maps in 1-Click</span>
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* CARD 2: ⚡ БЫСТРАЯ ПОБЕДА ДНЯ */}
+                {/* CARD 2: ⚡ QUICK GROWTH WIN */}
                 <div className="p-4 sm:p-5 rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-emerald-50/20 shadow-xs flex flex-col justify-between space-y-3">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
                         <Sparkles className="w-3 h-3 text-emerald-600" />
-                        Быстрая Победа
+                        Quick Growth Win
                       </span>
                       <span className="text-[11px] font-black text-emerald-700">
-                        +18% показов утром
+                        +18% Morning Impressions
                       </span>
                     </div>
 
                     <div>
                       <h4 className="font-extrabold text-slate-900 text-sm leading-snug">
-                        ИИ нашел 2 скрытые категории лидеров: [Завтраки] и [Кофейня]
+                        AI found 2 hidden champion categories: [Breakfast] and [Coffee Shop]
                       </h4>
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                        Разведка выявила, что чемпионы локации получают треть утренних гостей по смежным категориям. Добавьте их в 1 клик без изменения основной категории.
+                        Local intelligence revealed area leaders capture 35% of morning diners via secondary categories. Add them in 1-click without changing your primary niche.
                       </p>
                     </div>
                   </div>
@@ -1258,20 +1258,20 @@ export default function DashboardCockpitPage() {
                     {isQuickWinApplied ? (
                       <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2">
                         <Check className="w-4 h-4 stroke-[3] text-emerald-600" />
-                        <span>✓ Категории «Завтраки» и «Кофейня» активированы</span>
+                        <span>✓ 'Breakfast' & 'Coffee Shop' categories activated</span>
                       </div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => {
                           setIsQuickWinApplied(true);
-                          setToastMessage('✨ Категории [Завтраки] и [Кофейня] добавлены в Google профиль!');
+                          setToastMessage('✨ [Breakfast] and [Coffee Shop] categories added to Google profile!');
                           setTimeout(() => setToastMessage(null), 4000);
                         }}
                         className="w-full py-2.5 px-4 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-                        <span>✓ Добавить категории в профиль бесплатно</span>
+                        <span>✓ Add Categories to Google Maps for Free</span>
                       </button>
                     )}
                   </div>
@@ -1286,9 +1286,9 @@ export default function DashboardCockpitPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                  Интерактивный путеводитель: 4 шага к доминированию
+                  Interactive Roadmap: 4 Steps to Local Dominance
                 </h3>
-                <span className="text-xs text-slate-400">Шаг за шагом к Топ-3</span>
+                <span className="text-xs text-slate-400">Step-by-Step Path to Top-3</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1303,19 +1303,19 @@ export default function DashboardCockpitPage() {
                       1
                     </span>
                     <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      ✓ Завершено
+                      ✓ Completed
                     </span>
                   </div>
                   <div className="mt-3">
                     <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-google-blue transition-colors">
-                      📍 Разведка
+                      📍 1. Radar Intel
                     </h4>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      Сетка 3x3 изучена. Соседние чемпионы локации выявлены.
+                      3x3 geo-grid scanned. Surrounding category leaders identified.
                     </p>
                   </div>
                   <div className="mt-3 text-xs font-bold text-google-blue flex items-center gap-1">
-                    <span>Смотреть карту 3x3</span>
+                    <span>View 3x3 Radar &rarr;</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
@@ -1330,19 +1330,19 @@ export default function DashboardCockpitPage() {
                       2
                     </span>
                     <span className="text-[10px] font-extrabold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200 animate-pulse">
-                      ⚡ 42 из 150
+                      ⚡ 42 of 150
                     </span>
                   </div>
                   <div className="mt-3">
                     <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-purple-700 transition-colors">
-                      ✨ Порядок 150 пунктов
+                      ✨ 2. 150 Points
                     </h4>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      Удобства, парковка, меню и фильтры карт. Согласование ИИ + человек.
+                      Amenities, parking, payments, and dining tags. Human + AI alignment.
                     </p>
                   </div>
                   <div className="mt-3 text-xs font-bold text-purple-700 flex items-center gap-1">
-                    <span>Заполнить 150 пунктов</span>
+                    <span>Optimize 150 Points &rarr;</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
@@ -1357,19 +1357,19 @@ export default function DashboardCockpitPage() {
                       3
                     </span>
                     <span className="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                      💬 В процессе
+                      💬 Active
                     </span>
                   </div>
                   <div className="mt-3">
                     <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-amber-700 transition-colors">
-                      🚀 Рост &amp; GEO
+                      🚀 3. Growth &amp; GEO
                     </h4>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      QR-код для гостей, RAG-ответы на отзывы и авто-репост из Instagram.
+                      Review QR generator, RAG review replies, and Instagram/TikTok sync.
                     </p>
                   </div>
                   <div className="mt-3 text-xs font-bold text-amber-700 flex items-center gap-1">
-                    <span>Настроить рост</span>
+                    <span>Manage Growth &rarr;</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
@@ -1384,19 +1384,19 @@ export default function DashboardCockpitPage() {
                       4
                     </span>
                     <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      🛡️ 24/7 Активен
+                      🛡️ 24/7 Active
                     </span>
                   </div>
                   <div className="mt-3">
                     <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">
-                      🛡️ ИИ-Bodyguard
+                      🛡️ AI Bodyguard
                     </h4>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      Автоматический откат правок конкурентов (телефон, часы) за 3 минуты.
+                      Automated 3-minute rollback of competitor tampering (phone, hours).
                     </p>
                   </div>
                   <div className="mt-3 text-xs font-bold text-emerald-700 flex items-center gap-1">
-                    <span>Проверить защиту</span>
+                    <span>Verify Shield &rarr;</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
@@ -2091,10 +2091,10 @@ export default function DashboardCockpitPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                    360° Паспорт заведения и статистика (Google API)
+                    360° Business Profile Data Passport (Google API)
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Полный реестр сырых полей Google Business Profile для {activeProfile?.name || 'заведения'}
+                    Full registry of official Google Business Profile API parameters for {activeProfile?.name || 'your venue'}
                   </p>
                 </div>
               </div>
@@ -2128,14 +2128,14 @@ export default function DashboardCockpitPage() {
 
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
               <span className="text-xs text-slate-500">
-                Официальный Google Business Profile API (300 QPM)
+                Official Google Business Profile API (300 QPM Approved)
               </span>
               <button
                 type="button"
                 onClick={() => setIsPassportModalOpen(false)}
                 className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"
               >
-                Закрыть паспорт
+                Close Passport
               </button>
             </div>
           </div>

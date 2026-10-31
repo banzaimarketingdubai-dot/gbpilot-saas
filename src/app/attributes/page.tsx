@@ -54,17 +54,17 @@ import {
 import { getSubscription, SubscriptionState } from '@/lib/subscription';
 
 
-const GROUP_NAMES_RU: Record<string, string> = {
-  'accessibility': '♿ Доступность',
-  'amenities': '☕ Удобства & Wi-Fi',
-  'parking': '🚗 Парковка',
-  'services': '📦 Сервис и залы',
-  'payments': '💳 Способы оплаты',
-  'crowd_vibe': '👥 Атмосфера',
-  'planning': '📅 Бронирование',
-  'ownership': '🏢 Владение',
-  'legal_professional': '⚖️ Услуги',
-  'food_dining': '🍽️ Меню & Кухня'
+const GROUP_NAMES_EN: Record<string, string> = {
+  'accessibility': '♿ Accessibility',
+  'amenities': '☕ Amenities & Wi-Fi',
+  'parking': '🚗 Parking & Valet',
+  'services': '📦 Service Options',
+  'payments': '💳 Payments & Cards',
+  'crowd_vibe': '👥 Crowd & Atmosphere',
+  'planning': '📅 Reservations & Planning',
+  'ownership': '🏢 Ownership & Identity',
+  'legal_professional': '⚖️ Professional Services',
+  'food_dining': '🍽️ Dining & Offerings'
 };
 
 interface ActiveVenueProfile {
@@ -488,25 +488,25 @@ export default function AttributesManagerPage() {
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200">
-                  ✨ Шаг 2: Наведение порядка
+                  ✨ Step 2: 150-Point Optimization
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
-                  <span>Google Verified: {activeProfile?.name || 'Заведение'}</span>
+                  <span>Google Verified: {activeProfile?.name || 'Venue'}</span>
                 </span>
               </div>
 
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Оптимизатор 150 пунктов Google Карт (Человек + ИИ)
+                Google Maps 150-Attribute Optimizer (Human + AI)
               </h1>
 
               <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-                Чем больше пунктов заполнено (парковка, Wi-Fi, способы оплаты, детские стульчики, веранда, кондиционер), тем чаще заведение показывают в фильтрах карт. ИИ изучил лидеров вашего района и подготовил рекомендации.
+                The more attributes configured (parking, Wi-Fi, payment methods, amenities, outdoor patio, A/C), the higher your ranking in Google Maps filters. AI has analyzed top local competitors to prioritize missing attributes.
               </p>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-1">
                 <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/70">
-                  {activeProfile?.category || 'Кафе / Ресторан'}
+                  {activeProfile?.category || 'Cafe / Restaurant'}
                 </span>
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
@@ -515,7 +515,7 @@ export default function AttributesManagerPage() {
                 {activeProfile?.rating ? (
                   <span className="flex items-center gap-1 font-bold text-slate-800">
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span>{activeProfile.rating.toFixed(1)} ★ ({activeProfile.reviews_count || 0} отзывов)</span>
+                    <span>{activeProfile.rating.toFixed(1)} ★ ({activeProfile.reviews_count || 0} reviews)</span>
                   </span>
                 ) : null}
               </div>
@@ -524,7 +524,7 @@ export default function AttributesManagerPage() {
             {/* Completion Gauge */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-w-[260px] space-y-3 shrink-0">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-700">Заполнено параметров:</span>
+                <span className="font-bold text-slate-700">Configured Attributes:</span>
                 <span className="font-black text-purple-700">{completionPercentage}% ({activeCount}/150)</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
@@ -534,8 +534,8 @@ export default function AttributesManagerPage() {
                 />
               </div>
               <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
-                <span>🟢 Активно: <strong>{activeCount}</strong></span>
-                <span>✨ ИИ советует: <strong>+{recommendedCount}</strong></span>
+                <span>🟢 Active: <strong>{activeCount}</strong></span>
+                <span>✨ AI Recommends: <strong>+{recommendedCount}</strong></span>
               </div>
             </div>
           </div>
@@ -544,22 +544,22 @@ export default function AttributesManagerPage() {
           <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs overflow-x-auto text-[11px] sm:text-xs">
             <Link href="/geo-grid" className="flex items-center gap-1 text-slate-500 hover:text-google-blue font-semibold transition-colors">
               <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">1</span>
-              <span>Разведка</span>
+              <span>Radar Intel</span>
             </Link>
             <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
             <span className="flex items-center gap-1 text-purple-700 font-extrabold bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">
               <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
-              <span>Порядок (150 пунктов)</span>
+              <span>150 Points</span>
             </span>
             <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
             <Link href="/reviews-posts" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
               <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">3</span>
-              <span>Рост &amp; GEO</span>
+              <span>Growth &amp; GEO</span>
             </Link>
             <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
             <Link href="/admin/sentinel" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
               <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">4</span>
-              <span>ИИ-Bodyguard</span>
+              <span>AI Bodyguard</span>
             </Link>
           </div>
         </div>
@@ -580,7 +580,7 @@ export default function AttributesManagerPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Поиск по 150 пунктам (парковка, Wi-Fi, карты, кондиционер, терраса)..."
+                    placeholder="Search 150+ attributes (parking, Wi-Fi, payment methods, terrace, A/C)..."
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-google-blue focus:bg-white transition-all"
                   />
                   {searchQuery && (
@@ -617,7 +617,7 @@ export default function AttributesManagerPage() {
                     }`}
                   >
                     <Check className="w-3 h-3 text-emerald-600" />
-                    <span>Активно ({activeCount})</span>
+                    <span>Active ({activeCount})</span>
                   </button>
                   <button
                     type="button"
@@ -640,7 +640,7 @@ export default function AttributesManagerPage() {
                     }`}
                   >
                     <Sparkles className="w-3 h-3 text-google-blue" />
-                    <span>Совет ИИ ({recommendedCount})</span>
+                    <span>AI Recommends ({recommendedCount})</span>
                   </button>
                 </div>
               </div>
@@ -669,7 +669,7 @@ export default function AttributesManagerPage() {
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                     }`}
                   >
-                    <span>{GROUP_NAMES_RU[grp.id] || grp.name}</span>
+                    <span>{GROUP_NAMES_EN[grp.id] || grp.name}</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                       selectedGroupFilter === grp.id ? 'bg-blue-800/50 text-white' : 'bg-slate-200 text-slate-700'
                     }`}>
@@ -688,7 +688,7 @@ export default function AttributesManagerPage() {
                     className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>✨ Выбрать все рекомендации ИИ ({recommendedCount})</span>
+                    <span>✨ Select All AI Recommendations ({recommendedCount})</span>
                   </button>
 
                   <button
@@ -698,7 +698,7 @@ export default function AttributesManagerPage() {
                     title="Copy formatted summary of all checked attributes for manual pasting"
                   >
                     {isCopied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{isCopied ? 'Скопировано!' : 'Скопировать список'}</span>
+                    <span>{isCopied ? 'Copied!' : 'Copy Attribute List'}</span>
                   </button>
 
                   {hasUnsavedChanges && (
@@ -731,12 +731,12 @@ export default function AttributesManagerPage() {
                     {isSyncing ? (
                       <>
                         <RotateCcw className="w-4 h-4 animate-spin" />
-                        <span>Применение в Google...</span>
+                        <span>Applying to Google...</span>
                       </>
                     ) : (
                       <>
                         <Zap className="w-4 h-4 fill-white" />
-                        <span>⚡ Применить в Google Maps (1 клик)</span>
+                        <span>⚡ Apply to Google Maps (1-Click)</span>
                       </>
                     )}
                   </button>
@@ -865,7 +865,7 @@ export default function AttributesManagerPage() {
 
                                 {isRecommended && (
                                   <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
-                                    ✨ ИИ Boost
+                                    ✨ AI Boost
                                   </span>
                                 )}
                               </div>
@@ -873,15 +873,15 @@ export default function AttributesManagerPage() {
                               {/* Status & Recommendation Bar */}
                               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] gap-2 flex-wrap">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-slate-400">В Google:</span>
+                                  <span className="text-slate-400">On Google:</span>
                                   <span className={`font-semibold ${isChecked ? 'text-emerald-700' : 'text-slate-500'}`}>
-                                    {isChecked ? '🟢 Включено' : '⚪ Пусто'}
+                                    {isChecked ? '🟢 Enabled' : '⚪ Not Set'}
                                   </span>
                                 </div>
 
                                 {isConflict && (
                                   <span className="text-[10px] text-amber-700 font-medium bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60">
-                                    Авто-исключение
+                                    Auto-Exclusion
                                   </span>
                                 )}
 
@@ -898,7 +898,7 @@ export default function AttributesManagerPage() {
                                       : 'bg-slate-100 text-slate-700 hover:bg-google-blue hover:text-white'
                                   }`}
                                 >
-                                  {isChecked ? '✓ Сохранено' : '+ Применить'}
+                                  {isChecked ? '✓ Saved' : '+ Apply'}
                                 </button>
                               </div>
                             </div>
@@ -1157,10 +1157,10 @@ export default function AttributesManagerPage() {
               </div>
               <div>
                 <div className="font-bold text-white text-xs">
-                  Выбрано: {activeCount} из {allAttributes.length} пунктов ({completionPercentage}%)
+                  Configured: {activeCount} of {allAttributes.length} attributes ({completionPercentage}%)
                 </div>
                 <div className="text-[10px] text-slate-400">
-                  {hasUnsavedChanges ? '⚠️ Есть несохраненные изменения' : '✓ Синхронизировано'}
+                  {hasUnsavedChanges ? '⚠️ Unsaved changes' : '✓ Synchronized with Google'}
                 </div>
               </div>
             </div>
@@ -1173,7 +1173,7 @@ export default function AttributesManagerPage() {
                 className="px-4 py-2 bg-google-blue hover:bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
-                <span>{isSyncing ? 'Применение...' : 'Применить в Google Maps (1 клик)'}</span>
+                <span>{isSyncing ? 'Applying...' : 'Apply to Google Maps (1-Click)'}</span>
               </button>
             </div>
           </div>

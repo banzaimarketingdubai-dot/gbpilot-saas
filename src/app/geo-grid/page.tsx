@@ -660,14 +660,14 @@ export default function GeoGridPage() {
           localStorage.removeItem(`gbpilot_keywords_${profileKey}`);
         }
         setScanNotice(data.has_real_data
-          ? 'Запросы обновлены из реальных данных GBP.'
-          : 'Запросы обновлены из Google Suggest. Подключите GBP для реальных данных.'
+          ? 'Keywords refreshed from live GBP Performance data.'
+          : 'Keywords refreshed from Google Suggest. Connect GBP for live queries.'
         );
       } else {
-        setScanNotice('Не удалось обновить запросы. Проверьте соединение.');
+        setScanNotice('Failed to refresh keywords. Check your connection.');
       }
     } catch {
-      setScanNotice('Ошибка загрузки запросов с сервера.');
+      setScanNotice('Error loading keywords from server.');
     } finally {
       setIsLoadingKeywords(false);
     }
@@ -695,7 +695,7 @@ export default function GeoGridPage() {
   const handleScan = async (keywordOverride?: string) => {
     const kwToScan = (typeof keywordOverride === 'string' ? keywordOverride : selectedKeyword).trim();
     if (!kwToScan) {
-      alert('Введите или выберите поисковый запрос для сканирования');
+      alert('Enter or select a search keyword to scan');
       return;
     }
     setIsScanning(true);
@@ -759,8 +759,8 @@ export default function GeoGridPage() {
         // ── Handle limit_reached ──
         if (data.status === 'limit_reached') {
           setScanNotice(
-            `Лимит сканов исчерпан (${data.meta?.scans_used ?? '?'}/${data.meta?.scans_limit ?? '?'} в месяц). ` +
-            `Сброс в начале следующего месяца.`
+            `Scan limit reached (${data.meta?.scans_used ?? '?'}/${data.meta?.scans_limit ?? '?'} per month). ` +
+            `Resets at the start of next month.`
           );
           setIsScanning(false);
           return;
@@ -768,7 +768,7 @@ export default function GeoGridPage() {
 
         // ── Handle error (no coordinates etc.) ──
         if (data.status === 'error') {
-          setScanNotice(`Ошибка: ${data.message || 'Не удалось определить координаты бизнеса. Подключите Google Business Profile.'}`);
+          setScanNotice(`Error: ${data.message || 'Unable to determine business location. Connect Google Business Profile.'}`);
           setIsScanning(false);
           return;
         }
@@ -826,10 +826,10 @@ export default function GeoGridPage() {
             setCompetitors([]);
           }
 
-          const cacheMsg = data.meta?.cached ? ' (из кэша)' : '';
+          const cacheMsg = data.meta?.cached ? ' (cached)' : '';
           const accuracyMsg = data.meta?.accuracy_note ? ` · ${data.meta.accuracy_note}` : '';
           setScanNotice(
-            `Сканирование завершено для «${kwToScan}»${cacheMsg}${accuracyMsg}`
+            `Scan completed for "${kwToScan}"${cacheMsg}${accuracyMsg}`
           );
           return;
         }
@@ -837,11 +837,11 @@ export default function GeoGridPage() {
 
       // Non-200 or empty grid — show empty state
       generateLocalSpatialRanks(dim, bName, kwToScan);
-      setScanNotice('Бэкенд не вернул данные. Проверьте соединение или попробуйте позже.');
+      setScanNotice('Backend returned no data. Check connection or try again later.');
 
     } catch (e: any) {
       if (e?.name === 'AbortError') {
-        setScanNotice('Сканирование превысило тайм-аут (30 с). Попробуйте меньшую сетку.');
+        setScanNotice('Scan timed out (30s). Try a smaller grid.');
       } else {
         console.warn('Scan error:', e);
         generateLocalSpatialRanks(
@@ -849,7 +849,7 @@ export default function GeoGridPage() {
           activeProfile?.name || '',
           kwToScan
         );
-        setScanNotice('Ошибка соединения. Данные не загружены.');
+        setScanNotice('Connection error. Data not loaded.');
       }
     } finally {
       setIsScanning(false);
@@ -1022,7 +1022,7 @@ export default function GeoGridPage() {
                 {isLoadingKeywords ? (
                   <div className="flex items-center gap-2 text-xs text-slate-400 italic py-1">
                     <div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-google-blue rounded-full animate-spin" />
-                    Загружаем реальные поисковые запросы из GBP...
+                    Loading live search keywords from GBP...
                   </div>
                 ) : keywordPills.map((pill) => {
                   const isSelected = selectedKeyword.toLowerCase().trim() === pill.label.toLowerCase().trim();
@@ -1061,7 +1061,7 @@ export default function GeoGridPage() {
                       {/* Impressions tooltip for GBP_REAL when selected */}
                       {isSelected && pill.source === 'GBP_REAL' && pill.impressions && (
                         <span className="text-[9px] font-bold text-white/70 ml-0.5">
-                          {pill.impressions} показов
+                          {pill.impressions} impressions
                         </span>
                       )}
                       {/* Delete button */}
@@ -1086,7 +1086,7 @@ export default function GeoGridPage() {
 
                 {!isLoadingKeywords && keywordPills.length === 0 && (
                   <div className="text-xs text-slate-400 italic py-1">
-                    Нет запросов. Нажмите «Reset Suggestions» или добавьте вручную.
+                    No keywords. Click "Reset Suggestions" or add manually.
                   </div>
                 )}
               </div>
@@ -1095,7 +1095,7 @@ export default function GeoGridPage() {
               {keywordsHaveRealData && !isLoadingKeywords && (
                 <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 font-bold">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                  Запросы из реальной статистики Google Business Profile
+                  Keywords from live Google Business Profile performance
                 </div>
               )}
 
@@ -1185,12 +1185,12 @@ export default function GeoGridPage() {
                 <div className="flex flex-wrap items-center gap-2 text-[11px]">
                   {scanMeta.cached && (
                     <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-bold flex items-center gap-1">
-                      💾 Кэш{scanMeta.cached_at ? ` · ${new Date(scanMeta.cached_at).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}` : ''}
+                      💾 Cache{scanMeta.cached_at ? ` · ${new Date(scanMeta.cached_at).toLocaleString('en-US', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}` : ''}
                     </span>
                   )}
                   {scanMeta.scans_limit !== null && (
                     <span className="px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200 font-bold">
-                      Сканов: {scanMeta.scans_used ?? 0}/{scanMeta.scans_limit}
+                      Scans: {scanMeta.scans_used ?? 0}/{scanMeta.scans_limit}
                     </span>
                   )}
                   {scanMeta.accuracy_note && (
@@ -1207,12 +1207,12 @@ export default function GeoGridPage() {
                   <div className="p-3 rounded-xl bg-white border border-slate-200 text-center">
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">ARP</div>
                     <div className="text-lg font-black text-slate-900">{scanMetrics.arp?.toFixed(1) ?? '—'}</div>
-                    <div className="text-[10px] text-slate-400">Ср. ранг</div>
+                    <div className="text-[10px] text-slate-400">Avg Rank</div>
                   </div>
                   <div className="p-3 rounded-xl bg-white border border-slate-200 text-center">
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">ATRP</div>
                     <div className="text-lg font-black text-slate-900">{scanMetrics.atrp?.toFixed(1) ?? '—'}</div>
-                    <div className="text-[10px] text-slate-400">Топ-ранг</div>
+                    <div className="text-[10px] text-slate-400">Top Rank</div>
                   </div>
                   <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
                     <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">SoLV</div>
@@ -1221,7 +1221,7 @@ export default function GeoGridPage() {
                         ? `${scanMetrics.solv.toFixed(0)}%`
                         : '—'}
                     </div>
-                    <div className="text-[10px] text-emerald-600">Видимость в топ-3</div>
+                    <div className="text-[10px] text-emerald-600">Top 3 Visibility</div>
                   </div>
                 </div>
               )}
@@ -1306,7 +1306,7 @@ export default function GeoGridPage() {
                         className={`${getPinSizeClass()} rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all transform hover:scale-110 active:scale-95 cursor-pointer relative ${bgClass} ${
                           isSelected ? 'ring-3 ring-google-blue scale-110 shadow-lg' : ''
                         }`}
-                        title={`Точка #${item.pos}: ${pinLabel} — ${(item as GridNodeData).competitor || state}`}
+                        title={`Node #${item.pos}: ${pinLabel} — ${(item as GridNodeData).competitor || state}`}
                       >
                         <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5 fill-current opacity-90" />
                         <span className="font-black leading-none">{pinLabel}</span>
@@ -1344,16 +1344,16 @@ export default function GeoGridPage() {
                       </div>
                       <div>
                         <div className="font-bold text-slate-900">
-                          Точка #{selectedNode.pos} ·{' '}
+                          Node #{selectedNode.pos} ·{' '}
                           {selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 3
-                            ? 'Зона доминирования'
+                            ? 'Dominant Zone (Rank 1-3)'
                             : selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 8
-                            ? 'Уязвимая зона'
+                            ? 'Vulnerable Zone (Rank 4-10)'
                             : selectedNode.state === 'NOT_IN_TOP20'
-                            ? 'Зона потери клиентов (20+)'
-                            : 'Нет данных API'}
+                            ? 'Lost Customer Zone (Rank 20+)'
+                            : 'No API Data'}
                         </div>
-                        <div className="text-slate-500 text-[11px]">Запрос: «{selectedKeyword}»</div>
+                        <div className="text-slate-500 text-[11px]">Keyword: "{selectedKeyword}"</div>
                       </div>
                     </div>
                     <span className={`px-2.5 py-1 rounded-lg font-bold border text-[11px] ${
@@ -1364,11 +1364,11 @@ export default function GeoGridPage() {
                         : 'bg-slate-100 text-slate-600 border-slate-200'
                     }`}>
                       {selectedNode.state === 'FOUND' && selectedNode.rank === 1
-                        ? '100% Видимость'
+                        ? '100% Visibility'
                         : selectedNode.state === 'FOUND' && selectedNode.rank !== null && selectedNode.rank <= 3
-                        ? 'Топ-3 Local Pack'
+                        ? 'Top 3 Local Pack'
                         : selectedNode.state === 'NOT_IN_TOP20'
-                        ? 'Ниже 20-го места'
+                        ? 'Below Rank 20'
                         : 'NO DATA'}
                     </span>
                   </div>
@@ -1379,36 +1379,36 @@ export default function GeoGridPage() {
                       {(() => {
                         const leaders = (selectedNode.top3 || []).filter((t) => !t.is_you);
                         const cols: { key: string; head: string; card: PlaceCard | null; isYou: boolean; rank?: number }[] = [
-                          { key: 'you', head: 'Вы', card: ownProfile, isYou: true },
-                          ...leaders.map((t) => ({ key: t.place_id || `r${t.rank}`, head: `#${t.rank} в точке`, card: t as PlaceCard, isYou: false, rank: t.rank })),
+                          { key: 'you', head: 'You', card: ownProfile, isYou: true },
+                          ...leaders.map((t) => ({ key: t.place_id || `r${t.rank}`, head: `#${t.rank} in node`, card: t as PlaceCard, isYou: false, rank: t.rank })),
                         ];
                         const dash = <span className="text-slate-300">—</span>;
                         const host = (u?: string) => (u ? u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') : '');
                         const rows: { label: string; cell: (c: PlaceCard | null) => React.ReactNode }[] = [
-                          { label: 'Основная категория', cell: (c) => (c?.primary_category ? c.primary_category : dash) },
-                          { label: 'Доп. категории (типы API)', cell: (c) => (c?.secondary_categories && c.secondary_categories.length > 0 ? c.secondary_categories.join(', ') : dash) },
-                          { label: 'Рейтинг', cell: (c) => (c && c.rating > 0 ? c.rating.toFixed(1) : dash) },
-                          { label: 'Отзывов', cell: (c) => (c ? c.reviews_count : dash) },
+                          { label: 'Primary Category', cell: (c) => (c?.primary_category ? c.primary_category : dash) },
+                          { label: 'Additional Categories (API types)', cell: (c) => (c?.secondary_categories && c.secondary_categories.length > 0 ? c.secondary_categories.join(', ') : dash) },
+                          { label: 'Rating', cell: (c) => (c && c.rating > 0 ? c.rating.toFixed(1) : dash) },
+                          { label: 'Reviews', cell: (c) => (c ? c.reviews_count : dash) },
                           {
-                            label: 'Прирост отзывов / нед.',
+                            label: 'Review Growth / week',
                             cell: (c) => {
                               const v = c?.place_id ? velocity[c.place_id] : undefined;
-                              if (!v || v.per_week === null) return <span className="text-slate-300" title="Нужно минимум два скана с интервалом от суток">—</span>;
-                              return <span title={`По ${v.snapshots} снимкам за ${v.days} дн.`}>{v.per_week > 0 ? `+${v.per_week}` : v.per_week}</span>;
+                              if (!v || v.per_week === null) return <span className="text-slate-300" title="Requires at least 2 scans 24h apart">—</span>;
+                              return <span title={`Over ${v.snapshots} snapshots across ${v.days} days`}>{v.per_week > 0 ? `+${v.per_week}` : v.per_week}</span>;
                             },
                           },
-                          { label: 'Фото (в ответе API, макс. 10)', cell: (c) => (c && (c.photos_count ?? 0) > 0 ? c.photos_count : dash) },
-                          { label: 'Сайт', cell: (c) => (c?.website_url ? host(c.website_url) : dash) },
-                          { label: 'Телефон', cell: (c) => (c?.phone ? c.phone : dash) },
-                          { label: 'Часы работы', cell: (c) => (c ? (c.has_hours ? 'указаны' : dash) : dash) },
-                          { label: 'Уровень цен', cell: (c) => (c?.price_level ? c.price_level.replace('PRICE_LEVEL_', '').toLowerCase() : dash) },
+                          { label: 'Photos (API max 10)', cell: (c) => (c && (c.photos_count ?? 0) > 0 ? c.photos_count : dash) },
+                          { label: 'Website', cell: (c) => (c?.website_url ? host(c.website_url) : dash) },
+                          { label: 'Phone', cell: (c) => (c?.phone ? c.phone : dash) },
+                          { label: 'Operating Hours', cell: (c) => (c ? (c.has_hours ? 'Configured' : dash) : dash) },
+                          { label: 'Price Level', cell: (c) => (c?.price_level ? c.price_level.replace('PRICE_LEVEL_', '').toLowerCase() : dash) },
                         ];
                         return (
                           <div className="overflow-x-auto">
                             <table className="w-full text-left text-[11px]">
                               <thead>
                                 <tr className="bg-white border-b border-slate-100 text-slate-500 font-bold text-[10px]">
-                                  <th className="py-2 px-3 uppercase tracking-wide">Показатель</th>
+                                  <th className="py-2 px-3 uppercase tracking-wide">Metric</th>
                                   {cols.map((c) => (
                                     <th key={c.key} className={`py-2 px-3 ${c.isYou ? 'text-emerald-700' : ''}`}>
                                       <div className="uppercase tracking-wide">{c.head}</div>
@@ -1449,9 +1449,9 @@ export default function GeoGridPage() {
 
                       {/* Deterministic gaps for this point */}
                       <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5">
-                        <div className="text-[11px] font-extrabold text-slate-900">Разрывы с лидерами в этой точке</div>
+                        <div className="text-[11px] font-extrabold text-slate-900">Gaps vs Leaders at this Node</div>
                         {!ownProfile ? (
-                          <p className="text-[11px] text-slate-500">Google не вернул данные вашей карточки, поэтому разрывы не рассчитываются.</p>
+                          <p className="text-[11px] text-slate-500">Google did not return data for your profile, so gaps cannot be computed.</p>
                         ) : selectedNode.gaps && selectedNode.gaps.length > 0 ? (
                           <ul className="space-y-1">
                             {selectedNode.gaps.map((g) => (
@@ -1462,20 +1462,20 @@ export default function GeoGridPage() {
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-[11px] text-slate-500">По доступным полям Google разрывов с лидерами в этой точке не найдено.</p>
+                          <p className="text-[11px] text-slate-500">No gaps found vs leaders at this node across available Google fields.</p>
                         )}
                       </div>
                       <p className="text-[10px] text-slate-400">
-                        Данные: Google Places API. Описания карточек конкурентов API не отдаёт; фото учитываются не более 10; категории — типы Places API.
+                        Data: Google Places API. Competitor descriptions are not exposed via API; maximum 10 photos returned; categories reflect Places API types.
                       </p>
                     </div>
                   ) : (
                     <div className="p-3 text-slate-400 italic text-[11px]">
                       {selectedNode.state === 'NO_DATA'
-                        ? 'Google Places API не вернул данные для этой точки.'
+                        ? 'Google Places API returned no data for this node.'
                         : selectedNode.state === 'NOT_IN_TOP20'
-                        ? 'Ваш бизнес не попал в топ-20 из этой точки.'
-                        : 'Нажмите «Run Live Grid Scan» для получения данных.'}
+                        ? 'Your business did not rank in top 20 from this node.'
+                        : 'Click "Run Live Grid Scan" to fetch data.'}
                     </div>
                   )}
                 </div>
@@ -1487,12 +1487,12 @@ export default function GeoGridPage() {
               <div className="material-card p-5 sm:p-6 bg-white border border-google-border rounded-2xl shadow-sm space-y-3">
                 <div className="flex items-center justify-between border-b border-google-border-light pb-2.5">
                   <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <span>⚡ Разрывы с лидерами по всей сетке</span>
+                    <span>⚡ Gaps vs Leaders Across Entire Grid</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">Сравнение с 3 ключевыми конкурентами в Топ-3</span>
+                  <span className="text-[10px] text-slate-400">Comparison against 3 key competitors in Top-3</span>
                 </div>
                 {!ownProfile ? (
-                  <p className="text-xs text-slate-500">Google не вернул данные вашей карточки, поэтому разрывы не рассчитываются.</p>
+                  <p className="text-xs text-slate-500">Google did not return data for your profile, so gaps cannot be computed.</p>
                 ) : overallGaps.length > 0 ? (
                   <ul className="space-y-2">
                     {overallGaps.map((g) => (
@@ -1507,11 +1507,11 @@ export default function GeoGridPage() {
                   </ul>
                 ) : (
                   <p className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 font-semibold">
-                    ✓ По доступным полям Google разрывов с лидерами не найдено. Вы на уровне или опережаете лидеров!
+                    ✓ No gaps found vs leaders across available Google fields. You match or lead the competition!
                   </p>
                 )}
                 <p className="text-[10px] text-slate-400">
-                  Разрывы вычисляются детерминированно из официальных полей Google Places API (категории, сайт, телефон, часы, разница рейтингов и отзывов).
+                  Gaps are calculated deterministically from official Google Places API fields (categories, website, phone, hours, rating, and review counts).
                 </p>
               </div>
             )}
@@ -1579,10 +1579,10 @@ export default function GeoGridPage() {
                   </span>
                 </div>
                 <span className="text-2xl font-black text-google-blue block">
-                  {completedPlatforms['APPLE_MAPS'] ? 'Заполнено' : '—'}
+                  {completedPlatforms['APPLE_MAPS'] ? 'Configured' : '—'}
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Статус размещения карточки в Apple Maps
+                  Listing status on Apple Maps
                 </p>
               </div>
 
@@ -1594,25 +1594,25 @@ export default function GeoGridPage() {
                   </span>
                 </div>
                 <span className="text-2xl font-black text-google-green block">
-                  {completedPlatforms['TWO_GIS'] ? 'Заполнено' : '—'}
+                  {completedPlatforms['TWO_GIS'] ? 'Configured' : '—'}
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Статус размещения карточки в 2GIS
+                  Listing status on 2GIS
                 </p>
               </div>
 
               <div className="material-card p-5 bg-white space-y-2 border border-google-border rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-google-text-secondary">TripAdvisor &amp; Каталоги</span>
+                  <span className="text-xs font-semibold text-google-text-secondary">TripAdvisor &amp; Directories</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                    Внешние площадки
+                    External Directories
                   </span>
                 </div>
                 <span className="text-2xl font-black text-purple-600 block">
                   {Object.values(completedPlatforms).filter(Boolean).length} / {directoryBlueprints.length}
                 </span>
                 <p className="text-[11px] text-google-text-tertiary">
-                  Отмечено заполненными пользователем
+                  Marked configured by user
                 </p>
               </div>
             </div>
