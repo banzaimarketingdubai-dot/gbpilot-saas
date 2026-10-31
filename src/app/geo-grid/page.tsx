@@ -29,6 +29,7 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
+import { GeoActionPlan } from '@/components/GeoActionPlan';
 import { getSubscription, activateTrial } from '@/lib/subscription';
 import { loadOwnerGroundTruth, OwnerGroundTruth } from '@/lib/groundTruth';
 import { buildDirectoryBlueprints, DirectoryPlatformId } from '@/lib/geo/directoryBuilder';
@@ -136,6 +137,7 @@ interface ScanMeta {
   accuracy_note?: string;
   step_m?: number;
   mode?: string;
+  keyword?: string;
 }
 
 export interface KeywordPill {
@@ -790,7 +792,7 @@ export default function GeoGridPage() {
 
           // Metrics
           if (data.metrics) setScanMetrics(data.metrics as ScanMetrics);
-          if (data.meta)    setScanMeta(data.meta as ScanMeta);
+          if (data.meta)    setScanMeta({ ...(data.meta as ScanMeta), keyword: kwToScan });
           setOwnProfile((data.own_profile as PlaceCard) || null);
           setOverallGaps(Array.isArray(data.overall_gaps) ? (data.overall_gaps as GapItem[]) : []);
           setVelocity((data.velocity as Record<string, VelocityItem>) || {});
@@ -1215,7 +1217,7 @@ export default function GeoGridPage() {
                     <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">SoLV</div>
                     <div className="text-lg font-black text-emerald-800">
                       {scanMetrics.solv !== undefined && scanMetrics.solv !== null
-                        ? `${(scanMetrics.solv * 100).toFixed(0)}%`
+                        ? `${scanMetrics.solv.toFixed(0)}%`
                         : '—'}
                     </div>
                     <div className="text-[10px] text-emerald-600">Видимость в топ-3</div>
@@ -1497,6 +1499,21 @@ export default function GeoGridPage() {
                   )}
                   <p className="text-[10px] text-slate-400">Сравнение с тремя конкурентами, чаще всего попадающими в Топ-3 по сетке.</p>
                 </div>
+              )}
+
+              {/* Action plan: manual edits tracked in a journal, before/after on re-scan */}
+              {scanMetrics && scanMeta?.keyword && (
+                <GeoActionPlan
+                  profileId={String(activeProfile?.id || 'default')}
+                  businessName={activeProfile?.name || ''}
+                  placeId={ownProfile?.place_id || scanMeta?.own_place_id || undefined}
+                  keyword={scanMeta.keyword}
+                  gaps={[...overallGaps, ...(selectedNode?.gaps || [])]
+                    .filter((g, i, arr) => arr.findIndex((x) => x.id === g.id) === i)
+                    .map((g) => ({ id: g.id, kind: g.kind, title: g.title, detail: g.detail }))}
+                  baselineArp={scanMetrics.arp ?? null}
+                  baselineSolv={scanMetrics.solv ?? null}
+                />
               )}
             </div>
 

@@ -207,6 +207,27 @@ class GeoGridScanResponse(BaseModel):
     overall_gaps: List[GeoGridGap] = []                # you vs. the top competitors across the whole grid
     velocity: Dict[str, GeoGridVelocity] = {}          # reviews/week by place_id, from stored scan snapshots
 
+class GeoActionGap(BaseModel):
+    id: str
+    kind: str
+    title: str
+    detail: str
+
+class GeoActionCreate(BaseModel):
+    profile_id: Optional[str] = None
+    business_name: Optional[str] = None
+    place_id: Optional[str] = None
+    keyword: str
+    gap: GeoActionGap
+    baseline_arp: Optional[float] = None    # ARP / SoLV of the scan the gap came from (for before/after)
+    baseline_solv: Optional[float] = None
+
+class GeoActionStatusUpdate(BaseModel):
+    profile_id: Optional[str] = None
+    business_name: Optional[str] = None
+    place_id: Optional[str] = None
+    status: str                             # PENDING | APPLIED | DISMISSED
+
 class B2BLead(BaseModel):
     name: str
     address: str

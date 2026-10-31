@@ -117,6 +117,29 @@ class GeoScanHistory(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, index=True)
 
 
+class GeoActionLog(Base):
+    """
+    Action plan journal for Geo-Grid gaps: one row per (profile, query, gap).
+    Status is PENDING / APPLIED / DISMISSED. Baseline ARP/SoLV is stored at creation so a later re-scan
+    can show before/after. Nothing here is written to Google: applying is confirmed by the owner.
+    """
+    __tablename__ = 'geo_action_log'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    profile_key = Column(String(255), nullable=False, index=True)
+    keyword = Column(String(200), nullable=False)
+    gap_id = Column(String(200), nullable=False)
+    kind = Column(String(40), nullable=False)
+    title = Column(String(300), nullable=False)
+    detail = Column(Text, nullable=False)
+    status = Column(String(20), nullable=False, default='PENDING')
+    baseline_arp = Column(Float)
+    baseline_solv = Column(Float)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    applied_at = Column(DateTime(timezone=True))
+
+
 class RankSnapshot(Base):
     __tablename__ = 'rank_snapshots'
     

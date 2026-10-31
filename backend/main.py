@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from schemas import (
+    GeoActionCreate, GeoActionStatusUpdate,
     TriggerGenerationRequest, TriggerGenerationResponse, 
     ProactiveRecommendationSchema, ScrapeRequest, ScrapeResponse,
     ExecuteActionRequest, ExecuteActionResponse,
@@ -656,6 +657,65 @@ async def geo_grid_scan_endpoint(request: GeoGridScanRequest, db: Session = Depe
 
     result = await run_geo_grid(request, db, db_profile_name)
     return GeoGridScanResponse(**result)
+
+def _iso(v):
+    return v.isoformat() if v is not None else None
+
+
+def _action_out(a: dict) -> dict:
+    out = dict(a)
+    for k in ("created_at", "updated_at", "applied_at", "rescan_due_at"):
+        if k in out:
+            out[k] = _iso(out[k])
+    if out.get("after"):
+        out["after"] = {**out["after"], "at": _iso(out["after"].get("at"))}
+    out.pop("profile_key", None)
+    return out
+
+
+@app.get("/api/v1/geo-grid/actions", tags=["Geo-Grid"])
+async def list_geo_actions_endpoint(
+    profile_id: Optional[str] = None,
+    business_name: Optional[str] = None,
+    keyword: Optional[str] = None,
+    place_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Action plan journal for Geo-Grid gaps with before/after numbers and a re-scan hint."""
+    import geo_actions_service as ga
+
+    pk = ga.profile_key_for(profile_id, business_name)
+    res = ga.list_actions(db, pk, keyword, place_id)
+    return {"items": [_action_out(i) for i in res["items"]], "rescan_due": res["rescan_due"]}
+
+
+@app.post("/api/v1/geo-grid/actions", tags=["Geo-Grid"])
+async def create_geo_action_endpoint(body: GeoActionCreate, db: Session = Depends(get_db)):
+    """Adds a gap to the action plan (idempotent per profile + query + gap). Nothing is written to Google."""
+    import geo_actions_service as ga
+
+    if not body.keyword.strip():
+        raise HTTPException(status_code=400, detail="keyword is required")
+    pk = ga.profile_key_for(body.profile_id, body.business_name)
+    ga.create_action(db, pk, body.keyword, body.gap.model_dump(), body.baseline_arp, body.baseline_solv)
+    res = ga.list_actions(db, pk, body.keyword, body.place_id)
+    return {"items": [_action_out(i) for i in res["items"]], "rescan_due": res["rescan_due"]}
+
+
+@app.post("/api/v1/geo-grid/actions/{action_id}/status", tags=["Geo-Grid"])
+async def update_geo_action_status_endpoint(action_id: int, body: GeoActionStatusUpdate, db: Session = Depends(get_db)):
+    """Owner confirms an action: PENDING / APPLIED / DISMISSED."""
+    import geo_actions_service as ga
+
+    if body.status not in ga.STATUSES:
+        raise HTTPException(status_code=400, detail="status must be PENDING, APPLIED or DISMISSED")
+    pk = ga.profile_key_for(body.profile_id, body.business_name)
+    updated = ga.set_status(db, action_id, pk, body.status)
+    if not updated:
+        raise HTTPException(status_code=404, detail="action not found")
+    res = ga.list_actions(db, pk, updated["keyword"], body.place_id)
+    return {"items": [_action_out(i) for i in res["items"]], "rescan_due": res["rescan_due"]}
+
 
 @app.get("/api/v1/geo-grid/suggest-keywords", tags=["Geo-Grid"])
 async def suggest_keywords_endpoint(
