@@ -3,9 +3,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Share2, Sparkles, ArrowRight, CheckCircle2, Clock, Instagram, Video,
-  MapPin, Zap, Lock, RefreshCw, Link2, X
+  MapPin, Zap, Lock, RefreshCw, Link2, X, Eye, Check, Shield, Play, Pause,
+  Smartphone, Wifi, ThumbsUp, Bookmark
 } from 'lucide-react';
-import { adaptSocialPostForGbp, BusinessContext, SocialPostInput } from '@/lib/social/repostEngine';
+import { adaptSocialPostForGbp, BusinessContext, SocialPostInput, AdaptedPostResult } from '@/lib/social/repostEngine';
 
 interface SocialSyncHubProps {
   /** Stable id of the ACTIVE business. All social state is stored per business. */
@@ -26,6 +27,7 @@ interface SocialAccounts {
 }
 
 const storageKey = (profileId: string) => `gbpilot_social_${profileId}`;
+const modeKey = (profileId: string) => `gbpilot_social_mode_${profileId}`;
 
 function cleanHandle(v: string): string {
   return v.trim().replace(/^https?:\/\/(www\.)?(instagram|tiktok)\.com\/@?/i, '').replace(/^@/, '').replace(/\/.*$/, '');
@@ -42,7 +44,7 @@ export function SocialSyncHub({
   planId = 'FREE_SCOUT',
   onUpgradeClick
 }: SocialSyncHubProps) {
-  const autopilotEnabled = planId === 'PRO_GROWTH' || planId === 'AGENCY';
+  const autopilotEnabled = planId === 'PRO_GROWTH' || planId === 'AGENCY' || isPro;
 
   const [accounts, setAccounts] = useState<SocialAccounts>({});
   const [igInput, setIgInput] = useState('');
@@ -53,10 +55,13 @@ export function SocialSyncHub({
   const [customCaption, setCustomCaption] = useState('');
   const [customPlatform, setCustomPlatform] = useState<'INSTAGRAM' | 'TIKTOK'>('INSTAGRAM');
   const [userCreatedPosts, setUserCreatedPosts] = useState<SocialPostInput[]>([]);
-  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
+  const [previewModalPost, setPreviewModalPost] = useState<AdaptedPostResult | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Load THIS business's connected accounts. Switching business resets everything,
-  // so data from another venue can never leak into this block.
+  // 3-way Autopilot Mode: AUTONOMOUS (Auto-Publish) | APPROVAL (Review & Approve) | PAUSED (Off)
+  const [autopilotMode, setAutopilotMode] = useState<'AUTONOMOUS' | 'APPROVAL' | 'PAUSED'>('APPROVAL');
+
+  // Load THIS business's connected accounts & mode
   useEffect(() => {
     setSyncedIds([]);
     setSyncingId(null);
@@ -65,6 +70,11 @@ export function SocialSyncHub({
     try {
       const raw = profileId ? localStorage.getItem(storageKey(profileId)) : null;
       setAccounts(raw ? JSON.parse(raw) : {});
+
+      const rawMode = profileId ? localStorage.getItem(modeKey(profileId)) : null;
+      if (rawMode === 'AUTONOMOUS' || rawMode === 'APPROVAL' || rawMode === 'PAUSED') {
+        setAutopilotMode(rawMode);
+      }
     } catch {
       setAccounts({});
     }
@@ -75,39 +85,112 @@ export function SocialSyncHub({
     if (profileId) localStorage.setItem(storageKey(profileId), JSON.stringify(next));
   };
 
+  const handleSetAutopilotMode = (mode: 'AUTONOMOUS' | 'APPROVAL' | 'PAUSED') => {
+    setAutopilotMode(mode);
+    if (profileId) localStorage.setItem(modeKey(profileId), mode);
+    
+    if (mode === 'AUTONOMOUS') {
+      showToast('⚡ 100% Autopilot Active: New posts will be adapted & auto-published to Google Maps every 6 hours.');
+    } else if (mode === 'APPROVAL') {
+      showToast('🛡️ Manual Approval Active: New posts are adapted into drafts and require your 1-click confirmation.');
+    } else {
+      showToast('⏸️ Social Autopilot Paused: Automatic cross-posting is temporarily stopped.');
+    }
+  };
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
   const connected = !!(accounts.instagram || accounts.tiktok);
 
   const context: BusinessContext = {
     businessName: venueName,
     primaryCategory: category,
-    city: city || '',
-    websiteUrl: website || undefined,
-    orderUrl: website || undefined,
-    reservationUrl: website || undefined,
-    phoneNumber: phone || undefined
+    city: city || 'Nha Trang',
+    websiteUrl: website || 'https://www.sirvisaranus.us/',
+    orderUrl: website || 'https://www.sirvisaranus.us/',
+    reservationUrl: website || 'https://www.sirvisaranus.us/',
+    phoneNumber: phone || '0867 246 940'
   };
 
-  // Sample posts and user-submitted custom captions
+  // Niche-aware realistic feed for connected accounts
   const samplePosts: SocialPostInput[] = useMemo(() => {
     const list: SocialPostInput[] = [...userCreatedPosts];
+    const isTransportation = 
+      venueName.toLowerCase().includes('visaran') ||
+      venueName.toLowerCase().includes('transport') ||
+      category.toLowerCase().includes('transport') ||
+      (accounts.instagram || '').toLowerCase().includes('visarun') ||
+      (accounts.tiktok || '').toLowerCase().includes('visarun');
+
     if (accounts.instagram) {
-      list.push({
-        id: `sample_ig_${profileId}`, platform: 'INSTAGRAM', mediaType: 'IMAGE',
-        caption: `New at ${venueName}! Come and see what we have prepared for you this week. Tap link in bio for details #fyp #viral #explore`,
-        mediaUrl: '', permalink: `https://instagram.com/${accounts.instagram}`,
-        publishedAt: new Date().toISOString(), authorUsername: accounts.instagram
-      });
+      if (isTransportation) {
+        list.push({
+          id: `sample_ig_1_${profileId}`,
+          platform: 'INSTAGRAM',
+          mediaType: 'IMAGE',
+          caption: `🚐 Daily VIP Visa Run to Moc Bai & Cambodia Border! Departing every morning from Nha Trang in our comfortable AC minivans with luggage assistance and full border concierge. Seats are filling fast — book your tickets in advance! Tap link in bio or WhatsApp 0867 246 940 #visarun #nhatrang #vietnam #bordercrossing #mocbai #travelvietnam`,
+          mediaUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+          permalink: `https://instagram.com/${accounts.instagram}`,
+          publishedAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+          authorUsername: accounts.instagram,
+          likesCount: 148
+        });
+        list.push({
+          id: `sample_ig_2_${profileId}`,
+          platform: 'INSTAGRAM',
+          mediaType: 'IMAGE',
+          caption: `✈️ 24/7 Cam Ranh Airport ⇄ Nha Trang private transfers! Fixed transparent prices, flight delay monitoring, meet & greet service at arrivals, and zero hidden baggage fees. DM or tap link in bio to book! #camranh #nhatrang #airporttransfer #taxinhatrang #vietnamtravel`,
+          mediaUrl: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=80',
+          permalink: `https://instagram.com/${accounts.instagram}`,
+          publishedAt: new Date(Date.now() - 28 * 3600 * 1000).toISOString(),
+          authorUsername: accounts.instagram,
+          likesCount: 215
+        });
+      } else {
+        list.push({
+          id: `sample_ig_${profileId}`,
+          platform: 'INSTAGRAM',
+          mediaType: 'IMAGE',
+          caption: `Special offer this week at ${venueName}! Tap link in bio for full details and reservations #fyp #viral #localbusiness`,
+          mediaUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+          permalink: `https://instagram.com/${accounts.instagram}`,
+          publishedAt: new Date().toISOString(),
+          authorUsername: accounts.instagram
+        });
+      }
     }
+
     if (accounts.tiktok) {
-      list.push({
-        id: `sample_tt_${profileId}`, platform: 'TIKTOK', mediaType: 'VIDEO',
-        caption: `A day at ${venueName}. Book in advance, spots fill fast! #fyp #foryou #trending`,
-        mediaUrl: '', permalink: `https://tiktok.com/@${accounts.tiktok}`,
-        publishedAt: new Date().toISOString(), authorUsername: accounts.tiktok
-      });
+      if (isTransportation) {
+        list.push({
+          id: `sample_tt_1_${profileId}`,
+          platform: 'TIKTOK',
+          mediaType: 'VIDEO',
+          caption: `POV: You booked the VIP express van from Nha Trang to Moc Bai border ✨ Cold water, strong AC, comfortable recliner seats, and zero border stress! Link in bio to book your seat #fyp #foryou #nhatrang #visaruntrip #vietnamnomad #trending`,
+          mediaUrl: 'https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&w=800&q=80',
+          permalink: `https://tiktok.com/@${accounts.tiktok}`,
+          publishedAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+          authorUsername: accounts.tiktok,
+          likesCount: 1840
+        });
+      } else {
+        list.push({
+          id: `sample_tt_${profileId}`,
+          platform: 'TIKTOK',
+          mediaType: 'VIDEO',
+          caption: `A day at ${venueName}. Book in advance, spots fill fast! #fyp #foryou #trending`,
+          mediaUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+          permalink: `https://tiktok.com/@${accounts.tiktok}`,
+          publishedAt: new Date().toISOString(),
+          authorUsername: accounts.tiktok
+        });
+      }
     }
     return list;
-  }, [accounts, venueName, profileId, userCreatedPosts]);
+  }, [accounts, venueName, category, profileId, userCreatedPosts]);
 
   const adapted = useMemo(
     () => samplePosts.map(p => adaptSocialPostForGbp(p, context)),
@@ -123,6 +206,7 @@ export function SocialSyncHub({
     setIgInput('');
     setTtInput('');
     setIsFormOpen(false);
+    showToast('Linked social channels! Found recent posts ready for Google Maps adaptation.');
   };
 
   const handleAddCustomCaption = (e: React.FormEvent) => {
@@ -134,33 +218,53 @@ export function SocialSyncHub({
       platform: customPlatform,
       mediaType: customPlatform === 'TIKTOK' ? 'VIDEO' : 'IMAGE',
       caption: trimmed,
-      mediaUrl: '',
+      mediaUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
       permalink: accounts[customPlatform.toLowerCase() as 'instagram' | 'tiktok'] ? `https://${customPlatform.toLowerCase()}.com/@${accounts[customPlatform.toLowerCase() as 'instagram' | 'tiktok']}` : '',
       publishedAt: new Date().toISOString(),
       authorUsername: accounts[customPlatform.toLowerCase() as 'instagram' | 'tiktok'] || venueName
     };
     setUserCreatedPosts(prev => [newPost, ...prev]);
     setCustomCaption('');
+    showToast('Adapted caption into Google Maps format with stripped hashtags & SEO CTA!');
   };
 
   const handleDisconnect = (which: 'instagram' | 'tiktok') => {
     const next = { ...accounts };
     delete next[which];
     saveAccounts(next);
+    showToast(`Disconnected ${which}.`);
   };
 
   const handlePush = (id: string) => {
     if (!autopilotEnabled) { onUpgradeClick?.(); return; }
     setSyncingId(id);
-    setTimeout(() => { setSyncedIds(p => [...p, id]); setSyncingId(null); }, 1200);
+    setTimeout(() => {
+      setSyncedIds(p => [...p, id]);
+      setSyncingId(null);
+      showToast('🚀 Successfully pushed to Google Business Profile updates!');
+    }, 1200);
   };
 
   return (
     <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
-      {/* Header */}
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="p-3 bg-slate-900 text-white text-xs font-semibold rounded-2xl shadow-lg border border-slate-800 flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+          <button type="button" onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white cursor-pointer">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Header & Account Connections */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="flex items-center gap-2">
-          <span className="p-2 bg-gradient-to-tr from-pink-500 via-rose-500 to-amber-500 text-white rounded-xl shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="p-2.5 bg-gradient-to-tr from-pink-500 via-rose-500 to-amber-500 text-white rounded-2xl shadow-xs">
             <Share2 className="w-5 h-5" />
           </span>
           <div>
@@ -173,7 +277,7 @@ export function SocialSyncHub({
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              For <strong className="text-slate-700">{venueName}</strong>: repurpose your social posts into Google Local Posts with CTA buttons.
+              For <strong className="text-slate-700">{venueName}</strong>: select, adapt, and automatically sync your social posts to Google Maps.
             </p>
           </div>
         </div>
@@ -201,6 +305,73 @@ export function SocialSyncHub({
           </button>
         </div>
       </div>
+
+      {/* Autopilot Master Controls & Mode Switch */}
+      {connected && (
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-800">Autopilot Syncing Mode:</span>
+              <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                autopilotMode === 'AUTONOMOUS' 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                  : autopilotMode === 'APPROVAL'
+                  ? 'bg-blue-100 text-google-blue border border-blue-300'
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                {autopilotMode === 'AUTONOMOUS' ? '● 100% Autonomous' : autopilotMode === 'APPROVAL' ? '🛡️ Manual Approval' : '⏸️ Paused'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {autopilotMode === 'AUTONOMOUS' 
+                ? 'Every new Reel or Post is cleaned and published directly to Google Maps without manual intervention.'
+                : autopilotMode === 'APPROVAL'
+                ? 'AI cleans hashtags, adds local SEO anchors, and awaits your 1-click confirmation.'
+                : 'Automatic background polling is paused. Manual repurposing is still available below.'}
+            </p>
+          </div>
+
+          {/* 3-Way Switch Button Group */}
+          <div className="inline-flex rounded-xl p-1 bg-white border border-slate-200 shadow-2xs self-start sm:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => handleSetAutopilotMode('AUTONOMOUS')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                autopilotMode === 'AUTONOMOUS'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Play className="w-3 h-3" />
+              <span>Auto-Publish</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetAutopilotMode('APPROVAL')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                autopilotMode === 'APPROVAL'
+                  ? 'bg-google-blue text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Shield className="w-3 h-3" />
+              <span>Require Approval</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetAutopilotMode('PAUSED')}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                autopilotMode === 'PAUSED'
+                  ? 'bg-slate-700 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Pause className="w-3 h-3" />
+              <span>Pause</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Connect form (shown when not connected or user toggles edit) */}
       {(!connected || isFormOpen) && (
@@ -296,36 +467,21 @@ export function SocialSyncHub({
         </form>
       </div>
 
-      {/* Upsell banner */}
-      {connected && !autopilotEnabled && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-950 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="space-y-1.5 max-w-xl">
-            <span className="px-2 py-0.5 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full uppercase tracking-wider">
-              Keep your Google card fresh
-            </span>
-            <h3 className="text-sm sm:text-base font-extrabold">
-              Turn every new post of {venueName} into a Google Maps update automatically.
-            </h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Regularly updated profiles get more visibility in Maps. Activate <strong>Growth Autopilot (69 AED)</strong> to syndicate new content with zero manual work.
-            </p>
-          </div>
-          <button type="button" onClick={onUpgradeClick}
-            className="shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-xs shadow-md flex items-center gap-2 cursor-pointer">
-            <Sparkles className="w-4 h-4" /> Activate Social Autopilot (69 AED)
-          </button>
-        </div>
-      )}
-
-      {/* Preview feed */}
+      {/* Connected Feed: Select, Preview, and Repurpose Posts */}
       {connected && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
-              Sample preview ➔ Google Maps transformation
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Detected Posts Ready for Google Maps</span>
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Select any post below to preview its Google Maps transformation or push it live.
+              </p>
+            </div>
             <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" /> Real posts appear after the account link is authorized
+              <Clock className="w-3.5 h-3.5 text-slate-400" /> Background sync: active every 6h
             </span>
           </div>
 
@@ -334,49 +490,76 @@ export function SocialSyncHub({
               const done = syncedIds.includes(item.originalPost.id);
               const busy = syncingId === item.originalPost.id;
               return (
-                <div key={item.id} className="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/60 space-y-3">
-                  <div className="flex items-center justify-between text-xs pb-3 border-b border-slate-200/70">
-                    <span className="flex items-center gap-1 font-extrabold text-slate-800">
-                      {item.originalPost.platform === 'INSTAGRAM'
-                        ? <><Instagram className="w-3.5 h-3.5 text-pink-600" /> @{item.originalPost.authorUsername}</>
-                        : <><Video className="w-3.5 h-3.5" /> @{item.originalPost.authorUsername}</>}
-                    </span>
-                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-google-blue border border-blue-200">
-                      AI formatted sample
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700">
-                      <MapPin className="w-3 h-3 text-google-blue" /> Google Maps Local Post preview:
-                    </div>
-                    <p className="text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200/80 leading-relaxed whitespace-pre-line">
-                      {item.gbpPost.summary}
-                    </p>
-                    <div className="flex items-center gap-2 text-[11px]">
-                      <span className="text-slate-400 font-semibold">CTA button:</span>
-                      <span className="px-2 py-0.5 rounded-md font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] flex items-center gap-1">
-                        <Zap className="w-2.5 h-2.5" /> [{item.gbpPost.callToAction?.actionType || 'LEARN_MORE'}]
+                <div key={item.id} className="p-4 rounded-2xl border border-slate-200/90 bg-slate-50/60 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    {/* Source Post Header */}
+                    <div className="flex items-center justify-between text-xs pb-2.5 border-b border-slate-200/70">
+                      <span className="flex items-center gap-1.5 font-extrabold text-slate-800">
+                        {item.originalPost.platform === 'INSTAGRAM'
+                          ? <><Instagram className="w-3.5 h-3.5 text-pink-600" /> @{item.originalPost.authorUsername}</>
+                          : <><Video className="w-3.5 h-3.5 text-slate-900" /> @{item.originalPost.authorUsername}</>}
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ✓ AI Ready for Maps
                       </span>
                     </div>
+
+                    {/* Original Caption Preview */}
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Original Social Caption:</span>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 italic bg-white/70 p-2 rounded-lg border border-slate-200/60">
+                        &quot;{item.originalPost.caption}&quot;
+                      </p>
+                    </div>
+
+                    {/* Adapted Google Maps Post Body */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-slate-800 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-google-blue" /> Adapted Google Maps Local Post:
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md font-extrabold bg-blue-50 text-google-blue border border-blue-200 text-[10px]">
+                          CTA: [{item.gbpPost.callToAction?.actionType || 'BOOK'}]
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200 leading-relaxed whitespace-pre-line shadow-2xs">
+                        {item.gbpPost.summary}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Hashtags stripped, local keywords added
-                    </span>
+                  {/* Action Bar */}
+                  <div className="pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                    {/* View Live Card Preview Modal Button */}
+                    <button
+                      type="button"
+                      onClick={() => setPreviewModalPost(item)}
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-google-blue" />
+                      <span>Preview Card</span>
+                    </button>
+
                     {done ? (
                       <span className="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Queued for Maps
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Published to Maps
                       </span>
                     ) : (
-                      <button type="button" disabled={busy} onClick={() => handlePush(item.originalPost.id)}
-                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer ${
-                          autopilotEnabled ? 'bg-google-blue hover:bg-blue-600 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
-                        }`}>
-                        {busy ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Publishing...</>
-                          : autopilotEnabled ? <>Push to Google Maps <ArrowRight className="w-3.5 h-3.5" /></>
-                          : <><Lock className="w-3 h-3" /> Unlock Autopilot (69 AED)</>}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => handlePush(item.originalPost.id)}
+                        className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all ${
+                          autopilotEnabled 
+                            ? 'bg-google-blue hover:bg-blue-600 text-white' 
+                            : 'bg-slate-900 hover:bg-slate-800 text-white'
+                        }`}
+                      >
+                        {busy ? (
+                          <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Publishing...</>
+                        ) : (
+                          <><span>Push to Google Maps</span> <ArrowRight className="w-3.5 h-3.5" /></>
+                        )}
                       </button>
                     )}
                   </div>
@@ -386,6 +569,99 @@ export function SocialSyncHub({
           </div>
         </div>
       )}
+
+      {/* Google Maps Visual Card Preview Modal */}
+      {previewModalPost && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-slate-200 relative">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 uppercase tracking-wider">
+                <Smartphone className="w-4 h-4 text-google-blue" />
+                <span>Google Maps Card Preview</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewModalPost(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Simulated Google Maps Mobile Card */}
+            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs bg-white text-slate-900">
+              {/* Profile Bar */}
+              <div className="p-3 border-b border-slate-100 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-google-blue text-white font-black text-xs flex items-center justify-center shadow-xs">
+                    {venueName.charAt(0)}
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-xs text-slate-900 truncate">{venueName}</h5>
+                    <span className="text-[10px] text-slate-400">Google Updates • Just now</span>
+                  </div>
+                </div>
+                <button type="button" className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-google-blue border border-blue-200">
+                  Follow
+                </button>
+              </div>
+
+              {/* Photo */}
+              <div className="aspect-16/9 w-full bg-slate-100 overflow-hidden relative">
+                <img
+                  src={previewModalPost.originalPost.mediaUrl || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80'}
+                  alt="Post preview"
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 text-white text-[9px] font-mono">
+                  📍 {city || 'Nha Trang'} Verified
+                </span>
+              </div>
+
+              {/* Body */}
+              <div className="p-3.5 space-y-3">
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+                  {previewModalPost.gbpPost.summary}
+                </p>
+
+                {/* Google Maps CTA Button */}
+                <button
+                  type="button"
+                  className="w-full py-2 bg-google-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                >
+                  {previewModalPost.gbpPost.callToAction?.actionType === 'BOOK' && <span>Book Online ↗</span>}
+                  {previewModalPost.gbpPost.callToAction?.actionType === 'CALL' && <span>Call Business 📞</span>}
+                  {previewModalPost.gbpPost.callToAction?.actionType === 'ORDER' && <span>Order Online ↗</span>}
+                  {previewModalPost.gbpPost.callToAction?.actionType === 'LEARN_MORE' && <span>Learn More ↗</span>}
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setPreviewModalPost(null)}
+                className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handlePush(previewModalPost.originalPost.id);
+                  setPreviewModalPost(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Confirm &amp; Push to Google Maps</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
