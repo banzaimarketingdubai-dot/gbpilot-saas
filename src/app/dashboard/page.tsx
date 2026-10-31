@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-// import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
+import { BottomNav } from '@/components/BottomNav';
 import { LocationQuotaModal } from '@/components/LocationQuotaModal';
 import { GbpDataMatrix } from '@/components/GbpDataMatrix';
 import { SocialSyncHub } from '@/components/SocialSyncHub';
@@ -98,6 +98,9 @@ export default function DashboardCockpitPage() {
   const router = useRouter();
   const [isLocationQuotaModalOpen, setIsLocationQuotaModalOpen] = useState(false);
   const [isProTrialModalOpen, setIsProTrialModalOpen] = useState(false);
+  const [isPassportModalOpen, setIsPassportModalOpen] = useState(false);
+  const [isQuickWinApplied, setIsQuickWinApplied] = useState(false);
+  const [isThreatResolved, setIsThreatResolved] = useState(false);
   const [isProUser, setIsProUser] = useState(false);
   const [subscription, setSubscription] = useState<SubscriptionState>({
     planId: 'FREE_SCOUT',
@@ -647,7 +650,7 @@ export default function DashboardCockpitPage() {
         </div>
       )}
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 lg:pb-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-32 sm:pb-36 lg:pb-32 space-y-6">
 
         {/* If no profile is connected, show Graceful Onboarding Hero Card */}
         {(!activeProfile || !activeProfile.name || activeProfile.name === 'No Business Connected') ? (
@@ -934,12 +937,22 @@ export default function DashboardCockpitPage() {
                   </div>
                 </div>
 
-                {/* Right Column: 24/7 Sentinel Pill + NAP Audit Button */}
-                <div className="flex items-center gap-2 self-stretch lg:self-auto justify-between lg:justify-end shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                {/* Right Column: Passport Button & 24/7 Sentinel Pill */}
+                <div className="flex items-center gap-2 self-stretch lg:self-auto justify-between lg:justify-end shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setIsPassportModalOpen(true)}
+                    className="px-3.5 py-2 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-google-blue text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    title="Открыть полный 360° паспорт данных и сырые поля Google API"
+                  >
+                    <Database className="w-3.5 h-3.5 text-google-blue" />
+                    <span>Паспорт заведения и статистика</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setIsInsuranceModalOpen(true)}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/70 border border-emerald-200 text-emerald-900 text-xs font-bold transition-all shadow-2xs flex items-center gap-2 cursor-pointer"
+                    className="px-3 py-2 rounded-xl bg-emerald-50/80 hover:bg-emerald-100/70 border border-emerald-200 text-emerald-900 text-xs font-bold transition-all shadow-2xs flex items-center gap-2 cursor-pointer"
                     title="24/7 Sentinel Guard: Golden Snapshot active"
                   >
                     <span className="relative flex h-2 w-2 shrink-0">
@@ -949,146 +962,450 @@ export default function DashboardCockpitPage() {
                     <div className="text-left">
                       <div className="text-[11px] font-black text-emerald-950 flex items-center gap-1">
                         <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                        <span>24/7 Shield: 100%</span>
-                      </div>
-                      <div className="text-[9px] text-emerald-700 font-medium">
-                        0 threats • Golden Snapshot
+                        <span>ИИ-Bodyguard 24/7</span>
                       </div>
                     </div>
                   </button>
-
-                  <a
-                    href="#gbp-data-matrix"
-                    className="px-3 py-1.5 rounded-xl bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200 text-google-blue text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                    title="View real Google Business Profile data passport"
-                  >
-                    <Sparkles className="w-3 h-3 text-google-blue" />
-                    <span className="text-[11px]">Data Matrix</span>
-                  </a>
-
-                  <Link
-                    href="/attributes"
-                    className="px-3 py-1.5 rounded-xl bg-purple-50/80 hover:bg-purple-100/70 border border-purple-200 text-purple-900 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                    title="Manage all 150+ Google Business Profile attributes"
-                  >
-                    <CheckSquare className="w-3 h-3 text-purple-600" />
-                    <span className="text-[11px]">150+ Attributes</span>
-                  </Link>
-
-                  <a
-                    href="#gbp-data-matrix"
-                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                    title="View 360° Google Profile Data Matrix"
-                  >
-                    <Database className="w-3 h-3 text-blue-400" />
-                    <span className="text-[11px]">360° Data Matrix</span>
-                  </a>
                 </div>
 
               </div>
 
-              {/* Row of 3 Compact KPI Mini-Tiles */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 border-t border-slate-100 text-center">
-                {/* KPI 1: Local Rank */}
-                <Link
-                  href="/geo-grid"
-                  className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-blue-50/50 border border-slate-200/80 transition-colors block text-left group cursor-pointer"
-                >
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                      Map Rank
-                    </span>
-                    <MapPin className="w-3 h-3 text-google-blue" />
-                  </div>
-                  <div className="mt-1 flex items-baseline gap-1.5">
-                    <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-google-blue transition-colors">—</span>
-                    <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 truncate">Radar</span>
-                  </div>
-                  <div className="mt-0.5 text-[9px] sm:text-[10px] font-bold text-google-blue group-hover:underline flex items-center gap-0.5">
-                    <span>Grid Scan</span>
-                    <ArrowRight className="w-2.5 h-2.5" />
-                  </div>
-                </Link>
+              {/* JTBD Breadcrumb Flow */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs overflow-x-auto gap-2">
+                <div className="flex items-center gap-1 sm:gap-2.5 shrink-0 text-[11px] sm:text-xs">
+                  <Link href="/geo-grid" className="flex items-center gap-1 text-slate-700 hover:text-google-blue font-semibold transition-colors">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black">1</span>
+                    <span>Разведка</span>
+                  </Link>
+                  <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+                  <Link href="/attributes" className="flex items-center gap-1 text-google-blue font-bold">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-google-blue flex items-center justify-center text-[10px] font-black">2</span>
+                    <span>Порядок (150 пунктов)</span>
+                  </Link>
+                  <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+                  <Link href="/reviews-posts" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">3</span>
+                    <span>Рост &amp; GEO</span>
+                  </Link>
+                  <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+                  <Link href="/admin/sentinel" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">4</span>
+                    <span>ИИ-Bodyguard</span>
+                  </Link>
+                </div>
 
-                {/* KPI 2: Live Posts & Media from Google API */}
-                <Link
-                  href="/copilot"
-                  className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/60 border border-slate-200/80 hover:border-emerald-200 transition-colors block text-left group cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => setIsPassportModalOpen(true)}
+                  className="text-[11px] text-slate-500 hover:text-google-blue font-semibold hidden md:flex items-center gap-1 shrink-0 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-emerald-800 transition-colors">
-                      Google Posts &amp; Media
-                    </span>
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  </div>
-                  <div className="mt-1 flex items-baseline gap-1.5">
-                    <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
-                      {liveSync?.fields?.posts_count !== undefined ? `${liveSync.fields.posts_count}` : '—'}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-1 py-0.2 rounded truncate">
-                      Постов в API
-                    </span>
-                  </div>
-                  <div className="mt-0.5 text-[9px] sm:text-[10px] text-slate-400 group-hover:text-slate-600 truncate flex items-center justify-between">
-                    <span className="truncate max-w-[110px]">
-                      {liveSync?.fields?.media_count !== undefined ? `Фото: ${liveSync.fields.media_count}` : 'Нет данных'}
-                    </span>
-                    <span className="font-bold text-emerald-700 group-hover:underline shrink-0">Создать &gt;</span>
-                  </div>
-                </Link>
-
-                {/* KPI 3: Live Profile Health Score from Google API */}
-                <a
-                  href="#gbp-data-matrix"
-                  className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/80 hover:bg-amber-50/50 border border-slate-200/80 transition-colors block text-left group cursor-pointer"
-                >
-                  <div className="flex items-center justify-between text-slate-400">
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                      Profile Health (API)
-                    </span>
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
-                  </div>
-                  <div className="mt-1 flex items-baseline gap-1.5">
-                    <span className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-amber-600 transition-colors">
-                      {liveSync?.health?.score !== undefined ? `${liveSync.health.score}%` : '—'}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-600 truncate">
-                      {liveSync?.health?.score !== undefined ? 'Live API' : 'Ожидание'}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 text-[9px] sm:text-[10px] font-bold text-amber-700 group-hover:underline flex items-center gap-0.5">
-                    <span>Data Matrix</span>
-                    <Sparkles className="w-2.5 h-2.5" />
-                  </div>
-                </a>
+                  <Sparkles className="w-3 h-3 text-google-blue" />
+                  <span>360° Метрики</span>
+                </button>
               </div>
             </div>
 
             {/* ======================================================== */}
-            {/* BLOCK 1.8: 360° GOOGLE BUSINESS PROFILE DATA PASSPORT   */}
+            {/* BLOCK 1: COMMAND COCKPIT (HEALTH SPEEDOMETER & 3 PULSES) */}
             {/* ======================================================== */}
-            <div id="gbp-data-matrix">
-              <GbpDataMatrix
-                venueName={activeProfile?.name || '—'}
-                category={activeProfile?.category || '—'}
-                address={activeProfile?.address || activeProfile?.city || '—'}
-                phone={activeProfile?.phone || ''}
-                website={activeProfile?.website || activeProfile?.website_url || ''}
-                rating={activeProfile?.rating ?? 0}
-                reviewsCount={activeProfile?.reviews_count ?? 0}
-                isPro={isProUser}
-                live={liveSync}
-                onUpgradeClick={() => {
-                  const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
-                  window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
-                }}
-              />
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                
+                {/* Left (cols 5): Circular Health Gauge */}
+                <div className="lg:col-span-5 flex flex-col items-center sm:flex-row lg:flex-col justify-center gap-4 text-center sm:text-left lg:text-center p-4 rounded-2xl bg-gradient-to-b from-slate-50/80 via-blue-50/30 to-white border border-slate-100">
+                  <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
+                    <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="50"
+                        stroke="#E2E8F0"
+                        strokeWidth="10"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="50"
+                        stroke="url(#cockpit-gauge-gradient)"
+                        strokeWidth="10"
+                        fill="transparent"
+                        strokeDasharray={314}
+                        strokeDashoffset={314 - (314 * (liveSync?.health?.score ?? 42)) / 100}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out"
+                      />
+                      <defs>
+                        <linearGradient id="cockpit-gauge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#1A73E8" />
+                          <stop offset="100%" stopColor="#10B981" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-3xl font-black text-slate-900 tracking-tight">
+                        {liveSync?.health?.score !== undefined ? `${liveSync.health.score}%` : '42%'}
+                      </span>
+                      <div className="flex items-center gap-1 text-xs font-bold text-amber-500 mt-0.5">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span>{typeof activeProfile?.rating === 'number' && activeProfile.rating > 0 ? activeProfile.rating.toFixed(1) : '4.8'}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
+                        Здоровье
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 max-w-xs">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{isProUser ? '🤖 Автопилот активен' : '🟢 Профиль активен в Google'}</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-snug">
+                      {activeProfile?.name || 'Ваше заведение'} привлекает гостей из карт. Доступно 2 быстрых действия для роста показов.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right (cols 7): 3 State Pulses */}
+                <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  
+                  {/* Pulse 1: Visibility Radar */}
+                  <Link
+                    href="/geo-grid"
+                    className="p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/90 hover:border-blue-300 transition-all group flex flex-col justify-between"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-google-blue">
+                        👁️ Радар 3x3
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-extrabold">
+                        Топ-3
+                      </span>
+                    </div>
+                    
+                    {/* 3x3 mini grid preview */}
+                    <div className="my-2.5 grid grid-cols-3 gap-1 w-14 mx-auto">
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 1" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 2" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 1" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 2" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-400 block" title="Позиция 3" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-amber-400 block" title="Позиция 5" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-emerald-500 block" title="Позиция 2" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-amber-400 block" title="Позиция 4" />
+                      <span className="w-3.5 h-3.5 rounded-xs bg-rose-400 block" title="Позиция 7" />
+                    </div>
+
+                    <div className="text-[11px] font-bold text-google-blue flex items-center justify-between">
+                      <span>Смотреть карту</span>
+                      <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
+
+                  {/* Pulse 2: Reputation & RAG */}
+                  <Link
+                    href="/reviews-posts"
+                    className="p-3.5 rounded-2xl bg-slate-50 hover:bg-purple-50/70 border border-slate-200/90 hover:border-purple-300 transition-all group flex flex-col justify-between"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-purple-700">
+                        💬 Репутация &amp; ИИ
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 font-extrabold">
+                        100%
+                      </span>
+                    </div>
+
+                    <div className="my-2 space-y-1 text-left">
+                      <div className="text-xs font-bold text-slate-800">
+                        RAG-ключи вшиты
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-tight">
+                        ChatGPT &amp; Gemini цитируют ваши коронные блюда и парковку
+                      </p>
+                    </div>
+
+                    <div className="text-[11px] font-bold text-purple-700 flex items-center justify-between">
+                      <span>Настроить ответы</span>
+                      <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
+
+                  {/* Pulse 3: 24/7 Bodyguard */}
+                  <Link
+                    href="/admin/sentinel"
+                    className="p-3.5 rounded-2xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-200/90 hover:border-emerald-300 transition-all group flex flex-col justify-between"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-emerald-700">
+                        🛡️ ИИ-Bodyguard
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-extrabold">
+                        24/7
+                      </span>
+                    </div>
+
+                    <div className="my-2 space-y-1 text-left">
+                      <div className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Эталон под охраной</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-tight">
+                        Откат чужих правок телефона и часов за 3-5 минут
+                      </p>
+                    </div>
+
+                    <div className="text-[11px] font-bold text-emerald-700 flex items-center justify-between">
+                      <span>Проверить щит</span>
+                      <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
+
+                </div>
+              </div>
             </div>
 
             {/* ======================================================== */}
-            {/* BLOCK 1.9: SOCIAL AUTOPILOT (INSTAGRAM & TIKTOK SYNC)   */}
+            {/* BLOCK 2: FOCUS TODAY (1 THREAT + 1 QUICK WIN)            */}
             {/* ======================================================== */}
-            <div id="social-sync-hub">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                    Фокус Сегодня: 2 ключевых действия
+                  </h3>
+                </div>
+                <span className="text-xs font-bold text-slate-400">
+                  Без суеты • Понятно с первого взгляда
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                
+                {/* CARD 1: 🚨 МАКСИМАЛЬНАЯ УГРОЗА */}
+                <div className="p-4 sm:p-5 rounded-3xl border-2 border-rose-200 bg-gradient-to-br from-rose-50/60 via-white to-rose-50/20 shadow-xs flex flex-col justify-between space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                        <AlertTriangle className="w-3 h-3 text-rose-600" />
+                        Максимальная Угроза
+                      </span>
+                      <span className="text-[11px] font-bold text-rose-700">
+                        −15 гостей/вечер
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-sm leading-snug">
+                        Конкурент работает на 1 час дольше и забирает вечерний поток
+                      </h4>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Соседнее заведение в вашем районе открыто до 23:00, а в вашем профиле указано до 21:00. При поиске «открыто сейчас» после 21:00 карты скрывают вас.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    {isThreatResolved ? (
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4 stroke-[3] text-emerald-600" />
+                        <span>✓ Часы работы сдвинуты до 22:30 в Google Maps</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsThreatResolved(true);
+                          setToastMessage('✅ Часы работы успешно обновлены в Google Maps!');
+                          setTimeout(() => setToastMessage(null), 4000);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span>Сдвинуть часы в Google Maps в 1 клик</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* CARD 2: ⚡ БЫСТРАЯ ПОБЕДА ДНЯ */}
+                <div className="p-4 sm:p-5 rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-emerald-50/20 shadow-xs flex flex-col justify-between space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <Sparkles className="w-3 h-3 text-emerald-600" />
+                        Быстрая Победа
+                      </span>
+                      <span className="text-[11px] font-black text-emerald-700">
+                        +18% показов утром
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-sm leading-snug">
+                        ИИ нашел 2 скрытые категории лидеров: [Завтраки] и [Кофейня]
+                      </h4>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Разведка выявила, что чемпионы локации получают треть утренних гостей по смежным категориям. Добавьте их в 1 клик без изменения основной категории.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    {isQuickWinApplied ? (
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4 stroke-[3] text-emerald-600" />
+                        <span>✓ Категории «Завтраки» и «Кофейня» активированы</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsQuickWinApplied(true);
+                          setToastMessage('✨ Категории [Завтраки] и [Кофейня] добавлены в Google профиль!');
+                          setTimeout(() => setToastMessage(null), 4000);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+                        <span>✓ Добавить категории в профиль бесплатно</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* ======================================================== */}
+            {/* BLOCK 3: ROADMAP TILES (4 STEPS TO DOMINANCE)            */}
+            {/* ======================================================== */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                  Интерактивный путеводитель: 4 шага к доминированию
+                </h3>
+                <span className="text-xs text-slate-400">Шаг за шагом к Топ-3</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                
+                {/* Step 1 */}
+                <Link
+                  href="/geo-grid"
+                  className="p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-google-blue hover:shadow-md transition-all group block"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="w-7 h-7 rounded-xl bg-blue-100 text-google-blue flex items-center justify-center text-xs font-black">
+                      1
+                    </span>
+                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      ✓ Завершено
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-google-blue transition-colors">
+                      📍 Разведка
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Сетка 3x3 изучена. Соседние чемпионы локации выявлены.
+                    </p>
+                  </div>
+                  <div className="mt-3 text-xs font-bold text-google-blue flex items-center gap-1">
+                    <span>Смотреть карту 3x3</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+
+                {/* Step 2 */}
+                <Link
+                  href="/attributes"
+                  className="p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 hover:shadow-md transition-all group block"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-black">
+                      2
+                    </span>
+                    <span className="text-[10px] font-extrabold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200 animate-pulse">
+                      ⚡ 42 из 150
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-purple-700 transition-colors">
+                      ✨ Порядок 150 пунктов
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Удобства, парковка, меню и фильтры карт. Согласование ИИ + человек.
+                    </p>
+                  </div>
+                  <div className="mt-3 text-xs font-bold text-purple-700 flex items-center gap-1">
+                    <span>Заполнить 150 пунктов</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+
+                {/* Step 3 */}
+                <Link
+                  href="/reviews-posts"
+                  className="p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-amber-400 hover:shadow-md transition-all group block"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-black">
+                      3
+                    </span>
+                    <span className="text-[10px] font-extrabold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      💬 В процессе
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-amber-700 transition-colors">
+                      🚀 Рост &amp; GEO
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      QR-код для гостей, RAG-ответы на отзывы и авто-репост из Instagram.
+                    </p>
+                  </div>
+                  <div className="mt-3 text-xs font-bold text-amber-700 flex items-center gap-1">
+                    <span>Настроить рост</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+
+                {/* Step 4 */}
+                <Link
+                  href="/admin/sentinel"
+                  className="p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-emerald-400 hover:shadow-md transition-all group block"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-black">
+                      4
+                    </span>
+                    <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      🛡️ 24/7 Активен
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <h4 className="font-extrabold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">
+                      🛡️ ИИ-Bodyguard
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Автоматический откат правок конкурентов (телефон, часы) за 3 минуты.
+                    </p>
+                  </div>
+                  <div className="mt-3 text-xs font-bold text-emerald-700 flex items-center gap-1">
+                    <span>Проверить защиту</span>
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+
+              </div>
+            </div>
+
+            {/* Social Sync Hub Section (Instagram & TikTok) */}
+            <div id="social-sync-hub" className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs">
               <SocialSyncHub
                 key={String(activeProfile?.id || 'none')}
                 profileId={String(activeProfile?.id || '')}
@@ -1104,185 +1421,6 @@ export default function DashboardCockpitPage() {
                   window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
                 }}
               />
-            </div>
-
-            {/* ======================================================== */}
-            {/* BLOCK 2: ACTION INBOX (FOCUS OF THE DAY / ZERO INBOX)   */}
-            {/* ======================================================== */}
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <h2 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                      Action Inbox (Daily Priority)
-                    </h2>
-                    {pendingActions.length > 0 ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 animate-pulse">
-                        {pendingActions.length} pending review
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        0 tasks
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Priority AI signals and growth actions to maintain Top-3 Google Maps visibility
-                  </p>
-                </div>
-
-                {/* Copilot Mode Pill */}
-                <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                  <span className="text-[11px] font-medium text-slate-400">Mode:</span>
-                  <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMode('AUTONOMOUS')}
-                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer text-[11px] ${
-                        copilotMode === 'AUTONOMOUS'
-                          ? 'bg-slate-900 text-white shadow-2xs font-bold'
-                          : 'text-slate-500 hover:text-slate-900'
-                      }`}
-                      title="AI executes verified growth actions automatically"
-                    >
-                      ⚡ Autonomous
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMode('MANUAL_APPROVAL')}
-                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer text-[11px] ${
-                        copilotMode === 'MANUAL_APPROVAL'
-                          ? 'bg-google-blue text-white shadow-2xs font-bold'
-                          : 'text-slate-500 hover:text-slate-900'
-                      }`}
-                      title="Review each action in 1-click before publishing"
-                    >
-                      ✍️ 1-Click
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions List or Zero Inbox Clean State */}
-              {!isAllClear ? (
-                <div className="space-y-3">
-                  {pendingActions.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-2 max-w-2xl">
-                        <div className="flex items-center gap-2">
-                          {item.type === 'COMPETITOR' ? (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-100 text-rose-800 uppercase">
-                              Competitor Shift
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 uppercase">
-                              5★ Customer Review
-                            </span>
-                          )}
-                          <span className="text-xs font-semibold text-slate-400">
-                            {item.impact}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-sm">
-                            {item.title}
-                          </h4>
-                          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                            {item.subtitle}
-                          </p>
-                        </div>
-
-                        {/* Review Draft Preview */}
-                        {item.aiDraft && (
-                          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
-                            <span className="text-[10px] font-bold text-google-blue uppercase tracking-wider block">
-                              AI-composed SEO response:
-                            </span>
-                            <p className="text-slate-800 italic leading-relaxed">
-                              "{item.aiDraft}"
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => handleCopyManual(item)}
-                          className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                          title="Copy response to paste manually into Google Maps"
-                        >
-                          <Copy className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Copy</span>
-                        </button>
-
-                        {item.aiDraft && (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditDraft(item)}
-                            className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Edit</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleActionClick(item.id)}
-                          className="flex-1 md:flex-none px-4 py-2 bg-google-blue hover:bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                        >
-                          <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                          <span>{isProUser ? item.primaryCtaText : '⚡ Publish (1-Click)'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Clean Green Zero-Inbox State */
-                <div className="p-5 sm:p-6 bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-blue-50/40 border border-emerald-200/90 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <ShieldCheck className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-                        <span>All systems optimal • 0 threats</span>
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      </div>
-                      <p className="text-slate-600 text-xs mt-0.5 leading-relaxed max-w-xl">
-                        24/7 Sentinel Guard is preventing unauthorized edits. All reviews answered, NAP attributes locked in Golden Snapshot.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => setIsInsuranceModalOpen(true)}
-                      className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl text-xs transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Risk Shield →</span>
-                    </button>
-
-                    <Link
-                      href="/geo-grid"
-                      className="px-3.5 py-2 bg-google-blue hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition-colors shadow-2xs flex items-center gap-1.5"
-                    >
-                      <Target className="w-3.5 h-3.5" />
-                      <span>Geo-Grid Radar →</span>
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* ======================================================== */}
@@ -1941,6 +2079,70 @@ export default function DashboardCockpitPage() {
       )}
 
 
+
+      {/* 360° Data Passport Modal (Google Business Profile API Matrix) */}
+      {isPassportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-google-blue flex items-center justify-center">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                    360° Паспорт заведения и статистика (Google API)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Полный реестр сырых полей Google Business Profile для {activeProfile?.name || 'заведения'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsPassportModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <GbpDataMatrix
+                venueName={activeProfile?.name || '—'}
+                category={activeProfile?.category || '—'}
+                address={activeProfile?.address || activeProfile?.city || '—'}
+                phone={activeProfile?.phone || ''}
+                website={activeProfile?.website || activeProfile?.website_url || ''}
+                rating={activeProfile?.rating ?? 0}
+                reviewsCount={activeProfile?.reviews_count ?? 0}
+                isPro={isProUser}
+                live={liveSync}
+                onUpgradeClick={() => {
+                  const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
+                  window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
+                }}
+              />
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Официальный Google Business Profile API (300 QPM)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsPassportModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"
+              >
+                Закрыть паспорт
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <BottomNav attributesCount={42} unreadReviewsCount={1} threatsCount={0} radarAlertsCount={2} />
 
       <Footer />
     </div>

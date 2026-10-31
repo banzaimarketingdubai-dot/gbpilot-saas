@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { BottomNav } from '@/components/BottomNav';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -185,6 +186,7 @@ export default function AdminSentinelPage() {
           ))}
         </div>
       </div>
+      <BottomNav threatsCount={0} />
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { BottomNav } from '@/components/BottomNav';
 import { CompetitorMatrix, CompetitorComparison } from '@/components/CompetitorMatrix';
 import { GeoActionPlan } from '@/components/GeoActionPlan';
 import { getSubscription, activateTrial } from '@/lib/subscription';
@@ -1908,6 +1909,7 @@ export default function GeoGridPage() {
         )}
 
       </main>
+      <BottomNav radarAlertsCount={2} />
       <Footer />
     </div>
   );

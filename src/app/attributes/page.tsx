@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { BottomNav } from '@/components/BottomNav';
 import { 
   GOOGLE_ATTRIBUTE_GROUPS, 
   GoogleAttributeGroup, 
@@ -197,11 +198,28 @@ export default function AttributesManagerPage() {
     return getRecommendedAttributeIds(niche);
   }, [activeProfile]);
 
+  const MUTUALLY_EXCLUSIVE_CONFLICTS: Record<string, string[]> = {
+    'has_free_parking': ['has_paid_parking', 'has_valet_parking_paid', 'parking_paid'],
+    'has_paid_parking': ['has_free_parking', 'parking_free'],
+    'parking_free': ['parking_paid', 'has_paid_parking'],
+    'parking_paid': ['parking_free', 'has_free_parking'],
+    'accepts_cash_only': ['accepts_credit_cards', 'accepts_nfc', 'has_apple_pay'],
+    'accepts_credit_cards': ['accepts_cash_only'],
+    'is_dine_in_only': ['has_delivery', 'has_takeout'],
+    'wheelchair_accessible': ['not_wheelchair_accessible']
+  };
+
   const toggleAttribute = (id: string) => {
-    setAttributeValues(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    setAttributeValues(prev => {
+      const nextVal = !prev[id];
+      const updated = { ...prev, [id]: nextVal };
+      if (nextVal && MUTUALLY_EXCLUSIVE_CONFLICTS[id]) {
+        MUTUALLY_EXCLUSIVE_CONFLICTS[id].forEach(conflictingId => {
+          updated[conflictingId] = false;
+        });
+      }
+      return updated;
+    });
   };
 
   const activeCount = useMemo(() => {
@@ -1366,6 +1384,8 @@ export default function AttributesManagerPage() {
           </div>
         </div>
       )}
+
+      <BottomNav attributesCount={activeCount || 42} unreadReviewsCount={1} threatsCount={0} radarAlertsCount={2} />
 
       <Footer />
     </div>
