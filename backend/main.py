@@ -4,6 +4,7 @@ try:
 except Exception:
     pass
 
+from typing import Optional, List
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 import os

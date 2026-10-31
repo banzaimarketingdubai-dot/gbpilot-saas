@@ -33,7 +33,7 @@ logger = logging.getLogger("GBPilot.GeoGrid")
 # Monthly number of billed (fresh) scans per location. Cache hits are free.
 # FREE_SCOUT value is an assumption (not specified by the owner) - change here if needed.
 PLAN_SCAN_LIMITS: Dict[str, int] = {
-    "FREE_SCOUT": 1,
+    "FREE_SCOUT": 2,
     "SLEEP_GUARD": 2,
     "STARTER": 2,
     "PRO_GROWTH": 5,

@@ -86,18 +86,22 @@ def test_cache_does_not_bill_and_limit_blocks_new_scan():
         calls["n"] += 1
         return [_place(OWN_ID, "Sir Visaranus")]
     _patch(fake)
-    req = _req(plan_id="FREE_SCOUT")          # limit 1 / month
+    req = _req(plan_id="FREE_SCOUT")          # limit 2 / month
     first = asyncio.run(gg.run_geo_grid(req, None))
     assert first["status"] == "success" and first["meta"]["scans_used"] == 1
     n_after_first = calls["n"]
 
     again = asyncio.run(gg.run_geo_grid(req, None))
     assert again["meta"]["cached"] is True and again["meta"]["scans_used"] == 1
-    assert calls["n"] == n_after_first             # no extra Google calls
+    assert calls["n"] == n_after_first             # cache hit: no extra Google calls, not billed
+
+    second = asyncio.run(gg.run_geo_grid(_req(plan_id="FREE_SCOUT", keyword="second query"), None))
+    assert second["status"] == "success" and second["meta"]["scans_used"] == 2
+    n_after_second = calls["n"]
 
     other = asyncio.run(gg.run_geo_grid(_req(plan_id="FREE_SCOUT", keyword="border run"), None))
     assert other["status"] == "limit_reached" and other["grid"] == []
-    assert calls["n"] == n_after_first
+    assert calls["n"] == n_after_second
 
     cache_only = asyncio.run(gg.run_geo_grid(_req(plan_id="FREE_SCOUT", keyword="border run", cache_only=True), None))
     assert cache_only["status"] == "no_cache"
