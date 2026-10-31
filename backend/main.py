@@ -333,6 +333,55 @@ async def google_deep_sync_endpoint(profile_id: str, db: Session = Depends(get_d
     return snapshot
 
 
+@app.post("/api/v1/profiles/rescan", tags=["Onboarding"])
+async def rescan_profile_endpoint(payload: dict, db: Session = Depends(get_db)):
+    """
+    Live manual re-scan of a business profile via Google Places API (New).
+    Accepts query (business name, address, or Maps URL) and optional place_id.
+    Fetches real-time status, rating, reviews count, hours, phone, website, and photos.
+    Updates the database record if found and returns fresh telemetry.
+    """
+    from google_service import get_public_place_details
+    query = payload.get("query") or payload.get("name") or payload.get("business_name") or ""
+    address = payload.get("address") or ""
+    search_query = f"{query} {address}".strip() if address and address not in query else query
+    if not search_query:
+        raise HTTPException(status_code=400, detail="Search query or business name is required")
+    
+    place_data = get_public_place_details(search_query)
+    if not place_data and address:
+        place_data = get_public_place_details(query)
+            
+    if not place_data:
+        return {"success": False, "message": f"Could not locate live listing on Google Maps for '{query}'"}
+    
+    # Update DB if profile exists
+    if db:
+        try:
+            prof = db.query(models.GBPProfile).filter(
+                (models.GBPProfile.business_name.ilike(f"%{query}%")) |
+                (models.GBPProfile.google_location_id == place_data.get("place_id"))
+            ).first()
+            if prof:
+                if place_data.get("rating"):
+                    prof.average_rating = float(place_data["rating"])
+                if place_data.get("reviews_count"):
+                    prof.review_count = int(place_data["reviews_count"])
+                if place_data.get("phone"):
+                    prof.phone_number = place_data["phone"]
+                if place_data.get("website_url"):
+                    prof.website_url = place_data["website_url"]
+                db.commit()
+        except Exception as e:
+            logger.warning(f"[DB Warning] Could not update profile in DB during rescan: {e}")
+            
+    return {
+        "success": True,
+        "scanned_at": datetime.utcnow().isoformat(),
+        "business": place_data
+    }
+
+
 @app.get("/api/v1/profiles", tags=["Onboarding"])
 async def list_profiles_endpoint(db: Session = Depends(get_db)):
     """

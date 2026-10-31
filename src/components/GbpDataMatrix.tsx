@@ -19,7 +19,8 @@ import {
   Flame,
   ArrowRight,
   Zap,
-  Info
+  Info,
+  RefreshCw
 } from 'lucide-react';
 
 export interface DataParameterItem {
@@ -55,6 +56,8 @@ interface GbpDataMatrixProps {
   /** Live snapshot from /api/v1/profiles/{id}/google-sync (real Google data). */
   live?: { fields?: Record<string, any>; sources?: Record<string, string> } | null;
   onUpgradeClick?: () => void;
+  onRescan?: () => void;
+  isRescanning?: boolean;
 }
 
 export function GbpDataMatrix({
@@ -67,7 +70,9 @@ export function GbpDataMatrix({
   reviewsCount = 0,
   isPro = false,
   live = null,
-  onUpgradeClick
+  onUpgradeClick,
+  onRescan,
+  isRescanning = false
 }: GbpDataMatrixProps) {
   const [selectedGroup, setSelectedGroup] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -394,8 +399,21 @@ export function GbpDataMatrix({
           </p>
         </div>
 
-        {/* Readiness Meter & Collapse Toggle */}
-        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+        {/* Readiness Meter, Re-Scan & Collapse Toggle */}
+        <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap">
+          {onRescan && (
+            <button
+              type="button"
+              onClick={onRescan}
+              disabled={isRescanning}
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Manually re-scan Google Places API"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-blue-300 ${isRescanning ? 'animate-spin' : ''}`} />
+              <span>{isRescanning ? 'Scanning...' : 'Live Re-Scan'}</span>
+            </button>
+          )}
+
           <div className="text-right">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Profile Health</div>
             <div className="text-xl font-black text-emerald-400">

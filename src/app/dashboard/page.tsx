@@ -41,7 +41,8 @@ import {
   CheckSquare,
   LogOut,
   Plus,
-  Database
+  Database,
+  RefreshCw
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -101,6 +102,7 @@ export default function DashboardCockpitPage() {
   const [isLocationQuotaModalOpen, setIsLocationQuotaModalOpen] = useState(false);
   const [isProTrialModalOpen, setIsProTrialModalOpen] = useState(false);
   const [isPassportModalOpen, setIsPassportModalOpen] = useState(false);
+  const [isRescanning, setIsRescanning] = useState(false);
   const [isQuickWinApplied, setIsQuickWinApplied] = useState(false);
   const [isThreatResolved, setIsThreatResolved] = useState(false);
   const [isProUser, setIsProUser] = useState(false);
@@ -537,6 +539,88 @@ export default function DashboardCockpitPage() {
       window.dispatchEvent(new CustomEvent('autopilot_mode_changed', { detail: { mode } }));
     }
     showToast(`Switched Cockpit to ${mode === 'AUTONOMOUS' ? 'Autonomous Autopilot' : 'Manual Approval'} mode.`);
+  };
+
+  const handleManualRescan = async () => {
+    if (!activeProfile?.name || activeProfile.name === 'No Business Connected') {
+      showToast('⚠️ No active profile selected to re-scan.');
+      return;
+    }
+
+    setIsRescanning(true);
+    showToast(`🔄 Re-scanning Google Business Profile for "${activeProfile.name}"...`);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
+      const res = await fetch(`${baseUrl}/api/v1/profiles/rescan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: activeProfile.name,
+          address: activeProfile.address,
+          name: activeProfile.name,
+          place_id: activeProfile.id
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.success && data.business) {
+        const b = data.business;
+        const updatedProfile: ActiveBusinessProfile = {
+          ...activeProfile,
+          id: b.place_id || activeProfile.id,
+          name: b.business_name || activeProfile.name,
+          address: b.address || activeProfile.address,
+          category: b.category || b.primary_category || activeProfile.category,
+          phone: b.phone || activeProfile.phone,
+          website_url: b.website_url || activeProfile.website_url,
+          website: b.website_url || activeProfile.website,
+          rating: typeof b.rating === 'number' && b.rating > 0 ? b.rating : activeProfile.rating,
+          reviews_count: typeof b.reviews_count === 'number' ? b.reviews_count : activeProfile.reviews_count,
+          cover_url: b.cover_url || activeProfile.cover_url,
+          opening_hours: Array.isArray(b.opening_hours) && b.opening_hours.length > 0 ? b.opening_hours : activeProfile.opening_hours,
+          verified: true
+        };
+
+        // Update active profile state and localStorage
+        setActiveProfile(updatedProfile);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gbpilot_active_profile', JSON.stringify(updatedProfile));
+
+          // Update availableProfiles in list
+          const updatedList = availableProfiles.map(p => 
+            p.name === updatedProfile.name || p.id === updatedProfile.id ? updatedProfile : p
+          );
+          setAvailableProfiles(updatedList);
+          localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updatedList));
+
+          // Also trigger deep sync for API passport if locId exists
+          const locId = (updatedProfile as any)?.google_location_id || updatedProfile?.id;
+          if (locId) {
+            fetch(`${baseUrl}/api/v1/profiles/${encodeURIComponent(String(locId))}/google-sync`)
+              .then(r => r.ok ? r.json() : null)
+              .then(d => { if (d) setLiveSync(d); })
+              .catch(() => {});
+          }
+
+          // Notify other windows/tabs
+          window.dispatchEvent(new CustomEvent('active_profile_updated'));
+        }
+
+        showToast(`✅ Live Google Maps re-scan complete! Telemetry updated for "${updatedProfile.name}".`);
+      } else {
+        showToast(data.message || '⚠️ Google Maps could not locate live profile. Please check location name.');
+      }
+    } catch (err: any) {
+      console.error('Manual rescan error:', err);
+      showToast('⚠️ Re-scan failed. Please check network connection.');
+    } finally {
+      setIsRescanning(false);
+    }
   };
 
   const showToast = (msg: string) => {
@@ -1052,8 +1136,19 @@ export default function DashboardCockpitPage() {
                   </div>
                 </div>
 
-                {/* Right Column: Passport Button & 24/7 Sentinel Pill */}
+                {/* Right Column: Re-Scan, Passport Button & 24/7 Sentinel Pill */}
                 <div className="flex items-center gap-2 self-stretch lg:self-auto justify-between lg:justify-end shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-wrap">
+                  <button
+                    type="button"
+                    disabled={isRescanning}
+                    onClick={handleManualRescan}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    title="Manually re-scan Google Business Profile to fetch live Google Maps data"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${isRescanning ? 'animate-spin' : ''}`} />
+                    <span>{isRescanning ? 'Scanning Google...' : 'Re-Scan GBP'}</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setIsPassportModalOpen(true)}
@@ -2244,6 +2339,8 @@ export default function DashboardCockpitPage() {
                 reviewsCount={activeProfile?.reviews_count ?? 0}
                 isPro={isProUser}
                 live={liveSync}
+                onRescan={handleManualRescan}
+                isRescanning={isRescanning}
                 onUpgradeClick={() => {
                   const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
                   window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
