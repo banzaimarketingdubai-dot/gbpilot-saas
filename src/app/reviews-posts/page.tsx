@@ -46,6 +46,7 @@ import {
 import { getSubscription, activateTrial } from '@/lib/subscription';
 import { calculateReviewVelocity, ReviewVelocityStats, ReviewInboxItem } from '@/lib/reviews/reviewEngine';
 import { detectCurrencyByLocation } from '@/lib/inspection/auditEngine';
+import { SocialSyncHub } from '@/components/SocialSyncHub';
 import { 
   detectReviewExtortion, 
   generateExtortionTakedownDossier, 
@@ -90,7 +91,21 @@ interface DefenseLogItem {
 const INITIAL_DEFENSE_LOGS: DefenseLogItem[] = [];
 
 export default function ShieldReviewsPage() {
-  const [activeTab, setActiveTab] = useState<'REVIEWS' | 'DEFENSE_LOG' | 'QR_NFC'>('REVIEWS');
+  const [activeTab, setActiveTab] = useState<'REVIEWS' | 'DEFENSE_LOG' | 'QR_NFC' | 'SOCIAL_AUTOPILOT'>('REVIEWS');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'social' || tab === 'social_autopilot' || tab === 'social-sync') {
+        setActiveTab('SOCIAL_AUTOPILOT');
+      } else if (tab === 'qr' || tab === 'nfc') {
+        setActiveTab('QR_NFC');
+      } else if (tab === 'defense') {
+        setActiveTab('DEFENSE_LOG');
+      }
+    }
+  }, []);
   
   // Tab 1: Review Inbox state
   const [autopilotReply, setAutopilotReply] = useState(true);
@@ -512,6 +527,19 @@ export default function ShieldReviewsPage() {
               <div className="flex items-center gap-1.5">
                 <span>📇 QR &amp; NFC Stand</span>
                 <span className="text-[9px] bg-slate-200/80 text-slate-600 px-1.5 py-0.2 rounded font-normal">Revo Coming Soon</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('SOCIAL_AUTOPILOT')}
+              className={`flex-1 sm:flex-none px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'SOCIAL_AUTOPILOT'
+                  ? 'bg-white text-pink-600 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span>📲 Social Autopilot</span>
+                <span className="text-[9px] bg-pink-100 text-pink-700 px-1.5 py-0.2 rounded font-bold">IG &amp; TikTok</span>
               </div>
             </button>
           </div>
@@ -1596,7 +1624,29 @@ export default function ShieldReviewsPage() {
           </div>
         )}
 
-      
+        {/* ======================================================== */}
+        {/* SUB-TAB 4: SOCIAL MEDIA AUTOPILOT (INSTAGRAM & TIKTOK)   */}
+        {/* ======================================================== */}
+        {activeTab === 'SOCIAL_AUTOPILOT' && (
+          <div className="space-y-6 animate-in fade-in">
+            <SocialSyncHub
+              key={String(activeProfile?.id || activeProfile?.place_id || 'none')}
+              profileId={String(activeProfile?.id || activeProfile?.place_id || 'default')}
+              venueName={activeProfile?.name || 'Your Business'}
+              category={(activeProfile as any)?.category || 'Local Business'}
+              city={activeProfile?.city || activeProfile?.address || ''}
+              website={(activeProfile as any)?.website || (activeProfile as any)?.website_url || ''}
+              phone={(activeProfile as any)?.phone || (activeProfile as any)?.phone_number || ''}
+              isPro={typeof window !== 'undefined' && localStorage.getItem('gbpilot_pro_activated') === 'true'}
+              planId={typeof window !== 'undefined' && localStorage.getItem('gbpilot_pro_activated') === 'true' ? 'PRO_GROWTH' : 'FREE_SCOUT'}
+              onUpgradeClick={() => {
+                const proCheckout = process.env.NEXT_PUBLIC_CREEM_PRODUCT_PRO || 'prod_279fuhC5FSVX9DR6MLSuU4';
+                window.open(`https://www.creem.io/payment/${proCheckout}`, '_blank');
+              }}
+            />
+          </div>
+        )}
+
         {/* Review Takedown Quota Paywall Modal (PLG) */}
         {isTakedownQuotaModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
