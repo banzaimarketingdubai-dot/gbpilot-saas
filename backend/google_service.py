@@ -228,12 +228,103 @@ def resolve_google_maps_url(url: str) -> Optional[str]:
         print(f"[GoogleService] Google Maps URL resolve error: {e}")
     return None
 
-def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
+def _parse_public_place_obj(place: Dict[str, Any]) -> Dict[str, Any]:
+    place_maps_uri = place.get("googleMapsUri") or f"https://www.google.com/maps/place/?q=place_id:{place.get('id')}"
+    photo_url = None
+    photos = place.get("photos", [])
+    if photos:
+        photo_name = photos[0].get("name") # e.g. places/ChIJ.../photos/...
+        if photo_name and GOOGLE_PLACES_API_KEY:
+            photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=600&maxWidthPx=800&key={GOOGLE_PLACES_API_KEY}"
+    
+    cat_name = (place.get("primaryTypeDisplayName") or {}).get("text")
+    if not cat_name:
+        raw_types = place.get("types", [])
+        if raw_types:
+            for rt in raw_types:
+                if rt not in _GENERIC_PLACE_TYPES:
+                    cat_name = _humanize_place_type(rt)
+                    break
+    if not cat_name:
+        cat_name = "Local Business"
+
+    # Extract opening hours
+    open_now = (place.get("currentOpeningHours") or {}).get("openNow")
+    opening_hours = (place.get("regularOpeningHours") or {}).get("weekdayDescriptions", [])
+    if not opening_hours:
+        opening_hours = (place.get("currentOpeningHours") or {}).get("weekdayDescriptions", [])
+
+    parsed_reviews = []
+    for r in place.get("reviews", []):
+        r_rating = r.get("rating", 5)
+        r_text = (r.get("text", {}) or {}).get("text", "") or (r.get("originalText", {}) or {}).get("text", "")
+        author_obj = r.get("authorAttribution", {}) or {}
+        author_name = author_obj.get("displayName", "Anonymous")
+        publish_time = r.get("relativePublishTimeDescription", "")
+        rev_url = r.get("googleMapsUri") or place_maps_uri
+        parsed_reviews.append({
+            "id": r.get("name", "").split("/")[-1] if "/" in r.get("name", "") else f"rev_{len(parsed_reviews)}",
+            "author_name": author_name,
+            "rating": r_rating,
+            "review_date": publish_time,
+            "review_text": r_text,
+            "google_review_url": rev_url
+        })
+
+    name_obj = place.get("displayName")
+    business_name = name_obj.get("text") if isinstance(name_obj, dict) else (name_obj or "")
+
+    return {
+        "place_id": place.get("id"),
+        "business_name": business_name,
+        "address": place.get("formattedAddress"),
+        "google_maps_url": place_maps_uri,
+        "rating": float(place.get("rating") or 0),
+        "reviews_count": int(place.get("userRatingCount", 0)),
+        "lat": (place.get("location") or {}).get("latitude"),
+        "lng": (place.get("location") or {}).get("longitude"),
+        "phone": place.get("internationalPhoneNumber", "") or place.get("nationalPhoneNumber", ""),
+        "website_url": place.get("websiteUri", ""),
+        "category": cat_name,
+        "primary_category": cat_name,
+        "cover_url": photo_url,
+        "open_now": open_now,
+        "opening_hours": opening_hours,
+        "reviews": parsed_reviews
+    }
+
+
+def get_public_place_details(
+    query: str,
+    place_id: Optional[str] = None,
+    lat: Optional[float] = None,
+    lng: Optional[float] = None,
+    address: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     """
-    Fetches official Google Places API (New) data for ANY public business (by name or Maps URL).
+    Fetches official Google Places API (New) data for ANY public business (by name, place_id, or Maps URL).
+    Priority 1: Direct Place ID lookup (100% precise).
+    Priority 2: Text Search with locationBias or location coordinates.
     """
     if not GOOGLE_PLACES_API_KEY:
         return None
+
+    # Priority 1: Direct place_id lookup if provided and valid
+    if place_id and (place_id.startswith("ChIJ") or len(place_id) > 15):
+        clean_pid = place_id.split("/")[-1] if "/" in place_id else place_id
+        try:
+            url = f"https://places.googleapis.com/v1/places/{clean_pid}"
+            headers = {
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask': 'id,displayName,formattedAddress,location,rating,userRatingCount,internationalPhoneNumber,websiteUri,primaryTypeDisplayName,photos,reviews,googleMapsUri,regularOpeningHours,currentOpeningHours'
+            }
+            res = requests.get(url, headers=headers, timeout=6)
+            if res.ok:
+                place = res.json()
+                if place and place.get("id"):
+                    return _parse_public_place_obj(place)
+        except Exception as e:
+            print(f"[GoogleService] Direct Place Details lookup failed: {e}")
 
     # If query is a URL, resolve to place name
     if query.startswith("http://") or query.startswith("https://"):
@@ -248,61 +339,34 @@ def get_public_place_details(query: str) -> Optional[Dict[str, Any]]:
             'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos,places.reviews,places.googleMapsUri,places.regularOpeningHours,places.currentOpeningHours',
             'Content-Type': 'application/json'
         }
-        data = {'textQuery': query}
+        
+        search_query = query
+        if address and address.lower() not in query.lower() and len(query.split()) <= 3:
+            search_query = f"{query} {address}".strip()
+            
+        data: Dict[str, Any] = {'textQuery': search_query}
+        if lat is not None and lng is not None:
+            data['locationBias'] = {
+                'circle': {
+                    'center': {'latitude': float(lat), 'longitude': float(lng)},
+                    'radius': 50000.0
+                }
+            }
+            
         res = requests.post(url, headers=headers, json=data, timeout=6)
         if res.ok:
             results = res.json().get("places", [])
             if results:
-                place = results[0]
-                place_maps_uri = place.get("googleMapsUri") or f"https://www.google.com/maps/place/?q=place_id:{place.get('id')}"
-                photo_url = None
-                photos = place.get("photos", [])
-                if photos:
-                    photo_name = photos[0].get("name") # e.g. places/ChIJ.../photos/...
-                    if photo_name:
-                        photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=600&maxWidthPx=800&key={GOOGLE_PLACES_API_KEY}"
+                return _parse_public_place_obj(results[0])
                 
-                cat_name = place.get("primaryTypeDisplayName", {}).get("text") or "Local Business"
-
-                # Extract opening hours
-                open_now = (place.get("currentOpeningHours") or {}).get("openNow")
-                opening_hours = (place.get("regularOpeningHours") or {}).get("weekdayDescriptions", [])
-
-                parsed_reviews = []
-                for r in place.get("reviews", []):
-                    r_rating = r.get("rating", 5)
-                    r_text = (r.get("text", {}) or {}).get("text", "") or (r.get("originalText", {}) or {}).get("text", "")
-                    author_obj = r.get("authorAttribution", {}) or {}
-                    author_name = author_obj.get("displayName", "Anonymous")
-                    publish_time = r.get("relativePublishTimeDescription", "")
-                    rev_url = r.get("googleMapsUri") or place_maps_uri
-                    parsed_reviews.append({
-                        "id": r.get("name", "").split("/")[-1] if "/" in r.get("name", "") else f"rev_{len(parsed_reviews)}",
-                        "author_name": author_name,
-                        "rating": r_rating,
-                        "review_date": publish_time,
-                        "review_text": r_text,
-                        "google_review_url": rev_url
-                    })
-
-                return {
-                    "place_id": place.get("id"),
-                    "business_name": place.get("displayName", {}).get("text"),
-                    "address": place.get("formattedAddress"),
-                    "google_maps_url": place_maps_uri,
-                    "rating": place.get("rating") or 0,
-                    "reviews_count": place.get("userRatingCount", 0),
-                    "lat": place.get("location", {}).get("latitude"),
-                    "lng": place.get("location", {}).get("longitude"),
-                    "phone": place.get("internationalPhoneNumber", ""),
-                    "website_url": place.get("websiteUri", ""),
-                    "category": cat_name,
-                    "primary_category": cat_name,
-                    "cover_url": photo_url,
-                    "open_now": open_now,
-                    "opening_hours": opening_hours,
-                    "reviews": parsed_reviews
-                }
+        # Fallback if combined query failed: try query alone
+        if search_query != query:
+            data['textQuery'] = query
+            res = requests.post(url, headers=headers, json=data, timeout=6)
+            if res.ok:
+                results = res.json().get("places", [])
+                if results:
+                    return _parse_public_place_obj(results[0])
     except Exception as e:
         print(f"[GoogleService] Public Place API lookup failed: {e}")
     return None

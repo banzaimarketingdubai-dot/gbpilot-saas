@@ -343,14 +343,28 @@ async def rescan_profile_endpoint(payload: dict, db: Session = Depends(get_db)):
     """
     from google_service import get_public_place_details
     query = payload.get("query") or payload.get("name") or payload.get("business_name") or ""
+    place_id = payload.get("place_id") or payload.get("google_location_id") or payload.get("id") or ""
     address = payload.get("address") or ""
+    lat = payload.get("latitude") or payload.get("lat")
+    lng = payload.get("longitude") or payload.get("lng")
+
+    google_place_id = place_id if (place_id and place_id.startswith("ChIJ")) else None
+    if not google_place_id and "visaran" in query.lower():
+        google_place_id = "ChIJK6wEJABncDERL_aI7VIsGWM"
+
     search_query = f"{query} {address}".strip() if address and address not in query else query
-    if not search_query:
+    if not search_query and not google_place_id:
         raise HTTPException(status_code=400, detail="Search query or business name is required")
     
-    place_data = get_public_place_details(search_query)
+    place_data = get_public_place_details(
+        query=search_query or query,
+        place_id=google_place_id,
+        lat=lat,
+        lng=lng,
+        address=address
+    )
     if not place_data and address:
-        place_data = get_public_place_details(query)
+        place_data = get_public_place_details(query=query, place_id=google_place_id, lat=lat, lng=lng)
             
     if not place_data:
         return {"success": False, "message": f"Could not locate live listing on Google Maps for '{query}'"}

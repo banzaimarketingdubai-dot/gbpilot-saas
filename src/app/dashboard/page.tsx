@@ -90,7 +90,25 @@ interface ActiveBusinessProfile {
   description?: string;
   opening_hours?: string[];
   attributes?: Record<string, boolean>;
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
 }
+
+const formatCategory = (category?: string): string => {
+  if (!category) return 'Transportation Service';
+  const c = category.toLowerCase();
+  if (c.includes('транспорт') || c.includes('transport')) return 'Transportation Service';
+  if (c.includes('кафе') || c.includes('кофе') || c.includes('coffee') || c.includes('cafe')) return 'Coffee Shop';
+  if (c.includes('ресторан') || c.includes('restaurant')) return 'Restaurant';
+  if (c.includes('парикмах') || c.includes('салон') || c.includes('salon') || c.includes('beauty') || c.includes('barber')) return 'Beauty & Salon';
+  if (c.includes('клиник') || c.includes('dental') || c.includes('clinic') || c.includes('врач') || c.includes('мед')) return 'Dental & Clinic';
+  if (c.includes('тур') || c.includes('tour') || c.includes('travel')) return 'Travel Agency';
+  if (c.includes('недвиж') || c.includes('real estate')) return 'Real Estate Agency';
+  if (/[\u0400-\u04FF]/.test(category)) return 'Local Business';
+  return category;
+};
 
 const generateActionItems = (_profile: ActiveBusinessProfile | null): ActionItem[] => {
   // Only return real action items if real recommendations or unreplied customer reviews exist
@@ -382,6 +400,9 @@ export default function DashboardCockpitPage() {
         try {
           currentProf = JSON.parse(storedActive);
           if (currentProf && currentProf.name) {
+            if (currentProf.category) {
+              currentProf.category = formatCategory(currentProf.category);
+            }
             if (!currentProf.cover_url && !currentProf.photo_url) {
               currentProf.cover_url = DEFAULT_VENUE_PHOTO;
             }
@@ -559,7 +580,9 @@ export default function DashboardCockpitPage() {
           query: activeProfile.name,
           address: activeProfile.address,
           name: activeProfile.name,
-          place_id: activeProfile.id
+          place_id: (activeProfile as any).google_location_id || activeProfile.id,
+          lat: (activeProfile as any).latitude || (activeProfile as any).lat,
+          lng: (activeProfile as any).longitude || (activeProfile as any).lng,
         })
       });
 
@@ -575,7 +598,7 @@ export default function DashboardCockpitPage() {
           id: b.place_id || activeProfile.id,
           name: b.business_name || activeProfile.name,
           address: b.address || activeProfile.address,
-          category: b.category || b.primary_category || activeProfile.category,
+          category: formatCategory(b.category || b.primary_category || activeProfile.category),
           phone: b.phone || activeProfile.phone,
           website_url: b.website_url || activeProfile.website_url,
           website: b.website_url || activeProfile.website,
@@ -1074,7 +1097,7 @@ export default function DashboardCockpitPage() {
                     {/* Category, Stars & Live Open Status */}
                     <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
                       <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md text-[11px] border border-slate-200/60">
-                        {activeProfile?.category || '—'}
+                        {formatCategory(activeProfile?.category)}
                       </span>
                       
                       <div className="flex items-center gap-1 font-bold text-xs">
