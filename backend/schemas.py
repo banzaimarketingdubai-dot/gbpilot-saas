@@ -92,11 +92,50 @@ class GeoGridTop3Item(BaseModel):
     rank: int
     place_id: str = ""
     name: str
+    address: str = ""
     rating: float = 0.0
     reviews_count: int = 0
     primary_category: str = ""
+    secondary_categories: List[str] = []
     google_maps_url: str = ""
+    website_url: str = ""
+    phone: str = ""
+    photos_count: int = 0                   # Places API returns at most 10 photo references
+    open_now: Optional[bool] = None
+    has_hours: bool = False
+    price_level: str = ""
     is_you: bool = False
+
+class GeoGridGap(BaseModel):
+    id: str
+    kind: str                               # category | website | phone | hours | rating | reviews | photos
+    title: str
+    detail: str                             # built from real numbers, e.g. "У 2 из 3 лидеров есть категория X"
+    leaders_with: int = 0
+    leaders_total: int = 0
+
+class GeoGridOwnProfile(BaseModel):
+    place_id: str = ""
+    name: str = ""
+    address: str = ""
+    rating: float = 0.0
+    reviews_count: int = 0
+    primary_category: str = ""
+    secondary_categories: List[str] = []
+    website_url: str = ""
+    phone: str = ""
+    photos_count: int = 0
+    open_now: Optional[bool] = None
+    has_hours: bool = False
+    price_level: str = ""
+    google_maps_url: str = ""
+
+class GeoGridVelocity(BaseModel):
+    per_week: Optional[float] = None        # None until >= 2 snapshots at least a day apart
+    days: float = 0.0
+    snapshots: int = 0
+    from_reviews: int = 0
+    to_reviews: int = 0
 
 class GeoGridNode(BaseModel):
     pos: int
@@ -109,6 +148,7 @@ class GeoGridNode(BaseModel):
     competitor_rating: Optional[float] = None
     competitor_reviews: Optional[int] = None
     top3: List[GeoGridTop3Item] = []
+    gaps: List[GeoGridGap] = []             # you vs. the leaders at THIS point
 
 class GeoGridCompetitor(BaseModel):
     place_id: str = ""
@@ -163,6 +203,9 @@ class GeoGridScanResponse(BaseModel):
     metrics: GeoGridMetrics = GeoGridMetrics()
     meta: GeoGridMeta = GeoGridMeta()
     message: str = ""
+    own_profile: Optional[GeoGridOwnProfile] = None    # your card as Google returns it (same fields as leaders)
+    overall_gaps: List[GeoGridGap] = []                # you vs. the top competitors across the whole grid
+    velocity: Dict[str, GeoGridVelocity] = {}          # reviews/week by place_id, from stored scan snapshots
 
 class B2BLead(BaseModel):
     name: str

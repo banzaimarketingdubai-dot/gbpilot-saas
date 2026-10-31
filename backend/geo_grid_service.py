@@ -26,12 +26,14 @@ from google_service import (
     search_places_grid_point,
     get_public_place_details,
     get_place_location_by_id,
+    get_place_profile_by_id,
 )
+from gap_analysis import compute_gaps, compute_review_velocity
 
 logger = logging.getLogger("GBPilot.GeoGrid")
 
 # Monthly number of billed (fresh) scans per location. Cache hits are free.
-# FREE_SCOUT value is an assumption (not specified by the owner) - change here if needed.
+# Limits agreed with the owner: free/starter 2, PRO_GROWTH 5, AGENCY 15 scans per month.
 PLAN_SCAN_LIMITS: Dict[str, int] = {
     "FREE_SCOUT": 2,
     "SLEEP_GUARD": 2,
@@ -226,6 +228,62 @@ def _save_scan(db, profile_key: str, cache_key: str, request: GeoGridScanRequest
 
 
 # ----------------------------------------------------------------------------
+# comparable profile + review snapshots
+# ----------------------------------------------------------------------------
+_PROFILE_FIELDS = (
+    "place_id", "name", "address", "rating", "reviews_count", "primary_category",
+    "secondary_categories", "website_url", "phone", "photos_count", "open_now",
+    "has_hours", "price_level", "google_maps_url",
+)
+
+
+def _slim_profile(p: Dict[str, Any]) -> Dict[str, Any]:
+    out = {k: p.get(k) for k in _PROFILE_FIELDS}
+    out["rating"] = float(p.get("rating") or 0)
+    out["reviews_count"] = int(p.get("reviews_count") or 0)
+    out["photos_count"] = int(p.get("photos_count") or 0)
+    out["secondary_categories"] = list(p.get("secondary_categories") or [])
+    out["has_hours"] = bool(p.get("has_hours"))
+    for k in ("place_id", "name", "address", "primary_category", "website_url", "phone",
+              "price_level", "google_maps_url"):
+        out[k] = out[k] or ""
+    return out
+
+
+def _load_snapshots(db, profile_key: str, limit: int = 60) -> List[Tuple[datetime, Dict[str, Any]]]:
+    """Stored per-scan {place_id: {rating, reviews_count}} snapshots of this profile (any query)."""
+    rows: List[Tuple[datetime, Dict[str, Any]]] = []
+    if db is not None:
+        try:
+            _ensure_table(db)
+            q = (
+                db.query(models.GeoScanHistory)
+                .filter(models.GeoScanHistory.profile_key == profile_key)
+                .order_by(models.GeoScanHistory.created_at.desc())
+                .limit(limit)
+            )
+            for r in q:
+                snap = (r.payload or {}).get("snapshots") if isinstance(r.payload, dict) else None
+                if snap:
+                    rows.append((_as_utc(r.created_at), snap))
+            return rows
+        except Exception as e:
+            logger.warning(f"[GeoGrid] snapshot load failed: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
+    for r in _MEMORY_HISTORY:
+        if r["profile_key"] == profile_key and (r["payload"] or {}).get("snapshots"):
+            rows.append((r["created_at"], r["payload"]["snapshots"]))
+    return rows
+
+
+def _attach_velocity(payload: Dict[str, Any], db, profile_key: str) -> None:
+    payload["velocity"] = compute_review_velocity(_load_snapshots(db, profile_key))
+
+
+# ----------------------------------------------------------------------------
 # own business resolution
 # ----------------------------------------------------------------------------
 async def _resolve_own_business(request: GeoGridScanRequest, fallback_name: str) -> Dict[str, Any]:
@@ -284,7 +342,8 @@ def _quota(db, profile_key: str, request: GeoGridScanRequest) -> Dict[str, Any]:
 
 def _empty_response(status: str, message: str, meta: Dict[str, Any]) -> Dict[str, Any]:
     return {"status": status, "grid": [], "competitors": [],
-            "metrics": compute_metrics([]), "meta": meta, "message": message}
+            "metrics": compute_metrics([]), "meta": meta, "message": message,
+            "own_profile": None, "overall_gaps": [], "velocity": {}}
 
 
 # ----------------------------------------------------------------------------
@@ -314,6 +373,10 @@ async def run_geo_grid(request: GeoGridScanRequest, db, db_profile_name: Optiona
         meta.update(base_meta)
         meta.update({"cached": True, "stale": stale, "cached_at": latest["created_at"].isoformat()})
         payload.update({"status": status, "meta": meta, "message": message})
+        payload.pop("snapshots", None)
+        payload.setdefault("own_profile", None)
+        payload.setdefault("overall_gaps", [])
+        _attach_velocity(payload, db, profile_key)
         return payload
 
     if request.cache_only:
@@ -372,6 +435,8 @@ async def run_geo_grid(request: GeoGridScanRequest, db, db_profile_name: Optiona
 
     grid: List[Dict[str, Any]] = []
     comp_map: Dict[str, Dict[str, Any]] = {}
+    own_profile: Optional[Dict[str, Any]] = None
+    seen_places: Dict[str, Dict[str, Any]] = {}
 
     for node, places in raw:
         entry: Dict[str, Any] = {
@@ -387,13 +452,15 @@ async def run_geo_grid(request: GeoGridScanRequest, db, db_profile_name: Optiona
                     break
             entry["rank"] = rank
             entry["state"] = "FOUND" if rank else "NOT_IN_TOP20"
+            for p in places:
+                if is_own(p) and own_profile is None:
+                    own_profile = _slim_profile(p)
             for idx, p in enumerate(places[:3]):
-                entry["top3"].append({
-                    "rank": idx + 1, "place_id": p.get("place_id") or "", "name": p.get("name") or "",
-                    "rating": float(p.get("rating") or 0), "reviews_count": int(p.get("reviews_count") or 0),
-                    "primary_category": p.get("primary_category") or "",
-                    "google_maps_url": p.get("google_maps_url") or "", "is_you": is_own(p),
-                })
+                item = _slim_profile(p)
+                item.update({"rank": idx + 1, "is_you": is_own(p)})
+                entry["top3"].append(item)
+                if item["place_id"]:
+                    seen_places[item["place_id"]] = item
             if places:
                 lead = places[0]
                 entry["competitor"] = "You" if is_own(lead) else (lead.get("name") or None)
@@ -428,6 +495,15 @@ async def run_geo_grid(request: GeoGridScanRequest, db, db_profile_name: Optiona
             base_meta,
         )
 
+    if own_profile is None and own_pid:
+        fetched = await asyncio.to_thread(get_place_profile_by_id, own_pid)
+        if fetched:
+            own_profile = _slim_profile(fetched)
+
+    for entry in grid:
+        leaders = [t for t in entry["top3"] if not t["is_you"]]
+        entry["gaps"] = compute_gaps(own_profile, leaders) if entry["state"] != "NO_DATA" else []
+
     ranked = sorted(
         (c for c in comp_map.values() if c["wins"] > 0),
         key=lambda c: (-c["wins"], sum(c["ranks"]) / len(c["ranks"]), -c["reviews_count"]),
@@ -447,9 +523,22 @@ async def run_geo_grid(request: GeoGridScanRequest, db, db_profile_name: Optiona
     if failed:
         message += f" Для {failed} точек Google не ответил (показаны как «нет данных»)."
 
+    overall_gaps = compute_gaps(own_profile, [_slim_profile(c) for c in competitors[:3]])
+
+    snapshots: Dict[str, Dict[str, Any]] = {
+        pid: {"rating": it["rating"], "reviews_count": it["reviews_count"]}
+        for pid, it in seen_places.items()
+    }
+    if own_profile and own_profile.get("place_id"):
+        snapshots[own_profile["place_id"]] = {
+            "rating": own_profile["rating"], "reviews_count": own_profile["reviews_count"]}
+
     payload = {"status": "success", "grid": grid, "competitors": competitors,
-               "metrics": metrics, "meta": dict(base_meta), "message": message}
-    _save_scan(db, profile_key, cache_key, request, dim, step, mode, payload)
+               "metrics": metrics, "meta": dict(base_meta), "message": message,
+               "own_profile": own_profile, "overall_gaps": overall_gaps, "snapshots": snapshots}
+    _save_scan(db, profile_key, cache_key, request, dim, step, mode, dict(payload))  # copy keeps snapshots in history
+    _attach_velocity(payload, db, profile_key)
+    payload.pop("snapshots", None)
 
     # refresh quota numbers after billing this scan
     payload["meta"].update(_quota(db, profile_key, request))

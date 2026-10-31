@@ -363,6 +363,7 @@ def _parse_grid_place(p: Dict[str, Any]) -> Dict[str, Any]:
         "website_url": p.get("websiteUri") or "",
         "phone": p.get("internationalPhoneNumber") or "",
         "open_now": (p.get("currentOpeningHours") or {}).get("openNow"),
+        "has_hours": bool(p.get("currentOpeningHours")),
         "photos_count": len(p.get("photos") or []),
         "price_level": p.get("priceLevel") or "",
     }
@@ -460,6 +461,25 @@ def get_place_location_by_id(place_id: str) -> Optional[Dict[str, Any]]:
             }
     except Exception as e:
         print(f"[GoogleService] Place location lookup failed: {e}")
+    return None
+
+
+def get_place_profile_by_id(place_id: str) -> Optional[Dict[str, Any]]:
+    """Full comparable profile of one known place (same fields as grid results). None on failure."""
+    if not GOOGLE_PLACES_API_KEY or not place_id:
+        return None
+    try:
+        mask = _GRID_FIELD_MASK.replace("places.", "")
+        res = requests.get(
+            f'https://places.googleapis.com/v1/places/{place_id}',
+            headers={'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY, 'X-Goog-FieldMask': mask},
+            timeout=8,
+        )
+        if res.ok:
+            return _parse_grid_place(res.json())
+        print(f"[GoogleService] Place profile HTTP {res.status_code}: {res.text[:160]}")
+    except Exception as e:
+        print(f"[GoogleService] Place profile lookup failed: {e}")
     return None
 
 

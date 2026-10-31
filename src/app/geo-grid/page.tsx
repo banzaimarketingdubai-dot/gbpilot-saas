@@ -62,15 +62,41 @@ const getProfileCoords = (profile: any): { lat: number; lng: number } | null => 
 
 type GridNodeState = 'FOUND' | 'NOT_IN_TOP20' | 'NO_DATA';
 
-interface Top3Item {
-  rank: number;
+interface PlaceCard {
   place_id: string;
   name: string;
+  address?: string;
   rating: number;
   reviews_count: number;
   primary_category: string;
+  secondary_categories?: string[];
   google_maps_url: string;
+  website_url?: string;
+  phone?: string;
+  photos_count?: number; // Places API returns at most 10 photo references per place
+  open_now?: boolean | null;
+  has_hours?: boolean;
+  price_level?: string;
+}
+
+interface Top3Item extends PlaceCard {
+  rank: number;
   is_you: boolean;
+}
+
+interface GapItem {
+  id: string;
+  kind: string;
+  title: string;
+  detail: string; // built by the backend from real numbers
+  leaders_with: number;
+  leaders_total: number;
+}
+
+interface VelocityItem {
+  per_week: number | null; // null until >= 2 snapshots at least a day apart
+  days: number;
+  snapshots: number;
 }
 
 interface GridNodeData {
@@ -81,6 +107,7 @@ interface GridNodeData {
   lat?: number;
   lng?: number;
   top3?: Top3Item[];
+  gaps?: GapItem[];
 }
 
 interface ScanMetrics {
@@ -371,6 +398,9 @@ export default function GeoGridPage() {
   const [selectedNode, setSelectedNode] = useState<GridNodeData | null>(null);
   const [scanMetrics, setScanMetrics] = useState<ScanMetrics | null>(null);
   const [scanMeta, setScanMeta] = useState<ScanMeta | null>(null);
+  const [ownProfile, setOwnProfile] = useState<PlaceCard | null>(null);
+  const [overallGaps, setOverallGaps] = useState<GapItem[]>([]);
+  const [velocity, setVelocity] = useState<Record<string, VelocityItem>>({});
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -645,7 +675,7 @@ export default function GeoGridPage() {
     setSelectedNode(null);
     setGridRanks(buildGridTemplate(newSize));
     setScanMetrics(null);
-    setScanMeta(null);
+    setScanMeta(null); setOwnProfile(null); setOverallGaps([]); setVelocity({});
   };
 
   const generateLocalSpatialRanks = (dimension: number, _businessName: string, _keyword: string) => {
@@ -656,7 +686,7 @@ export default function GeoGridPage() {
     setGridRanks(ranks);
     setCompetitors([]);
     setScanMetrics(null);
-    setScanMeta(null);
+    setScanMeta(null); setOwnProfile(null); setOverallGaps([]); setVelocity({});
   };
 
   const handleScan = async (keywordOverride?: string) => {
@@ -669,7 +699,7 @@ export default function GeoGridPage() {
     setScanNotice(null);
     setSelectedNode(null);
     setScanMetrics(null);
-    setScanMeta(null);
+    setScanMeta(null); setOwnProfile(null); setOverallGaps([]); setVelocity({});
 
     const dim = gridSize === '7x7' ? 7 : gridSize === '5x5' ? 5 : 3;
     const bName = activeProfile?.name || kwToScan;
@@ -754,12 +784,16 @@ export default function GeoGridPage() {
             lat: g.lat,
             lng: g.lng,
             top3: Array.isArray(g.top3) ? g.top3 : [],
+            gaps: Array.isArray(g.gaps) ? g.gaps : [],
           }));
           setGridRanks(newRanks);
 
           // Metrics
           if (data.metrics) setScanMetrics(data.metrics as ScanMetrics);
           if (data.meta)    setScanMeta(data.meta as ScanMeta);
+          setOwnProfile((data.own_profile as PlaceCard) || null);
+          setOverallGaps(Array.isArray(data.overall_gaps) ? (data.overall_gaps as GapItem[]) : []);
+          setVelocity((data.velocity as Record<string, VelocityItem>) || {});
 
           // Competitors list (from top-level competitors array)
           if (Array.isArray(data.competitors) && data.competitors.length > 0) {
@@ -1336,44 +1370,101 @@ export default function GeoGridPage() {
                     </span>
                   </div>
 
-                  {/* Top-3 table for this grid point */}
+                  {/* You vs. the Top-3 at this point: only real Places API fields, gaps computed from numbers */}
                   {selectedNode.top3 && selectedNode.top3.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-[11px]">
-                        <thead>
-                          <tr className="bg-white border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wide text-[10px]">
-                            <th className="py-2 px-3">#</th>
-                            <th className="py-2 px-3">Бизнес в этой точке</th>
-                            <th className="py-2 px-3">Рейтинг</th>
-                            <th className="py-2 px-3">Вы?</th>
-                            <th className="py-2 px-3">Maps</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {selectedNode.top3.map((t) => (
-                            <tr key={t.place_id || t.rank} className={t.is_you ? 'bg-emerald-50' : 'bg-white'}>
-                              <td className="py-2 px-3 font-extrabold text-slate-700">#{t.rank}</td>
-                              <td className="py-2 px-3 font-semibold text-slate-900 max-w-[180px] truncate">{t.name}</td>
-                              <td className="py-2 px-3 text-slate-600">{t.rating > 0 ? t.rating.toFixed(1) : '—'}</td>
-                              <td className="py-2 px-3">
-                                {t.is_you
-                                  ? <span className="text-emerald-700 font-bold">✓ Вы</span>
-                                  : <span className="text-slate-400">—</span>}
-                              </td>
-                              <td className="py-2 px-3">
-                                <a
-                                  href={t.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${t.place_id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-google-blue hover:underline font-bold"
-                                >
-                                  ↗
-                                </a>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="space-y-3 p-3">
+                      {(() => {
+                        const leaders = (selectedNode.top3 || []).filter((t) => !t.is_you);
+                        const cols: { key: string; head: string; card: PlaceCard | null; isYou: boolean; rank?: number }[] = [
+                          { key: 'you', head: 'Вы', card: ownProfile, isYou: true },
+                          ...leaders.map((t) => ({ key: t.place_id || `r${t.rank}`, head: `#${t.rank} в точке`, card: t as PlaceCard, isYou: false, rank: t.rank })),
+                        ];
+                        const dash = <span className="text-slate-300">—</span>;
+                        const host = (u?: string) => (u ? u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '') : '');
+                        const rows: { label: string; cell: (c: PlaceCard | null) => React.ReactNode }[] = [
+                          { label: 'Основная категория', cell: (c) => (c?.primary_category ? c.primary_category : dash) },
+                          { label: 'Доп. категории (типы API)', cell: (c) => (c?.secondary_categories && c.secondary_categories.length > 0 ? c.secondary_categories.join(', ') : dash) },
+                          { label: 'Рейтинг', cell: (c) => (c && c.rating > 0 ? c.rating.toFixed(1) : dash) },
+                          { label: 'Отзывов', cell: (c) => (c ? c.reviews_count : dash) },
+                          {
+                            label: 'Прирост отзывов / нед.',
+                            cell: (c) => {
+                              const v = c?.place_id ? velocity[c.place_id] : undefined;
+                              if (!v || v.per_week === null) return <span className="text-slate-300" title="Нужно минимум два скана с интервалом от суток">—</span>;
+                              return <span title={`По ${v.snapshots} снимкам за ${v.days} дн.`}>{v.per_week > 0 ? `+${v.per_week}` : v.per_week}</span>;
+                            },
+                          },
+                          { label: 'Фото (в ответе API, макс. 10)', cell: (c) => (c && (c.photos_count ?? 0) > 0 ? c.photos_count : dash) },
+                          { label: 'Сайт', cell: (c) => (c?.website_url ? host(c.website_url) : dash) },
+                          { label: 'Телефон', cell: (c) => (c?.phone ? c.phone : dash) },
+                          { label: 'Часы работы', cell: (c) => (c ? (c.has_hours ? 'указаны' : dash) : dash) },
+                          { label: 'Уровень цен', cell: (c) => (c?.price_level ? c.price_level.replace('PRICE_LEVEL_', '').toLowerCase() : dash) },
+                        ];
+                        return (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-[11px]">
+                              <thead>
+                                <tr className="bg-white border-b border-slate-100 text-slate-500 font-bold text-[10px]">
+                                  <th className="py-2 px-3 uppercase tracking-wide">Показатель</th>
+                                  {cols.map((c) => (
+                                    <th key={c.key} className={`py-2 px-3 ${c.isYou ? 'text-emerald-700' : ''}`}>
+                                      <div className="uppercase tracking-wide">{c.head}</div>
+                                      <div className="font-semibold text-slate-900 normal-case max-w-[160px] truncate">
+                                        {c.card?.name ? (
+                                          <a
+                                            href={c.card.google_maps_url || `https://www.google.com/maps/place/?q=place_id:${c.card.place_id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:underline text-google-blue"
+                                          >
+                                            {c.card.name}
+                                          </a>
+                                        ) : (
+                                          dash
+                                        )}
+                                      </div>
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {rows.map((r) => (
+                                  <tr key={r.label} className="bg-white">
+                                    <td className="py-2 px-3 text-slate-500 font-semibold">{r.label}</td>
+                                    {cols.map((c) => (
+                                      <td key={c.key} className={`py-2 px-3 text-slate-800 ${c.isYou ? 'bg-emerald-50/60 font-semibold' : ''}`}>
+                                        {r.cell(c.card)}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Deterministic gaps for this point */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5">
+                        <div className="text-[11px] font-extrabold text-slate-900">Разрывы с лидерами в этой точке</div>
+                        {!ownProfile ? (
+                          <p className="text-[11px] text-slate-500">Google не вернул данные вашей карточки, поэтому разрывы не рассчитываются.</p>
+                        ) : selectedNode.gaps && selectedNode.gaps.length > 0 ? (
+                          <ul className="space-y-1">
+                            {selectedNode.gaps.map((g) => (
+                              <li key={g.id} className="text-[11px] text-slate-700 flex items-start gap-1.5">
+                                <span className="mt-0.5 text-amber-600">▲</span>
+                                <span>{g.detail}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-[11px] text-slate-500">По доступным полям Google разрывов с лидерами в этой точке не найдено.</p>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        Данные: Google Places API. Описания карточек конкурентов API не отдаёт; фото учитываются не более 10; категории — типы Places API.
+                      </p>
                     </div>
                   ) : (
                     <div className="p-3 text-slate-400 italic text-[11px]">
@@ -1384,6 +1475,27 @@ export default function GeoGridPage() {
                         : 'Нажмите «Run Live Grid Scan» для получения данных.'}
                     </div>
                   )}
+                </div>
+              )}
+              {/* Overall gaps vs. the strongest competitors across the whole grid */}
+              {scanMetrics && (
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 space-y-2">
+                  <div className="text-xs font-extrabold text-slate-900">Разрывы с лидерами по всей сетке</div>
+                  {!ownProfile ? (
+                    <p className="text-[11px] text-slate-500">Google не вернул данные вашей карточки, поэтому разрывы не рассчитываются.</p>
+                  ) : overallGaps.length > 0 ? (
+                    <ul className="space-y-1">
+                      {overallGaps.map((g) => (
+                        <li key={g.id} className="text-[11px] text-slate-700 flex items-start gap-1.5">
+                          <span className="mt-0.5 text-amber-600">▲</span>
+                          <span>{g.detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">По доступным полям Google разрывов с лидерами не найдено.</p>
+                  )}
+                  <p className="text-[10px] text-slate-400">Сравнение с тремя конкурентами, чаще всего попадающими в Топ-3 по сетке.</p>
                 </div>
               )}
             </div>
