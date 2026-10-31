@@ -1479,43 +1479,56 @@ export default function GeoGridPage() {
                   )}
                 </div>
               )}
-              {/* Overall gaps vs. the strongest competitors across the whole grid */}
-              {scanMetrics && (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-                  <div className="text-xs font-extrabold text-slate-900">Разрывы с лидерами по всей сетке</div>
-                  {!ownProfile ? (
-                    <p className="text-[11px] text-slate-500">Google не вернул данные вашей карточки, поэтому разрывы не рассчитываются.</p>
-                  ) : overallGaps.length > 0 ? (
-                    <ul className="space-y-1">
-                      {overallGaps.map((g) => (
-                        <li key={g.id} className="text-[11px] text-slate-700 flex items-start gap-1.5">
-                          <span className="mt-0.5 text-amber-600">▲</span>
-                          <span>{g.detail}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-[11px] text-slate-500">По доступным полям Google разрывов с лидерами не найдено.</p>
-                  )}
-                  <p className="text-[10px] text-slate-400">Сравнение с тремя конкурентами, чаще всего попадающими в Топ-3 по сетке.</p>
-                </div>
-              )}
-
-              {/* Action plan: manual edits tracked in a journal, before/after on re-scan */}
-              {scanMetrics && scanMeta?.keyword && (
-                <GeoActionPlan
-                  profileId={String(activeProfile?.id || 'default')}
-                  businessName={activeProfile?.name || ''}
-                  placeId={ownProfile?.place_id || scanMeta?.own_place_id || undefined}
-                  keyword={scanMeta.keyword}
-                  gaps={[...overallGaps, ...(selectedNode?.gaps || [])]
-                    .filter((g, i, arr) => arr.findIndex((x) => x.id === g.id) === i)
-                    .map((g) => ({ id: g.id, kind: g.kind, title: g.title, detail: g.detail }))}
-                  baselineArp={scanMetrics.arp ?? null}
-                  baselineSolv={scanMetrics.solv ?? null}
-                />
-              )}
             </div>
+
+            {/* Overall gaps vs. the strongest competitors across the whole grid */}
+            {scanMetrics && (
+              <div className="material-card p-5 sm:p-6 bg-white border border-google-border rounded-2xl shadow-sm space-y-3">
+                <div className="flex items-center justify-between border-b border-google-border-light pb-2.5">
+                  <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <span>⚡ Разрывы с лидерами по всей сетке</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">Сравнение с 3 ключевыми конкурентами в Топ-3</span>
+                </div>
+                {!ownProfile ? (
+                  <p className="text-xs text-slate-500">Google не вернул данные вашей карточки, поэтому разрывы не рассчитываются.</p>
+                ) : overallGaps.length > 0 ? (
+                  <ul className="space-y-2">
+                    {overallGaps.map((g) => (
+                      <li key={g.id} className="text-xs text-slate-700 flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                        <span className="mt-0.5 text-amber-600 font-bold">▲</span>
+                        <div>
+                          <div className="font-bold text-slate-900">{g.title}</div>
+                          <div className="text-slate-600 text-[11px] mt-0.5">{g.detail}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 font-semibold">
+                    ✓ По доступным полям Google разрывов с лидерами не найдено. Вы на уровне или опережаете лидеров!
+                  </p>
+                )}
+                <p className="text-[10px] text-slate-400">
+                  Разрывы вычисляются детерминированно из официальных полей Google Places API (категории, сайт, телефон, часы, разница рейтингов и отзывов).
+                </p>
+              </div>
+            )}
+
+            {/* Action plan: manual edits tracked in a journal, before/after on re-scan */}
+            {scanMetrics && (selectedKeyword || scanMeta?.keyword) && (
+              <GeoActionPlan
+                profileId={String(activeProfile?.id || 'default')}
+                businessName={activeProfile?.name || ''}
+                placeId={ownProfile?.place_id || scanMeta?.own_place_id || undefined}
+                keyword={selectedKeyword || scanMeta?.keyword || ''}
+                gaps={[...overallGaps, ...(selectedNode?.gaps || [])]
+                  .filter((g, i, arr) => arr.findIndex((x) => x.id === g.id) === i)
+                  .map((g) => ({ id: g.id, kind: g.kind, title: g.title, detail: g.detail }))}
+                baselineArp={scanMetrics.arp ?? null}
+                baselineSolv={scanMetrics.solv ?? null}
+              />
+            )}
 
             {/* Competitor Differentiation Matrix Component */}
             <CompetitorMatrix
