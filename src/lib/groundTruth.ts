@@ -99,6 +99,43 @@ export function saveOwnerGroundTruth(
 export function getGroundTruthPresets(profile?: { name?: string; category?: string; address?: string } | null): GroundTruthPresets {
   const text = `${profile?.name || ''} ${profile?.category || ''} ${profile?.address || ''}`.toLowerCase();
 
+  // 1. Transportation / Visa Run / Airport Transfer / Tours / Bus
+  if (
+    text.includes('transport') || text.includes('транспорт') ||
+    text.includes('visaran') || text.includes('visa') || text.includes('виза') ||
+    text.includes('transfer') || text.includes('airport') || text.includes('aeroport') ||
+    text.includes('bus') || text.includes('shuttle') || text.includes('tour') ||
+    text.includes('travel') || text.includes('border') || text.includes('driver') ||
+    text.includes('car rental') || text.includes('van') || text.includes('taxi')
+  ) {
+    return {
+      nicheLabel: 'Transportation / Visa Run / Airport Transfer',
+      flagshipChips: [
+        'Daily express VIP Visa Run to Moc Bai & Cambodia border',
+        'Direct 24/7 Cam Ranh Airport ⇄ Nha Trang private transfers',
+        'VIP air-conditioned minivan private charter with Wi-Fi',
+        'Hassle-free Vietnam visa extension & renewal concierge'
+      ],
+      personaChips: [
+        'Expats, remote workers, and digital nomads needing visa runs',
+        'International tourists seeking reliable airport transport',
+        'Families and small groups needing spacious private charters',
+        'Long-term residents requiring fast-track visa renewals'
+      ],
+      rulesChips: [
+        'Doorstep hotel pickup & drop-off across Nha Trang',
+        'Luggage assistance & modern clean vehicles with AC & Wi-Fi',
+        'Instant booking confirmation via WhatsApp / Phone',
+        'Fixed transparent pricing with zero hidden border fees'
+      ],
+      placeholders: {
+        flagship: 'e.g. VIP Visa Run transfers to Moc Bai border, Cam Ranh airport transfers, private minivan charters',
+        persona: 'e.g. Expats, remote workers, and travelers looking for safe, punctual transport with AC and Wi-Fi',
+        rules: 'e.g. Hotel pickup in Nha Trang, clean minivans, 24/7 WhatsApp booking, luggage included'
+      }
+    };
+  }
+
   if (text.includes('clinic') || text.includes('dental') || text.includes('med') || text.includes('клиник') || text.includes('стомат') || text.includes('aesthetic')) {
     return {
       nicheLabel: 'Healthcare / Aesthetic Clinic',

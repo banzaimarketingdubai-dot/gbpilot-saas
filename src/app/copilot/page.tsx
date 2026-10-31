@@ -36,6 +36,12 @@ import {
 } from 'lucide-react';
 import { getSubscription, activateTrial } from '@/lib/subscription';
 import { loadOwnerGroundTruth, saveOwnerGroundTruth, getGroundTruthPresets, OwnerGroundTruth } from '@/lib/groundTruth';
+import { 
+  getNicheStudioConfig, 
+  MediaPhoto, 
+  PostPreset, 
+  CalendarDayPreset 
+} from '@/lib/nicheStudio';
 
 interface ChatMessage {
   id: string;
@@ -56,161 +62,77 @@ interface PlannedPost {
   scheduledDate: string;
 }
 
-interface CalendarDay {
-  dayName: string;
-  dateNum: string;
-  fullDate: string;
-  status: 'SCHEDULED' | 'RECOMMENDED' | 'EMPTY';
-  label?: string;
-}
-
-interface MediaPhoto {
-  id: string;
-  label: string;
-  url: string;
-  gps: string;
-  authorityScore: string;
-}
-
-interface PostPreset {
-  id: string;
-  label: string;
-  icon: string;
-  title: string;
-  content: string;
-  ctaType: 'BOOK' | 'ORDER' | 'CALL_NOW' | 'LEARN_MORE';
-  targetKeywords: string[];
-  photoTaggingAdvice: string;
-  preferredPhotoId: string;
-}
-
-const MEDIA_VAULT: MediaPhoto[] = [
-  {
-    id: 'photo-1',
-    label: 'Artisan Coffee & Breakfast',
-    url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80',
-    gps: '25.0805° N, 55.1403° E',
-    authorityScore: 'Dubai Marina Centroid Verified'
-  },
-  {
-    id: 'photo-2',
-    label: 'Cozy Interior Ambience',
-    url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80',
-    gps: '25.0805° N, 55.1403° E',
-    authorityScore: 'Ambience Centroid Indexed'
-  },
-  {
-    id: 'photo-3',
-    label: 'Storefront & Street View',
-    url: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=600&q=80',
-    gps: '25.0805° N, 55.1403° E',
-    authorityScore: 'Primary Map Geotagged'
-  },
-  {
-    id: 'photo-4',
-    label: 'Chef & Team in Action',
-    url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
-    gps: '25.0805° N, 55.1403° E',
-    authorityScore: 'Service Entity Verified'
-  }
-];
-
-const PRESETS: PostPreset[] = [
-  {
-    id: 'morning',
-    label: '☕ Morning Coffee Offer',
-    icon: '☕',
-    title: 'Morning Artisanal Brew & Breakfast Perk',
-    content: 'Start your morning in town with our freshly roasted single-origin brew paired with handcrafted breakfast specials. Show this Google post for 15% off before 11:00 AM.',
-    ctaType: 'ORDER',
-    targetKeywords: ['specialty coffee', 'morning breakfast', 'local roastery', 'fresh espresso'],
-    photoTaggingAdvice: 'Attach high-resolution counter/morning sunlight photo geotagged with your exact latitude and longitude.',
-    preferredPhotoId: 'photo-1'
-  },
-  {
-    id: 'weekend',
-    label: '🔥 Weekend Special Discount',
-    icon: '🔥',
-    title: 'Weekend Exclusive: Signature Chef Tasting',
-    content: 'Treat yourself this weekend to our handcrafted artisan dishes and single-origin coffee. Reserve your table or drop in for an exclusive weekend perk.',
-    ctaType: 'BOOK',
-    targetKeywords: ['weekend dining', 'best local cafe', 'weekend brunch', 'specialty dishes'],
-    photoTaggingAdvice: 'Include geotagged photo with high color saturation (dining table/dishes) to qualify for Google Maps Discovery carousel.',
-    preferredPhotoId: 'photo-2'
-  },
-  {
-    id: 'ramadan',
-    label: '🌙 Ramadan Special Hours & Iftar',
-    icon: '🌙',
-    title: 'Holy Month of Ramadan: Iftar & Late Night Suhoor',
-    content: 'Gather with family and friends at our venue throughout Ramadan. Serving specialty coffee, artisan dates, and special Iftar & Suhoor sets until 02:00 AM.',
-    ctaType: 'BOOK',
-    targetKeywords: ['ramadan iftar dubai', 'suhoor dubai marina', 'late night dining', 'specialty coffee'],
-    photoTaggingAdvice: 'Attach evening photo with warm ambient lighting geotagged to Dubai Marina centroid.',
-    preferredPhotoId: 'photo-2'
-  },
-  {
-    id: 'dubai-summer',
-    label: '☀️ Dubai Summer Perk (+45°C AC & Valet)',
-    icon: '☀️',
-    title: 'Beat the Heat: Free Valet & Chilled Specialty Brews',
-    content: 'Escape the midday summer heat! Enjoy ultra-cool indoor seating, high-speed Wi-Fi, cold brew on tap, and complimentary valet parking.',
-    ctaType: 'ORDER',
-    targetKeywords: ['indoor cafe dubai', 'valet parking', 'cold brew dubai', 'wifi cafe dubai'],
-    photoTaggingAdvice: 'Highlight spacious indoor AC seating and cold beverages.',
-    preferredPhotoId: 'photo-1'
-  },
-  {
-    id: 'seasonal',
-    label: '🎉 New Menu / Seasonal Update',
-    icon: '🎉',
-    title: 'New Seasonal Arrivals Just Landed',
-    content: 'Explore our brand-new seasonal creations crafted with premium organic local ingredients. Available for dine-in and takeout starting today.',
-    ctaType: 'LEARN_MORE',
-    targetKeywords: ['seasonal menu', 'organic food', 'new dishes', 'local food scene'],
-    photoTaggingAdvice: 'Capture interior photo showcasing seasonal menu board geotagged with centroid coordinates.',
-    preferredPhotoId: 'photo-4'
-  },
-  {
-    id: 'flash',
-    label: '⚡ Flash Local Deal',
-    icon: '⚡',
-    title: 'Today Only: Flash Local Perk for Google Maps Users',
-    content: 'Special flash deal for our local community! Mention this Google Maps post today to receive a complimentary house dessert or beverage upgrade with any main order.',
-    ctaType: 'CALL_NOW',
-    targetKeywords: ['flash deal', 'local offer', 'today special', 'google maps deal'],
-    photoTaggingAdvice: 'Upload entrance or storefront photo with clearly visible street number to boost primary map centroid authority.',
-    preferredPhotoId: 'photo-3'
-  }
-];
-
 export default function CopilotContentStudioPage() {
-  const [activeProfile, setActiveProfile] = useState<{id?: string, name: string, address: string, city?: string} | null>(null);
-  
+  const [activeProfile, setActiveProfile] = useState<{
+    id?: string;
+    name: string;
+    address: string;
+    city?: string;
+    category?: string;
+    latitude?: number;
+    longitude?: number;
+    cover_url?: string;
+    photo_url?: string;
+    snapshot_url?: string;
+    website_url?: string;
+  } | null>(null);
+
+  // Dynamic Niche Studio Configuration based on activeProfile
+  const nicheConfig = React.useMemo(() => {
+    return getNicheStudioConfig(activeProfile);
+  }, [activeProfile]);
+
   // Upper Studio: Google Posts Planner state
   const [postTopic, setPostTopic] = useState('');
   const [isGeneratingPost, setIsGeneratingPost] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<MediaPhoto>(MEDIA_VAULT[0]);
+  const [selectedPhoto, setSelectedPhoto] = useState<MediaPhoto | null>(null);
+  const [customPhotos, setCustomPhotos] = useState<MediaPhoto[]>([]);
+  const [isAddingPhotoModal, setIsAddingPhotoModal] = useState(false);
+  const [customPhotoInputUrl, setCustomPhotoInputUrl] = useState('');
+  const [customPhotoLabel, setCustomPhotoLabel] = useState('');
+
+  // Combined media vault: custom uploaded + niche preset photos
+  const activeMediaVault = React.useMemo(() => {
+    return [...customPhotos, ...nicheConfig.mediaVault];
+  }, [customPhotos, nicheConfig.mediaVault]);
+
+  // Synchronize selected photo with vault
+  useEffect(() => {
+    if (!selectedPhoto || !activeMediaVault.some(p => p.id === selectedPhoto.id)) {
+      setSelectedPhoto(activeMediaVault[0]);
+    }
+  }, [activeMediaVault, selectedPhoto]);
+
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(4); // Default to Friday
-  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([
-    { dayName: 'Mon', dateNum: '14', fullDate: 'Monday, Oct 14', status: 'EMPTY' },
-    { dayName: 'Tue', dateNum: '15', fullDate: 'Tuesday, Oct 15', status: 'EMPTY' },
-    { dayName: 'Wed', dateNum: '16', fullDate: 'Wednesday, Oct 16', status: 'RECOMMENDED', label: '⚡ Peak Traffic Slot' },
-    { dayName: 'Thu', dateNum: '17', fullDate: 'Thursday, Oct 17', status: 'EMPTY' },
-    { dayName: 'Fri', dateNum: '18', fullDate: 'Friday, Oct 18', status: 'SCHEDULED', label: '10:00 AM • Weekend Promo' },
-    { dayName: 'Sat', dateNum: '19', fullDate: 'Saturday, Oct 19', status: 'EMPTY' },
-    { dayName: 'Sun', dateNum: '20', fullDate: 'Sunday, Oct 20', status: 'RECOMMENDED', label: '⚡ Sunday Brunch' },
-  ]);
+  const [calendarDays, setCalendarDays] = useState<CalendarDayPreset[]>(nicheConfig.calendarDays);
+
+  useEffect(() => {
+    setCalendarDays(nicheConfig.calendarDays);
+  }, [nicheConfig.calendarDays]);
 
   const [currentPost, setCurrentPost] = useState<PlannedPost>({
     title: '',
     content: '',
-    ctaType: 'LEARN_MORE',
-    ctaUrl: '',
+    ctaType: 'BOOK',
+    ctaUrl: 'https://gbpilot.top',
     targetKeywords: [],
     photoTaggingAdvice: 'Add 1 high-resolution photo geotagged with your exact coordinates before upload to trigger Local Pack rank signals.',
     scheduledDate: 'Friday at 10:00 AM'
   });
+
+  // Pre-seed initial post from niche config if empty or generic
+  useEffect(() => {
+    if (nicheConfig && (!currentPost.title || currentPost.title.includes('Signature Taste') || currentPost.title.includes('Weekend Chef'))) {
+      setCurrentPost(prev => ({
+        ...prev,
+        title: nicheConfig.defaultPost.title,
+        content: nicheConfig.defaultPost.content,
+        ctaType: nicheConfig.defaultPost.ctaType,
+        targetKeywords: nicheConfig.defaultPost.targetKeywords
+      }));
+    }
+  }, [nicheConfig]);
+
   const [postPublishedToast, setPostPublishedToast] = useState<string | null>(null);
 
   const handleSelectDay = (idx: number) => {
@@ -230,10 +152,53 @@ export default function CopilotContentStudioPage() {
       targetKeywords: preset.targetKeywords,
       photoTaggingAdvice: preset.photoTaggingAdvice
     }));
-    const matchPhoto = MEDIA_VAULT.find(p => p.id === preset.preferredPhotoId);
+    const matchPhoto = activeMediaVault.find(p => p.id === preset.preferredPhotoId) || activeMediaVault[0];
     if (matchPhoto) setSelectedPhoto(matchPhoto);
     setPostPublishedToast(`Applied "${preset.label}" template with targeted local keywords.`);
     setTimeout(() => setPostPublishedToast(null), 3500);
+  };
+
+  const handleAddCustomPhoto = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customPhotoInputUrl.trim()) return;
+    const newPhoto: MediaPhoto = {
+      id: `custom-photo-${Date.now()}`,
+      label: customPhotoLabel.trim() || `${activeProfile?.name || 'Venue'} Custom Photo`,
+      url: customPhotoInputUrl.trim(),
+      gps: selectedPhoto?.gps || `${activeProfile?.latitude ? activeProfile.latitude.toFixed(4) : '12.2718'}° N, ${activeProfile?.longitude ? activeProfile.longitude.toFixed(4) : '109.2016'}° E`,
+      authorityScore: 'Owner Verified Upload'
+    };
+    setCustomPhotos(prev => [newPhoto, ...prev]);
+    setSelectedPhoto(newPhoto);
+    setCustomPhotoInputUrl('');
+    setCustomPhotoLabel('');
+    setIsAddingPhotoModal(false);
+    setPostPublishedToast('Custom photo added to your Media Library and tagged with GPS centroid!');
+    setTimeout(() => setPostPublishedToast(null), 3500);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        const newPhoto: MediaPhoto = {
+          id: `custom-upload-${Date.now()}`,
+          label: file.name.replace(/\.[^/.]+$/, "") || 'Uploaded Photo',
+          url: dataUrl,
+          gps: selectedPhoto?.gps || `${activeProfile?.latitude ? activeProfile.latitude.toFixed(4) : '12.2718'}° N, ${activeProfile?.longitude ? activeProfile.longitude.toFixed(4) : '109.2016'}° E`,
+          authorityScore: 'Direct User Upload'
+        };
+        setCustomPhotos(prev => [newPhoto, ...prev]);
+        setSelectedPhoto(newPhoto);
+        setIsAddingPhotoModal(false);
+        setPostPublishedToast('Uploaded local photo and stamped with EXIF centroid coordinates!');
+        setTimeout(() => setPostPublishedToast(null), 3500);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Website AI Sync state
@@ -274,12 +239,19 @@ export default function CopilotContentStudioPage() {
           setExtractedData({
             business_name: ed.business_name || activeProfile?.name || 'Local Business',
             primary_category: ed.primary_category || 'Local Business & Services',
-            services: ed.suggested_secondary_categories || [
-              'Signature Menu Items',
-              'Specialty Tasting Experience',
-              'Takeout & Delivery Perks',
-              'Corporate Catering'
-            ],
+            services: (ed.suggested_secondary_categories && ed.suggested_secondary_categories.length > 0)
+              ? ed.suggested_secondary_categories
+              : (
+                nicheConfig.nicheType === 'TRANSPORTATION'
+                  ? ['Express Visa Run Transfers', 'Airport Door-to-Door Pickup', 'Private Minivan Charter', 'Fast-Track Border Support']
+                  : nicheConfig.nicheType === 'CLINIC'
+                  ? ['Initial Consultation & Exam', 'Preventative Care', 'Emergency Same-Day Relief', 'Specialist Diagnostic Review']
+                  : nicheConfig.nicheType === 'BEAUTY'
+                  ? ['Master Styling & Cut', 'Color Correction', 'Nail Care & Spa', 'Restorative Treatments']
+                  : nicheConfig.nicheType === 'RESTAURANT_CAFE'
+                  ? ['Signature Dishes', 'Specialty Tasting', 'Takeout & Dine-In', 'Event Catering']
+                  : ['Professional Consultation', 'Turnkey Client Advisory', 'Custom Service Packages', 'Guaranteed Quality Support']
+              ),
             target_keywords: ed.target_keywords || ['local services', 'top rated', 'fast service'],
             amenities: ed.amenities || ['Free Wi-Fi', 'Outdoor Seating', 'Card Payment Accepted'],
             hours: ed.suggested_hours 
@@ -412,12 +384,13 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
       setGtPersona(loadedGt.guestPersona);
       setGtRules(loadedGt.venueRulesAndPerks);
 
+      const cityLabel = parsedProfile?.city ? ` in ${parsedProfile.city}` : '';
       setMessages([
         {
           id: 'msg-welcome',
           sender: 'assistant',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: `Hello! I am your 24/7 AI Local SEO Director for **${profileName}** in Dubai. I monitor your local rankings, track competitor moves, and draft high-converting Google Posts. What would you like to achieve today?`,
+          text: `Hello! I am your 24/7 AI Local SEO Director for **${profileName}**${cityLabel}. I monitor your local rankings, track competitor moves, and draft high-converting Google Posts. What would you like to achieve today?`,
         }
       ]);
 
@@ -442,58 +415,49 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
 
   const quickPromptChips = [
     { label: '🔍 Analyze competitor #1', query: 'Analyze the #1 ranked competitor in our neighborhood and detail our overtake counter-moves.' },
-    { label: '📝 Write weekend promo post', query: 'Draft a high-engagement Google Business post for our weekend promotional offer with local SEO keywords.' },
+    { label: '📝 Write weekly offer post', query: 'Draft a high-engagement Google Business post for our current core offer with local SEO keywords.' },
     { label: '🛡️ Run security audit', query: 'Perform an immediate security audit on our business hours, phone, and profile attributes to check for competitor tampering.' },
-    { label: '🤖 Check ChatGPT ranking', query: 'What is our brand recommendation rate when users search for our category in ChatGPT, Perplexity, and Gemini?' },
+    { label: '🤖 Check AI search ranking', query: 'What is our brand recommendation rate when users search for our category in ChatGPT, Perplexity, and Gemini?' },
   ];
 
   const handleAutoGenerateWeeklyPost = () => {
     setIsGeneratingPost(true);
     setTimeout(() => {
       const bName = activeProfile?.name || 'Our Venue';
-      const isVisa = bName.toLowerCase().includes('visa') || bName.toLowerCase().includes('виза');
+      const city = activeProfile?.city || 'Local Area';
 
       if (groundTruth?.isCompleted && groundTruth.flagshipOffering) {
         const rulesSnippet = groundTruth.venueRulesAndPerks ? ` ${groundTruth.venueRulesAndPerks}.` : '';
         const personaSnippet = groundTruth.guestPersona ? ` Tailored for ${groundTruth.guestPersona.toLowerCase()}.` : '';
         setCurrentPost({
           title: `Featured at ${bName}: ${groundTruth.flagshipOffering.slice(0, 48)}`,
-          content: `Visit ${bName} for ${groundTruth.flagshipOffering}.${personaSnippet}${rulesSnippet} Reserve or drop in today!`,
-          ctaType: isVisa ? 'BOOK' : 'ORDER',
+          content: `Visit ${bName} for ${groundTruth.flagshipOffering}.${personaSnippet}${rulesSnippet} Reserve or contact us today!`,
+          ctaType: nicheConfig.defaultPost.ctaType,
           ctaUrl: 'https://gbpilot.top',
           targetKeywords: [
             groundTruth.flagshipOffering.split(',')[0].slice(0, 28).toLowerCase(),
             'top rated local',
-            activeProfile?.city?.toLowerCase() || 'dubai'
+            city.toLowerCase()
           ],
           photoTaggingAdvice: 'Attach high-resolution photo geotagged with your exact Google coordinates to boost primary map centroid visibility.',
           scheduledDate: 'This Friday at 10:00 AM'
         });
-      } else if (isVisa) {
-        setCurrentPost({
-          title: 'Express Visa Extension & Border Run Services',
-          content: `Need a seamless visa renewal or fast-track border run? ${bName} provides fully verified documentation and VIP transport. Book your consultation today.`,
-          ctaType: 'BOOK',
-          ctaUrl: 'https://gbpilot.top',
-          targetKeywords: ['visa extension', 'fast track visa', 'border run', 'expat services'],
-          photoTaggingAdvice: 'Attach office photo geotagged with your exact Google coordinates to boost primary map centroid visibility.',
-          scheduledDate: 'Tomorrow at 09:30 AM'
-        });
       } else {
+        const primePreset = nicheConfig.presets[0] || nicheConfig.defaultPost;
         setCurrentPost({
-          title: 'Signature Taste of the Week',
-          content: `Experience exceptional flavor and cozy atmosphere at ${bName}. Enjoy our freshly roasted specialty beans and handcrafted desserts all week long.`,
-          ctaType: 'ORDER',
+          title: primePreset.title,
+          content: primePreset.content,
+          ctaType: primePreset.ctaType,
           ctaUrl: 'https://gbpilot.top',
-          targetKeywords: ['specialty coffee', 'best local cafe', 'fresh pastry'],
-          photoTaggingAdvice: 'Include geotagged photo with high color contrast (food/interior) to qualify for Google Maps Discovery carousel.',
+          targetKeywords: primePreset.targetKeywords,
+          photoTaggingAdvice: 'photoTaggingAdvice' in primePreset ? (primePreset as any).photoTaggingAdvice : 'Attach high-resolution photo geotagged with your exact Google coordinates.',
           scheduledDate: 'This Friday at 10:00 AM'
         });
       }
       setIsGeneratingPost(false);
-      setPostPublishedToast('Generated localized weekly offer post with targeted keywords.');
+      setPostPublishedToast(`Generated localized weekly offer post tailored for ${nicheConfig.nicheLabel}.`);
       setTimeout(() => setPostPublishedToast(null), 4000);
-    }, 700);
+    }, 600);
   };
 
   const handlePublishPost = async (isImmediate = false) => {
@@ -841,8 +805,8 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
               <span>1-Click High-Converting Offer Presets:</span>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-              {PRESETS.map((preset) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {nicheConfig.presets.map((preset) => (
                 <button
                   key={preset.id}
                   type="button"
@@ -880,7 +844,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                   value={currentPost.title}
                   onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })}
                   className="material-input w-full p-2.5 rounded-xl border border-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue"
-                  placeholder="e.g. Weekend Chef Tasting: Artisan Pour-Over & Pastry"
+                  placeholder={nicheConfig.placeholders.headline}
                 />
               </div>
 
@@ -895,29 +859,85 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                   value={currentPost.content}
                   onChange={(e) => setCurrentPost({ ...currentPost, content: e.target.value })}
                   className="material-input w-full p-2.5 rounded-xl border border-slate-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue"
-                  placeholder="Detail your local offer, dish, service, or event..."
+                  placeholder={nicheConfig.placeholders.description}
                 />
               </div>
 
               {/* Smart Media Library with EXIF Geotagging */}
               <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
                     <ImageIcon className="w-4 h-4 text-google-blue" />
                     <span>Smart Media Library (EXIF Geotagged for 3-Pack Authority)</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    📍 12.2718° N, 109.2016° E Tagged
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingPhotoModal(!isAddingPhotoModal)}
+                      className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-google-blue border border-blue-200 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Upload / Custom Photo</span>
+                    </button>
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      📍 {selectedPhoto?.gps || 'EXIF Geotagged'}
+                    </span>
+                  </div>
                 </div>
+
+                {isAddingPhotoModal && (
+                  <div className="p-3 bg-white rounded-xl border border-blue-200 space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800 text-xs">Add Custom Photo to Library:</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingPhotoModal(false)}
+                        className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-semibold text-slate-500 block">Upload from Device:</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-google-blue hover:file:bg-blue-100 cursor-pointer"
+                        />
+                      </div>
+                      <form onSubmit={handleAddCustomPhoto} className="flex gap-1.5 items-end">
+                        <div className="flex-1 space-y-0.5">
+                          <label className="text-[10px] font-semibold text-slate-500 block">Or Paste Photo URL:</label>
+                          <input
+                            type="url"
+                            value={customPhotoInputUrl}
+                            onChange={(e) => setCustomPhotoInputUrl(e.target.value)}
+                            placeholder="https://... photo link"
+                            className="w-full p-1.5 rounded-lg border border-slate-200 text-xs font-mono"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={!customPhotoInputUrl.trim()}
+                          className="px-2.5 py-1.5 bg-google-blue hover:bg-blue-600 disabled:opacity-40 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0"
+                        >
+                          Add URL
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Select a photo below. Each image is stamped with validated venue GPS centroid coordinates before upload.
+                  Select a photo below or upload your own. Each image is stamped with validated venue GPS centroid coordinates before upload.
                 </p>
 
-                {/* 4 Selectable Photos */}
+                {/* Selectable Photos */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                  {MEDIA_VAULT.map((photo) => {
-                    const isPhotoActive = selectedPhoto.id === photo.id;
+                  {activeMediaVault.map((photo) => {
+                    const isPhotoActive = selectedPhoto?.id === photo.id;
                     return (
                       <button
                         key={photo.id}
@@ -1065,15 +1085,15 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
                 {/* Selected Post Image with Floating EXIF GPS Badge */}
                 <div className="relative aspect-4/3 w-full bg-slate-100 overflow-hidden">
                   <img
-                    src={selectedPhoto.url}
-                    alt={selectedPhoto.label}
+                    src={selectedPhoto?.url || activeMediaVault[0]?.url}
+                    alt={selectedPhoto?.label || 'Post preview'}
                     className="w-full h-full object-cover transition-all duration-300"
                   />
                   {/* Floating EXIF Geotag Badge Overlay */}
                   <div className="absolute bottom-2 left-2 right-2 bg-slate-950/85 backdrop-blur-xs text-white px-2.5 py-1.5 rounded-xl text-[9px] font-medium flex items-center justify-between border border-white/10 shadow-lg">
                     <div className="flex items-center gap-1 truncate">
                       <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span className="truncate">EXIF: {selectedPhoto.gps}</span>
+                      <span className="truncate">EXIF: {selectedPhoto?.gps || activeMediaVault[0]?.gps || 'Geo-Stamped'}</span>
                     </div>
                     <span className="text-emerald-400 font-bold shrink-0 text-[8px] bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-400/30">
                       ✓ Tagged
