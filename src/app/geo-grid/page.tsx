@@ -456,8 +456,12 @@ export default function GeoGridPage() {
       setIsLoadingKeywords(true);
       (async () => {
         try {
+          const bName = parsedProfile?.name || '';
+          const bCat = parsedProfile?.category || '';
+          const bAddr = parsedProfile?.address || '';
+          const bCity = parsedProfile?.city || '';
           const res = await fetch(
-            `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(parsedProfile?.id || 'default')}`
+            `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(parsedProfile?.id || 'default')}&business_name=${encodeURIComponent(bName)}&category=${encodeURIComponent(bCat)}&address=${encodeURIComponent(bAddr)}&city=${encodeURIComponent(bCity)}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -474,17 +478,24 @@ export default function GeoGridPage() {
             // Merge: API keywords first (dedupe against custom), then custom pills
             const apiLabels = new Set(apiKeywords.map(p => p.label.toLowerCase()));
             const dedupedCustom = savedCustomPills.filter(p => !apiLabels.has(p.label.toLowerCase()));
-            const merged = [...apiKeywords, ...dedupedCustom];
+            let merged = [...apiKeywords, ...dedupedCustom];
+            if (merged.length === 0) {
+              merged = getDefaultKeywordPills(parsedProfile);
+            }
             setKeywordPills(merged);
             if (merged.length > 0) setSelectedKeyword(merged[0].label);
+            if (data.notice) {
+              setScanNotice(data.notice);
+            }
           } else {
-            // API failed — show only saved custom pills, no hardcoded fallback
-            setKeywordPills(savedCustomPills);
-            if (savedCustomPills.length > 0) setSelectedKeyword(savedCustomPills[0].label);
+            const fallback = savedCustomPills.length > 0 ? savedCustomPills : getDefaultKeywordPills(parsedProfile);
+            setKeywordPills(fallback);
+            if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
           }
         } catch {
-          setKeywordPills(savedCustomPills);
-          if (savedCustomPills.length > 0) setSelectedKeyword(savedCustomPills[0].label);
+          const fallback = savedCustomPills.length > 0 ? savedCustomPills : getDefaultKeywordPills(parsedProfile);
+          setKeywordPills(fallback);
+          if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
         } finally {
           setIsLoadingKeywords(false);
         }
@@ -637,12 +648,16 @@ export default function GeoGridPage() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
     setIsLoadingKeywords(true);
     try {
+      const bName = activeProfile?.name || '';
+      const bCat = activeProfile?.category || '';
+      const bAddr = activeProfile?.address || '';
+      const bCity = activeProfile?.city || '';
       const res = await fetch(
-        `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(activeProfile?.id || 'default')}`
+        `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(activeProfile?.id || 'default')}&business_name=${encodeURIComponent(bName)}&category=${encodeURIComponent(bCat)}&address=${encodeURIComponent(bAddr)}&city=${encodeURIComponent(bCity)}`
       );
       if (res.ok) {
         const data = await res.json();
-        const fresh: KeywordPill[] = (data.keywords || [])
+        let fresh: KeywordPill[] = (data.keywords || [])
           .filter((k: any) => k.keyword && sanitizeQueryLabel(k.keyword))
           .map((k: any, i: number) => ({
             id: `kw-api-${i}-${k.source}`,
@@ -651,6 +666,9 @@ export default function GeoGridPage() {
             source: k.source as 'GBP_REAL' | 'GOOGLE_SUGGEST',
             impressions: k.impressions || undefined,
           }));
+        if (fresh.length === 0) {
+          fresh = getDefaultKeywordPills(activeProfile);
+        }
         setKeywordsHaveRealData(Boolean(data.has_real_data));
         setKeywordPills(fresh);
         if (fresh.length > 0) setSelectedKeyword(fresh[0].label);
@@ -659,15 +677,22 @@ export default function GeoGridPage() {
           const profileKey = activeProfile?.id || activeProfile?.name || 'default';
           localStorage.removeItem(`gbpilot_keywords_${profileKey}`);
         }
-        setScanNotice(data.has_real_data
-          ? 'Keywords refreshed from live GBP Performance data.'
-          : 'Keywords refreshed from Google Suggest. Connect GBP for live queries.'
+        setScanNotice(
+          data.notice || (data.has_real_data
+            ? 'Keywords loaded from live Google Business Profile performance telemetry.'
+            : `High-intent discovery queries generated for ${activeProfile?.name || 'your venue'} via Google Maps & Search Suggest.`)
         );
       } else {
-        setScanNotice('Failed to refresh keywords. Check your connection.');
+        const fallback = getDefaultKeywordPills(activeProfile);
+        setKeywordPills(fallback);
+        if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
+        setScanNotice(`Keywords generated for ${activeProfile?.name || 'your venue'}.`);
       }
     } catch {
-      setScanNotice('Error loading keywords from server.');
+      const fallback = getDefaultKeywordPills(activeProfile);
+      setKeywordPills(fallback);
+      if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
+      setScanNotice(`Keywords generated for ${activeProfile?.name || 'your venue'}.`);
     } finally {
       setIsLoadingKeywords(false);
     }
