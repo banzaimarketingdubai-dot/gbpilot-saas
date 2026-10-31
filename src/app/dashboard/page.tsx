@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
+// import { OnboardingInspectionModal } from '@/components/OnboardingInspectionModal';
 import { LocationQuotaModal } from '@/components/LocationQuotaModal';
 import { GbpDataMatrix } from '@/components/GbpDataMatrix';
 import { SocialSyncHub } from '@/components/SocialSyncHub';
@@ -127,7 +127,6 @@ export default function DashboardCockpitPage() {
   const [availableProfiles, setAvailableProfiles] = useState<ActiveBusinessProfile[]>([]);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isInspectionModalOpen, setIsInspectionModalOpen] = useState(false);
   const [profileToUnlinkConfirm, setProfileToUnlinkConfirm] = useState<ActiveBusinessProfile | null>(null);
   const [currentUser, setCurrentUser] = useState<{ email?: string; name?: string } | null>(null);
   const isSuperAdminUser = currentUser ? isSuperAdmin(currentUser.email) : false;
@@ -383,11 +382,8 @@ export default function DashboardCockpitPage() {
         setCopilotMode('MANUAL_APPROVAL');
       }
 
-      // Launch inspection modal ONLY if explicitly triggered by newly added location onboarding
-      const newLocationOnboardingTriggered = localStorage.getItem('gbpilot_trigger_inspection_for_new_location');
-      if (newLocationOnboardingTriggered === 'true') {
-        setIsInspectionModalOpen(true);
-        // Immediately clear the one-time trigger so refreshing the page will NEVER reopen it
+      // Clear legacy inspection triggers so no fake audit modals ever pop up
+      if (typeof window !== 'undefined') {
         localStorage.removeItem('gbpilot_trigger_inspection_for_new_location');
       }
 
@@ -961,15 +957,14 @@ export default function DashboardCockpitPage() {
                     </div>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsInspectionModalOpen(true)}
+                  <a
+                    href="#gbp-data-matrix"
                     className="px-3 py-1.5 rounded-xl bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200 text-google-blue text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-                    title="Trigger NAP data & attributes audit"
+                    title="View real Google Business Profile data passport"
                   >
                     <Sparkles className="w-3 h-3 text-google-blue" />
-                    <span className="text-[11px]">Audit NAP</span>
-                  </button>
+                    <span className="text-[11px]">Data Matrix</span>
+                  </a>
 
                   <Link
                     href="/attributes"
@@ -1945,20 +1940,7 @@ export default function DashboardCockpitPage() {
         </div>
       )}
 
-      <OnboardingInspectionModal
-        isOpen={isInspectionModalOpen}
-        onClose={() => setIsInspectionModalOpen(false)}
-        businessName={activeProfile?.name || '—'}
-        businessAddress={activeProfile?.address || '—'}
-        category={activeProfile?.category}
-        city={activeProfile?.city}
-        currentDescription={activeProfile?.description}
-        currentPhone={activeProfile?.phone}
-        onComplete={() => {
-          setIsInspectionModalOpen(false);
-          showToast('Profile optimization applied successfully! Google Maps listing updated.');
-        }}
-      />
+
 
       <Footer />
     </div>
