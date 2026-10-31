@@ -38,7 +38,8 @@ import {
   MapPin,
   Star,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  ChevronRight
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -51,6 +52,20 @@ import {
   getRecommendedAttributeIds 
 } from '@/lib/gbp/attributesData';
 import { getSubscription, SubscriptionState } from '@/lib/subscription';
+
+
+const GROUP_NAMES_RU: Record<string, string> = {
+  'accessibility': '♿ Доступность',
+  'amenities': '☕ Удобства & Wi-Fi',
+  'parking': '🚗 Парковка',
+  'services': '📦 Сервис и залы',
+  'payments': '💳 Способы оплаты',
+  'crowd_vibe': '👥 Атмосфера',
+  'planning': '📅 Бронирование',
+  'ownership': '🏢 Владение',
+  'legal_professional': '⚖️ Услуги',
+  'food_dining': '🍽️ Меню & Кухня'
+};
 
 interface ActiveVenueProfile {
   id?: string;
@@ -88,8 +103,8 @@ export default function AttributesManagerPage() {
   const [subscription, setSubscription] = useState<SubscriptionState>(() => getSubscription());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Tab View: 'MIRROR' | 'ATTRIBUTES' | 'DIFF'
-  const [activeTab, setActiveTab] = useState<'MIRROR' | 'ATTRIBUTES' | 'DIFF'>('MIRROR');
+  // Tab View: 'ATTRIBUTES' | 'DIFF'
+  const [activeTab, setActiveTab] = useState<'ATTRIBUTES' | 'DIFF'>('ATTRIBUTES');
 
   // Search & Filter state for 150+ attributes
   const [searchQuery, setSearchQuery] = useState('');
@@ -467,368 +482,88 @@ export default function AttributesManagerPage() {
           </div>
         </div>
 
-        {/* Master Venue Identity Header */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-50/70 via-indigo-50/30 to-transparent pointer-events-none rounded-bl-full" />
-          
+        {/* JTBD Header: Step 2 — 150 Points */}
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm relative overflow-hidden space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-100/80 text-google-blue border border-blue-200/80">
-                  Google Maps Public Baseline Mirror
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200">
+                  ✨ Шаг 2: Наведение порядка
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
-                  <span>Google Verified Location</span>
+                  <span>Google Verified: {activeProfile?.name || 'Заведение'}</span>
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {activeProfile?.name || 'Business Venue Profile'}
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Оптимизатор 150 пунктов Google Карт (Человек + ИИ)
               </h1>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+              <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                Чем больше пунктов заполнено (парковка, Wi-Fi, способы оплаты, детские стульчики, веранда, кондиционер), тем чаще заведение показывают в фильтрах карт. ИИ изучил лидеров вашего района и подготовил рекомендации.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-1">
                 <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/70">
-                  {activeProfile?.category || 'Local Business'}
+                  {activeProfile?.category || 'Кафе / Ресторан'}
                 </span>
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{activeProfile?.address}</span>
+                  <span>{activeProfile?.address || '—'}</span>
                 </span>
                 {activeProfile?.rating ? (
                   <span className="flex items-center gap-1 font-bold text-slate-800">
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    <span>{activeProfile.rating.toFixed(1)} ★ ({activeProfile.reviews_count || 0} reviews)</span>
+                    <span>{activeProfile.rating.toFixed(1)} ★ ({activeProfile.reviews_count || 0} отзывов)</span>
                   </span>
                 ) : null}
               </div>
             </div>
 
-            {/* Quick Completion Gauge */}
+            {/* Completion Gauge */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-w-[260px] space-y-3 shrink-0">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-700">150+ Attributes Fill Rate:</span>
-                <span className="font-black text-google-blue">{completionPercentage}%</span>
+                <span className="font-bold text-slate-700">Заполнено параметров:</span>
+                <span className="font-black text-purple-700">{completionPercentage}% ({activeCount}/150)</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-google-blue to-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-google-blue to-purple-600 h-2.5 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, Math.max(5, completionPercentage))}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
-                <span><strong>{activeCount}</strong> enabled</span>
-                <span><strong>{allAttributes.length}</strong> total available</span>
+                <span>🟢 Активно: <strong>{activeCount}</strong></span>
+                <span>✨ ИИ советует: <strong>+{recommendedCount}</strong></span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Top 3-Way Mode Switcher Tabs */}
-        <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-slate-200 shadow-xs max-w-2xl">
-          <button
-            type="button"
-            onClick={() => setActiveTab('MIRROR')}
-            className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'MIRROR'
-                ? 'bg-google-blue text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Eye className="w-4 h-4" />
-            <span>1. Live Google Profile Mirror</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('ATTRIBUTES')}
-            className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'ATTRIBUTES'
-                ? 'bg-google-blue text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>2. 150+ Attributes Catalog</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('DIFF')}
-            className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'DIFF'
-                ? 'bg-google-blue text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Scale className="w-4 h-4" />
-            <span>3. Google Live vs AI Diff</span>
-          </button>
-        </div>
-
-        {/* ======================================================== */}
-        {/* VIEW 1: LIVE GOOGLE PROFILE MIRROR (TRANSPARENT REALITY) */}
-        {/* ======================================================== */}
-        {activeTab === 'MIRROR' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            
-            {/* Confidence Banner */}
-            <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-start gap-3">
-              <div className="p-2 bg-blue-100 text-google-blue rounded-xl shrink-0 mt-0.5">
-                <Eye className="w-5 h-5" />
-              </div>
-              <div className="space-y-1 text-xs">
-                <div className="font-bold text-slate-900 flex items-center gap-2">
-                  <span>100% Authentic Google Maps Live Mirror</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-blue-200 text-google-blue">
-                    Zero AI Hallucinations
-                  </span>
-                </div>
-                <p className="text-slate-600 leading-relaxed">
-                  This screen inspects the exact live parameters currently stored in Google Business Profile and shown to customers on Google Maps. 
-                  Use this baseline to verify where real optimization gaps exist before deploying any AI updates.
-                </p>
-              </div>
-            </div>
-
-            {/* 4-Column Grid of Live Reality */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {/* Panel 1: About, Title & Description Reality */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-google-blue" />
-                    <h3 className="font-bold text-sm text-slate-900">About & Description (Current Live)</h3>
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Google About Tab</span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <span className="text-[11px] text-slate-400 font-semibold block">Official Title in Google:</span>
-                    <span className="font-bold text-slate-900 text-sm">{activeProfile?.name}</span>
-                  </div>
-
-                  <div>
-                    <span className="text-[11px] text-slate-400 font-semibold block">Primary Google Category:</span>
-                    <span className="inline-block px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-bold border border-slate-200">
-                      {activeProfile?.category || 'Local Business'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-slate-400 font-semibold">Published Profile Description:</span>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {activeProfile?.description?.length || 0} / 750 chars
-                      </span>
-                    </div>
-
-                    {activeProfile?.description ? (
-                      <div className="mt-1 p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-800 leading-relaxed font-sans">
-                        {activeProfile.description}
-                      </div>
-                    ) : (
-                      <div className="mt-1 p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl text-rose-900 space-y-1.5">
-                        <div className="font-bold flex items-center gap-1.5 text-rose-700">
-                          <AlertTriangle className="w-4 h-4 shrink-0" />
-                          <span>Empty on Google Maps (0 of 750 characters)</span>
-                        </div>
-                        <p className="text-[11px] text-rose-700 leading-relaxed">
-                          Your business has no description published in Google Business Profile. Search algorithms cannot index your core services or neighborhood keywords.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="text-[11px] text-slate-400 font-semibold block">Storefront Physical Address:</span>
-                    <span className="text-slate-700">{activeProfile?.address}</span>
-                  </div>
-
-                  {activeProfile?.latitude && activeProfile?.longitude && (
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                      <span>Coordinates: {activeProfile.latitude.toFixed(4)}, {activeProfile.longitude.toFixed(4)}</span>
-                      {activeProfile?.google_maps_url && (
-                        <a 
-                          href={activeProfile.google_maps_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-google-blue font-bold hover:underline flex items-center gap-1"
-                        >
-                          <span>Open on Maps</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Panel 2: Live Operating Hours & Holiday Readiness */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-emerald-600" />
-                    <h3 className="font-bold text-sm text-slate-900">Operating Hours & Schedule</h3>
-                  </div>
-                  {activeProfile?.open_now !== null && (
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                      activeProfile?.open_now
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-rose-50 text-rose-700 border-rose-200'
-                    }`}>
-                      {activeProfile?.open_now ? '● Open Now' : '● Closed Now'}
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <span className="text-[11px] text-slate-400 font-semibold block">7-Day Weekly Schedule (Google Maps):</span>
-                  
-                  {activeProfile?.opening_hours && activeProfile.opening_hours.length > 0 ? (
-                    <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
-                      {activeProfile.opening_hours.map((scheduleLine, idx) => {
-                        const [day, ...rest] = scheduleLine.split(':');
-                        const hours = rest.join(':').trim();
-                        return (
-                          <div key={idx} className="flex items-center justify-between px-3 py-1.5 text-[11px]">
-                            <span className="font-bold text-slate-700">{day}</span>
-                            <span className={hours.toLowerCase().includes('closed') ? 'text-rose-600 font-semibold' : 'text-slate-600 font-mono'}>
-                              {hours}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800">
-                      No regular hours published on Google Maps.
-                    </div>
-                  )}
-
-                  {/* Holiday Hours Status */}
-                  <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 space-y-1">
-                    <div className="font-bold flex items-center gap-1.5 text-amber-800 text-xs">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      <span>Holiday Hours Status: Attention Required</span>
-                    </div>
-                    <p className="text-[11px] text-amber-700 leading-relaxed">
-                      Upcoming regional public holidays do not have confirmed special hours in Google. Google displays a warning: *"Hours might differ on holidays"*, which discourages customer visits.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel 3: Contact Channels & Verification */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-purple-600" />
-                    <h3 className="font-bold text-sm text-slate-900">Contact & Online Channels</h3>
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Google Contact Tab</span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <span className="text-[11px] text-slate-400 font-semibold block">Primary Phone Number on Google:</span>
-                    {activeProfile?.phone ? (
-                      <a href={`tel:${activeProfile.phone}`} className="font-bold text-slate-800 text-sm hover:text-google-blue">
-                        {activeProfile.phone}
-                      </a>
-                    ) : (
-                      <span className="text-rose-600 font-bold">No phone number configured on Google Maps</span>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="text-[11px] text-slate-400 font-semibold block">Website URL Indexed on Google:</span>
-                    {activeProfile?.website_url ? (
-                      <a 
-                        href={activeProfile.website_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-google-blue font-semibold hover:underline flex items-center gap-1 truncate"
-                      >
-                        <span className="truncate">{activeProfile.website_url}</span>
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                      </a>
-                    ) : (
-                      <span className="text-amber-700 font-medium">No official website attached to Google listing</span>
-                    )}
-                  </div>
-
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                    <span className="text-[11px] font-bold text-slate-700">NAP Protection Status:</span>
-                    <p className="text-[11px] text-slate-500">
-                      Name, Address, and Phone are monitored 24/7 by Sentinel Guard to intercept malicious crowd-sourced edits.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel 4: Live Customer Reputation & Reviews */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <h3 className="font-bold text-sm text-slate-900">Google Reputation & Reviews</h3>
-                  </div>
-                  <span className="text-xs font-bold text-slate-800">
-                    {activeProfile?.rating ? `${activeProfile.rating.toFixed(1)} / 5.0` : '—'}
-                  </span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between p-3 bg-amber-50/50 rounded-xl border border-amber-200/60">
-                    <div>
-                      <div className="text-lg font-black text-slate-900">{activeProfile?.rating?.toFixed(1) || '0.0'} ★</div>
-                      <div className="text-[11px] text-slate-500">{activeProfile?.reviews_count || 0} reviews on Google Maps</div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                        Top 5% in Neighborhood
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Reviews Snippet */}
-                  {activeProfile?.reviews && activeProfile.reviews.length > 0 ? (
-                    <div className="space-y-2">
-                      <span className="text-[11px] text-slate-400 font-semibold block">Latest Customer Review:</span>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800">{activeProfile.reviews[0].author_name}</span>
-                          <span className="text-amber-500 font-bold">{activeProfile.reviews[0].rating} ★</span>
-                        </div>
-                        <p className="text-[11px] text-slate-600 line-clamp-2 italic">
-                          "{activeProfile.reviews[0].review_text}"
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className="pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('ATTRIBUTES')}
-                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <span>Switch to 150+ Attributes Catalog</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
+          {/* Linear Breadcrumbs */}
+          <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs overflow-x-auto text-[11px] sm:text-xs">
+            <Link href="/geo-grid" className="flex items-center gap-1 text-slate-500 hover:text-google-blue font-semibold transition-colors">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">1</span>
+              <span>Разведка</span>
+            </Link>
+            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+            <span className="flex items-center gap-1 text-purple-700 font-extrabold bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">
+              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
+              <span>Порядок (150 пунктов)</span>
+            </span>
+            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+            <Link href="/reviews-posts" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">3</span>
+              <span>Рост &amp; GEO</span>
+            </Link>
+            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+            <Link href="/admin/sentinel" className="flex items-center gap-1 text-slate-500 hover:text-slate-800 font-medium transition-colors">
+              <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold">4</span>
+              <span>ИИ-Bodyguard</span>
+            </Link>
           </div>
-        )}
+        </div>
 
-        {/* ======================================================== */}
         {/* VIEW 2: 150+ ATTRIBUTES CATALOG (FULL EDITABLE FORM)     */}
         {/* ======================================================== */}
         {activeTab === 'ATTRIBUTES' && (
@@ -845,7 +580,7 @@ export default function AttributesManagerPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search 150+ attributes (e.g., wifi, parking, cards, ac, vegan)..."
+                    placeholder="Поиск по 150 пунктам (парковка, Wi-Fi, карты, кондиционер, терраса)..."
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-google-blue focus:bg-white transition-all"
                   />
                   {searchQuery && (
@@ -882,7 +617,7 @@ export default function AttributesManagerPage() {
                     }`}
                   >
                     <Check className="w-3 h-3 text-emerald-600" />
-                    <span>Active ({activeCount})</span>
+                    <span>Активно ({activeCount})</span>
                   </button>
                   <button
                     type="button"
@@ -905,7 +640,7 @@ export default function AttributesManagerPage() {
                     }`}
                   >
                     <Sparkles className="w-3 h-3 text-google-blue" />
-                    <span>AI Recommended ({recommendedCount})</span>
+                    <span>Совет ИИ ({recommendedCount})</span>
                   </button>
                 </div>
               </div>
@@ -934,7 +669,7 @@ export default function AttributesManagerPage() {
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                     }`}
                   >
-                    <span>{grp.name}</span>
+                    <span>{GROUP_NAMES_RU[grp.id] || grp.name}</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                       selectedGroupFilter === grp.id ? 'bg-blue-800/50 text-white' : 'bg-slate-200 text-slate-700'
                     }`}>
@@ -953,7 +688,7 @@ export default function AttributesManagerPage() {
                     className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Select All AI Recommended ({recommendedCount})</span>
+                    <span>✨ Выбрать все рекомендации ИИ ({recommendedCount})</span>
                   </button>
 
                   <button
@@ -963,7 +698,7 @@ export default function AttributesManagerPage() {
                     title="Copy formatted summary of all checked attributes for manual pasting"
                   >
                     {isCopied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{isCopied ? 'Summary Copied!' : 'Copy Summary'}</span>
+                    <span>{isCopied ? 'Скопировано!' : 'Скопировать список'}</span>
                   </button>
 
                   {hasUnsavedChanges && (
@@ -996,12 +731,12 @@ export default function AttributesManagerPage() {
                     {isSyncing ? (
                       <>
                         <RotateCcw className="w-4 h-4 animate-spin" />
-                        <span>Syncing...</span>
+                        <span>Применение в Google...</span>
                       </>
                     ) : (
                       <>
                         <Zap className="w-4 h-4 fill-white" />
-                        <span>Sync to Google (1-Click)</span>
+                        <span>⚡ Применить в Google Maps (1 клик)</span>
                       </>
                     )}
                   </button>
@@ -1097,49 +832,74 @@ export default function AttributesManagerPage() {
                         {group.items.map(item => {
                           const isChecked = Boolean(attributeValues[item.id]);
                           const isRecommended = recommendedIds.includes(item.id);
+                          const isConflict = Boolean(MUTUALLY_EXCLUSIVE_CONFLICTS[item.id]);
 
                           return (
                             <div
                               key={item.id}
                               onClick={() => toggleAttribute(item.id)}
-                              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 select-none ${
                                 isChecked
-                                  ? 'bg-blue-50/60 border-blue-300 shadow-2xs hover:bg-blue-50'
+                                  ? 'bg-blue-50/70 border-google-blue shadow-xs'
                                   : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
                               }`}
                             >
-                              <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                                isChecked
-                                  ? 'bg-google-blue border-google-blue text-white'
-                                  : 'border-slate-300 bg-white'
-                              }`}>
-                                {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                              </div>
-
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className={`text-xs font-bold leading-snug ${
-                                    isChecked ? 'text-slate-900' : 'text-slate-700'
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2.5">
+                                  <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                                    isChecked
+                                      ? 'bg-google-blue border-google-blue text-white'
+                                      : 'border-slate-300 bg-white'
                                   }`}>
-                                    {item.name}
-                                  </span>
-
-                                  {isRecommended && (
-                                    <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                                      AI Boost
-                                    </span>
-                                  )}
-
-                                  {item.seoImpact === 'HIGH' && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      High Impact
-                                    </span>
-                                  )}
+                                    {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-slate-900 leading-snug">
+                                      {item.name}
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                                      {item.description}
+                                    </p>
+                                  </div>
                                 </div>
 
-                                <p className="text-[11px] text-slate-500 leading-tight">
-                                  {item.description}
-                                </p>
+                                {isRecommended && (
+                                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
+                                    ✨ ИИ Boost
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Status & Recommendation Bar */}
+                              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] gap-2 flex-wrap">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400">В Google:</span>
+                                  <span className={`font-semibold ${isChecked ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                    {isChecked ? '🟢 Включено' : '⚪ Пусто'}
+                                  </span>
+                                </div>
+
+                                {isConflict && (
+                                  <span className="text-[10px] text-amber-700 font-medium bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60">
+                                    Авто-исключение
+                                  </span>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleAttribute(item.id);
+                                    handleSaveChanges();
+                                  }}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                    isChecked 
+                                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
+                                      : 'bg-slate-100 text-slate-700 hover:bg-google-blue hover:text-white'
+                                  }`}
+                                >
+                                  {isChecked ? '✓ Сохранено' : '+ Применить'}
+                                </button>
                               </div>
                             </div>
                           );
@@ -1386,6 +1146,38 @@ export default function AttributesManagerPage() {
       )}
 
       <BottomNav attributesCount={activeCount || 42} unreadReviewsCount={1} threatsCount={0} radarAlertsCount={2} />
+
+      
+        {/* Sticky Floating Save / Sync Bar */}
+        <div className="fixed bottom-16 sm:bottom-20 left-0 right-0 z-40 px-4 pointer-events-none">
+          <div className="max-w-2xl mx-auto bg-slate-900/95 backdrop-blur-md text-white p-3 sm:p-3.5 rounded-2xl shadow-xl border border-slate-700 flex items-center justify-between gap-3 pointer-events-auto">
+            <div className="flex items-center gap-2.5 text-xs">
+              <div className="w-8 h-8 rounded-xl bg-google-blue flex items-center justify-center font-black shrink-0">
+                {activeCount}
+              </div>
+              <div>
+                <div className="font-bold text-white text-xs">
+                  Выбрано: {activeCount} из {allAttributes.length} пунктов ({completionPercentage}%)
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  {hasUnsavedChanges ? '⚠️ Есть несохраненные изменения' : '✓ Синхронизировано'}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isSyncing}
+                onClick={handleTriggerGoogleSync}
+                className="px-4 py-2 bg-google-blue hover:bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                <span>{isSyncing ? 'Применение...' : 'Применить в Google Maps (1 клик)'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
       <Footer />
     </div>
