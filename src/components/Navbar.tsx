@@ -276,7 +276,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       // Also fetch profiles from backend only if not unlinked
       if (!isUnlinked) {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
         fetch(`${baseUrl}/api/v1/profiles`)
           .then(res => res.json())
           .then(data => {
@@ -314,7 +314,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     const baseUrl =
       process.env.NEXT_PUBLIC_BACKEND_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      'https://gbpilot-saas-production.up.railway.app';
+      'https://gbpilot.top';
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
     const loginUrl = `${baseUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
     try {
@@ -389,7 +389,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     // Backend sync in background (non-blocking)
     if (!targetId.startsWith('demo_')) {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
         fetch(`${baseUrl}/api/v1/profiles/${targetId}`, { 

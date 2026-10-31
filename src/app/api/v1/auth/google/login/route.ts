@@ -4,7 +4,7 @@ import { getGoogleOAuthUrl } from '@/lib/gbp/auth';
 const BACKEND_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  'https://gbpilot-saas-production.up.railway.app';
+  'https://gbpilot.top';
 
 function cleanOrigin(raw: string | null, fallbackOrigin: string): string {
   const candidate = (raw || fallbackOrigin || 'https://www.gbpilot.top').trim().replace(/\/+$/, '');

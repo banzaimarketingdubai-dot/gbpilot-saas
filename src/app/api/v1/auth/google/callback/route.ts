@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const BACKEND_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  'https://gbpilot-saas-production.up.railway.app';
+  'https://gbpilot.top';
 
 export async function GET(request: Request) {
   const reqUrl = new URL(request.url);

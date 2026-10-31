@@ -13,7 +13,7 @@ const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '1025915570314-u36sfq2t3h689rkcpabfen7f3o5nqh3v.apps.googleusercontent.com';
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://gbpilot-saas-production.up.railway.app/api/v1/auth/google/callback';
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://gbpilot.top/api/v1/auth/google/callback';
 
 export const GBP_SCOPES = [
   'https://www.googleapis.com/auth/business.manage',

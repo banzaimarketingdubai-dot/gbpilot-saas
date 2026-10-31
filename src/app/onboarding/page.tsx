@@ -224,7 +224,7 @@ export default function OnboardingPage() {
 
   // Connect via Google OAuth directly
   const handleGoogleOAuthLogin = async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
     const loginUrl = `${backendUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
     

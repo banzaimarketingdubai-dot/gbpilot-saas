@@ -42,7 +42,7 @@ interface Props {
   baselineSolv: number | null; // percent, as returned by the scan metrics
 }
 
-const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
 
 const fmtArp = (v: number | null | undefined) => (typeof v === 'number' ? v.toFixed(1) : '—');
 const fmtSolv = (v: number | null | undefined) => (typeof v === 'number' ? `${v.toFixed(0)}%` : '—');

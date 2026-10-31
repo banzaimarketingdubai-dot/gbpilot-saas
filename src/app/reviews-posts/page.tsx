@@ -210,7 +210,7 @@ export default function ShieldReviewsPage() {
 
         if (!isSilent) setLoadingReviews(true);
 
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
         const profId = placeId || 'profile_123';
 
         const res = await fetch(`${baseUrl}/api/v1/reviews/${profId}?business_name=${encodeURIComponent(bName)}`);
@@ -294,7 +294,7 @@ export default function ShieldReviewsPage() {
     setRealReviews(prev => prev.map(r => r.id === reviewId ? { ...r, isGenerating: true, selectedTone: tone } : r));
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
       const res = await fetch(`${baseUrl}/api/v1/reviews/generate-reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

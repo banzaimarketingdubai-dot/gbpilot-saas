@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const getApiUrl = () =>
-  process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+  process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
 
 export interface CompetitorComparison {
   placeId?: string;

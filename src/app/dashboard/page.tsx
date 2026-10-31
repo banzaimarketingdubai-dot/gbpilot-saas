@@ -117,7 +117,7 @@ export default function DashboardCockpitPage() {
     const locId = (activeProfile as any)?.google_location_id || activeProfile?.id;
     if (!locId) { setLiveSync(null); return; }
     let cancelled = false;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
     fetch(`${baseUrl}/api/v1/profiles/${encodeURIComponent(String(locId))}/google-sync`)
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (!cancelled) setLiveSync(d); })
@@ -583,7 +583,7 @@ export default function DashboardCockpitPage() {
     // 3. Backend sync in background (non-blocking)
     if (profileToUnlink.id && !profileToUnlink.id.startsWith('demo_')) {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
         fetch(`${baseUrl}/api/v1/profiles/${profileToUnlink.id}/unlink`, { 

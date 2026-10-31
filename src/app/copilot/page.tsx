@@ -336,7 +336,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
 
     setIsSyncingToGoogle(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
       await fetch(`${baseUrl}/api/v1/profiles/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -497,7 +497,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
   };
 
   const handlePublishPost = async (isImmediate = false) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
     try {
       await fetch(`${baseUrl}/api/v1/posts/publish`, {
         method: 'POST',
@@ -531,7 +531,7 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
     setIsTyping(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
       const response = await fetch(`${baseUrl}/api/v1/copilot/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

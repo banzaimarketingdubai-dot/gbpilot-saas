@@ -451,7 +451,7 @@ export default function GeoGridPage() {
       }
 
       // Fetch real keywords from backend (GBP impressions + Google Suggest)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
       setIsLoadingKeywords(true);
       (async () => {
         try {
@@ -633,7 +633,7 @@ export default function GeoGridPage() {
   };
 
   const handleResetKeywords = async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
     setIsLoadingKeywords(true);
     try {
       const res = await fetch(
@@ -728,7 +728,7 @@ export default function GeoGridPage() {
         try { planId = JSON.parse(sub).plan_id || 'FREE_SCOUT'; } catch (_) {}
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot-saas-production.up.railway.app';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
