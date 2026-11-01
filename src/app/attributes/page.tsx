@@ -195,9 +195,30 @@ export default function AttributesManagerPage() {
         const storedNow = localStorage.getItem('gbpilot_active_profile');
         if (isUnlinkedNow || !storedNow) {
           setActiveProfile(null);
+          setAttributeValues({});
+          setInitialValues({});
         } else {
           try {
-            setActiveProfile(JSON.parse(storedNow));
+            const parsed = JSON.parse(storedNow);
+            const prof = {
+              ...parsed,
+              name: parsed.business_name || parsed.name || '',
+              address: parsed.address || '',
+              category: parsed.primary_category || parsed.category || '',
+              opening_hours: Array.isArray(parsed.opening_hours) ? parsed.opening_hours : [],
+              reviews: Array.isArray(parsed.reviews) ? parsed.reviews : []
+            };
+            setActiveProfile(prof);
+
+            const storedAttrs = prof.name ? localStorage.getItem(`gbpilot_attrs_${prof.name}`) : null;
+            let currentMap: Record<string, boolean> = {};
+            if (storedAttrs) {
+              try { currentMap = JSON.parse(storedAttrs); } catch (e) {}
+            } else if (prof.attributes && typeof prof.attributes === 'object') {
+              currentMap = prof.attributes;
+            }
+            setAttributeValues(currentMap);
+            setInitialValues(currentMap);
           } catch (e) {}
         }
       };

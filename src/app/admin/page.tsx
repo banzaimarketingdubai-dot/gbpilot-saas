@@ -77,6 +77,19 @@ export default function AdminOverviewPage() {
           setActiveProfile(JSON.parse(stored));
         } catch (e) {}
       }
+
+      const handleProfileUpdate = () => {
+        const storedUpdate = localStorage.getItem('gbpilot_active_profile');
+        if (storedUpdate) {
+          try {
+            setActiveProfile(JSON.parse(storedUpdate));
+          } catch (e) {}
+        }
+      };
+      window.addEventListener('active_profile_updated', handleProfileUpdate);
+      return () => {
+        window.removeEventListener('active_profile_updated', handleProfileUpdate);
+      };
     }
   }, []);
 

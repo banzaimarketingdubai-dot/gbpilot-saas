@@ -300,8 +300,19 @@ export default function ShieldReviewsPage() {
     const timer = setInterval(() => {
       fetchReviewsData(true);
     }, 120000);
-    return () => clearInterval(timer);
+
+    const handleProfileUpdate = () => {
+      setRealReviews([]);
+      fetchReviewsData();
+    };
+    window.addEventListener('active_profile_updated', handleProfileUpdate);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('active_profile_updated', handleProfileUpdate);
+    };
   }, [fetchReviewsData]);
+
 
   const handleRegenerateTone = async (reviewId: string, tone: 'PROFESSIONAL' | 'FRIENDLY' | 'SEO' | 'CRISIS') => {
     const targetRev = realReviews.find(r => r.id === reviewId);

@@ -122,7 +122,7 @@ export default function CopilotContentStudioPage() {
 
   // Pre-seed initial post from niche config if empty or generic
   useEffect(() => {
-    if (nicheConfig && (!currentPost.title || currentPost.title.includes('Signature Taste') || currentPost.title.includes('Weekend Chef'))) {
+    if (nicheConfig) {
       setCurrentPost(prev => ({
         ...prev,
         title: nicheConfig.defaultPost.title,
@@ -131,7 +131,7 @@ export default function CopilotContentStudioPage() {
         targetKeywords: nicheConfig.defaultPost.targetKeywords
       }));
     }
-  }, [nicheConfig]);
+  }, [nicheConfig.nicheType, activeProfile?.name]);
 
   const [postPublishedToast, setPostPublishedToast] = useState<string | null>(null);
 
@@ -394,8 +394,50 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
         }
       ]);
 
+      const handleProfileUpdate = () => {
+        const isUnlinked = localStorage.getItem('gbpilot_profile_unlinked') === 'true';
+        const stored = localStorage.getItem('gbpilot_active_profile');
+        let prof: any = null;
+        let pName = 'Your Business';
+        if (stored && !isUnlinked) {
+          try {
+            prof = JSON.parse(stored);
+            setActiveProfile(prof);
+            if (prof.name && prof.name !== 'No Business Connected') {
+              pName = prof.name;
+            }
+            if (prof.website_url) {
+              setScrapeUrl(prof.website_url);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          setActiveProfile(null);
+        }
+
+        const newGt = loadOwnerGroundTruth(prof);
+        setGroundTruth(newGt);
+        setGtFlagship(newGt.flagshipOffering);
+        setGtPersona(newGt.guestPersona);
+        setGtRules(newGt.venueRulesAndPerks);
+        setCustomPhotos([]);
+
+        const cLabel = prof?.city ? ` in ${prof.city}` : '';
+        setMessages([
+          {
+            id: `msg-welcome-${Date.now()}`,
+            sender: 'assistant',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            text: `Hello! I am your 24/7 AI Local SEO Director for **${pName}**${cLabel}. I monitor your local rankings, track competitor moves, and draft high-converting Google Posts. What would you like to achieve today?`,
+          }
+        ]);
+      };
+      window.addEventListener('active_profile_updated', handleProfileUpdate);
+
       return () => {
         window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+        window.removeEventListener('active_profile_updated', handleProfileUpdate);
       };
     }
   }, []);

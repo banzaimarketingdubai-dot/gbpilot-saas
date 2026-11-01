@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   MapPin, 
   Search, 
@@ -39,19 +39,28 @@ import { buildDirectoryBlueprints, DirectoryPlatformId } from '@/lib/geo/directo
 const getProfileCoords = (profile: any): { lat: number; lng: number } | null => {
   if (!profile) return null;
 
-  if (typeof profile.lat === 'number' && typeof profile.lng === 'number') {
-    return { lat: profile.lat, lng: profile.lng };
+  const rawLat = profile.lat ?? profile.latitude;
+  const rawLng = profile.lng ?? profile.longitude;
+  if (rawLat !== undefined && rawLng !== undefined && rawLat !== null && rawLng !== null) {
+    const numLat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat));
+    const numLng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng));
+    if (!isNaN(numLat) && !isNaN(numLng) && (numLat !== 0 || numLng !== 0)) {
+      return { lat: numLat, lng: numLng };
+    }
   }
 
   if (profile.location && typeof profile.location === 'string') {
     try {
       const cleaned = profile.location.replace('POINT(', '').replace(')', '').trim();
-      const parts = cleaned.split(/\s+/);
+      const parts = cleaned.includes(',') ? cleaned.split(',') : cleaned.split(/\s+/);
       if (parts.length >= 2) {
-        const lng = parseFloat(parts[0]);
-        const lat = parseFloat(parts[1]);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          return { lat, lng };
+        let p0 = parseFloat(parts[0]);
+        let p1 = parseFloat(parts[1]);
+        if (!isNaN(p0) && !isNaN(p1)) {
+          if (Math.abs(p0) <= 90 && Math.abs(p1) > 90) {
+            return { lat: p0, lng: p1 };
+          }
+          return { lat: p1, lng: p0 };
         }
       }
     } catch (e) {
@@ -405,6 +414,79 @@ export default function GeoGridPage() {
   const [overallGaps, setOverallGaps] = useState<GapItem[]>([]);
   const [velocity, setVelocity] = useState<Record<string, VelocityItem>>({});
 
+  const loadKeywordsForProfile = useCallback(async (targetProf: any) => {
+    if (!targetProf) {
+      setKeywordPills([]);
+      setSelectedKeyword('');
+      return;
+    }
+    const profileKey = targetProf?.id || targetProf?.name || 'default';
+    
+    // Load saved (custom) pills from localStorage for this profile
+    let savedCustomPills: KeywordPill[] = [];
+    if (typeof window !== 'undefined') {
+      const savedPillsJson = localStorage.getItem(`gbpilot_keywords_${profileKey}`);
+      if (savedPillsJson) {
+        try {
+          const parsed = JSON.parse(savedPillsJson);
+          if (Array.isArray(parsed)) {
+            savedCustomPills = parsed.filter(
+              (p: any) => p && typeof p.label === 'string' && sanitizeQueryLabel(p.label) && p.source === 'CUSTOM'
+            );
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
+    setIsLoadingKeywords(true);
+    try {
+      const bName = targetProf?.name || '';
+      const bCat = targetProf?.category || '';
+      const bAddr = targetProf?.address || '';
+      const bCity = targetProf?.city || '';
+      const res = await fetch(
+        `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(targetProf?.id || "default")}&business_name=${encodeURIComponent(bName)}&category=${encodeURIComponent(bCat)}&address=${encodeURIComponent(bAddr)}&city=${encodeURIComponent(bCity)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const apiKeywords: KeywordPill[] = (data.keywords || [])
+          .filter((k: any) => k.keyword && sanitizeQueryLabel(k.keyword))
+          .map((k: any, i: number) => ({
+            id: `kw-api-${i}-${k.source}`,
+            label: k.keyword,
+            category: 'PRODUCT' as const,
+            source: k.source as 'GBP_REAL' | 'GOOGLE_SUGGEST',
+            impressions: k.impressions || undefined,
+          }));
+        setKeywordsHaveRealData(Boolean(data.has_real_data));
+        const apiLabels = new Set(apiKeywords.map(p => p.label.toLowerCase()));
+        const dedupedCustom = savedCustomPills.filter(p => !apiLabels.has(p.label.toLowerCase()));
+        let merged = [...apiKeywords, ...dedupedCustom];
+        if (merged.length === 0) {
+          merged = getDefaultKeywordPills(targetProf);
+        }
+        setKeywordPills(merged);
+        if (merged.length > 0) setSelectedKeyword(merged[0].label);
+        if (data.notice) {
+          setScanNotice(data.notice);
+        }
+      } else {
+        const fallback = savedCustomPills.length > 0 ? savedCustomPills : getDefaultKeywordPills(targetProf);
+        setKeywordPills(fallback);
+        if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
+      }
+    } catch {
+      const fallback = savedCustomPills.length > 0 ? savedCustomPills : getDefaultKeywordPills(targetProf);
+      setKeywordPills(fallback);
+      if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
+    } finally {
+      setIsLoadingKeywords(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const sub = getSubscription();
@@ -432,80 +514,37 @@ export default function GeoGridPage() {
         } catch (e) {}
       }
 
-      const profileKey = parsedProfile?.id || parsedProfile?.name || 'default';
-      
-      // Load saved (custom) pills from localStorage for this profile
-      const savedPillsJson = localStorage.getItem(`gbpilot_keywords_${profileKey}`);
-      let savedCustomPills: KeywordPill[] = [];
-      if (savedPillsJson) {
+      loadKeywordsForProfile(parsedProfile);
+
+      const handleProfileUpdate = () => {
+        const storedUpdate = localStorage.getItem('gbpilot_active_profile');
+        if (!storedUpdate) return;
         try {
-          const parsed = JSON.parse(savedPillsJson);
-          if (Array.isArray(parsed)) {
-            // Only keep explicitly custom pills — real/suggest ones refresh from API each time
-            savedCustomPills = parsed.filter(
-              (p: any) => p && typeof p.label === 'string' && sanitizeQueryLabel(p.label) && p.source === 'CUSTOM'
-            );
-          }
+          const newProf = JSON.parse(storedUpdate);
+          setActiveProfile(newProf);
+          setGroundTruth(loadOwnerGroundTruth(newProf));
+          setGridRanks(buildGridTemplate(gridSize));
+          setSelectedNode(null);
+          setScanMetrics(null);
+          setScanMeta(null);
+          setOwnProfile(null);
+          setOverallGaps([]);
+          setVelocity({});
+          setCompetitors([]);
+          setScanNotice(null);
+          loadKeywordsForProfile(newProf);
         } catch (e) {
           console.error(e);
         }
-      }
-
-      // Fetch real keywords from backend (GBP impressions + Google Suggest)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
-      setIsLoadingKeywords(true);
-      (async () => {
-        try {
-          const bName = parsedProfile?.name || '';
-          const bCat = parsedProfile?.category || '';
-          const bAddr = parsedProfile?.address || '';
-          const bCity = parsedProfile?.city || '';
-          const res = await fetch(
-            `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(parsedProfile?.id || 'default')}&business_name=${encodeURIComponent(bName)}&category=${encodeURIComponent(bCat)}&address=${encodeURIComponent(bAddr)}&city=${encodeURIComponent(bCity)}`
-          );
-          if (res.ok) {
-            const data = await res.json();
-            const apiKeywords: KeywordPill[] = (data.keywords || [])
-              .filter((k: any) => k.keyword && sanitizeQueryLabel(k.keyword))
-              .map((k: any, i: number) => ({
-                id: `kw-api-${i}-${k.source}`,
-                label: k.keyword,
-                category: 'PRODUCT' as const,
-                source: k.source as 'GBP_REAL' | 'GOOGLE_SUGGEST',
-                impressions: k.impressions || undefined,
-              }));
-            setKeywordsHaveRealData(Boolean(data.has_real_data));
-            // Merge: API keywords first (dedupe against custom), then custom pills
-            const apiLabels = new Set(apiKeywords.map(p => p.label.toLowerCase()));
-            const dedupedCustom = savedCustomPills.filter(p => !apiLabels.has(p.label.toLowerCase()));
-            let merged = [...apiKeywords, ...dedupedCustom];
-            if (merged.length === 0) {
-              merged = getDefaultKeywordPills(parsedProfile);
-            }
-            setKeywordPills(merged);
-            if (merged.length > 0) setSelectedKeyword(merged[0].label);
-            if (data.notice) {
-              setScanNotice(data.notice);
-            }
-          } else {
-            const fallback = savedCustomPills.length > 0 ? savedCustomPills : getDefaultKeywordPills(parsedProfile);
-            setKeywordPills(fallback);
-            if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
-          }
-        } catch {
-          const fallback = savedCustomPills.length > 0 ? savedCustomPills : getDefaultKeywordPills(parsedProfile);
-          setKeywordPills(fallback);
-          if (fallback.length > 0) setSelectedKeyword(fallback[0].label);
-        } finally {
-          setIsLoadingKeywords(false);
-        }
-      })();
+      };
+      window.addEventListener('active_profile_updated', handleProfileUpdate);
 
       return () => {
         window.removeEventListener('gbpilot_subscription_changed', handleSubChange);
+        window.removeEventListener('active_profile_updated', handleProfileUpdate);
       };
     }
-  }, []);
+  }, [loadKeywordsForProfile, gridSize]);
 
   // Scan only on explicit button press — no auto-scan on profile load
 
@@ -653,7 +692,7 @@ export default function GeoGridPage() {
       const bAddr = activeProfile?.address || '';
       const bCity = activeProfile?.city || '';
       const res = await fetch(
-        `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(activeProfile?.id || 'default')}&business_name=${encodeURIComponent(bName)}&category=${encodeURIComponent(bCat)}&address=${encodeURIComponent(bAddr)}&city=${encodeURIComponent(bCity)}`
+        `${apiUrl}/api/v1/geo-grid/suggest-keywords?profile_id=${encodeURIComponent(activeProfile?.id || "default")}&business_name=${encodeURIComponent(bName)}&category=${encodeURIComponent(bCat)}&address=${encodeURIComponent(bAddr)}&city=${encodeURIComponent(bCity)}`
       );
       if (res.ok) {
         const data = await res.json();
