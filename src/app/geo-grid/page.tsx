@@ -39,39 +39,12 @@ import { buildDirectoryBlueprints, DirectoryPlatformId } from '@/lib/geo/directo
 const getProfileCoords = (profile: any): { lat: number; lng: number } => {
   if (!profile) return { lat: 12.2718, lng: 109.2016 };
 
-  const rawLat = profile.lat ?? profile.latitude;
-  const rawLng = profile.lng ?? profile.longitude;
-  if (rawLat !== undefined && rawLng !== undefined && rawLat !== null && rawLng !== null) {
-    const numLat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat));
-    const numLng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng));
-    if (!isNaN(numLat) && !isNaN(numLng) && (numLat !== 0 || numLng !== 0)) {
-      return { lat: numLat, lng: numLng };
-    }
-  }
-
-  if (profile.location && typeof profile.location === 'string') {
-    try {
-      const cleaned = profile.location.replace('POINT(', '').replace(')', '').trim();
-      const parts = cleaned.includes(',') ? cleaned.split(',') : cleaned.split(/\s+/);
-      if (parts.length >= 2) {
-        let p0 = parseFloat(parts[0]);
-        let p1 = parseFloat(parts[1]);
-        if (!isNaN(p0) && !isNaN(p1)) {
-          if (Math.abs(p0) <= 90 && Math.abs(p1) > 90) {
-            return { lat: p0, lng: p1 };
-          }
-          return { lat: p1, lng: p0 };
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
   const name = (profile.name || profile.business_name || '').toLowerCase();
   const address = (profile.address || profile.address_line || '').toLowerCase();
   const city = (profile.city || '').toLowerCase();
+  const combined = `${name} ${address} ${city}`;
 
+  // 1. High-precision known venue coordinates
   // Sir Visaranus: 60 Hòn Chồng, Bắc Nha Trang
   if (name.includes('visaranus') || name.includes('визар') || address.includes('hòn chồng') || address.includes('hon chong')) {
     return { lat: 12.2690, lng: 109.2020 };
@@ -82,12 +55,54 @@ const getProfileCoords = (profile: any): { lat: number; lng: number } => {
     return { lat: 12.2718, lng: 109.2016 };
   }
 
-  // Generic Nha Trang matching
-  if (city.includes('nha trang') || address.includes('nha trang') || address.includes('khánh hòa') || address.includes('khanh hoa')) {
+  const isVietnam = combined.includes('nha trang') || combined.includes('vietnam') || combined.includes('khánh hòa') || combined.includes('khanh hoa') || combined.includes('bắc nha trang') || combined.includes('cao văn bé') || combined.includes('hòn chồng');
+
+  // 2. Numeric coordinates from profile with geo-boundary sanity check
+  const rawLat = profile.lat ?? profile.latitude;
+  const rawLng = profile.lng ?? profile.longitude;
+  if (rawLat !== undefined && rawLng !== undefined && rawLat !== null && rawLng !== null) {
+    const numLat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat));
+    const numLng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng));
+    if (!isNaN(numLat) && !isNaN(numLng) && (numLat !== 0 || numLng !== 0)) {
+      // Reject legacy phantom Dubai default (25.2048, 55.2708) if profile is in Vietnam
+      if (isVietnam && (numLat > 24 || numLat < 8 || numLng > 110 || numLng < 102)) {
+        return { lat: 12.2718, lng: 109.2016 };
+      }
+      return { lat: numLat, lng: numLng };
+    }
+  }
+
+  // 3. PostGIS POINT parser with sanity check
+  if (profile.location && typeof profile.location === 'string') {
+    try {
+      const cleaned = profile.location.replace('POINT(', '').replace(')', '').trim();
+      const parts = cleaned.includes(',') ? cleaned.split(',') : cleaned.split(/\s+/);
+      if (parts.length >= 2) {
+        let p0 = parseFloat(parts[0]);
+        let p1 = parseFloat(parts[1]);
+        if (!isNaN(p0) && !isNaN(p1)) {
+          let latCandidate = p1;
+          let lngCandidate = p0;
+          if (Math.abs(p0) <= 90 && Math.abs(p1) > 90) {
+            latCandidate = p0;
+            lngCandidate = p1;
+          }
+          if (isVietnam && (latCandidate > 24 || latCandidate < 8 || lngCandidate > 110 || lngCandidate < 102)) {
+            return { lat: 12.2718, lng: 109.2016 };
+          }
+          return { lat: latCandidate, lng: lngCandidate };
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // 4. City matching
+  if (isVietnam) {
     return { lat: 12.2718, lng: 109.2016 };
   }
 
-  // Dubai matching
   if (city.includes('dubai') || address.includes('dubai') || address.includes('uae')) {
     return { lat: 25.1972, lng: 55.2744 };
   }
@@ -523,6 +538,22 @@ export default function GeoGridPage() {
       if (stored) {
         try {
           parsedProfile = JSON.parse(stored);
+          const pName = (parsedProfile?.name || '').toLowerCase();
+          const pAddr = (parsedProfile?.address || '').toLowerCase();
+          // Auto-heal contaminated legacy Dubai coordinates in user browser localStorage
+          if ((pName.includes('свои') || pName.includes('svoi') || pAddr.includes('cao văn bé')) && (parsedProfile.lat === 25.2048 || parsedProfile.latitude === 25.2048 || !parsedProfile.lat)) {
+            parsedProfile.lat = 12.2718;
+            parsedProfile.lng = 109.2016;
+            parsedProfile.latitude = 12.2718;
+            parsedProfile.longitude = 109.2016;
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedProfile));
+          } else if ((pName.includes('visaranus') || pAddr.includes('hòn chồng')) && (parsedProfile.lat === 25.2048 || parsedProfile.latitude === 25.2048 || !parsedProfile.lat)) {
+            parsedProfile.lat = 12.2690;
+            parsedProfile.lng = 109.2020;
+            parsedProfile.latitude = 12.2690;
+            parsedProfile.longitude = 109.2020;
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsedProfile));
+          }
           setActiveProfile(parsedProfile);
         } catch (e) {
           console.error(e);
@@ -545,6 +576,21 @@ export default function GeoGridPage() {
         if (!storedUpdate) return;
         try {
           const newProf = JSON.parse(storedUpdate);
+          const pName = (newProf?.name || '').toLowerCase();
+          const pAddr = (newProf?.address || '').toLowerCase();
+          if ((pName.includes('свои') || pName.includes('svoi') || pAddr.includes('cao văn bé')) && (newProf.lat === 25.2048 || newProf.latitude === 25.2048 || !newProf.lat)) {
+            newProf.lat = 12.2718;
+            newProf.lng = 109.2016;
+            newProf.latitude = 12.2718;
+            newProf.longitude = 109.2016;
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(newProf));
+          } else if ((pName.includes('visaranus') || pAddr.includes('hòn chồng')) && (newProf.lat === 25.2048 || newProf.latitude === 25.2048 || !newProf.lat)) {
+            newProf.lat = 12.2690;
+            newProf.lng = 109.2020;
+            newProf.latitude = 12.2690;
+            newProf.longitude = 109.2020;
+            localStorage.setItem('gbpilot_active_profile', JSON.stringify(newProf));
+          }
           setActiveProfile(newProf);
           setGroundTruth(loadOwnerGroundTruth(newProf));
           setGridRanks(buildGridTemplate(gridSize));
@@ -1352,7 +1398,7 @@ export default function GeoGridPage() {
                   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
                     <iframe
                       title="Google Maps Street Backdrop"
-                      src={`https://www.google.com/maps?q=${mapCoords.lat},${mapCoords.lng}&z=${gridSize === '7x7' ? 13 : gridSize === '5x5' ? 14 : 15}&output=embed`}
+                      src={`https://maps.google.com/maps?q=${mapCoords.lat.toFixed(6)},${mapCoords.lng.toFixed(6)}&hl=en&z=${gridSize === '7x7' ? 14 : gridSize === '5x5' ? 15 : 16}&output=embed`}
                       className="w-full h-full border-0 opacity-35 grayscale-[65%] contrast-[110%] scale-110 pointer-events-none"
                       tabIndex={-1}
                       loading="lazy"

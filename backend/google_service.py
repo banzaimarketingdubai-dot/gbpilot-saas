@@ -91,8 +91,18 @@ def parse_google_location(loc: Dict[str, Any], role: str = "OWNER") -> Dict[str,
     loc_id = loc_name.split("/")[-1] if "/" in loc_name else (loc_name or f"loc_{os.urandom(4).hex()}")
     
     latlng = loc.get("latlng", {})
-    lat = latlng.get("latitude", 25.2048) if isinstance(latlng, dict) else 25.2048
-    lng = latlng.get("longitude", 55.2708) if isinstance(latlng, dict) else 55.2708
+    lat = latlng.get("latitude") if isinstance(latlng, dict) else None
+    lng = latlng.get("longitude") if isinstance(latlng, dict) else None
+    if lat is None or lng is None:
+        addr_lower = f"{title} {address} {locality}".lower()
+        if "hòn chồng" in addr_lower or "hon chong" in addr_lower or "visaranus" in addr_lower:
+            lat, lng = 12.2690, 109.2020
+        elif "свои" in addr_lower or "svoi" in addr_lower or "cao văn bé" in addr_lower or "cao van be" in addr_lower or "nha trang" in addr_lower or "vietnam" in addr_lower:
+            lat, lng = 12.2718, 109.2016
+        elif "dubai" in addr_lower or "uae" in addr_lower:
+            lat, lng = 25.2048, 55.2708
+        else:
+            lat, lng = 12.2718, 109.2016
 
     role_str = str(role).upper()
     role_display = "Owner" if "OWNER" in role_str else "Manager"

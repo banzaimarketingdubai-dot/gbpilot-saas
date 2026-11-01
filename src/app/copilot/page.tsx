@@ -98,8 +98,11 @@ export default function CopilotContentStudioPage() {
 
   // Synchronize selected photo with vault
   useEffect(() => {
-    if (!selectedPhoto || !activeMediaVault.some(p => p.id === selectedPhoto.id)) {
-      setSelectedPhoto(activeMediaVault[0]);
+    if (activeMediaVault.length > 0) {
+      const exists = activeMediaVault.some(p => p.id === selectedPhoto?.id && p.url === selectedPhoto?.url);
+      if (!exists) {
+        setSelectedPhoto(activeMediaVault[0]);
+      }
     }
   }, [activeMediaVault, selectedPhoto]);
 
@@ -422,6 +425,23 @@ ${extractedData.target_keywords.map(k => `#${k}`).join(', ')}
         setGtPersona(newGt.guestPersona);
         setGtRules(newGt.venueRulesAndPerks);
         setCustomPhotos([]);
+
+        const newNiche = getNicheStudioConfig(prof);
+        if (newNiche && newNiche.mediaVault.length > 0) {
+          setSelectedPhoto(newNiche.mediaVault[0]);
+        }
+        const primePreset = newNiche?.presets?.[0] || newNiche?.defaultPost;
+        if (primePreset) {
+          setCurrentPost({
+            title: primePreset.title,
+            content: primePreset.content,
+            ctaType: primePreset.ctaType,
+            ctaUrl: prof?.website_url || 'https://gbpilot.top',
+            targetKeywords: primePreset.targetKeywords,
+            photoTaggingAdvice: (primePreset as any).photoTaggingAdvice || '',
+            scheduledDate: 'This Friday at 10:00 AM'
+          });
+        }
 
         const cLabel = prof?.city ? ` in ${prof.city}` : '';
         setMessages([

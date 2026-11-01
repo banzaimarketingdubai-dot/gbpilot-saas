@@ -520,8 +520,16 @@ async def scrape_business_endpoint(request: ScrapeRequest, db: Session = Depends
                     db.refresh(org)
                     
                 # Save the new GBP Profile
-                lon = profile_data.get('longitude', 55.2708)
-                lat = profile_data.get('latitude', 25.2048)
+                lon = profile_data.get('longitude') or profile_data.get('lng')
+                lat = profile_data.get('latitude') or profile_data.get('lat')
+                if lat is None or lon is None:
+                    txt = f"{profile_data.get('business_name', '')} {profile_data.get('address_line', '')} {profile_data.get('city', '')}".lower()
+                    if "visaranus" in txt or "hòn chồng" in txt or "hon chong" in txt:
+                        lat, lon = 12.2690, 109.2020
+                    elif "dubai" in txt or "uae" in txt:
+                        lat, lon = 25.2048, 55.2708
+                    else:
+                        lat, lon = 12.2718, 109.2016
                 point_str = f"POINT({lon} {lat})"
                 new_profile = models.GBPProfile(
                     organization_id=org.id,
@@ -1005,20 +1013,22 @@ async def suggest_keywords_endpoint(
     google_suggestions: list = []
 
     # --- Source 1: GBP_REAL via Performance API (if OAuth token present) ---
-    if profile and profile.refresh_token and profile.google_location_id:
+    r_token = getattr(profile, "refresh_token_encrypted", None)
+    if profile and r_token and getattr(profile, "google_location_id", None):
         try:
-            access = refresh_access_token(profile.refresh_token)
-            loc_id = profile.google_location_id
-            if not loc_id.startswith("locations/"):
-                loc_id = f"locations/{loc_id}"
-            real_keywords = get_search_keywords_impressions(access, loc_id)
+            access = refresh_access_token(r_token)
+            if access:
+                loc_id = profile.google_location_id
+                if not loc_id.startswith("locations/"):
+                    loc_id = f"locations/{loc_id}"
+                real_keywords = get_search_keywords_impressions(access, loc_id)
         except Exception as e:
             logger.warning(f"[SuggestKeywords] GBP impressions failed: {e}")
 
     # Determine business name, category, and location
     b_name = business_name or (profile.business_name if profile else "")
-    b_cat = category or (profile.category if profile else "")
-    b_loc = city or address or (profile.city if profile else "") or (profile.address if profile else "")
+    b_cat = category or (getattr(profile, "primary_category", "") if profile else "")
+    b_loc = city or address or (getattr(profile, "city", "") if profile else "") or (getattr(profile, "address_line", "") if profile else "")
 
     # If profile_id is a Google Place ID or matches Sir Visaranus
     if (not b_name or not b_cat) and (profile_id.startswith("ChIJ") or "visaran" in profile_id.lower() or "visaran" in (b_name or "").lower()):
@@ -1037,7 +1047,7 @@ async def suggest_keywords_endpoint(
     cat_l = (b_cat or "").lower()
     loc_l = (b_loc or "").lower()
 
-    if "visaran" in name_l or "visa" in cat_l or "visa" in name_l or ("transport" in cat_l and ("vietnam" in loc_l or "nha trang" in loc_l or "hòn chồng" in loc_l)):
+    if "visaran" in name_l or "visa" in cat_l or "visa" in name_l or "транспорт" in cat_l or "transport" in cat_l or "виза" in cat_l:
         niche_keywords = [
             {"keyword": "Visa Run Nha Trang", "source": "GOOGLE_SUGGEST"},
             {"keyword": "Transportation Service Nha Trang", "source": "GOOGLE_SUGGEST"},
@@ -1048,7 +1058,7 @@ async def suggest_keywords_endpoint(
             {"keyword": "Airport Transfer Cam Ranh", "source": "GOOGLE_SUGGEST"},
             {"keyword": "Private Driver Nha Trang", "source": "GOOGLE_SUGGEST"}
         ]
-    elif "cafe" in cat_l or "coffee" in cat_l or "bakery" in cat_l or "cafe" in name_l:
+    elif "cafe" in cat_l or "coffee" in cat_l or "bakery" in cat_l or "cafe" in name_l or "кафе" in cat_l or "кафе" in name_l or "кофе" in name_l or "свои" in name_l:
         loc_str = "Nha Trang" if ("vietnam" in loc_l or "nha trang" in loc_l) else ("Dubai" if "dubai" in loc_l else "")
         niche_keywords = [
             {"keyword": f"Specialty Coffee {loc_str}".strip(), "source": "GOOGLE_SUGGEST"},

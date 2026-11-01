@@ -463,7 +463,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-lg font-extrabold tracking-tight text-google-text-primary flex items-center">
                 GB<span className="text-google-blue">Pilot</span>
                 <span className="ml-2 px-2 py-0.5 text-[9px] font-bold tracking-wider bg-google-blue-light text-google-blue rounded-md border border-google-blue/20 whitespace-nowrap hidden sm:inline-block">
-                  🇦🇪 DUBAI AI COPILOT
+                  {((activeProfile?.city || activeProfile?.address || '').toLowerCase().includes('dubai') || (activeProfile?.city || activeProfile?.address || '').toLowerCase().includes('uae')) ? '🇦🇪 DUBAI AI COPILOT' : 'PROACTIVE AI COPILOT'}
                 </span>
               </span>
             </div>

@@ -104,8 +104,20 @@ export function getNicheStudioConfig(profile?: {
   const niche = detectNiche(profile);
   const name = profile?.name || 'Your Business';
   const city = profile?.city || 'Local Area';
-  const lat = profile?.latitude ? `${profile.latitude.toFixed(4)}° N` : '12.2718° N';
-  const lng = profile?.longitude ? `${profile.longitude.toFixed(4)}° E` : '109.2016° E';
+  const nameLower = (profile?.name || '').toLowerCase();
+  const addressLower = (profile?.address || '').toLowerCase();
+  let defaultLat = 12.2718;
+  let defaultLng = 109.2016;
+  if (nameLower.includes('visaran') || nameLower.includes('визар') || addressLower.includes('hòn chồng') || addressLower.includes('hon chong')) {
+    defaultLat = 12.2690;
+    defaultLng = 109.2020;
+  }
+  const rawLat = profile?.latitude ?? (profile as any)?.lat;
+  const rawLng = profile?.longitude ?? (profile as any)?.lng;
+  const latNum = typeof rawLat === 'number' && !isNaN(rawLat) && rawLat !== 25.2048 ? rawLat : defaultLat;
+  const lngNum = typeof rawLng === 'number' && !isNaN(rawLng) && rawLng !== 55.2708 ? rawLng : defaultLng;
+  const lat = `${latNum.toFixed(4)}° N`;
+  const lng = `${lngNum.toFixed(4)}° E`;
   const gpsFormatted = `${lat}, ${lng}`;
 
   const realPrimaryPhoto = profile?.cover_url || profile?.photo_url || profile?.snapshot_url;

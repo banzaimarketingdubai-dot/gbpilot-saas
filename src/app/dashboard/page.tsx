@@ -1757,69 +1757,112 @@ export default function DashboardCockpitPage() {
             {/* ======================================================== */}
             {/* BLOCK 3: DUBAI OPERATIONAL PRESETS (COMPACT 1-TAP CHIPS)*/}
             {/* ======================================================== */}
-            <div className="bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">🇦🇪</span>
-                  <span className="text-xs font-black tracking-wide uppercase text-slate-200">
-                    Dubai Operational Presets (1-Tap Apply)
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.2 bg-blue-500/20 text-blue-300 rounded-full border border-blue-400/30">
-                    Google Maps
-                  </span>
+            {(() => {
+              const isDubai = ((activeProfile?.address || '') + ' ' + (activeProfile?.city || '')).toLowerCase().includes('dubai') || ((activeProfile?.address || '') + ' ' + (activeProfile?.city || '')).toLowerCase().includes('uae');
+              return (
+                <div className="bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{isDubai ? '🇦🇪' : '⚡'}</span>
+                      <span className="text-xs font-black tracking-wide uppercase text-slate-200">
+                        {isDubai ? 'Dubai Operational Presets (1-Tap Apply)' : 'Local Operational Presets (1-Tap Apply)'}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.2 bg-blue-500/20 text-blue-300 rounded-full border border-blue-400/30">
+                        Google Maps
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-snug">
+                      {isDubai 
+                        ? 'Instantly extends operating hours or adjusts seasonal climate attributes to keep the "Open Now" badge.' 
+                        : 'Instantly extends peak evening hours or schedules holiday operational updates to preserve the "Open Now" badge.'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap w-full md:w-auto shrink-0">
+                    {/* Peak Traffic / Rush Hour */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleDubaiSmartMode('PEAK_TRAFFIC')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                        dubaiSmartMode === 'PEAK_TRAFFIC'
+                          ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md font-extrabold'
+                          : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
+                      }`}
+                      title="Extends closing by +30m to maintain Open Now badge during evening rush hour"
+                    >
+                      <span>⏰ Rush Hour (+30m)</span>
+                      {dubaiSmartMode === 'PEAK_TRAFFIC' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    </button>
+
+                    {isDubai ? (
+                      <>
+                        {/* Ramadan Mode */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDubaiSmartMode('RAMADAN')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                            dubaiSmartMode === 'RAMADAN'
+                              ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-md font-extrabold'
+                              : 'bg-slate-800 hover:bg-slate-700 text-purple-300 border-slate-700'
+                          }`}
+                          title="Iftar and Suhoor hours (17:30 – 02:00)"
+                        >
+                          <span>🌙 Ramadan</span>
+                          {dubaiSmartMode === 'RAMADAN' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </button>
+
+                        {/* Summer Shield */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDubaiSmartMode('SUMMER')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                            dubaiSmartMode === 'SUMMER'
+                              ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-md font-extrabold'
+                              : 'bg-slate-800 hover:bg-slate-700 text-sky-300 border-slate-700'
+                          }`}
+                          title="Air conditioning and indoor parking attributes during +45°C heat"
+                        >
+                          <span>☀️ Summer (+45°C)</span>
+                          {dubaiSmartMode === 'SUMMER' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* Holiday Mode */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDubaiSmartMode('RAMADAN')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                            dubaiSmartMode === 'RAMADAN'
+                              ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-md font-extrabold'
+                              : 'bg-slate-800 hover:bg-slate-700 text-purple-300 border-slate-700'
+                          }`}
+                          title="Active during public holidays and festival periods"
+                        >
+                          <span>🎉 Holiday Schedule</span>
+                          {dubaiSmartMode === 'RAMADAN' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </button>
+
+                        {/* High Season Shield */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDubaiSmartMode('SUMMER')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                            dubaiSmartMode === 'SUMMER'
+                              ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-md font-extrabold'
+                              : 'bg-slate-800 hover:bg-slate-700 text-sky-300 border-slate-700'
+                          }`}
+                          title="Active during peak tourism season"
+                        >
+                          <span>🌊 High Season Boost</span>
+                          {dubaiSmartMode === 'SUMMER' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
-                  Instantly extends operating hours or adjusts seasonal climate attributes to keep the "Open Now" badge.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap w-full md:w-auto shrink-0">
-                {/* Peak Traffic */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleDubaiSmartMode('PEAK_TRAFFIC')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                    dubaiSmartMode === 'PEAK_TRAFFIC'
-                      ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md font-extrabold'
-                      : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
-                  }`}
-                  title="Extends closing by +30m to maintain Open Now badge during evening rush hour"
-                >
-                  <span>⏰ Traffic (+30m)</span>
-                  {dubaiSmartMode === 'PEAK_TRAFFIC' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                </button>
-
-                {/* Ramadan Mode */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleDubaiSmartMode('RAMADAN')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                    dubaiSmartMode === 'RAMADAN'
-                      ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-md font-extrabold'
-                      : 'bg-slate-800 hover:bg-slate-700 text-purple-300 border-slate-700'
-                  }`}
-                  title="Iftar and Suhoor hours (17:30 – 02:00)"
-                >
-                  <span>🌙 Ramadan</span>
-                  {dubaiSmartMode === 'RAMADAN' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                </button>
-
-                {/* Summer Shield */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleDubaiSmartMode('SUMMER')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-                    dubaiSmartMode === 'SUMMER'
-                      ? 'bg-sky-400 text-slate-950 border-sky-300 shadow-md font-extrabold'
-                      : 'bg-slate-800 hover:bg-slate-700 text-sky-300 border-slate-700'
-                  }`}
-                  title="Air conditioning and indoor parking attributes during +45°C heat"
-                >
-                  <span>☀️ Summer (+45°C)</span>
-                  {dubaiSmartMode === 'SUMMER' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                </button>
-              </div>
-            </div>
+              );
+            })()}
           </>
         )}
 
