@@ -82,6 +82,8 @@ interface ActiveBusinessProfile {
   phone?: string;
   website?: string;
   website_url?: string;
+  instagram_url?: string;
+  tiktok_url?: string;
   rating?: number;
   reviews_count?: number;
   role?: string;
