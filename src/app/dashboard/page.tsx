@@ -1734,13 +1734,15 @@ export default function DashboardCockpitPage() {
             {/* Social Sync Hub Section (Instagram & TikTok) */}
             <div id="social-sync-hub" className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs">
               <SocialSyncHub
-                key={String(activeProfile?.id || 'none')}
-                profileId={String(activeProfile?.id || '')}
+                key={String(activeProfile?.id || activeProfile?.name || 'none')}
+                profileId={String(activeProfile?.id || (activeProfile as any)?.google_location_id || '')}
                 venueName={activeProfile?.name || 'Your Business'}
                 category={activeProfile?.category || 'Local Business'}
                 city={activeProfile?.city || ''}
                 website={activeProfile?.website || activeProfile?.website_url || ''}
                 phone={activeProfile?.phone || ''}
+                initialInstagram={activeProfile?.instagram_url}
+                initialTiktok={activeProfile?.tiktok_url}
                 isPro={isProUser}
                 planId={subscription?.planId || 'FREE_SCOUT'}
                 onUpgradeClick={() => {

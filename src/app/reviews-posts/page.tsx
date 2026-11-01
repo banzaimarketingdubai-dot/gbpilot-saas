@@ -1630,13 +1630,15 @@ export default function ShieldReviewsPage() {
         {activeTab === 'SOCIAL_AUTOPILOT' && (
           <div className="space-y-6 animate-in fade-in">
             <SocialSyncHub
-              key={String(activeProfile?.id || activeProfile?.place_id || 'none')}
+              key={String(activeProfile?.id || activeProfile?.place_id || activeProfile?.name || 'none')}
               profileId={String(activeProfile?.id || activeProfile?.place_id || 'default')}
               venueName={activeProfile?.name || 'Your Business'}
               category={(activeProfile as any)?.category || 'Local Business'}
               city={activeProfile?.city || activeProfile?.address || ''}
               website={(activeProfile as any)?.website || (activeProfile as any)?.website_url || ''}
               phone={(activeProfile as any)?.phone || (activeProfile as any)?.phone_number || ''}
+              initialInstagram={(activeProfile as any)?.instagram_url}
+              initialTiktok={(activeProfile as any)?.tiktok_url}
               isPro={typeof window !== 'undefined' && localStorage.getItem('gbpilot_pro_activated') === 'true'}
               planId={typeof window !== 'undefined' && localStorage.getItem('gbpilot_pro_activated') === 'true' ? 'PRO_GROWTH' : 'FREE_SCOUT'}
               onUpgradeClick={() => {

@@ -422,6 +422,8 @@ async def list_profiles_endpoint(db: Session = Depends(get_db)):
                     "phone": p.phone_number,
                     "phone_number": p.phone_number,
                     "website_url": p.website_url,
+                    "instagram_url": getattr(p, "instagram_url", None) or "",
+                    "tiktok_url": getattr(p, "tiktok_url", None) or "",
                     "health_score": p.health_score or 65,
                     "role": "Owner / Manager",
                     "verified": True,
@@ -569,6 +571,149 @@ async def unlink_profile_endpoint(profile_id: str, db: Session = Depends(get_db)
     except Exception as e:
         db.rollback()
         return {"status": "success", "message": f"Profile unlinked with fallback: {e}"}
+
+
+@app.get("/api/v1/profiles/{profile_id}/social", tags=["Profiles"])
+async def get_profile_social_endpoint(
+    profile_id: str,
+    business_name: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch connected social media handles/links (Instagram, TikTok) for a venue profile.
+    """
+    if not db:
+        return {"success": False, "instagram": "", "tiktok": "", "message": "DB unavailable"}
+    
+    prof = None
+    try:
+        import uuid as _uuid
+        try:
+            prof = db.query(models.GBPProfile).filter(models.GBPProfile.id == _uuid.UUID(profile_id)).first()
+        except Exception:
+            prof = None
+        if not prof:
+            prof = db.query(models.GBPProfile).filter(
+                (models.GBPProfile.google_location_id == profile_id) |
+                (models.GBPProfile.google_location_id == f"locations/{profile_id}")
+            ).first()
+        if not prof and business_name:
+            prof = db.query(models.GBPProfile).filter(
+                models.GBPProfile.business_name.ilike(f"%{business_name}%")
+            ).first()
+        if not prof and len(profile_id) < 60 and not profile_id.startswith("ChIJ"):
+            prof = db.query(models.GBPProfile).filter(
+                models.GBPProfile.business_name.ilike(f"%{profile_id}%")
+            ).first()
+    except Exception as e:
+        logger.warning(f"[DB Warning] Could not look up profile social: {e}")
+
+    return {
+        "success": True,
+        "instagram": (prof.instagram_url if prof else "") or "",
+        "tiktok": (prof.tiktok_url if prof else "") or ""
+    }
+
+
+@app.post("/api/v1/profiles/{profile_id}/social", tags=["Profiles"])
+async def save_profile_social_endpoint(
+    profile_id: str,
+    payload: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Persist Instagram and TikTok profile links directly into the database for this venue.
+    """
+    if not db:
+        return {
+            "success": True,
+            "message": "DB offline; cached in client",
+            "instagram": payload.get("instagram", ""),
+            "tiktok": payload.get("tiktok", "")
+        }
+
+    instagram = (payload.get("instagram") or "").strip()
+    tiktok = (payload.get("tiktok") or "").strip()
+    b_name = (payload.get("business_name") or "").strip()
+
+    prof = None
+    try:
+        import uuid as _uuid
+        try:
+            prof = db.query(models.GBPProfile).filter(models.GBPProfile.id == _uuid.UUID(profile_id)).first()
+        except Exception:
+            prof = None
+        if not prof:
+            prof = db.query(models.GBPProfile).filter(
+                (models.GBPProfile.google_location_id == profile_id) |
+                (models.GBPProfile.google_location_id == f"locations/{profile_id}")
+            ).first()
+        if not prof and b_name:
+            prof = db.query(models.GBPProfile).filter(
+                models.GBPProfile.business_name.ilike(f"%{b_name}%")
+            ).first()
+        if not prof and len(profile_id) < 60 and not profile_id.startswith("ChIJ"):
+            prof = db.query(models.GBPProfile).filter(
+                models.GBPProfile.business_name.ilike(f"%{profile_id}%")
+            ).first()
+
+        # If profile doesn't exist yet in DB, create it so links are never lost
+        if not prof:
+            default_user = db.query(models.User).first()
+            if not default_user:
+                default_user = models.User(
+                    email="admin@gbpilot.top",
+                    hashed_password="placeholder_hash",
+                    full_name="GBPilot Admin"
+                )
+                db.add(default_user)
+                db.commit()
+                db.refresh(default_user)
+
+            org = db.query(models.Organization).first()
+            if not org:
+                org = models.Organization(
+                    owner_id=default_user.id,
+                    name=f"{b_name or 'Business'} Workspace"
+                )
+                db.add(org)
+                db.commit()
+                db.refresh(org)
+
+            loc_ref = profile_id if (profile_id.startswith("ChIJ") or "locations/" in profile_id) else f"locations/{profile_id[:20]}"
+            prof = models.GBPProfile(
+                organization_id=org.id,
+                google_location_id=loc_ref,
+                business_name=b_name or profile_id,
+                primary_category="Local Business",
+                address_line="",
+                instagram_url=instagram,
+                tiktok_url=tiktok
+            )
+            db.add(prof)
+        else:
+            prof.instagram_url = instagram
+            prof.tiktok_url = tiktok
+
+        db.commit()
+        db.refresh(prof)
+
+        return {
+            "success": True,
+            "message": f"Social links saved for '{prof.business_name}' in database.",
+            "profile_id": str(prof.id),
+            "instagram": prof.instagram_url or "",
+            "tiktok": prof.tiktok_url or ""
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[DB Error] Failed to save social profiles: {e}")
+        return {
+            "success": False,
+            "message": f"Failed to save social links to database: {e}",
+            "instagram": instagram,
+            "tiktok": tiktok
+        }
 
 @app.post("/api/v1/auth/unlink", tags=["Authentication"])
 async def unlink_account_endpoint(email: str = None, db: Session = Depends(get_db)):

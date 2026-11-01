@@ -51,6 +51,8 @@ class GBPProfile(Base):
     phone_number = Column(String(50))
     website_url = Column(String(500))
     booking_url = Column(String(500))
+    instagram_url = Column(String(500), nullable=True)
+    tiktok_url = Column(String(500), nullable=True)
     health_score = Column(Integer, default=75)
     autopilot_mode = Column(String(50), default='MANUAL_APPROVAL')
     refresh_token_encrypted = Column(Text)

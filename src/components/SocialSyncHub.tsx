@@ -18,6 +18,8 @@ interface SocialSyncHubProps {
   phone?: string;
   isPro?: boolean;
   planId?: string;
+  initialInstagram?: string;
+  initialTiktok?: string;
   onUpgradeClick?: () => void;
 }
 
@@ -26,8 +28,9 @@ interface SocialAccounts {
   tiktok?: string;
 }
 
-const storageKey = (profileId: string) => `gbpilot_social_${profileId}`;
-const modeKey = (profileId: string) => `gbpilot_social_mode_${profileId}`;
+const sanitizeKey = (id: string) => (id || 'default').toLowerCase().replace(/[^a-z0-9]/g, '_');
+const storageKey = (id: string) => `gbpilot_social_${sanitizeKey(id)}`;
+const modeKey = (id: string) => `gbpilot_social_mode_${sanitizeKey(id)}`;
 
 function cleanHandle(v: string): string {
   return v.trim().replace(/^https?:\/\/(www\.)?(instagram|tiktok)\.com\/@?/i, '').replace(/^@/, '').replace(/\/.*$/, '');
@@ -42,6 +45,8 @@ export function SocialSyncHub({
   phone = '',
   isPro = false,
   planId = 'FREE_SCOUT',
+  initialInstagram = '',
+  initialTiktok = '',
   onUpgradeClick
 }: SocialSyncHubProps) {
   const autopilotEnabled = planId === 'PRO_GROWTH' || planId === 'AGENCY' || isPro;
@@ -51,6 +56,7 @@ export function SocialSyncHub({
   const [ttInput, setTtInput] = useState('');
   const [syncedIds, setSyncedIds] = useState<string[]>([]);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [isSavingDb, setIsSavingDb] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [customCaption, setCustomCaption] = useState('');
   const [customPlatform, setCustomPlatform] = useState<'INSTAGRAM' | 'TIKTOK'>('INSTAGRAM');
@@ -61,33 +67,139 @@ export function SocialSyncHub({
   // 3-way Autopilot Mode: AUTONOMOUS (Auto-Publish) | APPROVAL (Review & Approve) | PAUSED (Off)
   const [autopilotMode, setAutopilotMode] = useState<'AUTONOMOUS' | 'APPROVAL' | 'PAUSED'>('APPROVAL');
 
-  // Load THIS business's connected accounts & mode
+  const effectiveId = profileId || venueName || 'default_venue';
+
+  // Load THIS business's connected accounts from localStorage + Database
   useEffect(() => {
     setSyncedIds([]);
     setSyncingId(null);
     setIgInput('');
     setTtInput('');
-    try {
-      const raw = profileId ? localStorage.getItem(storageKey(profileId)) : null;
-      setAccounts(raw ? JSON.parse(raw) : {});
 
-      const rawMode = profileId ? localStorage.getItem(modeKey(profileId)) : null;
+    let loadedAccounts: SocialAccounts = {};
+
+    // 1. Initial props if passed from profile
+    if (initialInstagram || initialTiktok) {
+      loadedAccounts = {
+        instagram: initialInstagram ? cleanHandle(initialInstagram) : undefined,
+        tiktok: initialTiktok ? cleanHandle(initialTiktok) : undefined,
+      };
+    }
+
+    // 2. Fast cache from localStorage (try effectiveId then venueName)
+    try {
+      const raw = localStorage.getItem(storageKey(effectiveId)) || (venueName ? localStorage.getItem(storageKey(venueName)) : null);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        loadedAccounts = { ...loadedAccounts, ...parsed };
+      }
+
+      const rawMode = localStorage.getItem(modeKey(effectiveId)) || (venueName ? localStorage.getItem(modeKey(venueName)) : null);
       if (rawMode === 'AUTONOMOUS' || rawMode === 'APPROVAL' || rawMode === 'PAUSED') {
         setAutopilotMode(rawMode);
       }
-    } catch {
-      setAccounts({});
-    }
-  }, [profileId]);
+    } catch {}
 
-  const saveAccounts = (next: SocialAccounts) => {
+    setAccounts(loadedAccounts);
+
+    // 3. Database fetch: ensures links are NEVER lost on page reload
+    let cancelled = false;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
+    const queryParam = venueName ? `?business_name=${encodeURIComponent(venueName)}` : '';
+
+    fetch(`${baseUrl}/api/v1/profiles/${encodeURIComponent(effectiveId)}/social${queryParam}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!cancelled && data && data.success) {
+          const dbIg = data.instagram ? cleanHandle(data.instagram) : '';
+          const dbTt = data.tiktok ? cleanHandle(data.tiktok) : '';
+          if (dbIg || dbTt) {
+            setAccounts(prev => {
+              const merged: SocialAccounts = {
+                instagram: dbIg || prev.instagram,
+                tiktok: dbTt || prev.tiktok,
+              };
+              try {
+                localStorage.setItem(storageKey(effectiveId), JSON.stringify(merged));
+                if (venueName) localStorage.setItem(storageKey(venueName), JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [effectiveId, venueName, initialInstagram, initialTiktok]);
+
+  const saveAccounts = async (next: SocialAccounts) => {
     setAccounts(next);
-    if (profileId) localStorage.setItem(storageKey(profileId), JSON.stringify(next));
+    
+    // 1. LocalStorage persist for instant response
+    try {
+      localStorage.setItem(storageKey(effectiveId), JSON.stringify(next));
+      if (venueName) localStorage.setItem(storageKey(venueName), JSON.stringify(next));
+
+      // Update gbpilot_active_profile in localStorage
+      const rawActive = localStorage.getItem('gbpilot_active_profile');
+      if (rawActive) {
+        const parsed = JSON.parse(rawActive);
+        parsed.instagram_url = next.instagram || '';
+        parsed.tiktok_url = next.tiktok || '';
+        localStorage.setItem('gbpilot_active_profile', JSON.stringify(parsed));
+      }
+
+      // Update availableProfiles
+      const rawAvail = localStorage.getItem('gbpilot_available_profiles');
+      if (rawAvail) {
+        const list = JSON.parse(rawAvail);
+        if (Array.isArray(list)) {
+          const updated = list.map((p: any) => {
+            if (p.name === venueName || p.id === effectiveId) {
+              return { ...p, instagram_url: next.instagram || '', tiktok_url: next.tiktok || '' };
+            }
+            return p;
+          });
+          localStorage.setItem('gbpilot_available_profiles', JSON.stringify(updated));
+        }
+      }
+
+      window.dispatchEvent(new CustomEvent('active_profile_updated'));
+    } catch {}
+
+    // 2. Persist to Database on Server
+    setIsSavingDb(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
+      const res = await fetch(`${baseUrl}/api/v1/profiles/${encodeURIComponent(effectiveId)}/social`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instagram: next.instagram || '',
+          tiktok: next.tiktok || '',
+          business_name: venueName
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          showToast(`💾 Saved social channels to database for ${venueName}!`);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to save social links to database:', e);
+    } finally {
+      setIsSavingDb(false);
+    }
   };
 
   const handleSetAutopilotMode = (mode: 'AUTONOMOUS' | 'APPROVAL' | 'PAUSED') => {
     setAutopilotMode(mode);
-    if (profileId) localStorage.setItem(modeKey(profileId), mode);
+    if (effectiveId) {
+      localStorage.setItem(modeKey(effectiveId), mode);
+      if (venueName) localStorage.setItem(modeKey(venueName), mode);
+    }
     
     if (mode === 'AUTONOMOUS') {
       showToast('⚡ 100% Autopilot Active: New posts will be adapted & auto-published to Google Maps every 6 hours.');
@@ -410,10 +522,19 @@ export function SocialSyncHub({
             <button
               type="button"
               onClick={handleConnect}
-              disabled={!igInput.trim() && !ttInput.trim()}
-              className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-40 text-white font-bold text-xs cursor-pointer shadow-xs transition-all"
+              disabled={(!igInput.trim() && !ttInput.trim()) || isSavingDb}
+              className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-40 text-white font-bold text-xs cursor-pointer shadow-xs transition-all flex items-center justify-center gap-1.5"
             >
-              {connected ? 'Update Accounts' : 'Connect & Preview'}
+              {isSavingDb ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving to DB...</span>
+                </>
+              ) : connected ? (
+                'Update & Save to DB'
+              ) : (
+                'Connect & Save to DB'
+              )}
             </button>
           </div>
         </div>
