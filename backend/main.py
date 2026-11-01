@@ -385,6 +385,8 @@ async def rescan_profile_endpoint(payload: dict, db: Session = Depends(get_db)):
                     prof.phone_number = place_data["phone"]
                 if place_data.get("website_url"):
                     prof.website_url = place_data["website_url"]
+                if place_data.get("health", {}).get("score"):
+                    prof.health_score = int(place_data["health"]["score"])
                 db.commit()
         except Exception as e:
             logger.warning(f"[DB Warning] Could not update profile in DB during rescan: {e}")
@@ -392,7 +394,8 @@ async def rescan_profile_endpoint(payload: dict, db: Session = Depends(get_db)):
     return {
         "success": True,
         "scanned_at": datetime.utcnow().isoformat(),
-        "business": place_data
+        "business": place_data,
+        "health": place_data.get("health")
     }
 
 
@@ -419,7 +422,7 @@ async def list_profiles_endpoint(db: Session = Depends(get_db)):
                     "phone": p.phone_number,
                     "phone_number": p.phone_number,
                     "website_url": p.website_url,
-                    "health_score": p.health_score or 85,
+                    "health_score": p.health_score or 65,
                     "role": "Owner / Manager",
                     "verified": True,
                     "is_admin": True,

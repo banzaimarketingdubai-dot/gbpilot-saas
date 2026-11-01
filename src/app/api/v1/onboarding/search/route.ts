@@ -140,14 +140,20 @@ export async function POST(request: Request) {
     const addressParts = formattedAddress.split(',').map((p: string) => p.trim());
     const city = addressParts.length >= 2 ? addressParts[addressParts.length - 2] : 'Dubai';
 
-    // Calculate real initial health score
-    let score = 50;
-    if (formattedAddress && formattedAddress !== '—') score += 15;
-    if (phone && phone !== '—') score += 10;
-    if (website) score += 10;
+    // Calculate real initial multi-factor health audit score (0-100%)
+    let score = 0;
+    if (displayName && displayName !== '—') score += 8;
+    if (formattedAddress && formattedAddress !== '—') score += 8;
+    if (phone && phone !== '—') score += 7;
+    if (website) score += 6;
+    if (category && category.toLowerCase() !== 'local business') score += 6;
     if (weekdayDescriptions.length > 0) score += 10;
     if (coverUrl) score += 5;
-    if (rating >= 4.0) score += 10;
+    if (rating >= 4.5) score += 8;
+    else if (rating >= 4.0) score += 5;
+    else if (rating > 0) score += 2;
+    if (reviewsCount >= 10) score += 7;
+    else if (reviewsCount >= 1) score += 4;
 
     const detectedBusiness = {
       id: placeId,

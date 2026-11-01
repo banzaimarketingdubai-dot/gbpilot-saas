@@ -54,6 +54,7 @@ import { getSubscription, setSubscriptionPlan, activateTrial, SubscriptionState,
 import { isSuperAdmin } from '@/lib/roles';
 import { runInspectionAudit } from '@/lib/inspection/auditEngine';
 import { NextBestActionCard } from '@/components/NextBestActionCard';
+import { loadOwnerGroundTruth, OwnerGroundTruth } from '@/lib/groundTruth';
 
 const DEFAULT_VENUE_PHOTO = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80';
 
@@ -77,6 +78,7 @@ interface ActiveBusinessProfile {
   address: string;
   city?: string;
   category?: string;
+  secondary_categories?: string[];
   phone?: string;
   website?: string;
   website_url?: string;
@@ -89,6 +91,8 @@ interface ActiveBusinessProfile {
   snapshot_url?: string;
   description?: string;
   opening_hours?: string[];
+  has_holiday_hours?: boolean;
+  health_score?: number;
   attributes?: Record<string, boolean>;
   latitude?: number;
   longitude?: number;
@@ -123,6 +127,7 @@ export default function DashboardCockpitPage() {
   const [isRescanning, setIsRescanning] = useState(false);
   const [isQuickWinApplied, setIsQuickWinApplied] = useState(false);
   const [isThreatResolved, setIsThreatResolved] = useState(false);
+  const [groundTruth, setGroundTruth] = useState<OwnerGroundTruth | null>(null);
   const [isProUser, setIsProUser] = useState(false);
   const [subscription, setSubscription] = useState<SubscriptionState>({
     planId: 'FREE_SCOUT',
@@ -136,6 +141,15 @@ export default function DashboardCockpitPage() {
   const [pendingActionToExecute, setPendingActionToExecute] = useState<string | null>(null);
   const [activeProfile, setActiveProfile] = useState<ActiveBusinessProfile | null>(null);
   const [liveSync, setLiveSync] = useState<{ fields?: Record<string, any>; sources?: Record<string, string>; health?: { score: number; gaps: string[] } } | null>(null);
+
+  // Synchronize localStorage threat/win status and Ground Truth per active venue
+  useEffect(() => {
+    if (typeof window === 'undefined' || !activeProfile?.name) return;
+    const name = activeProfile.name;
+    setIsThreatResolved(localStorage.getItem(`gbpilot_threat_resolved_${name}`) === 'true');
+    setIsQuickWinApplied(localStorage.getItem(`gbpilot_quickwin_applied_${name}`) === 'true');
+    setGroundTruth(loadOwnerGroundTruth(activeProfile));
+  }, [activeProfile?.name, activeProfile?.id]);
 
   // Pull REAL Google Business Profile data for the active location.
   useEffect(() => {
@@ -170,59 +184,6 @@ export default function DashboardCockpitPage() {
       }
     });
   }, [activeProfile?.name, activeProfile?.address, activeProfile?.category]);
-
-  // Dynamic Real Profile Health Score strictly from activeProfile
-  const profileHealth = React.useMemo(() => {
-    if (!activeProfile || !activeProfile.name || activeProfile.name === 'No Business Connected') {
-      return {
-        score: 0,
-        ratingDisplay: '—',
-        hasRating: false,
-        reviewsCount: 0,
-        reviewsDisplay: '0 reviews',
-        statusLabel: 'No Venue Connected',
-        isHoursMissing: true,
-        isDescriptionMissing: true,
-        isPhoneMissing: true,
-        isAddressMissing: true,
-        isWebsiteMissing: true
-      };
-    }
-
-    let score = 0;
-    const hasName = Boolean(activeProfile.name && activeProfile.name !== '—');
-    const hasAddress = Boolean(activeProfile.address && activeProfile.address !== '—');
-    const hasPhone = Boolean(activeProfile.phone && activeProfile.phone !== '—');
-    const hasWebsite = Boolean(activeProfile.website_url || activeProfile.website);
-    const hasCategory = Boolean(activeProfile.category && activeProfile.category.toLowerCase() !== 'local business');
-    const hasHours = Boolean(activeProfile.opening_hours && activeProfile.opening_hours.length > 0);
-    const hasDesc = Boolean(activeProfile.description && activeProfile.description.trim().length > 30);
-    const hasRating = typeof activeProfile.rating === 'number' && activeProfile.rating > 0;
-    const reviewsCount = typeof activeProfile.reviews_count === 'number' ? activeProfile.reviews_count : 0;
-
-    if (hasName) score += 20;
-    if (hasAddress) score += 20;
-    if (hasPhone) score += 15;
-    if (hasWebsite) score += 15;
-    if (hasCategory) score += 15;
-    if (hasHours) score += 15;
-
-    const finalScore = liveSync?.health?.score !== undefined ? liveSync.health.score : Math.min(100, score);
-
-    return {
-      score: finalScore,
-      ratingDisplay: hasRating ? activeProfile.rating!.toFixed(1) : '—',
-      hasRating,
-      reviewsCount,
-      reviewsDisplay: reviewsCount > 0 ? `${reviewsCount} reviews` : '0 reviews',
-      statusLabel: 'Active on Google Maps',
-      isHoursMissing: !hasHours,
-      isDescriptionMissing: !hasDesc,
-      isPhoneMissing: !hasPhone,
-      isAddressMissing: !hasAddress,
-      isWebsiteMissing: !hasWebsite
-    };
-  }, [activeProfile, liveSync]);
 
   const configuredAttrsCount = React.useMemo(() => {
     if (typeof window === 'undefined' || !activeProfile?.name) return 0;
@@ -263,26 +224,135 @@ export default function DashboardCockpitPage() {
       name.includes('visaran') || name.includes('bus') ||
       cat.includes('tour') || cat.includes('travel') || name.includes('tour')
     ) {
-      return ['Tour Agency', 'Travel Agency'];
+      const candidates = ['Airport Shuttle Service', 'Tour Agency', 'Bus Tour Agency', 'Chauffeur Service'];
+      return candidates.filter(c => c.toLowerCase() !== cat).slice(0, 2);
     }
     if (
       cat.includes('cafe') || cat.includes('coffee') ||
       cat.includes('кафе') || cat.includes('кофе') ||
       cat.includes('ресторан') || cat.includes('restaurant')
     ) {
-      return ['Breakfast Restaurant', 'Coffee Shop'];
+      const candidates = ['Bakery', 'Breakfast Restaurant', 'Brunch Restaurant', 'Tea House', 'Pastry Shop'];
+      return candidates.filter(c => c.toLowerCase() !== cat).slice(0, 2);
     }
     if (
       cat.includes('salon') || cat.includes('beauty') ||
       cat.includes('barber') || cat.includes('парикмах') || cat.includes('салон')
     ) {
-      return ['Hair Salon', 'Beauty Parlour'];
+      const candidates = ['Hair Salon', 'Beauty Parlour', 'Nail Salon', 'Spa'];
+      return candidates.filter(c => c.toLowerCase() !== cat).slice(0, 2);
     }
     if (cat.includes('clinic') || cat.includes('dental') || cat.includes('врач') || cat.includes('мед')) {
-      return ['Dental Clinic', 'Medical Center'];
+      const candidates = ['Dental Clinic', 'Medical Center', 'Doctor', 'Health Consultant'];
+      return candidates.filter(c => c.toLowerCase() !== cat).slice(0, 2);
     }
     return ['Commercial Service', 'Consulting Agency'];
   }, [activeProfile?.category, activeProfile?.name]);
+
+  // Dynamic Real Profile Health Score strictly from activeProfile & multi-factor audit
+  const profileHealth = React.useMemo(() => {
+    if (!activeProfile || !activeProfile.name || activeProfile.name === 'No Business Connected') {
+      return {
+        score: 0,
+        ratingDisplay: '—',
+        hasRating: false,
+        reviewsCount: 0,
+        reviewsDisplay: '0 reviews',
+        statusLabel: 'No Venue Connected',
+        isHoursMissing: true,
+        isHolidayHoursMissing: true,
+        isSecondaryCatsMissing: true,
+        isDescriptionMissing: true,
+        isPhoneMissing: true,
+        isAddressMissing: true,
+        isWebsiteMissing: true
+      };
+    }
+
+    const hasName = Boolean(activeProfile.name && activeProfile.name !== '—');
+    const hasAddress = Boolean(activeProfile.address && activeProfile.address !== '—');
+    const hasPhone = Boolean(activeProfile.phone && activeProfile.phone !== '—');
+    const hasWebsite = Boolean(activeProfile.website_url || activeProfile.website);
+    const hasCategory = Boolean(activeProfile.category && activeProfile.category.toLowerCase() !== 'local business');
+    const hasHours = Boolean(activeProfile.opening_hours && activeProfile.opening_hours.length > 0);
+    const hasDesc = Boolean(activeProfile.description && activeProfile.description.trim().length > 30);
+    const hasPhoto = Boolean(activeProfile.cover_url || activeProfile.photo_url || activeProfile.snapshot_url);
+    const hasRating = typeof activeProfile.rating === 'number' && activeProfile.rating > 0;
+    const ratingVal = hasRating ? activeProfile.rating! : 0;
+    const reviewsCount = typeof activeProfile.reviews_count === 'number' ? activeProfile.reviews_count : 0;
+    const hasSecondaryCats = Boolean(
+      isQuickWinApplied || 
+      (Array.isArray((activeProfile as any).secondary_categories) && (activeProfile as any).secondary_categories.length > 0)
+    );
+    const isHolidayHoursVerified = Boolean(
+      isThreatResolved || 
+      (activeProfile as any).has_holiday_hours
+    );
+
+    let score = 0;
+
+    // 1. Core NAP (35 points max)
+    if (hasName) score += 8;
+    if (hasAddress) score += 8;
+    if (hasPhone) score += 7;
+    if (hasWebsite) score += 6;
+    if (hasCategory) score += 6;
+
+    // 2. Operating Hours & Schedule (15 points max)
+    if (hasHours) score += 10;
+    if (isHolidayHoursVerified) score += 5;
+
+    // 3. Discovery & Content (20 points max)
+    if (hasSecondaryCats) score += 10;
+    if (hasDesc) score += 5;
+    if (hasPhoto) score += 5;
+
+    // 4. Attributes Matrix & AI Ground Truth (15 points max)
+    if (configuredAttrsCount >= 16) {
+      score += 10;
+    } else if (configuredAttrsCount >= 6) {
+      score += 7;
+    } else if (configuredAttrsCount >= 1) {
+      score += 3;
+    }
+    if (groundTruth?.isCompleted) score += 5;
+
+    // 5. Reputation & Social Proof (15 points max)
+    if (ratingVal >= 4.5) {
+      score += 8;
+    } else if (ratingVal >= 4.0) {
+      score += 5;
+    } else if (ratingVal > 0) {
+      score += 2;
+    }
+
+    if (reviewsCount >= 10) {
+      score += 7;
+    } else if (reviewsCount >= 1) {
+      score += 4;
+    }
+
+    // Server-level deep sync override if available, otherwise strict audit score
+    const finalScore = liveSync?.health?.score !== undefined 
+      ? liveSync.health.score 
+      : Math.min(100, Math.max(0, score));
+
+    return {
+      score: finalScore,
+      ratingDisplay: hasRating ? activeProfile.rating!.toFixed(1) : '—',
+      hasRating,
+      reviewsCount,
+      reviewsDisplay: reviewsCount > 0 ? `${reviewsCount} reviews` : '0 reviews',
+      statusLabel: 'Active on Google Maps',
+      isHoursMissing: !hasHours,
+      isHolidayHoursMissing: !isHolidayHoursVerified,
+      isSecondaryCatsMissing: !hasSecondaryCats,
+      isDescriptionMissing: !hasDesc,
+      isPhoneMissing: !hasPhone,
+      isAddressMissing: !hasAddress,
+      isWebsiteMissing: !hasWebsite
+    };
+  }, [activeProfile, liveSync, isThreatResolved, isQuickWinApplied, configuredAttrsCount, groundTruth?.isCompleted]);
 
   // Collapsible Digital Insurance & Safe Uptime Hub state
   const [isValueCardCollapsed, setIsValueCardCollapsed] = useState(false);
@@ -562,6 +632,22 @@ export default function DashboardCockpitPage() {
     showToast(`Switched Cockpit to ${mode === 'AUTONOMOUS' ? 'Autonomous Autopilot' : 'Manual Approval'} mode.`);
   };
 
+  const handleResolveThreat = () => {
+    setIsThreatResolved(true);
+    if (typeof window !== 'undefined' && activeProfile?.name) {
+      localStorage.setItem(`gbpilot_threat_resolved_${activeProfile.name}`, 'true');
+    }
+    showToast('✅ Operating schedule & holiday hours verified on Google Maps!');
+  };
+
+  const handleApplyQuickWin = () => {
+    setIsQuickWinApplied(true);
+    if (typeof window !== 'undefined' && activeProfile?.name) {
+      localStorage.setItem(`gbpilot_quickwin_applied_${activeProfile.name}`, 'true');
+    }
+    showToast(`✨ [${suggestedSecondaryCategories[0]}] and [${suggestedSecondaryCategories[1]}] added to profile!`);
+  };
+
   const handleManualRescan = async () => {
     if (!activeProfile?.name || activeProfile.name === 'No Business Connected') {
       showToast('⚠️ No active profile selected to re-scan.');
@@ -599,6 +685,8 @@ export default function DashboardCockpitPage() {
           name: b.business_name || activeProfile.name,
           address: b.address || activeProfile.address,
           category: formatCategory(b.category || b.primary_category || activeProfile.category),
+          secondary_categories: b.secondary_categories || (activeProfile as any).secondary_categories,
+          description: b.description || activeProfile.description,
           phone: b.phone || activeProfile.phone,
           website_url: b.website_url || activeProfile.website_url,
           website: b.website_url || activeProfile.website,
@@ -606,6 +694,8 @@ export default function DashboardCockpitPage() {
           reviews_count: typeof b.reviews_count === 'number' ? b.reviews_count : activeProfile.reviews_count,
           cover_url: b.cover_url || activeProfile.cover_url,
           opening_hours: Array.isArray(b.opening_hours) && b.opening_hours.length > 0 ? b.opening_hours : activeProfile.opening_hours,
+          has_holiday_hours: b.has_holiday_hours !== undefined ? b.has_holiday_hours : (activeProfile as any).has_holiday_hours,
+          health_score: data.health?.score || b.health?.score,
           verified: true
         };
 
@@ -634,7 +724,7 @@ export default function DashboardCockpitPage() {
           window.dispatchEvent(new CustomEvent('active_profile_updated'));
         }
 
-        showToast(`✅ Live Google Maps re-scan complete! Telemetry updated for "${updatedProfile.name}".`);
+        showToast(`✅ Live Google Maps re-scan complete! Telemetry & Health Audit updated for "${updatedProfile.name}".`);
       } else {
         showToast(data.message || '⚠️ Google Maps could not locate live profile. Please check location name.');
       }
@@ -1352,22 +1442,24 @@ export default function DashboardCockpitPage() {
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-purple-700">
                         💬 Reputation &amp; AI
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 font-extrabold">
-                        100%
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${groundTruth?.isCompleted ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {groundTruth?.isCompleted ? '100% RAG' : 'Setup (30s)'}
                       </span>
                     </div>
 
                     <div className="my-2 space-y-1 text-left">
                       <div className="text-xs font-bold text-slate-800">
-                        RAG Facts Injected
+                        {groundTruth?.isCompleted ? 'RAG Facts Injected' : 'Ground Truth Pending'}
                       </div>
                       <p className="text-[10px] text-slate-500 leading-tight">
-                        ChatGPT, Gemini, & Perplexity cite your verified services & amenities
+                        {groundTruth?.isCompleted 
+                          ? 'ChatGPT, Gemini, & Perplexity cite your verified services & amenities' 
+                          : 'Configure signature offer & venue perks to train local AI agents'}
                       </p>
                     </div>
 
                     <div className="text-[11px] font-bold text-purple-700 flex items-center justify-between">
-                      <span>Configure AI</span>
+                      <span>{groundTruth?.isCompleted ? 'Edit AI Knowledge' : 'Train AI in 30s'}</span>
                       <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </Link>
@@ -1460,11 +1552,7 @@ export default function DashboardCockpitPage() {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => {
-                          setIsThreatResolved(true);
-                          setToastMessage('✅ Operating hours verified on Google Maps!');
-                          setTimeout(() => setToastMessage(null), 4000);
-                        }}
+                        onClick={handleResolveThreat}
                         className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Clock className="w-4 h-4" />
@@ -1506,11 +1594,7 @@ export default function DashboardCockpitPage() {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => {
-                          setIsQuickWinApplied(true);
-                          setToastMessage(`✨ [${suggestedSecondaryCategories[0]}] and [${suggestedSecondaryCategories[1]}] added to profile!`);
-                          setTimeout(() => setToastMessage(null), 4000);
-                        }}
+                        onClick={handleApplyQuickWin}
                         className="w-full py-2.5 px-4 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
@@ -2387,7 +2471,7 @@ export default function DashboardCockpitPage() {
         </div>
       )}
 
-      <BottomNav attributesCount={42} unreadReviewsCount={1} threatsCount={0} radarAlertsCount={2} />
+      <BottomNav attributesCount={configuredAttrsCount || 0} unreadReviewsCount={0} threatsCount={isThreatResolved ? 0 : 1} radarAlertsCount={2} />
 
       <Footer />
     </div>

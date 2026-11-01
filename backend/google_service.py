@@ -238,6 +238,9 @@ def _parse_public_place_obj(place: Dict[str, Any]) -> Dict[str, Any]:
             photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=600&maxWidthPx=800&key={GOOGLE_PLACES_API_KEY}"
     
     cat_name = (place.get("primaryTypeDisplayName") or {}).get("text")
+    raw_primary = place.get("primaryType") or ""
+    if not cat_name and raw_primary:
+        cat_name = _humanize_place_type(raw_primary)
     if not cat_name:
         raw_types = place.get("types", [])
         if raw_types:
@@ -248,11 +251,28 @@ def _parse_public_place_obj(place: Dict[str, Any]) -> Dict[str, Any]:
     if not cat_name:
         cat_name = "Local Business"
 
-    # Extract opening hours
+    # Extract secondary categories
+    secondary_cats: List[str] = []
+    for t in (place.get("types") or []):
+        if t in _GENERIC_PLACE_TYPES or t == raw_primary:
+            continue
+        label = _humanize_place_type(t)
+        if label and label.lower() != cat_name.lower() and label not in secondary_cats:
+            secondary_cats.append(label)
+
+    # Extract opening hours & holiday hours
     open_now = (place.get("currentOpeningHours") or {}).get("openNow")
     opening_hours = (place.get("regularOpeningHours") or {}).get("weekdayDescriptions", [])
     if not opening_hours:
         opening_hours = (place.get("currentOpeningHours") or {}).get("weekdayDescriptions", [])
+
+    has_holiday_hours = bool(
+        (place.get("regularOpeningHours") or {}).get("specialDays") or
+        (place.get("currentOpeningHours") or {}).get("specialDays")
+    )
+
+    # Editorial description
+    desc = (place.get("editorialSummary") or {}).get("text", "")
 
     parsed_reviews = []
     for r in place.get("reviews", []):
@@ -273,23 +293,138 @@ def _parse_public_place_obj(place: Dict[str, Any]) -> Dict[str, Any]:
 
     name_obj = place.get("displayName")
     business_name = name_obj.get("text") if isinstance(name_obj, dict) else (name_obj or "")
+    phone_val = place.get("internationalPhoneNumber", "") or place.get("nationalPhoneNumber", "")
+    web_val = place.get("websiteUri", "")
+    rating_val = float(place.get("rating") or 0)
+    reviews_count_val = int(place.get("userRatingCount", 0))
+
+    # Rigorous Multi-Factor Health Score Audit (sum = 100 max)
+    audit_score = 0
+    passed_audit: List[str] = []
+    gaps_audit: List[str] = []
+
+    # 1. Core NAP (35 pts)
+    if business_name:
+        audit_score += 8
+        passed_audit.append("Business Name Verified")
+    else:
+        gaps_audit.append("Missing Business Name")
+
+    if place.get("formattedAddress"):
+        audit_score += 8
+        passed_audit.append("Physical Address Verified")
+    else:
+        gaps_audit.append("Missing Physical Address")
+
+    if phone_val:
+        audit_score += 7
+        passed_audit.append("Phone Number Verified")
+    else:
+        gaps_audit.append("Missing Phone Number")
+
+    if web_val:
+        audit_score += 6
+        passed_audit.append("Official Website Indexed")
+    else:
+        gaps_audit.append("Missing Website Link")
+
+    if cat_name and cat_name.lower() != "local business":
+        audit_score += 6
+        passed_audit.append(f"Primary Category: {cat_name}")
+    else:
+        gaps_audit.append("Generic or Missing Primary Category")
+
+    # 2. Operating Hours (15 pts)
+    if opening_hours:
+        audit_score += 10
+        passed_audit.append("7-Day Operating Schedule")
+    else:
+        gaps_audit.append("Regular Operating Hours Missing")
+
+    if has_holiday_hours:
+        audit_score += 5
+        passed_audit.append("Holiday & Special Hours Confirmed")
+    else:
+        gaps_audit.append("Holiday & Special Operating Hours Unconfirmed")
+
+    # 3. Discovery & Content (20 pts)
+    if len(secondary_cats) > 0:
+        audit_score += 10
+        passed_audit.append(f"Secondary Categories ({len(secondary_cats)})")
+    else:
+        gaps_audit.append("No Secondary Categories Configured")
+
+    if desc and len(desc) > 30:
+        audit_score += 5
+        passed_audit.append("Rich Business Description")
+    else:
+        gaps_audit.append("Business Description Missing/Short")
+
+    if len(photos) >= 3:
+        audit_score += 5
+        passed_audit.append(f"Photo Vault ({len(photos)}+ photos)")
+    elif len(photos) > 0:
+        audit_score += 3
+        passed_audit.append("Cover Photo Available")
+        gaps_audit.append("Fewer than 3 Photos in Vault")
+    else:
+        gaps_audit.append("No Profile Photos")
+
+    # 4. Attributes & AI Readiness (15 pts)
+    # Kept as actionable gaps for dashboard optimization (attributes + AI facts)
+    gaps_audit.append("150-Point Attributes Matrix Incomplete")
+    gaps_audit.append("AI Ground Truth Facts Pending")
+
+    # 5. Reputation & Rating (15 pts)
+    if rating_val >= 4.5:
+        audit_score += 8
+        passed_audit.append(f"Excellent Rating ({rating_val}★)")
+    elif rating_val >= 4.0:
+        audit_score += 5
+        passed_audit.append(f"Good Rating ({rating_val}★)")
+    elif rating_val > 0:
+        audit_score += 2
+        gaps_audit.append(f"Sub-optimal Rating ({rating_val}★)")
+    else:
+        gaps_audit.append("No Rating Recorded")
+
+    if reviews_count_val >= 10:
+        audit_score += 7
+        passed_audit.append(f"Review Volume ({reviews_count_val} reviews)")
+    elif reviews_count_val >= 1:
+        audit_score += 4
+        passed_audit.append(f"Review Volume ({reviews_count_val} reviews)")
+        gaps_audit.append("Low Review Count (<10 reviews)")
+    else:
+        gaps_audit.append("Zero Customer Reviews")
+
+    health_audit = {
+        "score": min(100, max(0, audit_score)),
+        "passed": passed_audit,
+        "gaps": gaps_audit
+    }
 
     return {
         "place_id": place.get("id"),
         "business_name": business_name,
         "address": place.get("formattedAddress"),
         "google_maps_url": place_maps_uri,
-        "rating": float(place.get("rating") or 0),
-        "reviews_count": int(place.get("userRatingCount", 0)),
+        "rating": rating_val,
+        "reviews_count": reviews_count_val,
         "lat": (place.get("location") or {}).get("latitude"),
         "lng": (place.get("location") or {}).get("longitude"),
-        "phone": place.get("internationalPhoneNumber", "") or place.get("nationalPhoneNumber", ""),
-        "website_url": place.get("websiteUri", ""),
+        "phone": phone_val,
+        "website_url": web_val,
         "category": cat_name,
         "primary_category": cat_name,
+        "secondary_categories": secondary_cats[:5],
         "cover_url": photo_url,
         "open_now": open_now,
         "opening_hours": opening_hours,
+        "has_holiday_hours": has_holiday_hours,
+        "description": desc,
+        "photos_count": len(photos),
+        "health": health_audit,
         "reviews": parsed_reviews
     }
 
@@ -316,7 +451,7 @@ def get_public_place_details(
             url = f"https://places.googleapis.com/v1/places/{clean_pid}"
             headers = {
                 'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-                'X-Goog-FieldMask': 'id,displayName,formattedAddress,location,rating,userRatingCount,internationalPhoneNumber,websiteUri,primaryTypeDisplayName,photos,reviews,googleMapsUri,regularOpeningHours,currentOpeningHours'
+                'X-Goog-FieldMask': 'id,displayName,formattedAddress,location,rating,userRatingCount,internationalPhoneNumber,websiteUri,primaryType,primaryTypeDisplayName,types,photos,reviews,googleMapsUri,regularOpeningHours,currentOpeningHours,editorialSummary'
             }
             res = requests.get(url, headers=headers, timeout=6)
             if res.ok:
@@ -336,7 +471,7 @@ def get_public_place_details(
         url = 'https://places.googleapis.com/v1/places:searchText'
         headers = {
             'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.photos,places.reviews,places.googleMapsUri,places.regularOpeningHours,places.currentOpeningHours',
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.internationalPhoneNumber,places.websiteUri,places.primaryType,places.primaryTypeDisplayName,places.types,places.photos,places.reviews,places.googleMapsUri,places.regularOpeningHours,places.currentOpeningHours,places.editorialSummary',
             'Content-Type': 'application/json'
         }
         
