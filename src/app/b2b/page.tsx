@@ -144,6 +144,7 @@ export default function B2BLandingPage() {
   
   // FOMO Slider State
   const [fomoIndex, setFomoIndex] = useState(0);
+  const [fomoPaused, setFomoPaused] = useState(false);
   const fomoSlides = [
     {
       badge: "🚨 Competitor Alert",
@@ -172,19 +173,20 @@ export default function B2BLandingPage() {
     {
       badge: "⚡ Continuous Visibility Alignment",
       badgeColor: "bg-google-blue-light text-google-blue border-google-blue/20",
-      title: "1-Click AI Alignment Maximizes Google Maps Visibility",
-      description: "GBPilot analyzes 3x3 spatial rank heatmaps every 6 hours and delivers exact, pre-formatted Next Best Actions that you execute in a single click.",
+      title: "1-Click AI Alignment Maximizes Google Maps Visibility & Traffic",
+      description: "GBPilot continuously analyzes 3x3 spatial rank heatmaps every 6 hours and delivers pre-formatted Next Best Actions. Resolve critical NAP gaps, optimize secondary categories, and safeguard your top rank in a single click.",
       stat: "24/7",
       statLabel: "Continuous Rank Surveillance"
     }
   ];
 
   useEffect(() => {
+    if (fomoPaused) return;
     const timer = setInterval(() => {
       setFomoIndex((prev) => (prev + 1) % fomoSlides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [fomoPaused, fomoSlides.length]);
 
   // Quick Audit Search Input
   const [auditQuery, setAuditQuery] = useState('');
@@ -363,28 +365,43 @@ export default function B2BLandingPage() {
             </h2>
           </div>
 
-          {/* Dynamic Interactive Carousel */}
-          <div className="material-card p-6 sm:p-8 bg-google-bg border border-google-border shadow-material-1 relative overflow-hidden">
+          {/* Dynamic Interactive Carousel - Fixed Height Container */}
+          <div 
+            onMouseEnter={() => setFomoPaused(true)}
+            onMouseLeave={() => setFomoPaused(false)}
+            className="material-card p-6 sm:p-8 bg-google-bg border border-google-border shadow-material-1 relative overflow-hidden min-h-[460px] sm:min-h-[380px] md:min-h-[310px] flex flex-col justify-between transition-all"
+          >
             
-            <div className="grid md:grid-cols-12 gap-6 items-center">
+            <div className="grid md:grid-cols-12 gap-6 items-stretch flex-1">
               
-              <div className="md:col-span-8 space-y-4">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${fomoSlides[fomoIndex].badgeColor}`}>
-                  {fomoSlides[fomoIndex].badge}
-                </span>
+              <div className="md:col-span-8 flex flex-col justify-between h-full">
+                <div>
+                  {/* Badge Slot (Fixed Height) */}
+                  <div className="h-7 flex items-center">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border transition-colors duration-200 ${fomoSlides[fomoIndex].badgeColor}`}>
+                      {fomoSlides[fomoIndex].badge}
+                    </span>
+                  </div>
 
-                <h3 className="text-xl sm:text-2xl font-bold text-google-text-primary leading-tight">
-                  {fomoSlides[fomoIndex].title}
-                </h3>
+                  {/* Title Slot (Fixed Height for 2 Lines) */}
+                  <div className="min-h-[3.5rem] sm:min-h-[4rem] flex items-center my-1.5">
+                    <h3 className="text-xl sm:text-2xl font-bold text-google-text-primary leading-tight">
+                      {fomoSlides[fomoIndex].title}
+                    </h3>
+                  </div>
 
-                <p className="text-xs sm:text-sm text-google-text-secondary leading-relaxed">
-                  {fomoSlides[fomoIndex].description}
-                </p>
+                  {/* Description Slot (Fixed Height for 3-4 Lines) */}
+                  <div className="min-h-[4.75rem] sm:min-h-[4.25rem] md:min-h-[3.75rem] flex items-start">
+                    <p className="text-xs sm:text-sm text-google-text-secondary leading-relaxed">
+                      {fomoSlides[fomoIndex].description}
+                    </p>
+                  </div>
+                </div>
 
-                <div className="pt-2 flex items-center gap-3">
+                <div className="pt-3 flex items-center gap-3 mt-auto">
                   <Link 
                     href="/onboarding"
-                    className="material-button-primary text-xs py-2.5 px-4 font-bold flex items-center gap-1.5"
+                    className="material-button-primary text-xs py-2.5 px-4 font-bold flex items-center gap-1.5 hover:shadow-md transition-all"
                   >
                     <span>Protect Profile in 1-Click</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -392,13 +409,18 @@ export default function B2BLandingPage() {
                 </div>
               </div>
 
-              <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-google-border text-center shadow-sm">
-                <span className="text-4xl sm:text-5xl font-black text-google-red">
-                  {fomoSlides[fomoIndex].stat}
-                </span>
-                <span className="text-xs font-bold text-google-text-secondary mt-2">
-                  {fomoSlides[fomoIndex].statLabel}
-                </span>
+              {/* Right Stat Slot (Fixed Height) */}
+              <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-google-border text-center shadow-sm h-full min-h-[160px] md:min-h-[210px]">
+                <div className="h-14 flex items-center justify-center">
+                  <span className="text-4xl sm:text-5xl font-black text-google-red tracking-tight">
+                    {fomoSlides[fomoIndex].stat}
+                  </span>
+                </div>
+                <div className="h-10 flex items-center justify-center">
+                  <span className="text-xs font-bold text-google-text-secondary text-center leading-snug max-w-[200px]">
+                    {fomoSlides[fomoIndex].statLabel}
+                  </span>
+                </div>
               </div>
 
             </div>
@@ -409,8 +431,9 @@ export default function B2BLandingPage() {
                 <button 
                   key={idx}
                   onClick={() => setFomoIndex(idx)}
-                  className={`h-2 rounded-full transition-all ${
-                    idx === fomoIndex ? 'w-8 bg-google-blue' : 'w-2 bg-google-border'
+                  aria-label={`Go to slide ${idx + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    idx === fomoIndex ? 'w-8 bg-google-blue' : 'w-2 bg-google-border hover:bg-slate-400'
                   }`}
                 />
               ))}
