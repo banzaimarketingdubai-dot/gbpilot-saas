@@ -270,9 +270,15 @@ export default function OnboardingPage() {
             
             {/* Header */}
             <div className="text-center space-y-2 max-w-2xl mx-auto">
-              <span className="text-[11px] font-bold text-google-blue uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-                Step 1: Connect Location
-              </span>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <span className="text-[11px] font-bold text-google-blue uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                  Step 1: Connect Location
+                </span>
+                <span className="text-[11px] font-extrabold text-purple-900 bg-purple-50 px-3 py-1 rounded-full border border-purple-200 flex items-center gap-1.5 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                  <span>NEW: Includes 1-Click Migration to ChatGPT Business Hub</span>
+                </span>
+              </div>
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 Connect your business in 30 seconds
               </h1>

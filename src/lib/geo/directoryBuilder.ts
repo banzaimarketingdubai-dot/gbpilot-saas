@@ -1,7 +1,7 @@
 import { OwnerGroundTruth } from '@/lib/groundTruth';
 import { detectCurrencyByLocation } from '@/lib/inspection/auditEngine';
 
-export type DirectoryPlatformId = 'APPLE_MAPS' | 'TWOGIS' | 'TRIPADVISOR' | 'TIMEOUT_PR';
+export type DirectoryPlatformId = 'CHATGPT_BUSINESS_HUB' | 'APPLE_MAPS' | 'TWOGIS' | 'TRIPADVISOR' | 'TIMEOUT_PR';
 
 export interface DirectoryFieldBlock {
   id: string;
@@ -41,6 +41,7 @@ function clampText(text: string, maxLen: number): string {
 
 export function buildDirectoryBlueprints(
   profile: {
+    id?: string;
     name?: string;
     address?: string;
     city?: string;
@@ -77,10 +78,118 @@ export function buildDirectoryBlueprints(
   const p3 = isAed ? `${sym} 120` : `${sym}39`;
   const p4 = isAed ? `${sym} 190` : `${sym}59`;
 
+  const estChatGptVal = isAed ? 'AED 9,500 / mo' : '$2,600 / mo';
   const estAppleVal = isAed ? 'AED 4,800 / mo' : '$1,300 / mo';
   const est2GisVal = isAed ? 'AED 3,900 / mo' : '$1,050 / mo';
   const estTripVal = isAed ? 'AED 5,400 / mo' : '$1,480 / mo';
   const estPrVal = isAed ? 'AED 7,200 / mo' : '$1,950 / mo';
+
+  // 0. CHATGPT BUSINESS HUB (chatgpt.com/business-hub)
+  const chatGptBioRaw = `${bName} is an officially verified ${bCategory.toLowerCase()} based in ${bCity} at ${bAddress} (GPS: ${lat}, ${lng}). Specializing in ${flagship.toLowerCase()}, our mission is delivering high-standard service tailored for ${persona.toLowerCase()}.
+
+Core Highlights & Amenities:
+• Flagship Experience: ${flagship}
+• Guest Perks & Facilities: ${rules}
+• Verified Operating Hours: Daily active availability with direct inquiries.
+
+Official Website: ${bWebsite} | Phone: ${bPhone}. For bookings or customer support, visit our official portal or reach out directly.`;
+
+  const chatGptPoliciesRaw = `1. Customer Service & Consultations: Dedicated client care with fast response times. Direct communication available via phone ${bPhone} and official website ${bWebsite}.
+2. Bookings & Walk-ins: Walk-in guests are welcome during active operating hours. For ${flagship.toLowerCase()}, advance reservation is recommended.
+3. Cancellation & Rescheduling: Complimentary rescheduling available with reasonable prior notice.
+4. Payment & Accessibility: Digital and contactless payments accepted. Amenities include: ${rules}.`;
+
+  const chatGptJsonlSample = [
+    `{"id":"item-1","title":${JSON.stringify(flagship)},"category":${JSON.stringify(bCategory)},"price":${JSON.stringify(p3)},"currency":${JSON.stringify(currency.code)},"availability":"in_stock","description":${JSON.stringify(`${flagship} at ${bName}. ${rules}`)},"link":${JSON.stringify(bWebsite)}}`,
+    `{"id":"item-2","title":${JSON.stringify(`Standard ${bCategory} Service`)},"category":${JSON.stringify(bCategory)},"price":${JSON.stringify(p1)},"currency":${JSON.stringify(currency.code)},"availability":"in_stock","description":${JSON.stringify(`Core client offering tailored for ${persona}`)},"link":${JSON.stringify(bWebsite)}}`,
+    `{"id":"item-3","title":${JSON.stringify(`Introductory / First Visit Package`)},"category":${JSON.stringify(bCategory)},"price":${JSON.stringify(p2)},"currency":${JSON.stringify(currency.code)},"availability":"in_stock","description":${JSON.stringify(`Discover ${bName} with our welcoming consultation`)},"link":${JSON.stringify(bWebsite)}}`,
+    `{"id":"item-4","title":${JSON.stringify(`VIP / Extended Package`)},"category":${JSON.stringify(bCategory)},"price":${JSON.stringify(p4)},"currency":${JSON.stringify(currency.code)},"availability":"in_stock","description":${JSON.stringify(`Comprehensive service with priority support and personalized guidance`)},"link":${JSON.stringify(bWebsite)}}`
+  ].join('\n');
+
+  const domainHost = (() => {
+    try {
+      return new URL(bWebsite).hostname;
+    } catch {
+      return 'your-domain.com';
+    }
+  })();
+
+  const chatGptBlueprint: DirectoryPlatformBlueprint = {
+    id: 'CHATGPT_BUSINESS_HUB',
+    name: 'ChatGPT Business Hub (Businesses in ChatGPT)',
+    badge: '🤖 KILLER FEATURE • OpenAI Verified',
+    portalUrl: 'https://chatgpt.com/business-hub',
+    portalDomain: 'chatgpt.com/business-hub',
+    aiCitationImpact: '+95% Direct Recommendation & Blue Checkmark in ChatGPT Search',
+    financialWhyText: 'Over 300M people ask ChatGPT for recommendations instead of traditional search. Unverified businesses are either omitted or quoted with hallucinated hours and incorrect prices. Claiming your Business Hub profile and uploading your product feed cements your brand as the #1 verified authority in your city.',
+    estimatedMonthlyValue: estChatGptVal,
+    completionTime: '3 min (1-Click Copy & Feed Download)',
+    blocks: [
+      {
+        id: 'chatgpt-1-name',
+        blockNumber: 1,
+        fieldTitle: 'Block 1. Clean Business Name & Authorized Domain',
+        exactCabinetPath: 'Business Hub → Profile → Basic Info → Business Name & Domain',
+        maxChars: 100,
+        validationRule: 'OpenAI Moderation: Official business name only without emoji, spam keywords, or all-caps. Must match your website domain.',
+        value: `Official Business Name: ${bName}\nWebsite URL: ${bWebsite}\nDomain: ${domainHost}`,
+        isFreePreview: true,
+        fieldType: 'TEXT'
+      },
+      {
+        id: 'chatgpt-2-category',
+        blockNumber: 2,
+        fieldTitle: 'Block 2. Primary Category & Business Taxonomy',
+        exactCabinetPath: 'Business Hub → Profile → Industry Classification',
+        validationRule: 'Select your primary vertical so ChatGPT correctly routes user purchase intents and local recommendation queries.',
+        value: `Primary Category: ${bCategory}\nTarget Audience: ${persona}\nLocation Tag: ${bCity}, ${bAddress}`,
+        isFreePreview: true,
+        fieldType: 'ATTRIBUTES'
+      },
+      {
+        id: 'chatgpt-3-bio',
+        blockNumber: 3,
+        fieldTitle: 'Block 3. LLM Authoritative Knowledge Context & Description',
+        exactCabinetPath: 'Business Hub → Profile → About Business (AI Grounding Context)',
+        maxChars: 1500,
+        validationRule: 'This text is directly injected into ChatGPT retrieval-augmented generation (RAG). Contains verified factual anchors, LSI terms, and amenities.',
+        value: clampText(chatGptBioRaw, 1500),
+        isFreePreview: true,
+        fieldType: 'TEXT'
+      },
+      {
+        id: 'chatgpt-4-policies',
+        blockNumber: 4,
+        fieldTitle: 'Block 4. Customer Policies (Booking, Rescheduling, Returns)',
+        exactCabinetPath: 'Business Hub → Policies & Customer Service',
+        maxChars: 1200,
+        validationRule: 'OpenAI requires clear service rules so ChatGPT accurately answers questions regarding appointments, refunds, and walk-ins.',
+        value: clampText(chatGptPoliciesRaw, 1200),
+        isFreePreview: false,
+        fieldType: 'TEXT'
+      },
+      {
+        id: 'chatgpt-5-feed',
+        blockNumber: 5,
+        fieldTitle: 'Block 5. Product & Service Catalog Feed (JSONL / CSV Format)',
+        exactCabinetPath: 'Business Hub → Product Feeds → Upload Feed (CSV / JSONL)',
+        validationRule: 'Structured catalog feed powering ChatGPT product recommendations with real prices. Use the 1-click download buttons below to get your file.',
+        value: chatGptJsonlSample,
+        isFreePreview: false,
+        fieldType: 'CATALOG'
+      },
+      {
+        id: 'chatgpt-6-verification',
+        blockNumber: 6,
+        fieldTitle: 'Block 6. Ownership Verification & Persona ID Check',
+        exactCabinetPath: 'Business Hub → Settings → Verification',
+        validationRule: 'To prevent impersonation, OpenAI requires phone verification (SMS to business phone) or domain ownership (DNS TXT record), followed by Persona identity check.',
+        value: `Recommended Verification Methods:\n1. Phone Call / SMS: Code sent to verified number ${bPhone}\n2. Domain DNS TXT Record: "openai-domain-verification=${profile?.id || 'gbpilot-entity-verified'}"\n3. Corporate Email: Verification link sent to info@${domainHost}\n4. Identity Verification: 60-second ID selfie via Persona to unlock the Blue Verified Badge.`,
+        isFreePreview: false,
+        fieldType: 'ATTRIBUTES'
+      }
+    ]
+  };
 
   // 1. APPLE BUSINESS CONNECT (businessconnect.apple.com)
   const appleAboutRaw = `${bName} is an established ${bCategory.toLowerCase()} located at ${bAddress}. Specializing in ${flagship.toLowerCase()}, the venue serves ${persona.toLowerCase()}. Guests appreciate ${rules.toLowerCase()} with convenient access and verified operating hours.`;
@@ -372,5 +481,5 @@ export function buildDirectoryBlueprints(
     ]
   };
 
-  return [appleBlueprint, twoGisBlueprint, tripBlueprint, timeoutBlueprint];
+  return [chatGptBlueprint, appleBlueprint, twoGisBlueprint, tripBlueprint, timeoutBlueprint];
 }

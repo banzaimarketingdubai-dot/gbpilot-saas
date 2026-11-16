@@ -399,7 +399,7 @@ export default function GeoGridPage() {
   // Multi-Platform Field-by-Field Directory Builder state (Tab 2: AI_LLM_GEO)
   const [isProPlan, setIsProPlan] = useState<boolean>(false);
   const [groundTruth, setGroundTruth] = useState<OwnerGroundTruth | null>(null);
-  const [selectedDirectoryPlatform, setSelectedDirectoryPlatform] = useState<DirectoryPlatformId>('APPLE_MAPS');
+  const [selectedDirectoryPlatform, setSelectedDirectoryPlatform] = useState<DirectoryPlatformId>('CHATGPT_BUSINESS_HUB');
   const [copiedBlockId, setCopiedBlockId] = useState<string | null>(null);
   const [customBlockOverrides, setCustomBlockOverrides] = useState<Record<string, string>>({});
   const [completedPlatforms, setCompletedPlatforms] = useState<Record<string, boolean>>({});
@@ -687,6 +687,56 @@ export default function GeoGridPage() {
     setIsProPlan(true);
     setGeoToast('🎉 14-day Pro access activated ($0 today)! All directory blocks unlocked.');
     setTimeout(() => setGeoToast(null), 4500);
+  };
+
+  const handleDownloadFeed = (format: 'jsonl' | 'csv') => {
+    if (!activeProfile) return;
+    const safeName = (activeProfile.name || 'business').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const bName = activeProfile.name || 'Business';
+    const bCat = activeProfile.category || 'Services';
+    const bWeb = activeProfile.website_url || 'https://gbpilot.top';
+    const flagship = groundTruth?.flagshipOffering || `Signature ${bCat}`;
+    const persona = groundTruth?.guestPersona || 'Valued Guests';
+    const rules = groundTruth?.venueRulesAndPerks || 'Comfortable and verified';
+    
+    let contentStr = '';
+    let mimeType = 'text/plain';
+    let ext = 'txt';
+
+    if (format === 'jsonl') {
+      const feedBlock = activeDirectoryBlueprint.blocks.find(b => b.id === 'chatgpt-5-feed');
+      contentStr = feedBlock ? feedBlock.value : [
+        `{"id":"item-1","title":${JSON.stringify(flagship)},"category":${JSON.stringify(bCat)},"price":"120","currency":"USD","availability":"in_stock","description":${JSON.stringify(`${flagship} at ${bName}. ${rules}`)},"link":${JSON.stringify(bWeb)}}`,
+        `{"id":"item-2","title":${JSON.stringify(`Standard ${bCat} Service`)},"category":${JSON.stringify(bCat)},"price":"45","currency":"USD","availability":"in_stock","description":${JSON.stringify(`Core client offering tailored for ${persona}`)},"link":${JSON.stringify(bWeb)}}`,
+        `{"id":"item-3","title":${JSON.stringify(`Introductory Package`)},"category":${JSON.stringify(bCat)},"price":"65","currency":"USD","availability":"in_stock","description":${JSON.stringify(`Discover ${bName} with our welcoming consultation`)},"link":${JSON.stringify(bWeb)}}`,
+        `{"id":"item-4","title":${JSON.stringify(`VIP / Extended Package`)},"category":${JSON.stringify(bCat)},"price":"190","currency":"USD","availability":"in_stock","description":${JSON.stringify(`Comprehensive service with priority support and personalized guidance`)},"link":${JSON.stringify(bWeb)}}`
+      ].join('\n');
+      mimeType = 'application/x-ndjson';
+      ext = 'jsonl';
+    } else {
+      contentStr = [
+        `id,title,category,price,currency,availability,description,link`,
+        `item-1,"${flagship.replace(/"/g, '""')}","${bCat}","120","USD","in_stock","${flagship.replace(/"/g, '""')} at ${bName}. ${rules.replace(/"/g, '""')}","${bWeb}"`,
+        `item-2,"Standard ${bCat} Service","${bCat}","45","USD","in_stock","Core client offering tailored for ${persona.replace(/"/g, '""')}","${bWeb}"`,
+        `item-3,"Introductory Package","${bCat}","65","USD","in_stock","Discover ${bName} with our welcoming consultation","${bWeb}"`,
+        `item-4,"VIP / Extended Package","${bCat}","190","USD","in_stock","Comprehensive service with priority support","${bWeb}"`
+      ].join('\n');
+      mimeType = 'text/csv';
+      ext = 'csv';
+    }
+
+    const blob = new Blob([contentStr], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `chatgpt_catalog_${safeName}.${ext}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setGeoToast(`📥 Downloaded ${format.toUpperCase()} Catalog Feed for ChatGPT Business Hub!`);
+    setTimeout(() => setGeoToast(null), 3500);
   };
 
   const handleAddCustomKeyword = (e: React.FormEvent) => {
@@ -1790,7 +1840,7 @@ export default function GeoGridPage() {
               </div>
 
               {/* 4 Platform Selector Tabs */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 {directoryBlueprints.map((platform) => {
                   const isSelected = selectedDirectoryPlatform === platform.id;
                   const isDone = Boolean(completedPlatforms[platform.id]);
@@ -1866,6 +1916,18 @@ export default function GeoGridPage() {
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
 
+                  {activeDirectoryBlueprint.id === 'CHATGPT_BUSINESS_HUB' && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadFeed('jsonl')}
+                      className="px-3.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                      title="Download Product Feed in JSONL format for direct upload in ChatGPT Business Hub"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Download Feed (.jsonl)</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={handleCopyAllDirectoryBlocks}
@@ -1900,6 +1962,56 @@ export default function GeoGridPage() {
                   </button>
                 </div>
               </div>
+
+              {/* ChatGPT Live Recommendation Simulation Box */}
+              {activeDirectoryBlueprint.id === 'CHATGPT_BUSINESS_HUB' && (
+                <div className="material-card p-5 sm:p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-xs">
+                        GPT
+                      </div>
+                      <span className="font-bold text-xs text-slate-200">
+                        Live Simulation: How ChatGPT Answers Queries After Claiming Business Hub
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      Verified OpenAI Listing
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800/80 space-y-2 text-xs leading-relaxed font-sans">
+                    <p className="text-slate-400">
+                      User: <span className="text-slate-200 font-medium">&quot;Can you recommend a reputable {activeProfile?.category || 'business'} in {activeProfile?.city || 'this area'} with real prices?&quot;</span>
+                    </p>
+                    <div className="pt-2 border-t border-slate-800/60 text-slate-200 space-y-2">
+                      <p>
+                        ChatGPT: &quot;I recommend <strong className="text-white underline decoration-emerald-400 decoration-2">{activeProfile?.name || 'Your Business'}</strong> (<span className="text-emerald-400 font-bold">✓ Verified Business</span>). They specialize in {groundTruth?.flagshipOffering || 'signature client services'} located at {activeProfile?.address || activeProfile?.city || 'Central District'}.&quot;
+                      </p>
+                      <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-700/60 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-white flex items-center gap-1.5">
+                            <span>{activeProfile?.name || 'Your Business'}</span>
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/40">Verified Profile</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {groundTruth?.flagshipOffering || 'Premium Verified Experience'} • {groundTruth?.venueRulesAndPerks || 'Instant direct inquiry'}
+                          </div>
+                        </div>
+                        <a
+                          href="https://chatgpt.com/business-hub"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <span>Claim in ChatGPT</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Field-by-Field Blocks List */}
               <div className="space-y-4">
@@ -1998,6 +2110,31 @@ export default function GeoGridPage() {
                           <strong>Platform Requirement:</strong> {block.validationRule}
                         </span>
                       </div>
+
+                      {/* Dedicated Download Buttons for ChatGPT Product/Catalog Feed */}
+                      {isUnlocked && block.id === 'chatgpt-5-feed' && (
+                        <div className="mb-2.5 flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadFeed('jsonl')}
+                            className="px-3 py-1.5 rounded-lg bg-purple-100 text-purple-900 hover:bg-purple-200 border border-purple-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-purple-700" />
+                            <span>📥 Download JSONL Feed</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadFeed('csv')}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border border-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>📥 Download CSV Feed</span>
+                          </button>
+                          <span className="text-[11px] text-slate-500">
+                            Upload this file in <strong>Business Hub → Product Feeds</strong>
+                          </span>
+                        </div>
+                      )}
 
                       {/* Field Content (Editable when unlocked, blurred preview when locked on Free Scout) */}
                       {isUnlocked ? (

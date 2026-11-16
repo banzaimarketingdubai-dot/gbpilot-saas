@@ -37,7 +37,8 @@ import {
   X,
   Calculator,
   Sliders,
-  Share2
+  Share2,
+  DollarSign
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -415,6 +416,211 @@ export default function B2BLandingPage() {
               ))}
             </div>
 
+          </div>
+
+        </div>
+      </section>
+
+      {/* ======================================================== */}
+      {/* KILLER FEATURE: CHATGPT BUSINESS PROFILES & FOMO SECTION  */}
+      {/* ======================================================== */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden border-b border-slate-800">
+        {/* Subtle grid pattern background */}
+        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-google-blue/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 space-y-12 relative z-10">
+          
+          {/* Section Header with Urgency Badges */}
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>KILLER FEATURE • OPENAI BUSINESS HUB</span>
+              </span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-rose-400" />
+                <span>URGENT: 60-Day Category Land Grab</span>
+              </span>
+            </div>
+
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+              300M+ People Now Search Local Services in ChatGPT. <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400">
+                Are You Recommended, or Are Your Competitors Taking Every Call?
+              </span>
+            </h2>
+
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl mx-auto">
+              OpenAI has launched <strong>Businesses in ChatGPT</strong>. When affluent travelers, expats, and high-ticket clients ask ChatGPT for recommendations, it no longer quotes random websites. It pulls <strong>verified business profiles with blue checkmarks, real price feeds, and direct booking buttons</strong>.
+            </p>
+          </div>
+
+          {/* Fear of Loss (FOMO) Grid: The 3 Fatal Costs of Delay */}
+          <div className="grid md:grid-cols-3 gap-5">
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-rose-500/30 shadow-lg space-y-3 relative group hover:border-rose-500/60 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div className="text-[11px] font-black uppercase tracking-wider text-rose-400">
+                Threat #1: Algorithmic Hallucination
+              </div>
+              <h3 className="font-bold text-base text-white">
+                ChatGPT Tells Customers You Are &quot;Permanently Closed&quot;
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Without a verified profile in the Business Hub, ChatGPT is forced to guess your hours, pricing, and services. It routinely hallucinates outdated phone numbers or declares venues closed, silently funneling ready-to-pay guests to competitors.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-amber-500/30 shadow-lg space-y-3 relative group hover:border-amber-500/60 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="text-[11px] font-black uppercase tracking-wider text-amber-400">
+                Threat #2: Competitor Blue Check Redirection
+              </div>
+              <h3 className="font-bold text-base text-white">
+                Verified Rivals Steal the Top 3 Search Citations
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                OpenAI prioritizes claimed listings with verified product feeds. When a client asks <em>&quot;Best [service/cafe] near me&quot;</em>, ChatGPT features verified competitors with blue badges and direct reservation links, completely bypassing unverified venues.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-900/90 border border-sky-500/30 shadow-lg space-y-3 relative group hover:border-sky-500/60 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <div className="text-[11px] font-black uppercase tracking-wider text-sky-400">
+                Threat #3: Forfeiting the Highest-LTV Demographic
+              </div>
+              <h3 className="font-bold text-base text-white">
+                Zero Visibility to Paying ChatGPT Plus &amp; Pro Users
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                ChatGPT Plus and Pro subscribers represent the highest-income customer segment (digital nomads, corporate founders, tech expats). They rely almost exclusively on ChatGPT Search instead of scrolling through cluttered Google Ads.
+              </p>
+            </div>
+          </div>
+
+          {/* Interactive Simulation: Unverified vs Verified by GBPilot */}
+          <div className="material-card p-6 sm:p-8 bg-slate-900 border border-slate-800 rounded-3xl shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                  Live Reality Check
+                </span>
+                <h3 className="text-lg sm:text-xl font-bold text-white mt-1">
+                  What Happens When a Customer Asks ChatGPT for Your Category
+                </h3>
+              </div>
+              <span className="text-xs text-slate-400">
+                Simulated AI Local Search Response
+              </span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Unverified Failure */}
+              <div className="p-5 rounded-2xl bg-slate-950 border border-rose-500/30 space-y-3 font-sans text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-rose-400 flex items-center gap-1.5">
+                    <XCircle className="w-4 h-4 text-rose-500" />
+                    <span>Without Business Hub (Unverified)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-500">Hallucinated</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-900 text-slate-300 space-y-2 border border-slate-800 leading-relaxed">
+                  <p className="text-slate-400">User: &quot;Where can I book verified services with clear pricing in Nha Trang/Dubai?&quot;</p>
+                  <p className="text-rose-300">
+                    ChatGPT: &quot;I couldn&apos;t confirm live hours or exact prices for [Your Business]. Some web sources note it might be closed today. Alternatively, I suggest <strong>[Competitor Company]</strong> (Verified ✓), which offers confirmed bookings starting from $45.&quot;
+                  </p>
+                </div>
+                <div className="text-[11px] text-rose-400 font-semibold flex items-center gap-1">
+                  <span>❌ Result: Ready customer diverted directly to competitor.</span>
+                </div>
+              </div>
+
+              {/* Verified Success with GBPilot */}
+              <div className="p-5 rounded-2xl bg-slate-950 border border-emerald-500/40 space-y-3 font-sans text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-emerald-400 flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span>With GBPilot 1-Click Migration</span>
+                  </span>
+                  <span className="text-[10px] text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/30">Verified ✓</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-900 text-slate-200 space-y-2 border border-slate-800 leading-relaxed">
+                  <p className="text-slate-400">User: &quot;Where can I book verified services with clear pricing in Nha Trang/Dubai?&quot;</p>
+                  <p className="text-emerald-300">
+                    ChatGPT: &quot;I recommend <strong className="text-white underline decoration-emerald-400">Your Business</strong> (<span className="text-emerald-400 font-bold">✓ Verified Business Profile</span>). They specialize in premium services with 5-star amenities, open now with verified pricing from $25.&quot;
+                  </p>
+                  <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-700/60 flex items-center justify-between">
+                    <span className="text-white font-bold text-[11px]">Direct 1-Click Booking Link</span>
+                    <span className="text-emerald-400 font-bold text-[11px] flex items-center gap-1">
+                      <span>Reserve Now</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                  <span>✓ Result: High-ticket customer lands directly on your checkout/booking.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* How GBPilot Solves It In 3 Minutes (The Killer Solution) */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="text-center max-w-xl mx-auto space-y-2">
+              <span className="text-xs font-bold text-google-blue uppercase tracking-wider">
+                The Zero-Friction Migration Bridge
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                How GBPilot Ports Your Business to ChatGPT in 3 Minutes
+              </h3>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 font-black flex items-center justify-center">1</div>
+                <h4 className="font-bold text-white text-sm">One-Click Google Extraction</h4>
+                <p className="text-slate-400 leading-relaxed">
+                  GBPilot extracts your exact coordinates, category, hours, and photos from Google Maps and strips keyword spam to satisfy OpenAI strict moderation rules.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center">2</div>
+                <h4 className="font-bold text-white text-sm">LLM Knowledge Grounding</h4>
+                <p className="text-slate-400 leading-relaxed">
+                  Synthesizes your Ground Truth into high-density RAG context + creates compliant policies for appointments, cancellations, and amenities.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 font-black flex items-center justify-center">3</div>
+                <h4 className="font-bold text-white text-sm">Automated Product Feed (.jsonl)</h4>
+                <p className="text-slate-400 leading-relaxed">
+                  Packages your service price list into OpenAI&apos;s required JSONL / CSV Product Feed schema for instant upload inside the ChatGPT Business Hub.
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Bar */}
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+              <Link
+                href="/onboarding"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm sm:text-base shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer group"
+              >
+                <span>Migrate Your Google Profile to ChatGPT in 3 Minutes</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <span className="text-xs text-slate-400">
+                Included automatically with every GBPilot plan • $0 upfront
+              </span>
+            </div>
           </div>
 
         </div>
