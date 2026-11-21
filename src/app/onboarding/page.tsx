@@ -121,6 +121,18 @@ export default function OnboardingPage() {
     }
   };
 
+  // Auto-populate and trigger search when arriving via ?search=... (from /b2b or outreach links)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = (params.get('search') || params.get('q') || '').trim();
+    if (initialQuery) {
+      setSearchQuery(initialQuery);
+      performSearch(initialQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Form submit handler
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

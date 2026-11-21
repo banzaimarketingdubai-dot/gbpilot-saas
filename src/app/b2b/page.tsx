@@ -48,9 +48,16 @@ import { getIndustryPpcBenchmark, detectCurrencyByLocation } from '@/lib/inspect
 export default function B2BLandingPage() {
   const router = useRouter();
 
-  // Pricing State
-  const [currency, setCurrency] = useState<'AED' | 'USD'>('AED');
+  // Pricing State (Default to USD for global/US outreach; supports ?currency=AED or toggle)
+  const [currency, setCurrency] = useState<'AED' | 'USD'>('USD');
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const c = new URLSearchParams(window.location.search).get('currency');
+      if (c && c.toUpperCase() === 'AED') setCurrency('AED');
+    }
+  }, []);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [pricingToast, setPricingToast] = useState<string | null>(null);
 
@@ -780,7 +787,7 @@ export default function B2BLandingPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-bold text-google-text-primary">Social Media Autopilot</h3>
                     <span className="text-[10px] font-black uppercase tracking-wider bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full border border-pink-200">
-                      ⚡ 69 AED Flagship
+                      {currency === 'AED' ? '⚡ 69 AED Flagship' : '⚡ $19 Flagship'}
                     </span>
                   </div>
                   <p className="text-xs text-pink-700 font-semibold">Instagram &amp; TikTok ➔ Google Maps Repurposer</p>
@@ -800,7 +807,7 @@ export default function B2BLandingPage() {
                   </div>
                   <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
                     <span className="text-slate-400 font-mono text-[10px] block">IG Reel: "Fresh morning roast is brewing! #coffee #fyp..."</span>
-                    <span className="font-semibold text-slate-900 block">➔ Google Maps: "📍 Downtown Dubai: Savor specialty morning flat white &amp; brunch..."</span>
+                    <span className="font-semibold text-slate-900 block">➔ Google Maps: "📍 Downtown Austin: Savor specialty morning flat white &amp; brunch..."</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] pt-1">
                     <span className="text-emerald-700 font-bold">✓ Direct CTA: [Order Online]</span>
@@ -1309,7 +1316,7 @@ export default function B2BLandingPage() {
           
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="text-xs font-extrabold text-google-blue bg-blue-50 border border-blue-200 px-3 py-1 rounded-full uppercase tracking-wider">
-              🇦🇪 TRANSPARENT DUBAI &amp; GLOBAL PRICING
+              🌍 TRANSPARENT GLOBAL PRICING
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               Predictable ROI. Zero Agency Retainers.
@@ -1324,21 +1331,21 @@ export default function B2BLandingPage() {
               <div className="bg-slate-100 p-1 rounded-2xl border border-slate-200 flex items-center text-xs font-bold">
                 <button
                   type="button"
+                  onClick={() => setCurrency('USD')}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                    currency === 'USD' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  🇺🇸 USD ($)
+                </button>
+                <button
+                  type="button"
                   onClick={() => setCurrency('AED')}
                   className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
                     currency === 'AED' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
                   🇦🇪 AED (Dirhams)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency('USD')}
-                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    currency === 'USD' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  🌐 USD ($)
                 </button>
               </div>
 
@@ -1474,14 +1481,14 @@ export default function B2BLandingPage() {
                 onClick={() => handleSelectPlan('STARTER')}
                 className="w-full py-2.5 rounded-xl border border-blue-300 bg-blue-50/70 hover:bg-blue-100 text-google-blue font-bold text-xs transition-colors cursor-pointer"
               >
-                Choose Starter (39 AED)
+                Choose Starter ({currency === 'AED' ? (billingCycle === 'ANNUAL' ? '31 AED' : '39 AED') : (billingCycle === 'ANNUAL' ? '$8' : '$11')})
               </button>
             </div>
 
             {/* Tier 3: Growth / Pro (Most Popular) */}
             <div className="bg-gradient-to-b from-slate-900 to-indigo-950 text-white rounded-3xl border-2 border-blue-400 p-6 flex flex-col justify-between shadow-xl relative space-y-6">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-black text-[10px] uppercase tracking-wider rounded-full shadow-md">
-                ⭐ Most Popular in Dubai
+                ⭐ Most Popular Choice
               </div>
 
               <div className="space-y-4 pt-1">
@@ -1536,7 +1543,7 @@ export default function B2BLandingPage() {
                 onClick={() => handleSelectPlan('PRO_GROWTH')}
                 className="w-full py-3 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer"
               >
-                Deploy Growth (69 AED)
+                Deploy Growth ({currency === 'AED' ? (billingCycle === 'ANNUAL' ? '55 AED' : '69 AED') : (billingCycle === 'ANNUAL' ? '$15' : '$19')})
               </button>
             </div>
 
@@ -1580,11 +1587,11 @@ export default function B2BLandingPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span>Autonomous AI Review Replier (UAE Law 34/2021)</span>
+                    <span>Autonomous AI Review Replier &amp; Legal Takedown™</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                    <span>Priority Google API 300 QPM Sync &amp; WhatsApp Support</span>
+                    <span>Priority Google API 300 QPM Sync &amp; Direct Support</span>
                   </li>
                 </ul>
               </div>
@@ -1594,7 +1601,7 @@ export default function B2BLandingPage() {
                 onClick={() => handleSelectPlan('AGENCY')}
                 className="w-full py-2.5 rounded-xl border border-purple-300 bg-purple-50/70 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors cursor-pointer"
               >
-                Choose Shield Sentinel (99 AED)
+                Choose Shield Sentinel ({currency === 'AED' ? (billingCycle === 'ANNUAL' ? '79 AED' : '99 AED') : (billingCycle === 'ANNUAL' ? '$21' : '$27')})
               </button>
             </div>
 
@@ -1606,7 +1613,7 @@ export default function B2BLandingPage() {
               <div className="flex items-center justify-center md:justify-start gap-2">
                 <span className="text-base">🌙</span>
                 <h4 className="font-bold text-amber-950 text-sm">
-                  Dubai Seasonal Business or Summer Vacation? Meet Sleep Mode.
+                  Seasonal Business or Off-Season Break? Meet Sleep Mode.
                 </h4>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-200/60 text-amber-900 rounded-full">
                   {currency === 'AED' ? 'AED 33 / mo' : '$9 / mo'}

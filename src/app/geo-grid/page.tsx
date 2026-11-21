@@ -103,6 +103,10 @@ const getProfileCoords = (profile: any): { lat: number; lng: number } => {
     return { lat: 12.2718, lng: 109.2016 };
   }
 
+  if (city.includes('austin') || address.includes('austin, tx')) {
+    return { lat: 30.2672, lng: -97.7431 };
+  }
+
   if (city.includes('dubai') || address.includes('dubai') || address.includes('uae')) {
     return { lat: 25.1972, lng: 55.2744 };
   }

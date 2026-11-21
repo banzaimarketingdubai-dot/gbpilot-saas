@@ -136,9 +136,17 @@ export async function POST(request: Request) {
       review_text: r.text?.text || r.originalText?.text || ''
     }));
 
-    // City extraction heuristic
-    const addressParts = formattedAddress.split(',').map((p: string) => p.trim());
-    const city = addressParts.length >= 2 ? addressParts[addressParts.length - 2] : 'Dubai';
+    // City extraction heuristic (handles US "Street, City, ST ZIP, USA" and global formats)
+    const addressParts = formattedAddress.split(',').map((p: string) => p.trim()).filter(Boolean);
+    let city = 'Local Area';
+    if (addressParts.length >= 3 && /^[A-Z]{2}\s+\d{5}/.test(addressParts[addressParts.length - 2])) {
+      const stateCode = addressParts[addressParts.length - 2].split(/\s+/)[0];
+      city = `${addressParts[addressParts.length - 3]}, ${stateCode}`;
+    } else if (addressParts.length >= 2) {
+      city = addressParts[addressParts.length - 2];
+    } else if (addressParts.length === 1) {
+      city = addressParts[0];
+    }
 
     // Calculate real initial multi-factor health audit score (0-100%)
     let score = 0;

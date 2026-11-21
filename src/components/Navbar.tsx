@@ -427,7 +427,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'nav-shield', label: '🛡️ Shield & Reviews', href: '/reviews-posts', icon: ShieldCheck },
     { id: 'nav-attributes', label: '📋 Attributes', href: '/attributes', icon: CheckSquare },
     { id: 'nav-copilot', label: '🤖 Copilot', href: '/copilot', icon: Bot },
-    { id: 'nav-b2b', label: '🇦🇪 Pricing', href: '/b2b', icon: Sparkles },
+    { id: 'nav-b2b', label: 'Pricing', href: '/b2b', icon: Sparkles },
     ...(isUserSuperAdmin ? [{ id: 'nav-admin', label: '👑 Admin', href: '/admin', icon: Crown, badge: 'ROOT' }] : []),
   ];
 
@@ -630,7 +630,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="#pricing"
               className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-google-blue hover:bg-slate-50 transition-colors"
             >
-              🇦🇪 Dubai Pricing
+              💳 Pricing
             </a>
           </nav>
         ) : (
