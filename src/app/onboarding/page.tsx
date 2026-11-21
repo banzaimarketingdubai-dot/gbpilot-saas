@@ -36,7 +36,9 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { ClosedBetaModal } from '@/components/ClosedBetaModal';
 import { getGroundTruthPresets, saveOwnerGroundTruth } from '@/lib/groundTruth';
+import { captureAndGetUtm, trackFunnelEvent } from '@/lib/funnel';
 
 interface DetectedBusiness {
   id: string;
@@ -81,9 +83,42 @@ export default function OnboardingPage() {
   const [flagshipOffering, setFlagshipOffering] = useState('');
   const [guestPersona, setGuestPersona] = useState('');
   const [venueRulesAndPerks, setVenueRulesAndPerks] = useState('');
+  const [isBetaModalOpen, setIsBetaModalOpen] = useState(false);
+
+  // Step 2 runner accepting explicit business object (so URL auto-scan starts immediately)
+  const startDiagnosticsFor = (biz: DetectedBusiness) => {
+    setCurrentStep(2);
+    setScanProgress(0);
+    setRevealedRows(0);
+
+    trackFunnelEvent({
+      event_type: 'live_scan',
+      business_name: biz.name,
+      city: biz.city,
+      place_id: biz.id,
+    });
+
+    const timeline = [
+      { progress: 15, rows: 1, delay: 450 },   // Photo & Identity
+      { progress: 30, rows: 2, delay: 1100 },  // Name
+      { progress: 48, rows: 3, delay: 1750 },  // Address & Geo
+      { progress: 65, rows: 4, delay: 2400 },  // Operating Hours
+      { progress: 78, rows: 5, delay: 3050 },  // Category
+      { progress: 88, rows: 6, delay: 3700 },  // Phone (NAP)
+      { progress: 95, rows: 7, delay: 4350 },  // Rating & Reviews
+      { progress: 100, rows: 9, delay: 5000 }, // Maps Link & Golden Snapshot Locked
+    ];
+
+    timeline.forEach(({ progress, rows, delay }) => {
+      setTimeout(() => {
+        setScanProgress(progress);
+        setRevealedRows(rows);
+      }, delay);
+    });
+  };
 
   // Real search execution via /api/v1/onboarding/search (Zero mockups!)
-  const performSearch = async (queryText: string) => {
+  const performSearch = async (queryText: string, autoStartScan: boolean = false) => {
     const q = queryText.trim();
     if (!q) return;
 
@@ -102,6 +137,9 @@ export default function OnboardingPage() {
       if (data.found && data.business) {
         setDetectedBusiness(data.business);
         setSearchError(null);
+        if (autoStartScan) {
+          startDiagnosticsFor(data.business);
+        }
       } else {
         setDetectedBusiness(null);
         setSearchError({
@@ -121,14 +159,28 @@ export default function OnboardingPage() {
     }
   };
 
-  // Auto-populate and trigger search when arriving via ?search=... (from /b2b or outreach links)
+  // Auto-populate, log outreach visit, and launch LIVE SCAN immediately when arriving via ?search=...
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
+    const utm = captureAndGetUtm();
     const initialQuery = (params.get('search') || params.get('q') || '').trim();
+
+    if (utm.utm_source || utm.utm_campaign || initialQuery) {
+      trackFunnelEvent({
+        event_type: 'outreach_visit',
+        business_name: initialQuery,
+        page_path: '/onboarding',
+      });
+    }
+
+    if (params.get('beta_waitlist') === '1') {
+      setIsBetaModalOpen(true);
+    }
+
     if (initialQuery) {
       setSearchQuery(initialQuery);
-      performSearch(initialQuery);
+      performSearch(initialQuery, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -136,41 +188,20 @@ export default function OnboardingPage() {
   // Form submit handler
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    performSearch(searchQuery);
+    performSearch(searchQuery, false);
   };
 
   // Direct Google Maps Link submission when primary search wasn't found
   const handleFallbackUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fallbackMapsUrl.trim()) return;
-    performSearch(fallbackMapsUrl.trim());
+    performSearch(fallbackMapsUrl.trim(), false);
   };
 
   // Step 2: Start 15-Sec Live Data Inspection runner
   const startDiagnostics = () => {
     if (!detectedBusiness) return;
-    setCurrentStep(2);
-    setScanProgress(0);
-    setRevealedRows(0);
-
-    // Timed milestone reveals for animated table rows
-    const timeline = [
-      { progress: 15, rows: 1, delay: 600 },   // Photo & Identity
-      { progress: 30, rows: 2, delay: 1400 },  // Name
-      { progress: 48, rows: 3, delay: 2200 },  // Address & Geo
-      { progress: 65, rows: 4, delay: 3000 },  // Operating Hours
-      { progress: 78, rows: 5, delay: 3800 },  // Category
-      { progress: 88, rows: 6, delay: 4600 },  // Phone (NAP)
-      { progress: 95, rows: 7, delay: 5400 },  // Rating & Reviews
-      { progress: 100, rows: 9, delay: 6200 }, // Maps Link & Golden Snapshot Locked
-    ];
-
-    timeline.forEach(({ progress, rows, delay }) => {
-      setTimeout(() => {
-        setScanProgress(progress);
-        setRevealedRows(rows);
-      }, delay);
-    });
+    startDiagnosticsFor(detectedBusiness);
   };
 
   // Complete onboarding: Save 100% REAL business + Ground Truth and go to Cockpit Dashboard
@@ -221,6 +252,13 @@ export default function OnboardingPage() {
       // Trigger update events
       window.dispatchEvent(new CustomEvent('active_profile_updated'));
       window.dispatchEvent(new CustomEvent('user_session_updated'));
+
+      trackFunnelEvent({
+        event_type: 'trial_activated',
+        business_name: detectedBusiness.name,
+        city: detectedBusiness.city,
+        place_id: detectedBusiness.id,
+      });
     }
 
     router.push('/dashboard');
@@ -234,8 +272,8 @@ export default function OnboardingPage() {
 
   const groundTruthPresets = getGroundTruthPresets(detectedBusiness);
 
-  // Connect via Google OAuth directly
-  const handleGoogleOAuthLogin = async () => {
+  // Real Google OAuth flow (available via subtle approved-tester link inside Closed Beta modal)
+  const proceedWithGoogleOAuth = async () => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://gbpilot.top';
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.gbpilot.top';
     const loginUrl = `${backendUrl}/api/v1/auth/google/login?origin=${encodeURIComponent(origin)}&redirect_url=${encodeURIComponent(origin)}&state=${encodeURIComponent(origin)}`;
@@ -251,6 +289,11 @@ export default function OnboardingPage() {
       }
     } catch (e) {}
     window.location.href = loginUrl;
+  };
+
+  // Show Closed Beta waitlist gate instead of exposing Google OAuth 403 block
+  const handleGoogleOAuthLogin = () => {
+    setIsBetaModalOpen(true);
   };
 
   return (
@@ -991,6 +1034,15 @@ export default function OnboardingPage() {
         )}
 
       </main>
+
+      <ClosedBetaModal
+        isOpen={isBetaModalOpen}
+        onClose={() => setIsBetaModalOpen(false)}
+        onDirectGoogleOAuth={proceedWithGoogleOAuth}
+        defaultBusinessName={detectedBusiness?.name || searchQuery}
+        defaultCity={detectedBusiness?.city || ''}
+        source="onboarding_google_oauth"
+      />
 
       <Footer />
     </div>

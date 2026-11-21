@@ -28,6 +28,7 @@ import {
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { LocationQuotaModal } from '@/components/LocationQuotaModal';
+import { ClosedBetaModal } from '@/components/ClosedBetaModal';
 import { getSubscription, SubscriptionState } from '@/lib/subscription';
 import { isSuperAdmin, getUserRole, ROLE_DEFINITIONS } from '@/lib/roles';
 
@@ -310,7 +311,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   }, []);
 
-  const handleGoogleLogin = async () => {
+  const [isBetaModalOpen, setIsBetaModalOpen] = useState(false);
+
+  const proceedWithGoogleOAuth = async () => {
     const baseUrl =
       process.env.NEXT_PUBLIC_BACKEND_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
@@ -332,9 +335,18 @@ export const Navbar: React.FC<NavbarProps> = ({
     window.location.href = loginUrl;
   };
 
+  // Show Closed Beta waitlist gate instead of exposing Google OAuth 403 testing error to public users
+  const handleGoogleLogin = () => {
+    setIsBetaModalOpen(true);
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const onRequireLogin = () => handleGoogleLogin();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('beta_waitlist') === '1' || params.get('auth') === 'error') {
+        setIsBetaModalOpen(true);
+      }
+      const onRequireLogin = () => setIsBetaModalOpen(true);
       window.addEventListener('require_google_login', onRequireLogin);
       return () => window.removeEventListener('require_google_login', onRequireLogin);
     }
@@ -966,6 +978,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+
+    {/* Closed Beta Waitlist Gate (Replaces Google OAuth 403 block for public testers) */}
+    <ClosedBetaModal
+      isOpen={isBetaModalOpen}
+      onClose={() => setIsBetaModalOpen(false)}
+      onDirectGoogleOAuth={proceedWithGoogleOAuth}
+      defaultBusinessName={activeProfile?.name || ''}
+      defaultCity={activeProfile?.city || ''}
+      source="navbar_google_signin"
+    />
 
     {/* Location Quota Paywall & Enterprise Contact Modal */}
     <LocationQuotaModal

@@ -44,6 +44,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { setSubscriptionPlan, PlanId } from '@/lib/subscription';
 import { getIndustryPpcBenchmark, detectCurrencyByLocation } from '@/lib/inspection/auditEngine';
+import { captureAndGetUtm, trackFunnelEvent } from '@/lib/funnel';
 
 export default function B2BLandingPage() {
   const router = useRouter();
@@ -54,8 +55,16 @@ export default function B2BLandingPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const c = new URLSearchParams(window.location.search).get('currency');
+      const params = new URLSearchParams(window.location.search);
+      const c = params.get('currency');
       if (c && c.toUpperCase() === 'AED') setCurrency('AED');
+      const utm = captureAndGetUtm();
+      if (utm.utm_source || utm.utm_campaign) {
+        trackFunnelEvent({
+          event_type: 'outreach_visit',
+          page_path: '/b2b',
+        });
+      }
     }
   }, []);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -122,6 +131,12 @@ export default function B2BLandingPage() {
       }, 1000);
       return;
     }
+
+    trackFunnelEvent({
+      event_type: 'checkout_click',
+      page_path: '/b2b',
+      metadata_json: JSON.stringify({ planId, currency, billingCycle }),
+    });
 
     setIsCheckoutLoading(true);
     setPricingToast(`⏳ Redirecting to secure checkout via Creem.io...`);

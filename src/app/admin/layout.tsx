@@ -56,6 +56,12 @@ export default function AdminLayout({
       badge: 'Live',
     },
     {
+      name: 'Outreach & Beta',
+      href: '/admin/funnel',
+      icon: Activity,
+      badge: 'UTM',
+    },
+    {
       name: 'Finance & Creem.io',
       href: '/admin/finance',
       icon: CreditCard,

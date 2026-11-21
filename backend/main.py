@@ -204,8 +204,8 @@ async def google_callback(code: str = None, state: str = None, error: str = None
     target_frontend = get_safe_frontend_url(state)
     if error or not code:
         import urllib.parse
-        err_msg = urllib.parse.quote(error or "Missing authorization code")
-        return RedirectResponse(url=f"{target_frontend}/dashboard?auth=error&detail={err_msg}")
+        err_reason = urllib.parse.quote(error or "private_beta")
+        return RedirectResponse(url=f"{target_frontend}/onboarding?beta_waitlist=1&reason={err_reason}")
     try:
         tokens = exchange_code_for_tokens(code)
         access_token = tokens.get("access_token")
@@ -1500,6 +1500,320 @@ async def receive_revo_leads_webhook(payload: RevoWebhookPayload, db: Session = 
         "message": f"Successfully received {received_count} leads for GBP Analysis.",
         "event": payload.event
     }
+
+
+# =====================================================================
+# OUTREACH FUNNEL TRACKING & CLOSED BETA WAITLIST (SUPABASE POSTGRES)
+# =====================================================================
+from pydantic import BaseModel as _FunnelBaseModel
+from typing import Optional as _FunnelOptional
+
+class FunnelTrackRequest(_FunnelBaseModel):
+    event_type: str  # outreach_visit | live_scan | trial_activated | beta_modal_opened | beta_signup | checkout_click
+    utm_source: _FunnelOptional[str] = ""
+    utm_campaign: _FunnelOptional[str] = ""
+    utm_medium: _FunnelOptional[str] = ""
+    utm_content: _FunnelOptional[str] = ""
+    business_name: _FunnelOptional[str] = ""
+    city: _FunnelOptional[str] = ""
+    place_id: _FunnelOptional[str] = ""
+    page_path: _FunnelOptional[str] = ""
+    email: _FunnelOptional[str] = ""
+    phone: _FunnelOptional[str] = ""
+    metadata_json: _FunnelOptional[str] = ""
+
+class BetaWaitlistRequest(_FunnelBaseModel):
+    email: str
+    business_name: _FunnelOptional[str] = ""
+    phone: _FunnelOptional[str] = ""
+    city: _FunnelOptional[str] = ""
+    source: _FunnelOptional[str] = "google_oauth_gate"
+    utm_source: _FunnelOptional[str] = ""
+    utm_campaign: _FunnelOptional[str] = ""
+    notes: _FunnelOptional[str] = ""
+
+_FUNNEL_TABLES_READY = False
+
+def _ensure_funnel_tables(db: Session):
+    global _FUNNEL_TABLES_READY
+    if _FUNNEL_TABLES_READY or not db:
+        return
+    try:
+        from sqlalchemy import text
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS funnel_events (
+                id SERIAL PRIMARY KEY,
+                event_type VARCHAR(64) NOT NULL,
+                utm_source VARCHAR(128) DEFAULT '',
+                utm_campaign VARCHAR(128) DEFAULT '',
+                utm_medium VARCHAR(128) DEFAULT '',
+                utm_content VARCHAR(128) DEFAULT '',
+                business_name VARCHAR(255) DEFAULT '',
+                city VARCHAR(128) DEFAULT '',
+                place_id VARCHAR(255) DEFAULT '',
+                page_path VARCHAR(255) DEFAULT '',
+                email VARCHAR(255) DEFAULT '',
+                phone VARCHAR(128) DEFAULT '',
+                metadata_json TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS beta_waitlist (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                business_name VARCHAR(255) DEFAULT '',
+                phone VARCHAR(128) DEFAULT '',
+                city VARCHAR(128) DEFAULT '',
+                source VARCHAR(128) DEFAULT 'google_oauth_gate',
+                utm_source VARCHAR(128) DEFAULT '',
+                utm_campaign VARCHAR(128) DEFAULT '',
+                notes TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        db.commit()
+        _FUNNEL_TABLES_READY = True
+    except Exception as e:
+        logger.warning(f"[Funnel] Table init warning: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
+@app.post("/api/v1/funnel/track", tags=["Outreach Funnel"])
+async def track_funnel_event(payload: FunnelTrackRequest, db: Session = Depends(get_db)):
+    """Record an outreach/funnel telemetry event (visit, live_scan, trial_activated, checkout_click, etc.)."""
+    if not db:
+        return {"success": True, "stored": "memory"}
+    try:
+        from sqlalchemy import text
+        _ensure_funnel_tables(db)
+        db.execute(text("""
+            INSERT INTO funnel_events (
+                event_type, utm_source, utm_campaign, utm_medium, utm_content,
+                business_name, city, place_id, page_path, email, phone, metadata_json
+            ) VALUES (
+                :event_type, :utm_source, :utm_campaign, :utm_medium, :utm_content,
+                :business_name, :city, :place_id, :page_path, :email, :phone, :metadata_json
+            )
+        """), {
+            "event_type": (payload.event_type or "unknown")[:64],
+            "utm_source": (payload.utm_source or "")[:128],
+            "utm_campaign": (payload.utm_campaign or "")[:128],
+            "utm_medium": (payload.utm_medium or "")[:128],
+            "utm_content": (payload.utm_content or "")[:128],
+            "business_name": (payload.business_name or "")[:255],
+            "city": (payload.city or "")[:128],
+            "place_id": (payload.place_id or "")[:255],
+            "page_path": (payload.page_path or "")[:255],
+            "email": (payload.email or "")[:255],
+            "phone": (payload.phone or "")[:128],
+            "metadata_json": (payload.metadata_json or "")[:2000],
+        })
+        db.commit()
+        return {"success": True, "stored": "postgres"}
+    except Exception as e:
+        logger.warning(f"[Funnel] Track error: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/v1/beta/waitlist", tags=["Outreach Funnel"])
+async def subscribe_beta_waitlist(payload: BetaWaitlistRequest, db: Session = Depends(get_db)):
+    """Capture a Closed Beta waitlist subscription (replaces Google OAuth 403 block)."""
+    email_clean = (payload.email or "").strip().lower()
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if not db:
+        return {"success": True, "email": email_clean, "position": 1, "already_registered": False}
+    try:
+        from sqlalchemy import text
+        _ensure_funnel_tables(db)
+
+        existing = db.execute(
+            text("SELECT id FROM beta_waitlist WHERE LOWER(email) = :email LIMIT 1"),
+            {"email": email_clean}
+        ).fetchone()
+
+        already = False
+        if existing:
+            already = True
+            row_id = existing[0]
+            # Update business_name / phone / utm if newly supplied
+            db.execute(text("""
+                UPDATE beta_waitlist
+                SET business_name = CASE WHEN :bname != '' THEN :bname ELSE business_name END,
+                    phone = CASE WHEN :phone != '' THEN :phone ELSE phone END,
+                    city = CASE WHEN :city != '' THEN :city ELSE city END,
+                    utm_campaign = CASE WHEN :uc != '' THEN :uc ELSE utm_campaign END
+                WHERE id = :id
+            """), {
+                "bname": (payload.business_name or "")[:255],
+                "phone": (payload.phone or "")[:128],
+                "city": (payload.city or "")[:128],
+                "uc": (payload.utm_campaign or "")[:128],
+                "id": row_id,
+            })
+        else:
+            res = db.execute(text("""
+                INSERT INTO beta_waitlist (
+                    email, business_name, phone, city, source, utm_source, utm_campaign, notes
+                ) VALUES (
+                    :email, :business_name, :phone, :city, :source, :utm_source, :utm_campaign, :notes
+                ) RETURNING id
+            """), {
+                "email": email_clean[:255],
+                "business_name": (payload.business_name or "")[:255],
+                "phone": (payload.phone or "")[:128],
+                "city": (payload.city or "")[:128],
+                "source": (payload.source or "google_oauth_gate")[:128],
+                "utm_source": (payload.utm_source or "")[:128],
+                "utm_campaign": (payload.utm_campaign or "")[:128],
+                "notes": (payload.notes or "")[:1000],
+            })
+            row_id = res.fetchone()[0]
+
+        # Also log funnel event for conversion analytics
+        db.execute(text("""
+            INSERT INTO funnel_events (
+                event_type, utm_source, utm_campaign, business_name, city, email, phone, page_path
+            ) VALUES (
+                'beta_signup', :utm_source, :utm_campaign, :business_name, :city, :email, :phone, :source
+            )
+        """), {
+            "utm_source": (payload.utm_source or "")[:128],
+            "utm_campaign": (payload.utm_campaign or "")[:128],
+            "business_name": (payload.business_name or "")[:255],
+            "city": (payload.city or "")[:128],
+            "email": email_clean[:255],
+            "phone": (payload.phone or "")[:128],
+            "source": (payload.source or "google_oauth_gate")[:255],
+        })
+        db.commit()
+
+        total_count = db.execute(text("SELECT COUNT(*) FROM beta_waitlist")).scalar() or row_id
+        return {
+            "success": True,
+            "email": email_clean,
+            "position": int(total_count),
+            "already_registered": already,
+            "message": "You are confirmed on the GBPilot Private Beta priority list."
+        }
+    except Exception as e:
+        logger.error(f"[BetaWaitlist] Error: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Failed to save beta signup: {e}")
+
+@app.get("/api/v1/funnel/stats", tags=["Outreach Funnel"])
+async def get_funnel_stats(campaign: str = "", db: Session = Depends(get_db)):
+    """Return live outreach funnel KPIs, beta waitlist subscribers, and recent events for /admin/funnel."""
+    if not db:
+        return {"success": True, "summary": {}, "campaigns": [], "waitlist": [], "events": []}
+    try:
+        from sqlalchemy import text
+        _ensure_funnel_tables(db)
+
+        camp_filter = (campaign or "").strip()
+        where_ev = "WHERE utm_campaign = :camp" if camp_filter else ""
+        where_wl = "WHERE utm_campaign = :camp" if camp_filter else ""
+        params = {"camp": camp_filter} if camp_filter else {}
+
+        # Aggregated counts by event_type
+        counts_rows = db.execute(
+            text(f"SELECT event_type, COUNT(*) as cnt FROM funnel_events {where_ev} GROUP BY event_type"),
+            params
+        ).fetchall()
+        counts = {r[0]: int(r[1]) for r in counts_rows}
+
+        # Distinct campaigns for filter dropdown
+        camp_rows = db.execute(text("""
+            SELECT DISTINCT utm_campaign FROM (
+                SELECT utm_campaign FROM funnel_events WHERE utm_campaign IS NOT NULL AND utm_campaign != ''
+                UNION
+                SELECT utm_campaign FROM beta_waitlist WHERE utm_campaign IS NOT NULL AND utm_campaign != ''
+            ) t ORDER BY utm_campaign
+        """)).fetchall()
+        campaigns = [r[0] for r in camp_rows]
+
+        # Waitlist subscribers
+        wl_rows = db.execute(text(f"""
+            SELECT id, email, business_name, phone, city, source, utm_source, utm_campaign, notes, created_at
+            FROM beta_waitlist {where_wl}
+            ORDER BY created_at DESC LIMIT 200
+        """), params).fetchall()
+        waitlist = [
+            {
+                "id": r[0],
+                "email": r[1],
+                "business_name": r[2] or "",
+                "phone": r[3] or "",
+                "city": r[4] or "",
+                "source": r[5] or "",
+                "utm_source": r[6] or "",
+                "utm_campaign": r[7] or "",
+                "notes": r[8] or "",
+                "created_at": r[9].isoformat() if r[9] else "",
+            }
+            for r in wl_rows
+        ]
+
+        # Recent funnel events
+        ev_rows = db.execute(text(f"""
+            SELECT id, event_type, utm_source, utm_campaign, utm_content, business_name, city, place_id, page_path, email, phone, created_at
+            FROM funnel_events {where_ev}
+            ORDER BY created_at DESC LIMIT 100
+        """), params).fetchall()
+        events = [
+            {
+                "id": r[0],
+                "event_type": r[1],
+                "utm_source": r[2] or "",
+                "utm_campaign": r[3] or "",
+                "utm_content": r[4] or "",
+                "business_name": r[5] or "",
+                "city": r[6] or "",
+                "place_id": r[7] or "",
+                "page_path": r[8] or "",
+                "email": r[9] or "",
+                "phone": r[10] or "",
+                "created_at": r[11].isoformat() if r[11] else "",
+            }
+            for r in ev_rows
+        ]
+
+        visits = counts.get("outreach_visit", 0)
+        live_scans = counts.get("live_scan", 0)
+        trial_activations = counts.get("trial_activated", 0)
+        beta_modal_opens = counts.get("beta_modal_opened", 0)
+        beta_signups = len(waitlist) if not camp_filter else counts.get("beta_signup", len(waitlist))
+        checkout_clicks = counts.get("checkout_click", 0)
+
+        return {
+            "success": True,
+            "campaign": camp_filter or "all",
+            "summary": {
+                "visits": visits,
+                "live_scans": live_scans,
+                "trial_activations": trial_activations,
+                "beta_modal_opens": beta_modal_opens,
+                "beta_signups": beta_signups,
+                "checkout_clicks": checkout_clicks,
+                "scan_rate_pct": round((live_scans / visits) * 100, 1) if visits > 0 else 0.0,
+                "beta_conv_pct": round((beta_signups / max(visits, live_scans, 1)) * 100, 1) if (visits > 0 or live_scans > 0) else 0.0,
+            },
+            "campaigns": campaigns,
+            "waitlist": waitlist,
+            "events": events,
+        }
+    except Exception as e:
+        logger.error(f"[Funnel] Stats error: {e}")
+        return {"success": False, "error": str(e), "summary": {}, "campaigns": [], "waitlist": [], "events": []}
 
 if __name__ == "__main__":
     import uvicorn
